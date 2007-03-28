@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='us-ascii'?>
+<!DOCTYPE meshers PUBLIC "" "desktop.dtd">
+
+<!--  GUI customization for BLSURF Plugin  -->
+
+<meshers>
+
+<meshers-group name="BLSURF"
+               resources="BLSURFPlugin"
+               server-lib="libBLSURFEngine.so"
+               gui-lib="libBLSURFPluginGUI.so">
+  <hypotheses>
+    <hypothesis type="BLSURF_Parameters"
+		label-id="BLSURF Parameters"
+		icon-id="mesh_hypo_BLSURF.png"
+		dim="2"/>
+  </hypotheses>
+  <algorithms>
+    <algorithm type="BLSURF"
+               label-id="BLSURF"
+               icon-id="mesh_algo_BLSURF.png"
+               hypos="BLSURF_Parameters"
+               output="TRIA,QUAD"
+               dim="2"/>
+  </algorithms>
+</meshers-group>
+
+</meshers>

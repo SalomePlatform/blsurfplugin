@@ -7,8 +7,8 @@
 
 <meshers-group name="BLSURF"
                resources="BLSURFPlugin"
-               server-lib="libBLSURFEngine.so"
-               gui-lib="libBLSURFPluginGUI.so">
+               server-lib="BLSURFEngine"
+               gui-lib="BLSURFPluginGUI">
   <hypotheses>
     <hypothesis type="BLSURF_Parameters"
 		label-id="BLSURF Parameters"

@@ -22,6 +22,7 @@
 //
 //  File   : BLSURFPluginGUI_HypothesisCreator.h
 // Authors : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
+//           & Aurelien ALLEAUME (DISTENE)
 //  Module : BLSURFPlugin
 //  $Header: 
 
@@ -37,6 +38,7 @@ class QLineEdit;
 
 typedef struct
 {
+  int     myTopology;
   int     myPhysicalMesh, myGeometricMesh;
   double  myPhySize, myAngleMeshS, myGradation;
   bool    myAllowQuadrangles, myDecimesh;
@@ -79,6 +81,7 @@ private:
 
 private:
  QLineEdit*       myName;
+ QtxComboBox*     myTopology;
  QtxComboBox*     myPhysicalMesh;
  QtxDblSpinBox*   myPhySize;
  QtxComboBox*     myGeometricMesh;

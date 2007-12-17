@@ -38,8 +38,7 @@ LIB_SRC = \
 	BLSURFPlugin_BLSURF_i.cxx \
 	BLSURFPlugin_Hypothesis.cxx \
 	BLSURFPlugin_Hypothesis_i.cxx \
-	BLSURFPlugin_i.cxx \
-	cad_occ.cxx
+	BLSURFPlugin_i.cxx
 
 LIB_SERVER_IDL = BLSURFPlugin_Algorithm.idl
 

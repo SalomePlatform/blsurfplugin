@@ -44,6 +44,9 @@ module BLSURFPlugin
    */
   interface BLSURFPlugin_Hypothesis : SMESH::SMESH_Hypothesis
   {
+    void SetTopology(in long value);
+    long GetTopology();
+
     void SetPhysicalMesh(in long value);
     long GetPhysicalMesh();
 

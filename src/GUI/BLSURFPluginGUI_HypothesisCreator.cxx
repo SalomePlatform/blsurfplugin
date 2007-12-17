@@ -47,6 +47,13 @@
 #include <qcheckbox.h>
 #include <qpixmap.h>
 
+enum Topology {
+    FromCAD,
+    Process,
+    Process2
+  };
+
+
 enum PhysicalMesh
   {
     DefaultSize,
@@ -96,6 +103,14 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
     myName = new QLineEdit( GroupC1 );
   }
 
+  new QLabel( tr( "BLSURF_TOPOLOGY" ), GroupC1 );
+  myTopology = new QtxComboBox( GroupC1 );
+  QStringList topologyTypes;
+  topologyTypes.append( QObject::tr( "BLSURF_TOPOLOGY_CAD" ) );
+  topologyTypes.append( QObject::tr( "BLSURF_TOPOLOGY_PROCESS" ) );
+  topologyTypes.append( QObject::tr( "BLSURF_TOPOLOGY_PROCESS2" ) );
+  myTopology->insertStringList( topologyTypes );
+
   new QLabel( tr( "BLSURF_PHY_MESH" ), GroupC1 );
   myPhysicalMesh = new QtxComboBox( GroupC1 );
   QStringList physicalTypes;
@@ -131,7 +146,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   new QLabel( tr( "BLSURF_GRADATION" ), GroupC1 );
   myGradation = new QtxDblSpinBox( GroupC1 );
   myGradation->setMinValue( 1.1 );
-  myGradation->setMaxValue( 1.5 );
+  myGradation->setMaxValue( 2.5 );
   myGradation->setLineStep( 0.1 );
 
 //   new QLabel( tr( "BLSURF_SEG_PER_RADIUS" ), GroupC1 );
@@ -159,6 +174,7 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
 
   if( myName )
     myName->setText( data.myName );
+  myTopology->setCurrentItem( data.myTopology );
   myPhysicalMesh->setCurrentItem( data.myPhysicalMesh );
   myPhySize->setValue( data.myPhySize );
   myGeometricMesh->setCurrentItem( data.myGeometricMesh );
@@ -184,6 +200,7 @@ QString BLSURFPluginGUI_HypothesisCreator::storeParams() const
   storeParamsToHypo( data );
 
   QString guiHyp;
+  guiHyp += tr("BLSURF_TOPOLOGY") + " = " + QString::number( data.myTopology ) + "; ";
   guiHyp += tr("BLSURF_PHY_MESH") + " = " + QString::number( data.myPhysicalMesh ) + "; ";
   guiHyp += tr("BLSURF_HPHYDEF") + " = " + QString::number( data.myPhySize ) + "; ";
   guiHyp += tr("BLSURF_GEOM_MESH") + " = " + QString::number( data.myGeometricMesh ) + "; ";
@@ -205,6 +222,7 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   HypothesisData* data = SMESH::GetHypothesisData( hypType() );
   h_data.myName = isCreation() && data ? data->Label : "";
 
+  h_data.myTopology = (int) h->GetTopology();
   h_data.myPhysicalMesh = (int) h->GetPhysicalMesh();
   h_data.myPhySize = h->GetPhySize();
   h_data.myGeometricMesh = (int) h->GetGeometricMesh();
@@ -227,6 +245,7 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
     if( isCreation() )
       SMESH::SetName( SMESH::FindSObject( h ), h_data.myName.latin1() );
 
+    h->SetTopology( (int) h_data.myTopology );
     h->SetPhysicalMesh( (int) h_data.myPhysicalMesh );
     h->SetPhySize( h_data.myPhySize );
     h->SetGeometricMesh( (int) h_data.myGeometricMesh );
@@ -251,6 +270,7 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
 bool BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothesisData& h_data ) const
 {
   h_data.myName             = myName ? myName->text() : "";
+  h_data.myTopology         = myTopology->currentItem();
   h_data.myPhysicalMesh     = myPhysicalMesh->currentItem();
   h_data.myPhySize          = myPhySize->value();
   h_data.myGeometricMesh    = myGeometricMesh->currentItem();

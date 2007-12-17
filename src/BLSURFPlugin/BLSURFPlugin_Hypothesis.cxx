@@ -21,6 +21,7 @@
 //
 // File      : BLSURFPlugin_Hypothesis.cxx
 // Authors   : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
+//             & Aurelien ALLEAUME (DISTENE)
 // Date      : 28/03/2006
 // Project   : SALOME
 //=============================================================================
@@ -37,6 +38,7 @@ using namespace std;
 BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis (int hypId, int studyId,
                                                   SMESH_Gen * gen)
   : SMESH_Hypothesis(hypId, studyId, gen),
+    _topology(GetDefaultTopology()),
     _physicalMesh(GetDefaultPhysicalMesh()),
     _phySize(GetDefaultPhySize()),
     _geometricMesh(GetDefaultGeometricMesh()),
@@ -47,6 +49,19 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis (int hypId, int studyId,
 {
   _name = "BLSURF_Parameters";
   _param_algo_dim = 2;
+}
+
+//=============================================================================
+/*!
+ *  
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetTopology(Topology theTopology)
+{
+  if (theTopology != _topology) {
+    _topology = theTopology;
+    NotifySubMeshesHypothesisModification();
+  }
 }
 
 //=============================================================================
@@ -261,6 +276,12 @@ bool BLSURFPlugin_Hypothesis::SetParametersByMesh(const SMESH_Mesh*   theMesh,
                                                       const TopoDS_Shape& theShape)
 {
   return false;
+}
+
+//=============================================================================
+BLSURFPlugin_Hypothesis::Topology BLSURFPlugin_Hypothesis::GetDefaultTopology()
+{
+  return FromCAD;
 }
 
 //=============================================================================

@@ -65,6 +65,37 @@ BLSURFPlugin_Hypothesis_i::~BLSURFPlugin_Hypothesis_i()
   MESSAGE( "BLSURFPlugin_Hypothesis_i::~BLSURFPlugin_Hypothesis_i" );
 }
 
+/*!
+ *  BLSURFPlugin_Hypothesis_i::SetTopology
+ *
+ *  Set topology
+ */
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetTopology (CORBA::Long theValue)
+{
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetTopology");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetTopology((::BLSURFPlugin_Hypothesis::Topology)theValue);
+  SMESH::TPythonDump() << _this() << ".SetTopology( " << theValue << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetTopology
+ *
+ *  Get Topology
+ */
+//=============================================================================
+CORBA::Long BLSURFPlugin_Hypothesis_i::GetTopology()
+{
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetTopology");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetTopology();
+}
+
+//=============================================================================
+
 //=============================================================================
 /*!
  *  BLSURFPlugin_Hypothesis_i::SetPhysicalMesh

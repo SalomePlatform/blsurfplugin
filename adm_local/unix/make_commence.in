@@ -203,12 +203,12 @@ LN_S=@LN_S@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@/salome
-libdir=@libdir@/salome
+libdir=@libdir@64/salome
 # warning : if user give this path in configure we could have salome/salome :-(
 includedir=@includedir@/salome
 datadir=@datadir@/salome
 idldir=$(prefix)/idl/salome
-sharedpydir=@libdir@/python$(PYTHON_VERSION)/site-packages/salome/shared_modules
+sharedpydir=@libdir@64/python$(PYTHON_VERSION)/site-packages/salome/shared_modules
 
 docdir=${prefix}/doc/salome
 

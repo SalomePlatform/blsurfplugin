@@ -40,7 +40,7 @@ if test "x$BLSURF_HOME" != "x"; then
   
 
   BLSURF_INCLUDES="-I$BLSURF_HOME/include"
-  BLSURF_LIBS="-L$BLSURF_HOME/lib -lBLSURF"
+  BLSURF_LIBS="-L$BLSURF_HOME/lib -lBLSurf"
 
   CPPFLAGS_old="$CPPFLAGS"
   CXXFLAGS_old="$CXXFLAGS"
@@ -52,12 +52,12 @@ if test "x$BLSURF_HOME" != "x"; then
 
   AC_MSG_CHECKING(for BLSURF header file)
 
-  AC_CHECK_HEADER(blshare.h,BLSURF_ok=yes,BLSURF_ok=no)
+  AC_CHECK_HEADER(distene/api.h,BLSURF_ok=yes,BLSURF_ok=no)
   if test "x$BLSURF_ok" == "xyes"; then
 
     AC_MSG_CHECKING(for BLSURF library)
 
-    AC_TRY_COMPILE(#include "blshare.h",
+    AC_TRY_COMPILE(#include "distene/api.h",
         BLSURF_init();
      ,BLSURF_ok=yes;
       $CXX -shared -o linopt.o -c

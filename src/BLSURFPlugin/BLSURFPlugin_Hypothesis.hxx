@@ -21,6 +21,7 @@
 //
 // File      : BLSURFPlugin_Hypothesis.hxx
 // Authors   : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
+//             & Aurelien ALLEAUME (DISTENE)
 // Date      : 27/03/2006
 // Project   : SALOME
 // $Header$
@@ -39,6 +40,12 @@ class BLSURFPlugin_Hypothesis: public SMESH_Hypothesis
 public:
   BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_Gen * gen);
 
+  enum Topology {
+    FromCAD,
+    Process,
+    Process2
+  };
+
   enum PhysicalMesh {
     DefaultSize,
     PhysicalUserDefined
@@ -48,6 +55,9 @@ public:
     DefaultGeom,
     UserDefined
   };
+
+  void SetTopology(Topology theTopology);
+  Topology GetTopology() const { return _topology; }
 
   void SetPhysicalMesh(PhysicalMesh thePhysicalMesh);
   PhysicalMesh GetPhysicalMesh() const { return _physicalMesh; }
@@ -70,6 +80,7 @@ public:
   void SetDecimesh(bool theVal);
   bool GetDecimesh() const { return _decimesh; }
 
+  static Topology GetDefaultTopology();
   static PhysicalMesh GetDefaultPhysicalMesh();
   static double GetDefaultPhySize();
   static GeometricMesh GetDefaultGeometricMesh();
@@ -93,6 +104,7 @@ public:
   virtual bool SetParametersByMesh(const SMESH_Mesh* theMesh, const TopoDS_Shape& theShape);
 
 private:
+  Topology      _topology;
   PhysicalMesh  _physicalMesh;
   double        _phySize;
   GeometricMesh _geometricMesh;

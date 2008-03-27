@@ -21,6 +21,7 @@
 //
 // File      : BLSURFPlugin_BLSURF.hxx
 // Authors   : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
+//             & Aurelien ALLEAUME (DISTENE)
 // Date      : 20/03/2006
 // Project   : SALOME
 //=============================================================================
@@ -31,6 +32,9 @@
 #include "SMESH_2D_Algo.hxx"
 #include "SMESH_Mesh.hxx"
 #include "Utils_SALOME_Exception.hxx"
+extern "C"{
+#include "distene/api.h"
+}
 
 class BLSURFPlugin_Hypothesis;
 
@@ -44,7 +48,7 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
                                  const TopoDS_Shape&                  aShape,
                                  SMESH_Hypothesis::Hypothesis_Status& aStatus);
 
-    void SetParameters(const BLSURFPlugin_Hypothesis* hyp);
+    void SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsurf_session_t *bls);
 
     virtual bool Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape);
 
@@ -57,6 +61,7 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
     const BLSURFPlugin_Hypothesis* _hypothesis;
 
   private:
+    int    _topology;
     int    _physicalMesh;
     double _phySize;
     int    _geometricMesh;

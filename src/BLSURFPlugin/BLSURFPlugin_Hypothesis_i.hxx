@@ -50,6 +50,9 @@ class BLSURFPlugin_Hypothesis_i:
   // Destructor
   virtual ~BLSURFPlugin_Hypothesis_i();
 
+  void SetTopology(CORBA::Long theValue);
+  CORBA::Long GetTopology();
+
   void SetPhysicalMesh(CORBA::Long theValue);
   CORBA::Long GetPhysicalMesh();
 

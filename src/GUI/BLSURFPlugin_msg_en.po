@@ -23,6 +23,7 @@
 //
 // File      : BLSURFPlugin_msg_en.po
 // Authors   : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
+//             & Aurelien ALLEAUME (DISTENE)
 // Date      : 28/03/2006
 // Project   : SALOME
 //=============================================================================
@@ -37,6 +38,18 @@ msgstr ""
 
 msgid "BLSURF_2D_HYPOTHESIS"
 msgstr "BLSURF 2D"
+
+msgid "BLSURF_TOPOLOGY"
+msgstr "Topology"
+
+msgid "BLSURF_TOPOLOGY_CAD"
+msgstr "From CAD"
+
+msgid "BLSURF_TOPOLOGY_PROCESS"
+msgstr "Pre-process"
+
+msgid "BLSURF_TOPOLOGY_PROCESS2"
+msgstr "Pre-process++"
 
 msgid "BLSURF_PHY_MESH"
 msgstr "Physical Mesh"
@@ -66,10 +79,10 @@ msgid "BLSURF_GRADATION"
 msgstr "Gradation"
 
 msgid "BLSURF_DECIMESH"
-msgstr "Decimesh"
+msgstr "Patch independent"
 
 msgid "BLSURF_ALLOW_QUADRANGLES"
-msgstr "Allow Quadrangles"
+msgstr "Allow Quadrangles (Test)"
 
 msgid "BLSURF_2D_TITLE"
 msgstr "Hypothesis Construction"

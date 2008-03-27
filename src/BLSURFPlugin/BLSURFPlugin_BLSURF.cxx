@@ -21,6 +21,7 @@
 //
 // File    : BLSURFPlugin_BLSURF.cxx
 // Authors : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
+//           & Aurelien ALLEAUME (DISTENE)
 // Date    : 20/03/2006
 // Project : SALOME
 //=============================================================================
@@ -48,7 +49,24 @@ using namespace std;
 #include <TopoDS.hxx>
 #include <NCollection_Map.hxx>
 
-#include <cad_occ.h>
+extern "C"{
+#include <distene/api.h>
+}
+
+#include <Geom_Surface.hxx>
+#include <Handle_Geom_Surface.hxx>
+#include <Geom2d_Curve.hxx>
+#include <Handle_Geom2d_Curve.hxx>
+#include <Geom_Curve.hxx>
+#include <Handle_Geom_Curve.hxx>
+#include <TopoDS_Vertex.hxx>
+#include <TopoDS_Edge.hxx>
+#include <TopoDS_Wire.hxx>
+#include <TopoDS_Face.hxx>
+#include <TopoDS_Shape.hxx>
+#include <gp_Pnt2d.hxx>
+#include <TopTools_IndexedMapOfShape.hxx>
+#include <BRepTools.hxx>
 
 //=============================================================================
 /*!
@@ -128,9 +146,24 @@ bool BLSURFPlugin_BLSURF::CheckHypothesis
  */
 //=============================================================================
 
-void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp) {
+inline std::string to_string(double d)
+{
+   std::ostringstream o;
+   o << d;
+   return o.str();
+}
+
+inline std::string to_string(int i)
+{
+   std::ostringstream o;
+   o << i;
+   return o.str();
+}
+
+void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsurf_session_t *bls) {
   if (hyp) {
     MESSAGE("BLSURFPlugin_BLSURF::SetParameters");
+    _topology = (int) hyp->GetTopology();
     _physicalMesh = (int) hyp->GetPhysicalMesh();
     _phySize = hyp->GetPhySize();
     _geometricMesh = (int) hyp->GetGeometricMesh();
@@ -138,32 +171,39 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp) {
     _gradation = hyp->GetGradation();
     _quadAllowed = hyp->GetQuadAllowed();
     _decimesh = hyp->GetDecimesh();
+  } else {
+    MESSAGE("BLSURFPlugin_BLSURF::SetParameters using defaults");
+    _topology = BLSURFPlugin_Hypothesis::GetDefaultTopology();
+    _physicalMesh = BLSURFPlugin_Hypothesis::GetDefaultPhysicalMesh();
+    _phySize = BLSURFPlugin_Hypothesis::GetDefaultPhySize();
+    _geometricMesh = BLSURFPlugin_Hypothesis::GetDefaultGeometricMesh();
+    _angleMeshS = BLSURFPlugin_Hypothesis::GetDefaultAngleMeshS();
+    _gradation = BLSURFPlugin_Hypothesis::GetDefaultGradation();
+    _quadAllowed = BLSURFPlugin_Hypothesis::GetDefaultQuadAllowed();
+    _decimesh = BLSURFPlugin_Hypothesis::GetDefaultDecimesh();
+
   }
-
-  bool BlsurfEnvFile = true;
-
-  if ( BlsurfEnvFile ) {
-    TCollection_AsciiString SalomeExecDir;
-
-    char * Dir = getenv("PWD");
-    SalomeExecDir = Dir;
-    SalomeExecDir += "/blsurf.env";
-
-    ofstream theBlsurfEnv  ( SalomeExecDir.ToCString()  , ios::out);
-    theBlsurfEnv << "verb 10"                          << endl;
-    theBlsurfEnv << "hphy_flag "     << _physicalMesh  << endl;
-    theBlsurfEnv << "hphydef "       << _phySize       << endl;
-    theBlsurfEnv << "hgeo_flag "     << _geometricMesh << endl;
-    theBlsurfEnv << "angle_meshs "   << _angleMeshS    << endl;
-    theBlsurfEnv << "gradation "     << _gradation     << endl;
-    theBlsurfEnv << "topo_points 1"                    << endl;
-    theBlsurfEnv << "topo_project 1"                   << endl;
-    theBlsurfEnv << "topo_curves 1"                    << endl;
-    theBlsurfEnv << "surforient 1"                     << endl;
-    theBlsurfEnv << "decim "         << _decimesh      << endl;
-    theBlsurfEnv.close();
-  }
+  
+  blsurf_set_param(bls, "topo_points", _topology > 0 ? "1" : "0");
+  blsurf_set_param(bls, "topo_curves", _topology > 0 ? "1" : "0");
+  blsurf_set_param(bls, "topo_project", _topology > 0 ? "1" : "0");
+  blsurf_set_param(bls, "clean_boundary", _topology > 1 ? "1" : "0");
+  blsurf_set_param(bls, "close_boundary", _topology > 1 ? "1" : "0");
+  blsurf_set_param(bls, "hphy_flag", to_string(_physicalMesh).c_str());
+  blsurf_set_param(bls, "hphydef", to_string(_phySize).c_str());
+  blsurf_set_param(bls, "hgeo_flag", to_string(_geometricMesh).c_str());
+  blsurf_set_param(bls, "angle_meshs", to_string(_angleMeshS).c_str());
+  blsurf_set_param(bls, "angle_meshc", to_string(_angleMeshS).c_str());
+  blsurf_set_param(bls, "gradation", to_string(_gradation).c_str());
+  //  blsurf_set_param(bls, "patch_independent", to_string(_decimesh).c_str());
+  blsurf_set_param(bls, "patch_independent", _decimesh ? "1" : "0");
+  blsurf_set_param(bls, "element",  _quadAllowed ? "q1.0" : "p1");
+  blsurf_set_param(bls, "verb", "10");
 }
+
+status_t curv_fun(real t, real *uv, real *dt, real *dtt, void *user_data);
+status_t surf_fun(real *uv, real *xyz, real*du, real *dv,
+		  real *duu, real *duv, real *dvv, void *user_data);
 
 //=============================================================================
 /*!
@@ -172,8 +212,6 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp) {
 //=============================================================================
 
 bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape) {
-
-  SetParameters(_hypothesis);
 
   MESSAGE("BLSURFPlugin_BLSURF::Compute");
 
@@ -184,208 +222,213 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     cout << "  the shape is UNKNOWN" << endl;
   };
 
-  int i=0;
-  if (1) {
-    for (TopExp_Explorer expf(aShape, TopAbs_FACE); expf.More(); expf.Next()) {
-      const TopoDS_Shape& face = expf.Current();
-      i++;
-      int j=0;
-      for (TopExp_Explorer expe(face, TopAbs_EDGE); expe.More(); expe.Next()) {
-        const TopoDS_Shape& edge = expe.Current();
-        j++;
-        int k=0;
-        for (TopExp_Explorer expv(edge, TopAbs_VERTEX); expv.More(); expv.Next()) {
-          k++;
-        }
-        // cout << "  face " << i << " and its edge " << j << " has " << k << " vertices" << endl;
-      }
-      // cout << "  face " << i << " has " << j << " edges" << endl;
-    }
-    // cout << "  total number of faces = " << i << endl;
-  }
+  context_t *ctx =  context_new();
+  cad_t *c = cad_new(ctx);
 
-  BL_SURF mesh;
-  blw_* blw;
+  TopTools_IndexedMapOfShape fmap;
+  TopTools_IndexedMapOfShape emap;
+  TopTools_IndexedMapOfShape pmap;
+  vector<Handle(Geom2d_Curve)> curves;
+  vector<Handle(Geom_Surface)> surfaces;
+
+  fmap.Clear();
+  emap.Clear();
+  pmap.Clear();
+  surfaces.resize(0);
+  curves.resize(0);
+
+  int iface = 0;
+  for (TopExp_Explorer face_iter(aShape,TopAbs_FACE);face_iter.More();face_iter.Next()) {
+    TopoDS_Face f=TopoDS::Face(face_iter.Current());
+    if (fmap.FindIndex(f) > 0)
+      continue;
+    
+    fmap.Add(f);
+    iface++;
+    surfaces.push_back(BRep_Tool::Surface(f));
+    cad_face_t *fce = cad_face_new(c, iface, surf_fun, surfaces.back());  
+    cad_face_set_tag(fce, iface);
+    if(f.Orientation() != TopAbs_FORWARD){
+      cad_face_set_orientation(fce, CAD_ORIENTATION_REVERSED);
+    } else {
+      cad_face_set_orientation(fce, CAD_ORIENTATION_FORWARD);
+    }
+    
+    for (TopExp_Explorer edge_iter(f,TopAbs_EDGE);edge_iter.More();edge_iter.Next()) {
+      TopoDS_Edge e = TopoDS::Edge(edge_iter.Current());
+      int ic = emap.FindIndex(e);
+      if (ic <= 0)
+	ic = emap.Add(e);
+      
+      double tmin,tmax;
+      curves.push_back(BRep_Tool::CurveOnSurface(e, f, tmin, tmax));
+      cad_edge_t *edg = cad_edge_new(fce, ic, tmin, tmax, curv_fun, curves.back());
+      cad_edge_set_tag(edg, ic);
+      cad_edge_set_property(edg, EDGE_PROPERTY_SOFT_REQUIRED);
+
+      int npts = 0;
+      int ip1, ip2, *ip;
+      gp_Pnt2d e0 = curves.back()->Value(tmin);
+      gp_Pnt ee0 = surfaces.back()->Value(e0.X(), e0.Y());
+      Standard_Real d1=0,d2=0;
+      for (TopExp_Explorer ex_edge(e ,TopAbs_VERTEX); ex_edge.More(); ex_edge.Next()) {
+	TopoDS_Vertex v = TopoDS::Vertex(ex_edge.Current());
+
+	++npts;
+	if (npts == 1){
+	  ip = &ip1;
+	  d1 = ee0.SquareDistance(BRep_Tool::Pnt(v));
+	} else {
+	  ip = &ip2;
+          d2 = ee0.SquareDistance(BRep_Tool::Pnt(v));
+	}
+	*ip = pmap.FindIndex(v);
+	if(*ip <= 0)
+	  *ip = pmap.Add(v);
+      }
+      if (npts != 2) {
+	// should not happen 
+	cout << "An edge does not have 2 extremities." << endl;
+      } else {
+	if (d1 < d2)
+	  cad_edge_set_extremities(edg, ip1, ip2);
+	else
+	  cad_edge_set_extremities(edg, ip2, ip1);
+      }
+    } // for edge
+  } //for face
+ 
+
+
+
+  blsurf_session_t *bls = blsurf_session_new(ctx);
+  blsurf_data_set_cad(bls, c);
+
+  SetParameters(_hypothesis, bls);
 
   cout << endl;
   cout << "Beginning of Surface Mesh generation" << endl;
   cout << endl;
-  if (!mesh.init(aShape))
-    return(false);
+
+  if (blsurf_compute_mesh(bls) != STATUS_OK){
+    blsurf_session_delete(bls);
+    cad_delete(c);
+    context_delete(ctx);
+
+    return false;
+  }
+
   cout << endl;
   cout << "End of Surface Mesh generation" << endl;
   cout << endl;
-  mesh.get_blw(blw);
 
-  SMESHDS_Mesh* meshDS = aMesh.GetMeshDS();
-
-  if ( !_decimesh ) {
-    /* cf. export_mesh_all */
-    int j, ip, ic, nptri, is, oriented, iF, nF, idom, ndom, v[5], verb;
-    double centre[3];
-    char element[8];
-
-    verb = blw->env.verb;
-    blw->env.verb = 0;
-    assign_bls_mesh_num(blw);
-    blw->env.verb = verb;
+  mesh_t *msh;
+  blsurf_data_get_mesh(bls, &msh);
+  if(!msh){
+    blsurf_session_delete(bls);
+    cad_delete(c);
+    context_delete(ctx);
+    
+    return false;
+  }
   
-    FOR (j, 0, 2) {
-      centre[j] = (blw->bls_glo.xyzmin[j] + blw->bls_glo.xyzmax[j]) * 0.5;
-      cout << "centre[" << j << "] : " << centre[j] << endl;
-    }
+  integer nv, ne, nt, nq, vtx[4], tag;
+  real xyz[3];
 
-    /* points sommets des edges et des triangles */
-    nptri = blw->bls_mesh_num.number_of_nodes;
-    if (blw->env.verb >= 10)
-      fprintf(blw->out, "export_salome: surface mesh contains %d vertices\n", nptri);
-    SMDS_MeshNode** nodes = new SMDS_MeshNode*[nptri+1];
-    j = 0;
-    FOR (ip, 1, nptri) {
-      if (blw->bls_glo.vertices_xyz[3*ip-3] == BLHUGE) {
-        if (++j <= 10) {
-	      fprintf(blw->out, "export_salome: unconnected vertex %d\n", ip);
-	      if (j == 10) fprintf(blw->out, "export_salome: ...\n");
-        }
-        nodes[ip] = meshDS->AddNode(centre[0], centre[1], centre[2]);
-      }
-      else {
-        double floatVal = blw->bls_glo.vertices_xyz[3*ip-3];
-        // cout << "j : " << j << " node nmuber : " << ip << " --> first coordinate = " << floatVal << " != " << BLHUGE << endl;
-        nodes[ip] = meshDS->AddNode(blw->bls_glo.vertices_xyz[3*ip-3], blw->bls_glo.vertices_xyz[3*ip-2], blw->bls_glo.vertices_xyz[3*ip-1]);
-        // cout << "nodes[" << ip << "] : " << blw->bls_glo.vertices_xyz[3*ip-3] << ", "
-        //                                  << blw->bls_glo.vertices_xyz[3*ip-2] << ", "
-        //                                  << blw->bls_glo.vertices_xyz[3*ip-1] << endl;
-      }
-    }
+  mesh_get_vertex_count(msh, &nv);
+  mesh_get_edge_count(msh, &ne);
+  mesh_get_triangle_count(msh, &nt);
+  mesh_get_quadrangle_count(msh, &nq);
 
-    /* edges */
-    int nbEdges = C3D.number_of_curves;
-    cout << "Number Of Edges : " << nbEdges << endl;
-    FOR (ic, 1, C3D.number_of_curves) {
-      //TopoDS_Edge topo_edge = mesh.all_edges[ic-1]->topology;
-      int np = C3D.TC[ic].number_of_points;
-      cout << "Number Of Nodes for edge " << ic << " : " << np << endl;
-      FOR (ip, 1, np-1) {
-        meshDS->AddEdge(nodes[C3D.TC[ic].iglopc[ip]], nodes[C3D.TC[ic].iglopc[ip+1]]);
-      }
-    }
+  
+  SMESHDS_Mesh* meshDS = aMesh.GetMeshDS();
+  SMDS_MeshNode** nodes = new SMDS_MeshNode*[nv+1];
+  bool* tags = new bool[nv+1];
 
-    /* faces (triangles or quadrilaterals) */ 
-    SMDS_MeshFace* face;
-    if (blw->bls_glo.number_of_patches <= 0) {
-      strcpy(element, "p1");
+  for(int iv=1;iv<=nv;iv++) {
+    mesh_get_vertex_coordinates(msh, iv, xyz);
+    mesh_get_vertex_tag(msh, iv, &tag);    
+    nodes[iv] = meshDS->AddNode(xyz[0], xyz[1], xyz[2]);
+    // internal point are tagged to zero
+    if(tag){
+      meshDS->SetNodeOnVertex(nodes[iv], TopoDS::Vertex(pmap(tag)));
+      tags[iv] = false;
+    } else {
+      tags[iv] = true;
     }
-    else {
-      strcpy(element, TC2D[1].ms2d.element);
-    }
-    cout << endl;
-    cout << "Number_of_patches    : " << blw->bls_glo.number_of_patches << endl;
-    cout << "Element              : " << element << endl;
-    cout << "TC2D[1].ms2d.element : " << TC2D[1].ms2d.element << endl;
-    cout << endl;
-    if (STREQUAL(element, "p1")) {
-      if (blw->env.verb >= 10)
-        fprintf(blw->out, "export_salome: surface mesh contains %d triangles\n", blw->bls_mesh_num.ntri);
-      FOR (is, 1, blw->bls_glo.number_of_patches) {
-        TopoDS_Face topo_face = mesh.surfaces[is-1]->topology;
-        oriented = (TC2D[is].surforient >= 0);
-        // cout << endl;
-        // cout << "TC2D[is].surforient : " << TC2D[is].surforient << " --> oriented : " << oriented << endl;
-        nF = TC2D[is].ms2d.jmax_F;
-        ndom = TC2D[is].ms2d.ndom;
-        // cout << "nF   : " << nF   << endl;
-        // cout << "ndom : " << ndom << endl;
-        // cout << endl;
-        FOR (iF, 1, nF) {
-          idom = TC2D[is].ms2d.FRef[iF];
-          if (!(1 <= idom && idom <= ndom))
-            continue;
-          v[0] = TC2D[is].iglops[TC2D[is].ms2d.F[3*iF-3]];
-          v[1] = TC2D[is].iglops[TC2D[is].ms2d.F[3*iF-2]];
-          v[2] = TC2D[is].iglops[TC2D[is].ms2d.F[3*iF-1]];
-          if (v[0]==v[1] || v[1]==v[2] || v[2]==v[0])
-            continue;                                                 /* triangle degenere */
-          // cout << "Triangle " << iF << " of face " << is;
-          if ( oriented) {
-            // cout << " doesn't need to be re-oriented" << endl;
-            face = meshDS->AddFace(nodes[v[2]], nodes[v[1]], nodes[v[0]]);
-          }
-          else {
-            // cout << " needs to be re-oriented" << endl;
-            face = meshDS->AddFace(nodes[v[0]], nodes[v[1]], nodes[v[2]]);
-          }
-	      meshDS->SetMeshElementOnShape(face, topo_face);
-        }
-      }
-    }
-    delete nodes;
-  }
-  else {
-    cout << "decimesh is started"  << endl;
-    system("decimesh");
-    cout << "decimesh is finished" << endl;
-
-    FILE* fic = fopen("x_h100.mesh", "r");
-    char buf[200];
-    do {
-      fscanf(fic, "%s\n", buf);
-    }
-    while (strcmp(buf, "Vertices")!=0);
-    int n_vtx;
-    fscanf(fic, "%d\n", &n_vtx);
-    cout << "number of vertices: " << n_vtx << endl;
-
-    SMDS_MeshNode** nodes = new SMDS_MeshNode*[n_vtx+1];
-    double coo_x, coo_y, coo_z;
-    for (int i=1; i<=n_vtx; i++) {
-      fscanf(fic, "%lf %lf %lf %*d\n", &coo_x, &coo_y, &coo_z);
-      nodes[i] = meshDS->AddNode(coo_x, coo_y, coo_z);
-    }
-    cout << "nodes are updated" << endl;
-
-    fscanf(fic, "%*s\n");
-    int n_tri, n1, n2, n3, iFace;
-    SMDS_MeshFace* face;
-    fscanf(fic, "%d\n", &n_tri);
-    cout << "number of triangles: " << n_tri << endl;
-    for (int i=0; i<n_tri; i++) {
-      fscanf(fic, "%d %d %d %d\n", &n1, &n2, &n3, &iFace);
-      face = meshDS->AddFace(nodes[n3], nodes[n2], nodes[n1]);
-    }
-    cout << "triangles are updated" << endl;
-
-    char *keyWord;
-    fscanf(fic, "%s\n", keyWord);
-    cout << "keyWord : " << keyWord << endl;
-    int n_edges;
-    SMDS_MeshEdge* edge;
-    fscanf(fic, "%d\n", &n_edges);
-    cout << "number of edges: " << n_edges << endl;
-    for (int i=0; i<n_edges; i++) {
-      fscanf(fic, "%d %d %*d\n", &n1, &n2);
-      edge = meshDS->AddEdge(nodes[n1], nodes[n2]);
-      //meshDS->SetMeshElementOnShape(edge, topo_edge);
-    }
-    cout << "edges are updated, and finished" << endl;
-
-    fscanf(fic, "%s\n", keyWord); cout << "keyWord : " << keyWord << endl;
-    fscanf(fic, "%s\n", keyWord); cout << "keyWord : " << keyWord << endl;
-    fscanf(fic, "%s\n", keyWord); cout << "keyWord : " << keyWord << endl;
-    fscanf(fic, "%s\n", keyWord); cout << "keyWord : " << keyWord << endl;
-    fscanf(fic, "%s\n", keyWord); cout << "keyWord : " << keyWord << endl;
-    fscanf(fic, "%s\n", keyWord); cout << "keyWord : " << keyWord << endl;
-
-    int number = fscanf(fic, "%lf %lf %*lf\n", &coo_x, &coo_y);
-    cout << "coo_x  : " << coo_x << endl;
-    cout << "coo_y  : " << coo_y << endl;
-    cout << "number : " << number << endl;
-
-    fclose(fic);
   }
 
-  bool b = mesh.end();
-  return(b);
+  for(int it=1;it<=ne;it++) {
+    mesh_get_edge_vertices(msh, it, vtx);
+    SMDS_MeshEdge* edg = meshDS->AddEdge(nodes[vtx[0]], nodes[vtx[1]]);
+    mesh_get_edge_tag(msh, it, &tag);    
+
+    if (tags[vtx[0]]) {
+      meshDS->SetNodeOnEdge(nodes[vtx[0]], TopoDS::Edge(emap(tag)));
+      tags[vtx[0]] = false;
+    };
+    if (tags[vtx[1]]) {
+      meshDS->SetNodeOnEdge(nodes[vtx[1]], TopoDS::Edge(emap(tag)));
+      tags[vtx[1]] = false;
+    };
+    meshDS->SetMeshElementOnShape(edg, TopoDS::Edge(emap(tag)));
+    
+  }
+
+  for(int it=1;it<=nt;it++) {
+    mesh_get_triangle_vertices(msh, it, vtx);
+    SMDS_MeshFace* tri = meshDS->AddFace(nodes[vtx[0]], nodes[vtx[1]], nodes[vtx[2]]);
+    mesh_get_triangle_tag(msh, it, &tag);    
+    meshDS->SetMeshElementOnShape(tri, TopoDS::Face(fmap(tag)));
+    if (tags[vtx[0]]) {
+      meshDS->SetNodeOnFace(nodes[vtx[0]], TopoDS::Face(fmap(tag)));
+      tags[vtx[0]] = false;
+    };
+    if (tags[vtx[1]]) {
+      meshDS->SetNodeOnFace(nodes[vtx[1]], TopoDS::Face(fmap(tag)));
+      tags[vtx[1]] = false;
+    };
+    if (tags[vtx[2]]) {
+      meshDS->SetNodeOnFace(nodes[vtx[2]], TopoDS::Face(fmap(tag)));
+      tags[vtx[2]] = false;
+    };
+  }
+
+  for(int it=1;it<=nq;it++) {
+    mesh_get_quadrangle_vertices(msh, it, vtx);
+    SMDS_MeshFace* quad = meshDS->AddFace(nodes[vtx[0]], nodes[vtx[1]], nodes[vtx[2]], nodes[vtx[3]]);
+    mesh_get_quadrangle_tag(msh, it, &tag);    
+    meshDS->SetMeshElementOnShape(quad, TopoDS::Face(fmap(tag)));
+    if (tags[vtx[0]]) {
+      meshDS->SetNodeOnFace(nodes[vtx[0]], TopoDS::Face(fmap(tag)));
+      tags[vtx[0]] = false;
+    };
+    if (tags[vtx[1]]) {
+      meshDS->SetNodeOnFace(nodes[vtx[1]], TopoDS::Face(fmap(tag)));
+      tags[vtx[1]] = false;
+    };
+    if (tags[vtx[2]]) {
+      meshDS->SetNodeOnFace(nodes[vtx[2]], TopoDS::Face(fmap(tag)));
+      tags[vtx[2]] = false;
+    };
+    if (tags[vtx[3]]) {
+      meshDS->SetNodeOnFace(nodes[vtx[3]], TopoDS::Face(fmap(tag)));
+      tags[vtx[3]] = false;
+    };
+  }
+
+  delete nodes;
+
+  /* release the mesh object */
+  blsurf_data_regain_mesh(bls, msh);
+
+  /* clean up everything */
+  blsurf_session_delete(bls);
+  cad_delete(c);
+
+  context_delete(ctx);
+
+  return true;
 }
 
 //=============================================================================
@@ -430,4 +473,63 @@ ostream & operator << (ostream & save, BLSURFPlugin_BLSURF & hyp)
 istream & operator >> (istream & load, BLSURFPlugin_BLSURF & hyp)
 {
   return hyp.LoadFrom( load );
+}
+
+status_t curv_fun(real t, real *uv, real *dt, real *dtt, void *user_data)
+{
+  const Geom2d_Curve*pargeo = (const Geom2d_Curve*) user_data;
+
+  if (uv){
+    gp_Pnt2d P;
+    P=pargeo->Value(t);
+    uv[0]=P.X(); uv[1]=P.Y();
+  }
+
+  if(dt) {
+    gp_Vec2d V1;
+    V1=pargeo->DN(t,1);
+    dt[0]=V1.X(); dt[1]=V1.Y();
+  }
+
+  if(dtt){
+    gp_Vec2d V2;
+    V2=pargeo->DN(t,2);
+    dtt[0]=V2.X(); dtt[1]=V2.Y();
+  }
+
+  return 0;
+}
+
+status_t surf_fun(real *uv, real *xyz, real*du, real *dv,
+		  real *duu, real *duv, real *dvv, void *user_data)
+{
+  const Geom_Surface* geometry = (const Geom_Surface*) user_data;
+
+  if(xyz){
+   gp_Pnt P;
+   P=geometry->Value(uv[0],uv[1]);   // S.D0(U,V,P);
+   xyz[0]=P.X(); xyz[1]=P.Y(); xyz[2]=P.Z();
+  }
+
+  if(du && dv){
+    gp_Pnt P;
+    gp_Vec D1U,D1V;
+    
+    geometry->D1(uv[0],uv[1],P,D1U,D1V);
+    du[0]=D1U.X(); du[1]=D1U.Y(); du[2]=D1U.Z();
+    dv[0]=D1V.X(); dv[1]=D1V.Y(); dv[2]=D1V.Z();
+  }
+
+  if(duu && duv && dvv){
+    gp_Pnt P;
+    gp_Vec D1U,D1V;
+    gp_Vec D2U,D2V,D2UV;
+    
+    geometry->D2(uv[0],uv[1],P,D1U,D1V,D2U,D2V,D2UV);
+    duu[0]=D2U.X(); duu[1]=D2U.Y(); duu[2]=D2U.Z();
+    duv[0]=D2UV.X(); duv[1]=D2UV.Y(); duv[2]=D2UV.Z();
+    dvv[0]=D2V.X(); dvv[1]=D2V.Y(); dvv[2]=D2V.Z();    
+  }
+
+  return 0;
 }

@@ -16,7 +16,7 @@
 #
 
 AC_INIT(src)
-AC_CONFIG_AUX_DIR(${KERNEL_ROOT_DIR}/salome_adm/unix/config_files)
+AC_CONFIG_AUX_DIR(${KERNEL_ROOT_DIR}/salome_adm/unix/config_files/DEPRECATED)
 AC_CANONICAL_HOST
 
 PACKAGE=salome
@@ -140,14 +140,6 @@ echo
 
 CHECK_PYTHON
 
-echo
-echo ---------------------------------------------
-echo BOOST Library
-echo ---------------------------------------------
-echo
-
-CHECK_BOOST
-
 dnl echo
 dnl echo ---------------------------------------------
 dnl echo testing java
@@ -240,6 +232,14 @@ echo ---------------------------------------------
 echo
 
 CHECK_HDF5
+
+echo
+echo ---------------------------------------------
+echo BOOST Library
+echo ---------------------------------------------
+echo
+
+CHECK_BOOST
 
 echo
 echo ---------------------------------------------

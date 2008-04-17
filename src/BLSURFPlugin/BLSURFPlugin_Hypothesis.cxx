@@ -175,12 +175,14 @@ void BLSURFPlugin_Hypothesis::SetDecimesh(bool theVal)
 //=============================================================================
 ostream & BLSURFPlugin_Hypothesis::SaveTo(ostream & save)
 {
-//   save << _maxSize << " " << _fineness;
-
-//   if (_fineness == UserDefined)
-//     save << " " << _growthRate << " " << _nbSegPerEdge << " " << _nbSegPerRadius;
-
-//   save << " " << (int)_secondOrder << " " << (int)_optimize;
+  save << " " << (int)_topology
+       << " " << (int)_physicalMesh
+       << " " << (int)_geometricMesh
+       << " " << _phySize
+       << " " << _angleMeshS   
+       << " " << _gradation     
+       << " " << (int)_quadAllowed 
+       << " " << (int)_decimesh;
 
   return save;
 }
@@ -192,54 +194,58 @@ ostream & BLSURFPlugin_Hypothesis::SaveTo(ostream & save)
 //=============================================================================
 istream & BLSURFPlugin_Hypothesis::LoadFrom(istream & load)
 {
-//   bool isOK = true;
-//   int is;
-//   double val;
+  bool isOK = true;
+  int i;
+  double val;
 
-//   isOK = (load >> val);
-//   if (isOK)
-//     _maxSize = val;
-//   else
-//     load.clear(ios::badbit | load.rdstate());
+  isOK = (load >> i);
+  if (isOK)
+    _topology = (Topology) i;
+  else
+    load.clear(ios::badbit | load.rdstate());
 
-//   isOK = (load >> is);
-//   if (isOK)
-//     SetFineness((Fineness) is);
-//   else
-//     load.clear(ios::badbit | load.rdstate());
+  isOK = (load >> i);
+  if (isOK)
+    _physicalMesh = (PhysicalMesh) i;
+  else
+    load.clear(ios::badbit | load.rdstate());
 
-//   if (_fineness == UserDefined)
-//   {
-//     isOK = (load >> val);
-//     if (isOK)
-//       _growthRate = val;
-//     else
-//       load.clear(ios::badbit | load.rdstate());
+  isOK = (load >> i);
+  if (isOK)
+    _geometricMesh = (GeometricMesh) i;
+  else
+    load.clear(ios::badbit | load.rdstate());
 
-//     isOK = (load >> val);
-//     if (isOK)
-//       _nbSegPerEdge = val;
-//     else
-//       load.clear(ios::badbit | load.rdstate());
+  isOK = (load >> val);
+  if (isOK)
+    _phySize = val;
+  else
+    load.clear(ios::badbit | load.rdstate());
 
-//     isOK = (load >> val);
-//     if (isOK)
-//       _nbSegPerRadius = val;
-//     else
-//       load.clear(ios::badbit | load.rdstate());
-//   }
+  isOK = (load >> val);
+  if (isOK)
+    _angleMeshS = val;
+  else
+    load.clear(ios::badbit | load.rdstate());
 
-//   isOK = (load >> is);
-//   if (isOK)
-//     _secondOrder = (bool) is;
-//   else
-//     load.clear(ios::badbit | load.rdstate());
+  isOK = (load >> val);
+  if (isOK)
+    _gradation = val;
+  else
+    load.clear(ios::badbit | load.rdstate());
 
-//   isOK = (load >> is);
-//   if (isOK)
-//     _optimize = (bool) is;
-//   else
-//     load.clear(ios::badbit | load.rdstate());
+  isOK = (load >> i);
+  if (isOK)
+    _quadAllowed = (bool) i;
+  else
+    load.clear(ios::badbit | load.rdstate());
+
+  isOK = (load >> i);
+  if (isOK)
+    _decimesh = (bool) i;
+  else
+    load.clear(ios::badbit | load.rdstate());
+
   return load;
 }
 

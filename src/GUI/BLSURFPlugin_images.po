@@ -24,7 +24,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "POT-Creation-Date: 2002-05-28 10:57:43 AM CEST\n"
-"PO-Revision-Date: YYYY-MM-DD\n"
+"PO-Revision-Date: 2008-04-08 15:34+0400\n"
 "Last-Translator: FULLNAME <EMAIL@ADDRESS>\n"
 "Content-Type: text/plain; charset=iso-8859-1\n"
 
@@ -36,24 +36,13 @@ msgstr ""
 msgid "ICON_DLG_BLSURF_PARAMETERS"
 msgstr "mesh_hypo_BLSURF.png"
 
-msgid "ICON_DLG_BLSURF_PARAMETERS_2D"
-msgstr "mesh_hypo_BLSURF.png"
-
 #-----------------------------------------------------------
 # ObjectBrowser
 #-----------------------------------------------------------
 
-msgid "ICON_SMESH_TREE_ALGO_BLSURF_3D"
-msgstr "mesh_tree_algo_tetra.png"
-
-msgid "ICON_SMESH_TREE_ALGO_BLSURF_2D"
-msgstr "mesh_tree_algo_BLSURF.png"
-
-msgid "ICON_SMESH_TREE_ALGO_BLSURF_2D3D"
+msgid "ICON_SMESH_TREE_ALGO_BLSURF"
 msgstr "mesh_tree_algo_BLSURF.png"
 
 msgid "ICON_SMESH_TREE_HYPO_BLSURF_Parameters"
 msgstr "mesh_tree_hypo_BLSURF.png"
 
-msgid "ICON_SMESH_TREE_HYPO_BLSURF_Parameters_2D"
-msgstr "mesh_tree_hypo_BLSURF.png"

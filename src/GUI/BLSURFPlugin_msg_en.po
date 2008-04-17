@@ -36,7 +36,7 @@ msgstr ""
 "Last-Translator: FULLNAME <EMAIL@ADDRESS>\n"
 "Content-Type: text/plain; charset=iso-8859-1\n"
 
-msgid "BLSURF_2D_HYPOTHESIS"
+msgid "BLSURF_HYPOTHESIS"
 msgstr "BLSURF 2D"
 
 msgid "BLSURF_TOPOLOGY"
@@ -84,8 +84,5 @@ msgstr "Patch independent"
 msgid "BLSURF_ALLOW_QUADRANGLES"
 msgstr "Allow Quadrangles (Test)"
 
-msgid "BLSURF_2D_TITLE"
-msgstr "Hypothesis Construction"
-
-msgid "BLSURF_3D_TITLE"
+msgid "BLSURF_TITLE"
 msgstr "Hypothesis Construction"

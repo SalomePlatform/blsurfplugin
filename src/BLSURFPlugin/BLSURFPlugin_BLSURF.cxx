@@ -48,6 +48,7 @@ using namespace std;
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
 #include <NCollection_Map.hxx>
+#include <Standard_ErrorHandler.hxx>
 
 extern "C"{
 #include <distene/api.h>
@@ -204,6 +205,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
 status_t curv_fun(real t, real *uv, real *dt, real *dtt, void *user_data);
 status_t surf_fun(real *uv, real *xyz, real*du, real *dv,
 		  real *duu, real *duv, real *dvv, void *user_data);
+status_t message_callback(message_t *msg, void *user_data);
 
 //=============================================================================
 /*!
@@ -223,8 +225,10 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   };
 
   context_t *ctx =  context_new();
-  cad_t *c = cad_new(ctx);
+  context_set_message_callback(ctx, message_callback, &_comment);
 
+  cad_t *c = cad_new(ctx);
+ 
   TopTools_IndexedMapOfShape fmap;
   TopTools_IndexedMapOfShape emap;
   TopTools_IndexedMapOfShape pmap;
@@ -297,7 +301,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       }
     } // for edge
   } //for face
- 
+
 
 
 
@@ -310,12 +314,37 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   cout << "Beginning of Surface Mesh generation" << endl;
   cout << endl;
 
-  if (blsurf_compute_mesh(bls) != STATUS_OK){
+  status_t status = STATUS_ERROR;
+
+  try {
+    OCC_CATCH_SIGNALS;
+    status = blsurf_compute_mesh(bls);
+  }
+  catch ( std::exception& exc ) {
+//     if ( !_comment.empty() )
+//       _comment += "\n";
+    _comment += exc.what();
+  }
+  catch (Standard_Failure& ex) {
+//     if ( !_comment.empty() )
+//       _comment += "\n";
+    _comment += ex.DynamicType()->Name();
+    if ( ex.GetMessageString() && strlen( ex.GetMessageString() )) {
+      _comment += ": ";
+      _comment += ex.GetMessageString();
+    }
+  }
+  catch (...) {
+    if ( _comment.empty() )
+      _comment = "Exception in blsurf_compute_mesh()";
+  }
+  if ( status != STATUS_OK) {
     blsurf_session_delete(bls);
     cad_delete(c);
     context_delete(ctx);
 
-    return false;
+    return error(_comment);
+    //return false;
   }
 
   cout << endl;
@@ -329,7 +358,8 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     cad_delete(c);
     context_delete(ctx);
     
-    return false;
+    return error(_comment);
+    //return false;
   }
   
   integer nv, ne, nt, nq, vtx[4], tag;
@@ -532,4 +562,19 @@ status_t surf_fun(real *uv, real *xyz, real*du, real *dv,
   }
 
   return 0;
+}
+
+status_t message_callback(message_t *msg, void *user_data)
+{
+  integer errnumber = 0;
+  message_get_number(msg, &errnumber);
+  if ( errnumber < 0 ) {
+    char *desc;
+    string * error = (string*)user_data;
+    message_get_description(msg, &desc);
+//   if ( !error->empty() )
+//     *error += "\n";
+    *error += desc;
+  }
+  return STATUS_OK;
 }

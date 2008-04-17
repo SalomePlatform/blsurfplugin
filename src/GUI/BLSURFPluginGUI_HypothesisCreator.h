@@ -59,7 +59,8 @@ public:
   BLSURFPluginGUI_HypothesisCreator( const QString& );
   virtual ~BLSURFPluginGUI_HypothesisCreator();
 
-  virtual bool checkParams() const;
+  virtual bool     checkParams() const;
+  virtual QString  helpPage() const;
 
 protected:
   virtual QFrame*  buildFrame    ();
@@ -90,7 +91,6 @@ private:
  QCheckBox*       myAllowQuadrangles;
  QCheckBox*       myDecimesh;
 
- bool myIs2D;
 };
 
 #endif

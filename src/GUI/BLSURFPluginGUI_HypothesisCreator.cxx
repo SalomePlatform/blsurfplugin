@@ -67,9 +67,9 @@ enum GeometricMesh
   };
 
 BLSURFPluginGUI_HypothesisCreator::BLSURFPluginGUI_HypothesisCreator( const QString& theHypType )
-: SMESHGUI_GenericHypothesisCreator( theHypType ),
-  myIs2D(true)
+: SMESHGUI_GenericHypothesisCreator( theHypType )
 {
+  
 }
 
 BLSURFPluginGUI_HypothesisCreator::~BLSURFPluginGUI_HypothesisCreator()
@@ -220,7 +220,7 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
     BLSURFPlugin::BLSURFPlugin_Hypothesis::_narrow( initParamsHypothesis() );
 
   HypothesisData* data = SMESH::GetHypothesisData( hypType() );
-  h_data.myName = isCreation() && data ? data->Label : "";
+  h_data.myName = isCreation() && data ? hypName() : "";
 
   h_data.myTopology = (int) h->GetTopology();
   h_data.myPhysicalMesh = (int) h->GetPhysicalMesh();
@@ -319,16 +319,21 @@ void BLSURFPluginGUI_HypothesisCreator::onGeometricMeshChanged() {
 
 QString BLSURFPluginGUI_HypothesisCreator::caption() const
 {
-  return tr( QString( "BLSURF_%1_TITLE" ).arg(myIs2D?QString("2D"):QString("3D")) );
+  return tr( "BLSURF_TITLE" );
 }
 
 QPixmap BLSURFPluginGUI_HypothesisCreator::icon() const
 {
-  QString hypIconName = tr( QString("ICON_DLG_BLSURF_PARAMETERS%1").arg(myIs2D?QString(""):QString("")) );
+  QString hypIconName = tr( "ICON_DLG_BLSURF_PARAMETERS");
   return SUIT_Session::session()->resourceMgr()->loadPixmap( "BLSURFPlugin", hypIconName );
 }
 
 QString BLSURFPluginGUI_HypothesisCreator::type() const
 {
-  return tr( QString( "BLSURF_%1_HYPOTHESIS" ).arg(myIs2D?QString("2D"):QString("3D")) );
+  return tr( "BLSURF_HYPOTHESIS" );
+}
+
+QString BLSURFPluginGUI_HypothesisCreator::helpPage() const
+{
+  return "blsurf_hypo_page.html";
 }

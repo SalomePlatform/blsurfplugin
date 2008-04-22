@@ -46,6 +46,7 @@
 #include <qlineedit.h>
 #include <qcheckbox.h>
 #include <qpixmap.h>
+#include <qfontmetrics.h>
 
 enum Topology {
     FromCAD,
@@ -172,8 +173,11 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
   BlsurfHypothesisData data;
   readParamsFromHypo( data );
 
-  if( myName )
+  if( myName ) {
     myName->setText( data.myName );
+    QFontMetrics metrics( myName->font() );
+    myName->setMinimumWidth( metrics.width( data.myName )+5 );
+  }
   myTopology->setCurrentItem( data.myTopology );
   myPhysicalMesh->setCurrentItem( data.myPhysicalMesh );
   myPhySize->setValue( data.myPhySize );
@@ -245,18 +249,27 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
     if( isCreation() )
       SMESH::SetName( SMESH::FindSObject( h ), h_data.myName.latin1() );
 
-    h->SetTopology( (int) h_data.myTopology );
-    h->SetPhysicalMesh( (int) h_data.myPhysicalMesh );
-    h->SetPhySize( h_data.myPhySize );
-    h->SetGeometricMesh( (int) h_data.myGeometricMesh );
-    h->SetGradation( h_data.myGradation );
-    h->SetQuadAllowed( h_data.myAllowQuadrangles );
-    h->SetDecimesh( h_data.myDecimesh );
+    if ( h->GetTopology() != h_data.myTopology ) // avoid duplication of DumpPython commands
+      h->SetTopology( (int) h_data.myTopology );
+    if ( h->GetPhysicalMesh() != h_data.myPhysicalMesh )
+      h->SetPhysicalMesh( (int) h_data.myPhysicalMesh );
+    if ( h->GetPhySize() != h_data.myPhySize )
+      h->SetPhySize( h_data.myPhySize );
+    if ( h->GetGeometricMesh() != (int) h_data.myGeometricMesh )
+      h->SetGeometricMesh( (int) h_data.myGeometricMesh );
+    if ( h->GetGradation() !=  h_data.myGradation )
+      h->SetGradation( h_data.myGradation );
+    if ( h->GetQuadAllowed() != h_data.myAllowQuadrangles )
+      h->SetQuadAllowed( h_data.myAllowQuadrangles );
+    if ( h->GetDecimesh() != h_data.myDecimesh )
+      h->SetDecimesh( h_data.myDecimesh );
 
-    if( (int) h_data.myPhysicalMesh == PhysicalUserDefined )
+    if( (int) h_data.myPhysicalMesh == PhysicalUserDefined &&
+        h->GetPhySize() != h_data.myPhySize)
       h->SetPhySize( h_data.myPhySize );
 
-    if( (int) h_data.myGeometricMesh == UserDefined )
+    if( (int) h_data.myGeometricMesh == UserDefined &&
+        h->GetAngleMeshS() != h_data.myAngleMeshS )
       h->SetAngleMeshS( h_data.myAngleMeshS );
   }
   catch(const SALOME::SALOME_Exception& ex)

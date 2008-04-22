@@ -44,28 +44,58 @@ module BLSURFPlugin
    */
   interface BLSURFPlugin_Hypothesis : SMESH::SMESH_Hypothesis
   {
-    void SetTopology(in long value);
+    /*!
+     * Sets topology usage way defining how mesh conformity is assured
+     * value=0 - mesh conformity is assured by conformity of a shape
+     * value=1,2 - mesh conformity is assured by pre-processing a CAD model
+     */
+    void SetTopology(in long way);
     long GetTopology();
 
-    void SetPhysicalMesh(in long value);
+    /*!
+     * Sets a way to define size of mesh elements to generate
+     * 0 - size is defined automatically
+     * 1 - size is set by SetPhySize() method
+     */
+    void SetPhysicalMesh(in long isCustom);
     long GetPhysicalMesh();
 
-    void SetPhySize(in double value);
+    /*!
+     * Sets size of mesh elements to generate
+     */
+    void SetPhySize(in double size);
     double GetPhySize();
 
-    void SetGeometricMesh(in long value);
+    /*!
+     * Sets a way to define maximum angular deflection of mesh from CAD model
+     * 0 - deflection is defined automatically
+     * 1 - deflection is set by SetAngleMeshS() method
+     */
+    void SetGeometricMesh(in long isCustom);
     long GetGeometricMesh();
 
-    void SetAngleMeshS(in double value);
+    /*!
+     * Sets angular deflection (in degrees) of mesh from CAD model
+     */
+    void SetAngleMeshS(in double angle);
     double GetAngleMeshS();
 
-    void SetGradation(in double value);
+    /*!
+     * Sets maximal allowed ratio between the lengths of two adjacent edges
+     */
+    void SetGradation(in double ratio);
     double GetGradation();
 
-    void SetQuadAllowed(in boolean value);
+    /*!
+     * Sets to create quadrilateral elements or not
+     */
+    void SetQuadAllowed(in boolean allowed);
     boolean GetQuadAllowed();
 
-    void SetDecimesh(in boolean value);
+    /*!
+     * To respect geometrical edges or not
+     */
+    void SetDecimesh(in boolean toIgnoreEdges);
     boolean GetDecimesh();
   };
 

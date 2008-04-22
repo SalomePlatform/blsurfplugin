@@ -574,7 +574,11 @@ status_t message_callback(message_t *msg, void *user_data)
     message_get_description(msg, &desc);
 //   if ( !error->empty() )
 //     *error += "\n";
-    *error += desc;
+    // remove ^A from the tail
+    int len = strlen( desc );
+    while (len > 0 && desc[len-1] != '\n')
+      len--;
+    error->append( desc, len );
   }
   return STATUS_OK;
 }

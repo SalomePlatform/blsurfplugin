@@ -133,7 +133,12 @@ bool BLSURFPlugin_BLSURF::CheckHypothesis
   {
     _hypothesis = static_cast<const BLSURFPlugin_Hypothesis*> (theHyp);
     ASSERT(_hypothesis);
-    aStatus = SMESH_Hypothesis::HYP_OK;
+    if ( _hypothesis->GetPhysicalMesh() == BLSURFPlugin_Hypothesis::DefaultSize &&
+         _hypothesis->GetGeometricMesh() == BLSURFPlugin_Hypothesis::DefaultGeom )
+      //  hphy_flag = 0 and hgeo_flag = 0 is not allowed (spec)
+      aStatus = SMESH_Hypothesis::HYP_BAD_PARAMETER;
+    else
+      aStatus = SMESH_Hypothesis::HYP_OK;
   }
   else
     aStatus = SMESH_Hypothesis::HYP_INCOMPATIBLE;

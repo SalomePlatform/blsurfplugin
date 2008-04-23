@@ -57,13 +57,13 @@ enum Topology {
 
 enum PhysicalMesh
   {
-    DefaultSize,
+    DefaultSize = 0,
     PhysicalUserDefined
   };
 
 enum GeometricMesh
   {
-    DefaultGeom,
+    DefaultGeom = 0,
     UserDefined
   };
 
@@ -308,6 +308,11 @@ void BLSURFPluginGUI_HypothesisCreator::onPhysicalMeshChanged() {
         break;
       }
     myPhySize->setValue( aPhySize );
+    //  hphy_flag = 0 and hgeo_flag = 0 is not allowed (spec)
+    if ( myGeometricMesh->currentItem() == DefaultGeom ) {
+      myGeometricMesh->setCurrentItem( UserDefined );
+      onGeometricMeshChanged();
+    }
   }
 }
 
@@ -327,6 +332,11 @@ void BLSURFPluginGUI_HypothesisCreator::onGeometricMeshChanged() {
       }
     myAngleMeshS->setValue( aAngleMeshS );
     myGradation->setValue( aGradation );
+    //  hphy_flag = 0 and hgeo_flag = 0 is not allowed (spec)
+    if ( myPhysicalMesh->currentItem() == DefaultSize ) {
+      myPhysicalMesh->setCurrentItem( PhysicalUserDefined );
+      onPhysicalMeshChanged();
+    }
   }
 }
 

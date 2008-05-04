@@ -18,7 +18,7 @@
 #  See http://www.salome-platform.org/
 #
 #  File    : Makefile.in
-// Authors : Francis KLOSS (OCC) & Patrick LAUG (INRIA)
+#  Authors : Francis KLOSS (OCC) & Patrick LAUG (INRIA)
 #  Module  : BLSURFPLUGIN
 
 top_srcdir=@top_srcdir@

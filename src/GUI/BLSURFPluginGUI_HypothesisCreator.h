@@ -30,19 +30,25 @@
 #define BLSURFPLUGINGUI_HypothesisCreator_HeaderFile
 
 #include <SMESHGUI_Hypotheses.h>
+#include CORBA_SERVER_HEADER(BLSURFPlugin_Algorithm)
 
 class QtxDblSpinBox;
 class QtxComboBox;
 class QCheckBox;
 class QLineEdit;
+class QTable;
+class QSpinBox;
+class QPopupMenu;
 
 typedef struct
 {
-  int     myTopology;
+  int     myTopology, myVerbosity;
   int     myPhysicalMesh, myGeometricMesh;
-  double  myPhySize, myAngleMeshS, myGradation;
+  double  myPhySize, myPhyMin, myPhyMax, myAngleMeshS, myAngleMeshC, myGradation;
+  double  myGeoMin, myGeoMax;
   bool    myAllowQuadrangles, myDecimesh;
   QString myName;
+
 } BlsurfHypothesisData;
 
 /*!
@@ -72,25 +78,42 @@ protected:
   virtual QString  type() const;
 
 protected slots:
-  virtual void onPhysicalMeshChanged();
-  virtual void onGeometricMeshChanged();
+  void onPhysicalMeshChanged();
+  void onGeometricMeshChanged();
+  void onTabSelected(int);
+  void onAddOption();
+  void onDeleteOption();
+  void onOptionChosenInPopup(int);
 
 private:
-  bool readParamsFromHypo( BlsurfHypothesisData& ) const;
-  bool readParamsFromWidgets( BlsurfHypothesisData& ) const;
-  bool storeParamsToHypo( const BlsurfHypothesisData& ) const;
+  bool    readParamsFromHypo( BlsurfHypothesisData& ) const;
+  QString readParamsFromWidgets( BlsurfHypothesisData& ) const;
+  bool    storeParamsToHypo( const BlsurfHypothesisData& ) const;
 
 private:
- QLineEdit*       myName;
- QtxComboBox*     myTopology;
- QtxComboBox*     myPhysicalMesh;
- QtxDblSpinBox*   myPhySize;
- QtxComboBox*     myGeometricMesh;
- QtxDblSpinBox*   myAngleMeshS;
- QtxDblSpinBox*   myGradation;
- QCheckBox*       myAllowQuadrangles;
- QCheckBox*       myDecimesh;
 
+  QGroupBox*       myStdGroup;
+  QLineEdit*       myName;
+  QtxComboBox*     myPhysicalMesh;
+  QtxDblSpinBox*   myPhySize;
+  QtxDblSpinBox*   myPhyMin;
+  QtxDblSpinBox*   myPhyMax;
+  QtxComboBox*     myGeometricMesh;
+  QtxDblSpinBox*   myAngleMeshS;
+  QtxDblSpinBox*   myAngleMeshC;
+  QtxDblSpinBox*   myGeoMin;
+  QtxDblSpinBox*   myGeoMax;
+  QtxDblSpinBox*   myGradation;
+  QCheckBox*       myAllowQuadrangles;
+  QCheckBox*       myDecimesh;
+
+  QGroupBox*       myAdvGroup;
+  QtxComboBox*     myTopology;
+  QSpinBox*        myVerbosity;
+  QTable*          myOptionTable;
+  QPopupMenu*      myPopup;
+
+  BLSURFPlugin::string_array_var myOptions;
 };
 
 #endif

@@ -32,6 +32,7 @@
 
 #include "SMESH_Hypothesis.hxx"
 #include "Utils_SALOME_Exception.hxx"
+#include <map>
 
 //  Parameters for work of BLSURF
 
@@ -65,11 +66,26 @@ public:
   void SetPhySize(double thePhySize);
   double GetPhySize() const { return _phySize; }
 
+  void SetPhyMin(double theMinSize);
+  double GetPhyMin() const { return _phyMin; }
+
+  void SetPhyMax(double theMaxSize);
+  double GetPhyMax() const { return _phyMax; }
+
   void SetGeometricMesh(GeometricMesh theGeometricMesh);
   GeometricMesh GetGeometricMesh() const { return _geometricMesh; }
 
   void SetAngleMeshS(double theAngle);
   double GetAngleMeshS() const { return _angleMeshS; }
+
+  void SetAngleMeshC(double theAngle);
+  double GetAngleMeshC() const { return _angleMeshC; }
+
+  void SetGeoMin(double theMinSize);
+  double GetGeoMin() const { return _hgeoMin; }
+
+  void SetGeoMax(double theMaxSize);
+  double GetGeoMax() const { return _hgeoMax; }
 
   void SetGradation(double theGradation);
   double GetGradation() const { return _gradation; }
@@ -80,14 +96,31 @@ public:
   void SetDecimesh(bool theVal);
   bool GetDecimesh() const { return _decimesh; }
 
-  static Topology GetDefaultTopology();
-  static PhysicalMesh GetDefaultPhysicalMesh();
-  static double GetDefaultPhySize();
+  void SetVerbosity(int theVal);
+  int GetVerbosity() const { return _verb; }
+
+  static Topology      GetDefaultTopology();
+  static PhysicalMesh  GetDefaultPhysicalMesh();
+  static double        GetDefaultPhySize();
+  static double        GetDefaultMaxSize();
+  static double        GetDefaultMinSize();
   static GeometricMesh GetDefaultGeometricMesh();
-  static double GetDefaultAngleMeshS();
-  static double GetDefaultGradation();
-  static bool GetDefaultQuadAllowed();
-  static bool GetDefaultDecimesh();
+  static double        GetDefaultAngleMeshS();
+  static double        GetDefaultAngleMeshC() { return GetDefaultAngleMeshS(); }
+  static double        GetDefaultGradation();
+  static bool          GetDefaultQuadAllowed();
+  static bool          GetDefaultDecimesh();
+  static int           GetDefaultVerbosity() { return 10; }
+
+  static double undefinedDouble() { return -1.0; }
+
+  typedef std::map< std::string, std::string > TOptionValues;
+
+  void SetOptionValue(const std::string& optionName,
+                      const std::string& optionValue) throw (SALOME_Exception);
+  string GetOptionValue(const std::string& optionName) throw (SALOME_Exception);
+  void ClearOption(const std::string& optionName);
+  const TOptionValues& GetOptionValues() const { return _option2value; }
 
   // Persistence
   virtual ostream & SaveTo(ostream & save);
@@ -106,12 +139,14 @@ public:
 private:
   Topology      _topology;
   PhysicalMesh  _physicalMesh;
-  double        _phySize;
+  double        _phySize, _phyMin, _phyMax;
   GeometricMesh _geometricMesh;
-  double        _angleMeshS;
+  double        _angleMeshS, _angleMeshC, _hgeoMin, _hgeoMax;
   double        _gradation;
   bool          _quadAllowed;
   bool          _decimesh;
+  int           _verb;
+  TOptionValues _option2value;
 };
 
 #endif

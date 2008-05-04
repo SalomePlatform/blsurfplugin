@@ -55,7 +55,8 @@ msgid "BLSURF_PHY_MESH"
 msgstr "Physical Mesh"
 
 msgid "BLSURF_DEFAULT_USER"
-msgstr "Default"
+msgstr "None"
+#msgstr "Default" #PAL19680
 
 msgid "BLSURF_CUSTOM_USER"
 msgstr "Custom"
@@ -63,11 +64,24 @@ msgstr "Custom"
 msgid "BLSURF_HPHYDEF"
 msgstr "User Size"
 
+msgid "BLSURF_HPHYMIN"
+msgstr "Min Physical Size"
+
+msgid "BLSURF_HPHYMAX"
+msgstr "Max Physical Size"
+
+msgid "BLSURF_HGEOMIN"
+msgstr "Min Geometrical Size"
+
+msgid "BLSURF_HGEOMAX"
+msgstr "Max Geometrical Size"
+
 msgid "BLSURF_GEOM_MESH"
 msgstr "Geometrical Mesh"
 
 msgid "BLSURF_DEFAULT_GEOM"
-msgstr "Default"
+msgstr "None"
+#msgstr "Default" #PAL19680
 
 msgid "BLSURF_CUSTOM_GEOM"
 msgstr "Custom"
@@ -75,14 +89,33 @@ msgstr "Custom"
 msgid "BLSURF_ANGLE_MESH_S"
 msgstr "Angle Mesh S"
 
+msgid "BLSURF_ANGLE_MESH_C"
+msgstr "Angle Mesh C"
+
 msgid "BLSURF_GRADATION"
 msgstr "Gradation"
 
 msgid "BLSURF_DECIMESH"
 msgstr "Patch independent"
 
+msgid "BLSURF_VERBOSITY"
+msgstr "Verbosity level"
+
 msgid "BLSURF_ALLOW_QUADRANGLES"
 msgstr "Allow Quadrangles (Test)"
 
 msgid "BLSURF_TITLE"
 msgstr "Hypothesis Construction"
+
+msgid "ADD_OPTION"
+msgstr "Add option"
+
+msgid "REMOVE_OPTION"
+msgstr "Clear option"
+
+msgid "OPTION_NAME_COLUMN"
+msgstr "Option"
+
+msgid "OPTION_VALUE_COLUMN"
+msgstr "Value"
+

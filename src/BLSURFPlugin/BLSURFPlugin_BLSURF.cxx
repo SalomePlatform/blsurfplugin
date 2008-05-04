@@ -166,45 +166,65 @@ inline std::string to_string(int i)
    return o.str();
 }
 
-void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsurf_session_t *bls) {
+void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsurf_session_t *bls)
+{
+  int    _topology      = BLSURFPlugin_Hypothesis::GetDefaultTopology();
+  int    _physicalMesh  = BLSURFPlugin_Hypothesis::GetDefaultPhysicalMesh();
+  double _phySize       = BLSURFPlugin_Hypothesis::GetDefaultPhySize();
+  int    _geometricMesh = BLSURFPlugin_Hypothesis::GetDefaultGeometricMesh();
+  double _angleMeshS    = BLSURFPlugin_Hypothesis::GetDefaultAngleMeshS();
+  double _angleMeshC    = BLSURFPlugin_Hypothesis::GetDefaultAngleMeshC();
+  double _gradation     = BLSURFPlugin_Hypothesis::GetDefaultGradation();
+  bool   _quadAllowed   = BLSURFPlugin_Hypothesis::GetDefaultQuadAllowed();
+  bool   _decimesh      = BLSURFPlugin_Hypothesis::GetDefaultDecimesh();
+  int    _verb          = BLSURFPlugin_Hypothesis::GetDefaultVerbosity();
+
   if (hyp) {
     MESSAGE("BLSURFPlugin_BLSURF::SetParameters");
-    _topology = (int) hyp->GetTopology();
-    _physicalMesh = (int) hyp->GetPhysicalMesh();
-    _phySize = hyp->GetPhySize();
+    _topology      = (int) hyp->GetTopology();
+    _physicalMesh  = (int) hyp->GetPhysicalMesh();
+    _phySize       = hyp->GetPhySize();
     _geometricMesh = (int) hyp->GetGeometricMesh();
-    _angleMeshS = hyp->GetAngleMeshS();
-    _gradation = hyp->GetGradation();
-    _quadAllowed = hyp->GetQuadAllowed();
-    _decimesh = hyp->GetDecimesh();
+    _angleMeshS    = hyp->GetAngleMeshS();
+    _angleMeshC    = hyp->GetAngleMeshC();
+    _gradation     = hyp->GetGradation();
+    _quadAllowed   = hyp->GetQuadAllowed();
+    _decimesh      = hyp->GetDecimesh();
+    _verb          = hyp->GetVerbosity();
+
+    if ( hyp->GetPhyMin() != ::BLSURFPlugin_Hypothesis::undefinedDouble() )
+      blsurf_set_param(bls, "hphymin", to_string(hyp->GetPhyMin()).c_str());
+    if ( hyp->GetPhyMax() != ::BLSURFPlugin_Hypothesis::undefinedDouble() )
+      blsurf_set_param(bls, "hphymax", to_string(hyp->GetPhyMax()).c_str());
+    if ( hyp->GetGeoMin() != ::BLSURFPlugin_Hypothesis::undefinedDouble() )
+      blsurf_set_param(bls, "hgeomin", to_string(hyp->GetGeoMin()).c_str());
+    if ( hyp->GetGeoMax() != ::BLSURFPlugin_Hypothesis::undefinedDouble() )
+      blsurf_set_param(bls, "hgeomax", to_string(hyp->GetGeoMax()).c_str());
+
+    const BLSURFPlugin_Hypothesis::TOptionValues & opts = hyp->GetOptionValues();
+    BLSURFPlugin_Hypothesis::TOptionValues::const_iterator opIt;
+    for ( opIt = opts.begin(); opIt != opts.end(); ++opIt )
+      if ( !opIt->second.empty() )
+        blsurf_set_param(bls, opIt->first.c_str(), opIt->second.c_str());
+
   } else {
     MESSAGE("BLSURFPlugin_BLSURF::SetParameters using defaults");
-    _topology = BLSURFPlugin_Hypothesis::GetDefaultTopology();
-    _physicalMesh = BLSURFPlugin_Hypothesis::GetDefaultPhysicalMesh();
-    _phySize = BLSURFPlugin_Hypothesis::GetDefaultPhySize();
-    _geometricMesh = BLSURFPlugin_Hypothesis::GetDefaultGeometricMesh();
-    _angleMeshS = BLSURFPlugin_Hypothesis::GetDefaultAngleMeshS();
-    _gradation = BLSURFPlugin_Hypothesis::GetDefaultGradation();
-    _quadAllowed = BLSURFPlugin_Hypothesis::GetDefaultQuadAllowed();
-    _decimesh = BLSURFPlugin_Hypothesis::GetDefaultDecimesh();
-
   }
   
-  blsurf_set_param(bls, "topo_points", _topology > 0 ? "1" : "0");
-  blsurf_set_param(bls, "topo_curves", _topology > 0 ? "1" : "0");
-  blsurf_set_param(bls, "topo_project", _topology > 0 ? "1" : "0");
-  blsurf_set_param(bls, "clean_boundary", _topology > 1 ? "1" : "0");
-  blsurf_set_param(bls, "close_boundary", _topology > 1 ? "1" : "0");
-  blsurf_set_param(bls, "hphy_flag", to_string(_physicalMesh).c_str());
-  blsurf_set_param(bls, "hphydef", to_string(_phySize).c_str());
-  blsurf_set_param(bls, "hgeo_flag", to_string(_geometricMesh).c_str());
-  blsurf_set_param(bls, "angle_meshs", to_string(_angleMeshS).c_str());
-  blsurf_set_param(bls, "angle_meshc", to_string(_angleMeshS).c_str());
-  blsurf_set_param(bls, "gradation", to_string(_gradation).c_str());
-  //  blsurf_set_param(bls, "patch_independent", to_string(_decimesh).c_str());
+  blsurf_set_param(bls, "topo_points",       _topology > 0 ? "1" : "0");
+  blsurf_set_param(bls, "topo_curves",       _topology > 0 ? "1" : "0");
+  blsurf_set_param(bls, "topo_project",      _topology > 0 ? "1" : "0");
+  blsurf_set_param(bls, "clean_boundary",    _topology > 1 ? "1" : "0");
+  blsurf_set_param(bls, "close_boundary",    _topology > 1 ? "1" : "0");
+  blsurf_set_param(bls, "hphy_flag",         to_string(_physicalMesh).c_str());
+  blsurf_set_param(bls, "hphydef",           to_string(_phySize).c_str());
+  blsurf_set_param(bls, "hgeo_flag",         to_string(_geometricMesh).c_str());
+  blsurf_set_param(bls, "angle_meshs",       to_string(_angleMeshS).c_str());
+  blsurf_set_param(bls, "angle_meshc",       to_string(_angleMeshC).c_str());
+  blsurf_set_param(bls, "gradation",         to_string(_gradation).c_str());
   blsurf_set_param(bls, "patch_independent", _decimesh ? "1" : "0");
-  blsurf_set_param(bls, "element",  _quadAllowed ? "q1.0" : "p1");
-  blsurf_set_param(bls, "verb", "10");
+  blsurf_set_param(bls, "element",           _quadAllowed ? "q1.0" : "p1");
+  blsurf_set_param(bls, "verb",              to_string(_verb).c_str());
 }
 
 status_t curv_fun(real t, real *uv, real *dt, real *dtt, void *user_data);

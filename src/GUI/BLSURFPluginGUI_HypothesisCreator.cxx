@@ -30,8 +30,6 @@
 #include <SMESHGUI_Utils.h>
 #include <SMESHGUI_HypothesesUtils.h>
 
-#include CORBA_SERVER_HEADER(BLSURFPlugin_Algorithm)
-
 #include <SUIT_Session.h>
 
 #include <SalomeApp_Tools.h>
@@ -47,6 +45,17 @@
 #include <qcheckbox.h>
 #include <qpixmap.h>
 #include <qfontmetrics.h>
+#include <qtabbar.h>
+#include <qspinbox.h>
+#include <qpushbutton.h>
+#include <qcursor.h>
+#include <qpopupmenu.h>
+#include <qtable.h>
+#include <qapplication.h>
+
+#include <set>
+
+#define WITH_SIZE_BOUNDARIES
 
 enum Topology {
     FromCAD,
@@ -67,23 +76,35 @@ enum GeometricMesh
     UserDefined
   };
 
+enum {
+  STD_TAB = 0,
+  ADV_TAB,
+  OPTION_ID_COLUMN = 0,
+  OPTION_NAME_COLUMN,
+  OPTION_VALUE_COLUMN,
+  NB_COLUMNS
+};
+
 BLSURFPluginGUI_HypothesisCreator::BLSURFPluginGUI_HypothesisCreator( const QString& theHypType )
 : SMESHGUI_GenericHypothesisCreator( theHypType )
 {
-  
+  myPopup = 0;
 }
 
 BLSURFPluginGUI_HypothesisCreator::~BLSURFPluginGUI_HypothesisCreator()
 {
+  if ( myPopup )
+    delete myPopup;
 }
 
 bool BLSURFPluginGUI_HypothesisCreator::checkParams() const
 {
-  BlsurfHypothesisData data_old, data_new;
-  readParamsFromHypo( data_old );
-  readParamsFromWidgets( data_new );
-  bool res = storeParamsToHypo( data_new );
-  return res;
+//   BlsurfHypothesisData data_old, data_new;
+//   readParamsFromHypo( data_old );
+//   readParamsFromWidgets( data_new );
+//   bool res = storeParamsToHypo( data_new );
+//   return res;
+  return true;
 }
 
 QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
@@ -91,102 +112,203 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   QFrame* fr = new QFrame( 0, "myframe" );
   QVBoxLayout* lay = new QVBoxLayout( fr, 5, 0 );
 
-  QGroupBox* GroupC1 = new QGroupBox( 2, Qt::Horizontal, fr, "GroupC1" );
-  lay->addWidget( GroupC1 );
-  
-  GroupC1->setTitle( tr( "SMESH_ARGUMENTS"  ) );
-  GroupC1->layout()->setSpacing( 6 );
-  GroupC1->layout()->setMargin( 11 );
-  
+  // tab
+  QTabBar* tab = new QTabBar( fr, "QTabBar");
+  tab->setShape( QTabBar::RoundedAbove );
+  tab->insertTab( new QTab( tr( "SMESH_ARGUMENTS")), STD_TAB);
+  tab->insertTab( new QTab( tr( "GHS3D_ADV_ARGS")), ADV_TAB);
+  lay->addWidget( tab );
+
+  // basic parameters
+
+  myStdGroup = new QGroupBox( 2, Qt::Horizontal, fr, "myStdGroup" );
+  myStdGroup->layout()->setSpacing( 6 );
+  myStdGroup->layout()->setMargin( 11 );
+  lay->addWidget( myStdGroup );
+
   myName = 0;
   if( isCreation() ) {
-    new QLabel( tr( "SMESH_NAME" ), GroupC1 );
-    myName = new QLineEdit( GroupC1 );
+    new QLabel( tr( "SMESH_NAME" ), myStdGroup );
+    myName = new QLineEdit( myStdGroup );
   }
 
-  new QLabel( tr( "BLSURF_TOPOLOGY" ), GroupC1 );
-  myTopology = new QtxComboBox( GroupC1 );
+  new QLabel( tr( "BLSURF_PHY_MESH" ), myStdGroup );
+  myPhysicalMesh = new QtxComboBox( myStdGroup );
+  QStringList physicalTypes;
+  physicalTypes.append( QObject::tr( "BLSURF_DEFAULT_USER" ) );
+  physicalTypes.append( QObject::tr( "BLSURF_CUSTOM_USER" ) );
+  myPhysicalMesh->insertStringList( physicalTypes );
+
+  new QLabel( tr( "BLSURF_HPHYDEF" ), myStdGroup );
+  myPhySize = new QtxDblSpinBox( myStdGroup );
+  myPhySize->setMinValue( 1e-02 );
+  myPhySize->setMaxValue( 1e+02 );
+  myPhySize->setLineStep( 1 );
+
+#ifdef WITH_SIZE_BOUNDARIES
+  new QLabel( tr( "BLSURF_HPHYMIN" ), myStdGroup );
+  myPhyMin = new QtxDblSpinBox( myStdGroup );
+  myPhyMin->setMinValue( 1e-06 );
+  myPhyMin->setMaxValue( 1e+04 );
+  myPhyMin->setLineStep( 1 );
+
+  new QLabel( tr( "BLSURF_HPHYMAX" ), myStdGroup );
+  myPhyMax = new QtxDblSpinBox( myStdGroup );
+  myPhyMax->setMinValue( 1e-04 );
+  myPhyMax->setMaxValue( 1e+06 );
+  myPhyMax->setLineStep( 1 );
+#endif
+
+  new QLabel( tr( "BLSURF_GEOM_MESH" ), myStdGroup );
+  myGeometricMesh = new QtxComboBox( myStdGroup );
+  QStringList types;
+  types.append( QObject::tr( "BLSURF_DEFAULT_GEOM" ) );
+  types.append( QObject::tr( "BLSURF_CUSTOM_GEOM" ) );
+  myGeometricMesh->insertStringList( types );
+
+  new QLabel( tr( "BLSURF_ANGLE_MESH_S" ), myStdGroup );
+  myAngleMeshS = new QtxDblSpinBox( myStdGroup );
+  myAngleMeshS->setMinValue( 0 );
+  myAngleMeshS->setMaxValue( 16 );
+  myAngleMeshS->setLineStep( 0.5 );
+  
+  new QLabel( tr( "BLSURF_ANGLE_MESH_C" ), myStdGroup );
+  myAngleMeshC = new QtxDblSpinBox( myStdGroup );
+  myAngleMeshC->setMinValue( 0 );
+  myAngleMeshC->setMaxValue( 16 );
+  myAngleMeshC->setLineStep( 0.5 );
+  
+#ifdef WITH_SIZE_BOUNDARIES
+  new QLabel( tr( "BLSURF_HGEOMIN" ), myStdGroup );
+  myGeoMin = new QtxDblSpinBox( myStdGroup );
+  myGeoMin->setMinValue( 1e-06 );
+  myGeoMin->setMaxValue( 1e+04 );
+  myGeoMin->setLineStep( 1 );
+
+  new QLabel( tr( "BLSURF_HGEOMAX" ), myStdGroup );
+  myGeoMax = new QtxDblSpinBox( myStdGroup );
+  myGeoMax->setMinValue( 1e-04 );
+  myGeoMax->setMaxValue( 1e+06 );
+  myGeoMax->setLineStep( 1 );
+#endif
+
+  new QLabel( tr( "BLSURF_GRADATION" ), myStdGroup );
+  myGradation = new QtxDblSpinBox( myStdGroup );
+  myGradation->setMinValue( 1.1 );
+  myGradation->setMaxValue( 2.5 );
+  myGradation->setLineStep( 0.1 );
+
+  myAllowQuadrangles = new QCheckBox( tr( "BLSURF_ALLOW_QUADRANGLES" ), myStdGroup );
+  myStdGroup->addSpace(0);
+
+  myDecimesh = new QCheckBox( tr( "BLSURF_DECIMESH" ), myStdGroup );
+  myStdGroup->addSpace(0);
+
+
+
+  // advanced parameters
+
+  myAdvGroup = new QGroupBox( 3, Qt::Horizontal, fr, "myAdvGroup" );
+  lay->addWidget( myAdvGroup );
+  QFrame* anAdvFrame = new QFrame(myAdvGroup, "anAdvFrame");
+  QGridLayout* anAdvLayout = new QGridLayout(anAdvFrame, 5, 3);
+  anAdvLayout->setSpacing(6);
+  anAdvLayout->setAutoAdd(false);
+  
+  QLabel* aTopologyLabel = new QLabel( tr( "BLSURF_TOPOLOGY" ), anAdvFrame );
+  myTopology = new QtxComboBox( anAdvFrame );
   QStringList topologyTypes;
   topologyTypes.append( QObject::tr( "BLSURF_TOPOLOGY_CAD" ) );
   topologyTypes.append( QObject::tr( "BLSURF_TOPOLOGY_PROCESS" ) );
   topologyTypes.append( QObject::tr( "BLSURF_TOPOLOGY_PROCESS2" ) );
   myTopology->insertStringList( topologyTypes );
 
-  new QLabel( tr( "BLSURF_PHY_MESH" ), GroupC1 );
-  myPhysicalMesh = new QtxComboBox( GroupC1 );
-  QStringList physicalTypes;
-  physicalTypes.append( QObject::tr( "BLSURF_DEFAULT_USER" ) );
-  physicalTypes.append( QObject::tr( "BLSURF_CUSTOM_USER" ) );
-  myPhysicalMesh->insertStringList( physicalTypes );
+  QLabel* aVarbosityLabel = new QLabel( tr( "BLSURF_VERBOSITY" ), anAdvFrame );
+  myVerbosity = new QSpinBox( anAdvFrame );
+  myVerbosity->setMinValue( 0 );
+  myVerbosity->setMaxValue( 100 );
+  myVerbosity->setLineStep( 5 );
 
-  new QLabel( tr( "BLSURF_HPHYDEF" ), GroupC1 );
-  myPhySize = new QtxDblSpinBox( GroupC1 );
-  myPhySize->setMinValue( 1e-02 );
-  myPhySize->setMaxValue( 1e+02 );
-  myPhySize->setLineStep( 1 );
+  QButton* addBtn = new QPushButton(tr("ADD_OPTION"), anAdvFrame, "addBtn");
+  QButton* rmBtn = new QPushButton(tr("REMOVE_OPTION"), anAdvFrame, "rmBtn");
 
-  new QLabel( tr( "BLSURF_GEOM_MESH" ), GroupC1 );
-  myGeometricMesh = new QtxComboBox( GroupC1 );
-  QStringList types;
-  types.append( QObject::tr( "BLSURF_DEFAULT_GEOM" ) );
-  types.append( QObject::tr( "BLSURF_CUSTOM_GEOM" ) );
-  myGeometricMesh->insertStringList( types );
+  myOptionTable = new QTable( 0, NB_COLUMNS, anAdvFrame, "myOptionTable");
+  myOptionTable->hideColumn( OPTION_ID_COLUMN );
+  myOptionTable->horizontalHeader()->setLabel( OPTION_NAME_COLUMN, tr("OPTION_NAME_COLUMN"));
+  myOptionTable->horizontalHeader()->setLabel( OPTION_VALUE_COLUMN, tr("OPTION_VALUE_COLUMN"));
+  myOptionTable->setColumnReadOnly( OPTION_NAME_COLUMN, TRUE );
+  myOptionTable->setColumnReadOnly( OPTION_VALUE_COLUMN, FALSE );
+  myOptionTable->setLeftMargin( 0 );
 
-//   new QLabel( tr( "BLSURF_GROWTH_RATE" ), GroupC1 );
-//   myGrowthRate = new QtxDblSpinBox( GroupC1 );
-//   myGrowthRate->setMinValue( 0.1 );
-//   myGrowthRate->setMaxValue( 10 );
-//   myGrowthRate->setLineStep( 0.1 );
+  anAdvLayout->addWidget(aTopologyLabel, 0, 0);
+  anAdvLayout->addWidget(myTopology,     0, 1);
 
-  new QLabel( tr( "BLSURF_ANGLE_MESH_S" ), GroupC1 );
-  myAngleMeshS = new QtxDblSpinBox( GroupC1 );
-  myAngleMeshS->setMinValue( 0 );
-  myAngleMeshS->setMaxValue( 16 );
-  myAngleMeshS->setLineStep( 0.5 );
-  
-  new QLabel( tr( "BLSURF_GRADATION" ), GroupC1 );
-  myGradation = new QtxDblSpinBox( GroupC1 );
-  myGradation->setMinValue( 1.1 );
-  myGradation->setMaxValue( 2.5 );
-  myGradation->setLineStep( 0.1 );
+  anAdvLayout->addWidget(aVarbosityLabel, 1, 0);
+  anAdvLayout->addWidget(myVerbosity,     1, 1);
 
-//   new QLabel( tr( "BLSURF_SEG_PER_RADIUS" ), GroupC1 );
-//   myNbSegPerRadius = new QtxDblSpinBox( GroupC1 );
-//   myNbSegPerRadius->setMinValue( 0.2 );
-//   myNbSegPerRadius->setMaxValue( 5.0 );
+  anAdvLayout->addMultiCellWidget( myOptionTable, 2,4, 0,1 );
+  anAdvLayout->addWidget( addBtn,         2, 2);
+  anAdvLayout->addWidget( rmBtn,          3, 2);
 
-  myAllowQuadrangles = new QCheckBox( tr( "BLSURF_ALLOW_QUADRANGLES" ), GroupC1 );
-  GroupC1->addSpace(0);
-//   myIs2D = true;
+  anAdvLayout->setRowStretch( 4, 1 );
+  anAdvLayout->setColStretch( 9, 1 );
 
-  myDecimesh = new QCheckBox( tr( "BLSURF_DECIMESH" ), GroupC1 );
-  GroupC1->addSpace(0);
+  onTabSelected( STD_TAB );
 
-  connect( myGeometricMesh, SIGNAL( activated( int ) ), this, SLOT( onGeometricMeshChanged() ) );
-  connect( myPhysicalMesh,  SIGNAL( activated( int ) ), this, SLOT( onPhysicalMeshChanged() ) );
+  connect( tab,             SIGNAL( selected ( int ) ), this, SLOT( onTabSelected(int) ));
+  connect( myGeometricMesh, SIGNAL( activated( int ) ), this, SLOT( onGeometricMeshChanged() ));
+  connect( myPhysicalMesh,  SIGNAL( activated( int ) ), this, SLOT( onPhysicalMeshChanged() ));
+  connect( addBtn,          SIGNAL( clicked()),         this, SLOT( onAddOption() ));
+  connect( rmBtn,           SIGNAL( clicked()),         this, SLOT( onDeleteOption() ));
 
   return fr;
 }
 
 void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
 {
+  BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
+
   BlsurfHypothesisData data;
-  readParamsFromHypo( data );
+  that->readParamsFromHypo( data );
 
   if( myName ) {
     myName->setText( data.myName );
     QFontMetrics metrics( myName->font() );
     myName->setMinimumWidth( metrics.width( data.myName )+5 );
   }
-  myTopology->setCurrentItem( data.myTopology );
-  myPhysicalMesh->setCurrentItem( data.myPhysicalMesh );
-  myPhySize->setValue( data.myPhySize );
-  myGeometricMesh->setCurrentItem( data.myGeometricMesh );
-  myAngleMeshS->setValue( data.myAngleMeshS);
-  myGradation->setValue( data.myGradation);
-  myAllowQuadrangles->setChecked( data.myAllowQuadrangles );
-  myDecimesh->setChecked( data.myDecimesh );
+  myTopology        ->setCurrentItem( data.myTopology );
+  myPhysicalMesh    ->setCurrentItem( data.myPhysicalMesh );
+  myPhySize         ->setValue      ( data.myPhySize );
+#ifdef WITH_SIZE_BOUNDARIES
+  myPhyMin          ->setValue      ( data.myPhyMin );
+  myPhyMax          ->setValue      ( data.myPhyMax );
+  myGeoMin          ->setValue      ( data.myGeoMin );
+  myGeoMax          ->setValue      ( data.myGeoMax );
+#endif
+  myGeometricMesh   ->setCurrentItem( data.myGeometricMesh );
+  myAngleMeshS      ->setValue      ( data.myAngleMeshS);
+  myAngleMeshC      ->setValue      ( data.myAngleMeshC);
+  myGradation       ->setValue      ( data.myGradation);
+  myAllowQuadrangles->setChecked    ( data.myAllowQuadrangles );
+  myDecimesh        ->setChecked    ( data.myDecimesh );
+  myVerbosity       ->setValue      ( data.myVerbosity);
 
+  if ( myOptions.operator->() ) {
+    BLSURFPluginGUI_HypothesisCreator* that = const_cast<BLSURFPluginGUI_HypothesisCreator*>(this);
+    for ( int i = 0, nb = myOptions->length(); i < nb; ++i ) {
+      QString option = that->myOptions[i].in();
+      QStringList name_value = QStringList::split( ":", option );
+      if ( name_value.size() > 1 ) {
+        QString idStr = QString("%1").arg( i );
+        int row = myOptionTable->numRows();
+        myOptionTable->insertRows( row );
+        myOptionTable->setText( row, OPTION_ID_COLUMN, idStr);
+        myOptionTable->setText( row, OPTION_NAME_COLUMN, name_value[0]);
+        myOptionTable->setText( row, OPTION_VALUE_COLUMN, name_value[1] );
+      }
+    } 
+  }
+  myOptionTable->adjustColumn( OPTION_NAME_COLUMN );
   // update widgets
 
   bool isPhysicalCustom = (myPhysicalMesh->currentItem() == PhysicalUserDefined);
@@ -194,26 +316,17 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
 
   bool isCustom = (myGeometricMesh->currentItem() == UserDefined);
   myAngleMeshS->setEnabled(isCustom);
+  myAngleMeshC->setEnabled(isCustom);
   myGradation->setEnabled(isCustom);
 }
 
 QString BLSURFPluginGUI_HypothesisCreator::storeParams() const
 {
+  BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
+
   BlsurfHypothesisData data;
-  readParamsFromWidgets( data );
-  storeParamsToHypo( data );
-
-  QString guiHyp;
-  guiHyp += tr("BLSURF_TOPOLOGY") + " = " + QString::number( data.myTopology ) + "; ";
-  guiHyp += tr("BLSURF_PHY_MESH") + " = " + QString::number( data.myPhysicalMesh ) + "; ";
-  guiHyp += tr("BLSURF_HPHYDEF") + " = " + QString::number( data.myPhySize ) + "; ";
-  guiHyp += tr("BLSURF_GEOM_MESH") + " = " + QString::number( data.myGeometricMesh ) + "; ";
-  guiHyp += tr("BLSURF_ANGLE_MESH_S") + " = " + QString::number( data.myAngleMeshS ) + "; ";
-  guiHyp += tr("BLSURF_GRADATION") + " = " + QString::number( data.myGradation ) + "; ";
-  guiHyp += tr("BLSURF_ALLOW_QUADRANGLES") + " = " + QString(data.myAllowQuadrangles ? "yes" : "no") + "; ";
-  guiHyp += tr("BLSURF_DECIMESH") + " = " + QString(data.myDecimesh ? "yes" : "no") + "; ";
-
-  cout << "guiHyp : " << guiHyp << endl;
+  QString guiHyp = that->readParamsFromWidgets( data );
+  that->storeParamsToHypo( data );
 
   return guiHyp;
 }
@@ -226,14 +339,25 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   HypothesisData* data = SMESH::GetHypothesisData( hypType() );
   h_data.myName = isCreation() && data ? hypName() : "";
 
-  h_data.myTopology = (int) h->GetTopology();
-  h_data.myPhysicalMesh = (int) h->GetPhysicalMesh();
-  h_data.myPhySize = h->GetPhySize();
-  h_data.myGeometricMesh = (int) h->GetGeometricMesh();
-  h_data.myAngleMeshS = h->GetAngleMeshS();
-  h_data.myGradation = h->GetGradation();
+  h_data.myTopology         = (int) h->GetTopology();
+  h_data.myPhysicalMesh     = (int) h->GetPhysicalMesh();
+  h_data.myPhySize          = h->GetPhySize();
+#ifdef WITH_SIZE_BOUNDARIES
+  h_data.myPhyMin           = h->GetPhyMin();
+  h_data.myPhyMax           = h->GetPhyMax();
+  h_data.myGeoMin           = h->GetGeoMin();
+  h_data.myGeoMax           = h->GetGeoMax();
+#endif
+  h_data.myGeometricMesh    = (int) h->GetGeometricMesh();
+  h_data.myAngleMeshS       = h->GetAngleMeshS();
+  h_data.myAngleMeshC       = h->GetAngleMeshC();
+  h_data.myGradation        = h->GetGradation();
   h_data.myAllowQuadrangles = h->GetQuadAllowed();
-  h_data.myDecimesh = h->GetDecimesh();
+  h_data.myDecimesh         = h->GetDecimesh();
+  h_data.myVerbosity        = h->GetVerbosity();
+
+  BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
+  that->myOptions = h->GetOptionValues();
 
   return true;
 }
@@ -263,14 +387,31 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
       h->SetQuadAllowed( h_data.myAllowQuadrangles );
     if ( h->GetDecimesh() != h_data.myDecimesh )
       h->SetDecimesh( h_data.myDecimesh );
+    if ( h->GetVerbosity() != h_data.myVerbosity )
+      h->SetVerbosity( h_data.myVerbosity );
 
-    if( (int) h_data.myPhysicalMesh == PhysicalUserDefined &&
-        h->GetPhySize() != h_data.myPhySize)
-      h->SetPhySize( h_data.myPhySize );
+    if( (int) h_data.myPhysicalMesh == PhysicalUserDefined ) {
+      if ( h->GetPhySize() != h_data.myPhySize )
+        h->SetPhySize( h_data.myPhySize );
+  }
+    if( (int) h_data.myGeometricMesh == UserDefined ) {
+      if ( h->GetAngleMeshS() != h_data.myAngleMeshS )
+        h->SetAngleMeshS( h_data.myAngleMeshS );
+      if ( h->GetAngleMeshC() != h_data.myAngleMeshC )
+        h->SetAngleMeshC( h_data.myAngleMeshC );
+    }
+#ifdef WITH_SIZE_BOUNDARIES
+      if ( h->GetPhyMin() != h_data.myPhyMin )
+        h->SetPhyMin( h_data.myPhyMin );
+      if ( h->GetPhyMax() != h_data.myPhyMax )
+        h->SetPhyMax( h_data.myPhyMax );
+      if ( h->GetGeoMin() != h_data.myGeoMin )
+        h->SetGeoMin( h_data.myGeoMin );
+      if ( h->GetGeoMax() != h_data.myGeoMax )
+        h->SetGeoMax( h_data.myGeoMax );
+#endif
 
-    if( (int) h_data.myGeometricMesh == UserDefined &&
-        h->GetAngleMeshS() != h_data.myAngleMeshS )
-      h->SetAngleMeshS( h_data.myAngleMeshS );
+    h->SetOptionValues( myOptions );
   }
   catch(const SALOME::SALOME_Exception& ex)
   {
@@ -280,19 +421,62 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
   return ok;
 }
 
-bool BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothesisData& h_data ) const
+QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothesisData& h_data ) const
 {
   h_data.myName             = myName ? myName->text() : "";
   h_data.myTopology         = myTopology->currentItem();
   h_data.myPhysicalMesh     = myPhysicalMesh->currentItem();
   h_data.myPhySize          = myPhySize->value();
+#ifdef WITH_SIZE_BOUNDARIES
+  h_data.myPhyMin           = myPhyMin->value();
+  h_data.myPhyMax           = myPhyMax->value();
+  h_data.myGeoMin           = myGeoMin->value();
+  h_data.myGeoMax           = myGeoMax->value();
+#endif
   h_data.myGeometricMesh    = myGeometricMesh->currentItem();
   h_data.myAngleMeshS       = myAngleMeshS->value();
+  h_data.myAngleMeshC       = myAngleMeshC->value();
   h_data.myGradation        = myGradation->value();
   h_data.myAllowQuadrangles = myAllowQuadrangles->isChecked();
   h_data.myDecimesh         = myDecimesh->isChecked();
+  h_data.myVerbosity        = myVerbosity->value();
 
-  return true;
+  QString guiHyp;
+  guiHyp += tr("BLSURF_TOPOLOGY") + " = " + QString::number( h_data.myTopology ) + "; ";
+  guiHyp += tr("BLSURF_PHY_MESH") + " = " + QString::number( h_data.myPhysicalMesh ) + "; ";
+  guiHyp += tr("BLSURF_HPHYDEF") + " = " + QString::number( h_data.myPhySize ) + "; ";
+  guiHyp += tr("BLSURF_GEOM_MESH") + " = " + QString::number( h_data.myGeometricMesh ) + "; ";
+  guiHyp += tr("BLSURF_ANGLE_MESH_S") + " = " + QString::number( h_data.myAngleMeshS ) + "; ";
+  guiHyp += tr("BLSURF_GRADATION") + " = " + QString::number( h_data.myGradation ) + "; ";
+  guiHyp += tr("BLSURF_ALLOW_QUADRANGLES") + " = " + QString(h_data.myAllowQuadrangles ? "yes" : "no") + "; ";
+  guiHyp += tr("BLSURF_DECIMESH") + " = " + QString(h_data.myDecimesh ? "yes" : "no") + "; ";
+#ifdef WITH_SIZE_BOUNDARIES
+  guiHyp += "hphymin = " + QString::number( h_data.myPhyMin ) + "; ";
+  guiHyp += "hphymax = " + QString::number( h_data.myPhyMax ) + "; ";
+  guiHyp += "hgeomin = " + QString::number( h_data.myGeoMin ) + "; ";
+  guiHyp += "hgeomax = " + QString::number( h_data.myGeoMax ) + "; ";
+#endif
+
+  BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
+  int row = 0, nbRows = myOptionTable->numRows();
+  for ( ; row < nbRows; ++row )
+  {
+    int id = myOptionTable->text( row, OPTION_ID_COLUMN ).toInt();
+    if ( id >= 0 && id < myOptions->length() )
+    {
+      QString name = myOptionTable->text( row, OPTION_NAME_COLUMN );
+      QString value = myOptionTable->text( row, OPTION_VALUE_COLUMN );
+      if ( !value )
+        value = "";
+      that->myOptions[ id ] = ( name + ":" + value).latin1();
+      if ( value != "" )
+        guiHyp += name + " = " + value + "; ";
+    }
+  }
+
+  cout << "guiHyp : " << guiHyp << endl;
+
+  return guiHyp;
 }
 
 void BLSURFPluginGUI_HypothesisCreator::onPhysicalMeshChanged() {
@@ -319,6 +503,7 @@ void BLSURFPluginGUI_HypothesisCreator::onPhysicalMeshChanged() {
 void BLSURFPluginGUI_HypothesisCreator::onGeometricMeshChanged() {
   bool isCustom = (myGeometricMesh->currentItem() == UserDefined);
   myAngleMeshS->setEnabled(isCustom);
+  myAngleMeshC->setEnabled(isCustom);
   myGradation->setEnabled(isCustom);
 
   if ( ! isCustom ) {
@@ -331,6 +516,7 @@ void BLSURFPluginGUI_HypothesisCreator::onGeometricMeshChanged() {
         break;
       }
     myAngleMeshS->setValue( aAngleMeshS );
+    myAngleMeshC->setValue( aAngleMeshS );
     myGradation->setValue( aGradation );
     //  hphy_flag = 0 and hgeo_flag = 0 is not allowed (spec)
     if ( myPhysicalMesh->currentItem() == DefaultSize ) {
@@ -340,6 +526,79 @@ void BLSURFPluginGUI_HypothesisCreator::onGeometricMeshChanged() {
   }
 }
 
+void BLSURFPluginGUI_HypothesisCreator::onTabSelected(int tab)
+{
+  if ( tab == STD_TAB ) {
+    myAdvGroup->hide();
+    myStdGroup->show();
+  }
+  else {
+    myStdGroup->hide();
+    myAdvGroup->show();
+  }
+  qApp->processEvents();
+  dlg()->adjustSize();
+}
+
+void BLSURFPluginGUI_HypothesisCreator::onAddOption()
+{
+  if (!myPopup) {
+    // fill popup with option names
+    myPopup = new QPopupMenu();
+    if ( myOptions.operator->() ) {
+      for ( int i = 0, nb = myOptions->length(); i < nb; ++i ) {
+        QString name_value = myOptions[i].in();
+        QString name = QStringList::split( ":", name_value )[0];
+        myPopup->insertItem( name, i );
+      }
+    }
+    connect( myPopup, SIGNAL( activated( int ) ), SLOT( onOptionChosenInPopup( int ) ) );
+  }
+  if ( myPopup && myPopup->text(0) )
+    myPopup->exec( QCursor::pos() );
+}
+
+void BLSURFPluginGUI_HypothesisCreator::onOptionChosenInPopup(int i)
+{
+  QString idStr = QString("%1").arg( i );
+  QString option = myOptions[i].in();
+  QString optionName = QStringList::split( ":", option )[0];
+
+  // look for a row with optionName
+  int row = 0, nbRows = myOptionTable->numRows();
+  for ( ; row < nbRows; ++row )
+    if ( myOptionTable->text( row, OPTION_ID_COLUMN ) == idStr )
+      break;
+  // add a row if not found
+  if ( row == nbRows )
+    myOptionTable->insertRows( nbRows );
+
+  myOptionTable->setText( row, OPTION_ID_COLUMN, idStr);
+  myOptionTable->setText( row, OPTION_NAME_COLUMN, optionName);
+  myOptionTable->editCell( row, OPTION_VALUE_COLUMN );
+  myOptionTable->adjustColumn( OPTION_NAME_COLUMN );
+}
+    
+void BLSURFPluginGUI_HypothesisCreator::onDeleteOption()
+{
+  // clear option values and remember selected row
+  std::set<int> selectedRows;
+  int row = 0, nbRows = myOptionTable->numRows();
+  for ( ; row < nbRows; ++row ) {
+    if ( myOptionTable->isRowSelected( row )) {
+      selectedRows.insert( row );
+      int id = myOptionTable->text( row, OPTION_ID_COLUMN ).toInt();
+      if ( id >= 0 && id < myOptions->length() )
+        myOptions[ id ] = myOptionTable->text( row, OPTION_NAME_COLUMN );
+    }
+  }
+  // remove selected rows
+  std::set<int>::reverse_iterator r = selectedRows.rbegin();
+  for ( ; r != selectedRows.rend(); ++r )
+    myOptionTable->removeRow ( *r );
+}
+
+ 
 QString BLSURFPluginGUI_HypothesisCreator::caption() const
 {
   return tr( "BLSURF_TITLE" );

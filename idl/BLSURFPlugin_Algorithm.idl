@@ -26,12 +26,15 @@
 #define _SMESH_BLSURFALGORITHM_IDL_
 
 #include "SMESH_Hypothesis.idl"
+#include "SALOME_Exception.idl"
 
 /*!
  * BLSURFPlugin: interfaces to BLSURF related hypotheses and algorithms
  */
 module BLSURFPlugin
 {
+  typedef sequence<string> string_array;
+
   /*!
    * BLSURFPlugin_BLSURF: interface of BLSURF algorithm
    */
@@ -67,18 +70,48 @@ module BLSURFPlugin
     double GetPhySize();
 
     /*!
+     * Sets lower boundary of mesh element size (PhySize)
+     */
+    void SetPhyMin(in double theMinSize);
+    double GetPhyMin();
+
+    /*!
+     * Sets upper boundary of mesh element size (PhySize)
+     */
+    void SetPhyMax(in double theMaxSize);
+    double GetPhyMax();
+
+    /*!
      * Sets a way to define maximum angular deflection of mesh from CAD model
      * 0 - deflection is defined automatically
-     * 1 - deflection is set by SetAngleMeshS() method
+     * 1 - deflection is set by SetAngleMeshS() and SetAngleMeshC() methods
      */
     void SetGeometricMesh(in long isCustom);
     long GetGeometricMesh();
 
     /*!
-     * Sets angular deflection (in degrees) of mesh from CAD model
+     * Sets angular deflection (in degrees) of a mesh face from CAD surface
      */
     void SetAngleMeshS(in double angle);
     double GetAngleMeshS();
+
+    /*!
+     * Sets angular deflection (in degrees) of a mesh edge from CAD curve
+     */
+    void SetAngleMeshC(in double angle);
+    double GetAngleMeshC();
+
+    /*!
+     * Sets lower boundary of mesh element size computed to respect angular deflection
+     */
+    void SetGeoMin(in double theMinSize);
+    double GetGeoMin();
+
+    /*!
+     * Sets upper boundary of mesh element size computed to respect angular deflection
+     */
+    void SetGeoMax(in double theMaxSize);
+    double GetGeoMax();
 
     /*!
      * Sets maximal allowed ratio between the lengths of two adjacent edges
@@ -97,6 +130,37 @@ module BLSURFPlugin
      */
     void SetDecimesh(in boolean toIgnoreEdges);
     boolean GetDecimesh();
+
+    /*!
+     * Sets verbosity level in the range 0 to 100.
+     */
+    void SetVerbosity(in short theVal) raises (SALOME::SALOME_Exception);
+    short GetVerbosity();
+
+    /*!
+     * Sets advanced option value
+     */
+    void SetOptionValue(in string optionName,
+                        in string optionValue) raises (SALOME::SALOME_Exception);
+    string GetOptionValue(in string optionName) raises (SALOME::SALOME_Exception);
+    /*!
+     * Unsets advanced option
+     */
+    void UnsetOption(in string optionName);
+
+    /*!
+     * Return array of strings each of which is option name concatenated
+     * with option value devided by semicolon - "option_name:option_value".
+     * Option value is empty if an option is not set.
+     * Note: the method is mostly for interaction with GUI.
+     */
+    string_array GetOptionValues();
+
+    /*!
+     * Set option values each in the form "option_name[:option_value]".
+     * Note: the method is mostly for interaction with GUI.
+     */
+    void SetOptionValues(in string_array options);
   };
 
 };

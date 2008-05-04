@@ -60,15 +60,15 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
   protected:
     const BLSURFPlugin_Hypothesis* _hypothesis;
 
-  private:
-    int    _topology;
-    int    _physicalMesh;
-    double _phySize;
-    int    _geometricMesh;
-    double _angleMeshS;
-    double _gradation;
-    bool   _quadAllowed;
-    bool   _decimesh;
+//   private:
+//     int    _topology;
+//     int    _physicalMesh;
+//     double _phySize;
+//     int    _geometricMesh;
+//     double _angleMeshS;
+//     double _gradation;
+//     bool   _quadAllowed;
+//     bool   _decimesh;
 };
 
 #endif

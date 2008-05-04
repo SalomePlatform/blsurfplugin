@@ -59,11 +59,26 @@ class BLSURFPlugin_Hypothesis_i:
   void SetPhySize(CORBA::Double theValue);
   CORBA::Double GetPhySize();
 
+  void SetPhyMin(CORBA::Double theMinSize);
+  CORBA::Double GetPhyMin();
+
+  void SetPhyMax(CORBA::Double theMaxSize);
+  CORBA::Double GetPhyMax();
+
   void SetGeometricMesh(CORBA::Long theValue);
   CORBA::Long GetGeometricMesh();
 
   void SetAngleMeshS(CORBA::Double theValue);
   CORBA::Double GetAngleMeshS();
+
+  void SetAngleMeshC(CORBA::Double angle);
+  CORBA::Double GetAngleMeshC();
+
+  void SetGeoMin(CORBA::Double theMinSize);
+  CORBA::Double GetGeoMin();
+
+  void SetGeoMax(CORBA::Double theMaxSize);
+  CORBA::Double GetGeoMax();
 
   void SetGradation(CORBA::Double theValue);
   CORBA::Double GetGradation();
@@ -73,6 +88,19 @@ class BLSURFPlugin_Hypothesis_i:
 
   void SetDecimesh(CORBA::Boolean theValue);
   CORBA::Boolean GetDecimesh();
+
+  void SetVerbosity(CORBA::Short theVal) throw (SALOME::SALOME_Exception);
+  CORBA::Short GetVerbosity();
+
+  void SetOptionValue(const char* optionName,
+                      const char* optionValue) throw (SALOME::SALOME_Exception);
+  char* GetOptionValue(const char* optionName) throw (SALOME::SALOME_Exception);
+
+  void UnsetOption(const char* optionName);
+
+  BLSURFPlugin::string_array* GetOptionValues();
+
+  void SetOptionValues(const BLSURFPlugin::string_array& options) throw (SALOME::SALOME_Exception);
 
   // Get implementation
   ::BLSURFPlugin_Hypothesis* GetImpl();

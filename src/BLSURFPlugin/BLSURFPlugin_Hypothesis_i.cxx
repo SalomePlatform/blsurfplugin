@@ -411,8 +411,9 @@ void BLSURFPlugin_Hypothesis_i::SetOptionValue(const char* optionName,
   catch (SALOME_Exception& ex) {
     THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
   }
-  SMESH::TPythonDump() << _this() << ".SetOptionValue( '"
-                       << optionName << "', '" << optionValue << "' )";
+  if ( valueChanged )
+    SMESH::TPythonDump() << _this() << ".SetOptionValue( '"
+                         << optionName << "', '" << optionValue << "' )";
 }
 
 //=============================================================================

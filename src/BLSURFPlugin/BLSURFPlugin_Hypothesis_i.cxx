@@ -488,7 +488,7 @@ void BLSURFPlugin_Hypothesis_i::SetOptionValues(const BLSURFPlugin::string_array
     else {
       name = name_value.substr( 0, colonPos);
       if ( colonPos < name_value.size()-1 && name_value[colonPos] != ' ')
-        value = name_value.substr( colonPos );
+        value = name_value.substr( colonPos+1 );
     }
     SetOptionValue( name.c_str(), value.c_str() );
   }

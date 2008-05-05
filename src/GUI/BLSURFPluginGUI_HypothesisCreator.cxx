@@ -345,11 +345,15 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
 
   bool isPhysicalCustom = (myPhysicalMesh->currentItem() == PhysicalUserDefined);
   myPhySize->setEnabled(isPhysicalCustom);
+  myPhyMax->setEnabled(isPhysicalCustom);
+  myPhyMin->setEnabled(isPhysicalCustom);
 
   bool isCustom = (myGeometricMesh->currentItem() == UserDefined);
   myAngleMeshS->setEnabled(isCustom);
   myAngleMeshC->setEnabled(isCustom);
   myGradation->setEnabled(isCustom);
+  myGeoMax->setEnabled(isCustom);
+  myGeoMin->setEnabled(isCustom);
 }
 
 QString BLSURFPluginGUI_HypothesisCreator::storeParams() const
@@ -544,6 +548,8 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
 void BLSURFPluginGUI_HypothesisCreator::onPhysicalMeshChanged() {
   bool isCustom = (myPhysicalMesh->currentItem() == PhysicalUserDefined);
   myPhySize->setEnabled(isCustom);
+  myPhyMax->setEnabled(isCustom);
+  myPhyMin->setEnabled(isCustom);
 
   if ( ! isCustom ) {
     double aPhySize;
@@ -567,6 +573,8 @@ void BLSURFPluginGUI_HypothesisCreator::onGeometricMeshChanged() {
   myAngleMeshS->setEnabled(isCustom);
   myAngleMeshC->setEnabled(isCustom);
   myGradation->setEnabled(isCustom);
+  myGeoMax->setEnabled(isCustom);
+  myGeoMin->setEnabled(isCustom);
 
   if ( ! isCustom ) {
     double aAngleMeshS, aGradation;

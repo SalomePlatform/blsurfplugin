@@ -592,11 +592,11 @@ status_t surf_fun(real *uv, real *xyz, real*du, real *dv,
 status_t message_callback(message_t *msg, void *user_data)
 {
   integer errnumber = 0;
+  char *desc;
   message_get_number(msg, &errnumber);
+  message_get_description(msg, &desc);
   if ( errnumber < 0 ) {
-    char *desc;
     string * error = (string*)user_data;
-    message_get_description(msg, &desc);
 //   if ( !error->empty() )
 //     *error += "\n";
     // remove ^A from the tail
@@ -604,6 +604,9 @@ status_t message_callback(message_t *msg, void *user_data)
     while (len > 0 && desc[len-1] != '\n')
       len--;
     error->append( desc, len );
+  }
+  else {
+    cout << desc;
   }
   return STATUS_OK;
 }

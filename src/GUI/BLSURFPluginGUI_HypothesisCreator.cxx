@@ -97,13 +97,37 @@ BLSURFPluginGUI_HypothesisCreator::~BLSURFPluginGUI_HypothesisCreator()
     delete myPopup;
 }
 
+namespace {
+  inline bool isDouble( const QString& theText, const bool emptyOK=false ) {
+    QString str = theText.stripWhiteSpace();
+    bool isOk = true;
+    if ( !str.isEmpty() )
+      str.toDouble(&isOk);
+    else
+      isOk = emptyOK;
+    return isOk;
+  }
+}
+
 bool BLSURFPluginGUI_HypothesisCreator::checkParams() const
 {
-//   BlsurfHypothesisData data_old, data_new;
-//   readParamsFromHypo( data_old );
-//   readParamsFromWidgets( data_new );
-//   bool res = storeParamsToHypo( data_new );
-//   return res;
+  if ( !isDouble( myPhyMin->text(), true )) {
+    myPhyMin->selectAll();
+    return false;
+  }
+  if ( !isDouble( myPhyMax->text(), true )) {
+    myPhyMax->selectAll();
+    return false;
+  }
+  if ( !isDouble( myGeoMin->text(), true )) {
+    myGeoMin->selectAll();
+    return false;
+  }
+  if ( !isDouble( myGeoMin->text(), true )) {
+    myGeoMin->selectAll();
+    return false;
+  }
+
   return true;
 }
 
@@ -147,16 +171,18 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 
 #ifdef WITH_SIZE_BOUNDARIES
   new QLabel( tr( "BLSURF_HPHYMIN" ), myStdGroup );
-  myPhyMin = new QtxDblSpinBox( myStdGroup );
-  myPhyMin->setMinValue( 1e-06 );
-  myPhyMin->setMaxValue( 1e+04 );
-  myPhyMin->setLineStep( 1 );
+  myPhyMin = new QLineEdit( myStdGroup );
+//   myPhyMin = new QtxDblSpinBox( myStdGroup );
+//   myPhyMin->setMinValue( 1e-06 );
+//   myPhyMin->setMaxValue( 1e+04 );
+//   myPhyMin->setLineStep( 1 );
 
   new QLabel( tr( "BLSURF_HPHYMAX" ), myStdGroup );
-  myPhyMax = new QtxDblSpinBox( myStdGroup );
-  myPhyMax->setMinValue( 1e-04 );
-  myPhyMax->setMaxValue( 1e+06 );
-  myPhyMax->setLineStep( 1 );
+  myPhyMax = new QLineEdit( myStdGroup );
+//   myPhyMax = new QtxDblSpinBox( myStdGroup );
+//   myPhyMax->setMinValue( 1e-04 );
+//   myPhyMax->setMaxValue( 1e+06 );
+//   myPhyMax->setLineStep( 1 );
 #endif
 
   new QLabel( tr( "BLSURF_GEOM_MESH" ), myStdGroup );
@@ -178,25 +204,27 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   myAngleMeshC->setMaxValue( 16 );
   myAngleMeshC->setLineStep( 0.5 );
   
-#ifdef WITH_SIZE_BOUNDARIES
-  new QLabel( tr( "BLSURF_HGEOMIN" ), myStdGroup );
-  myGeoMin = new QtxDblSpinBox( myStdGroup );
-  myGeoMin->setMinValue( 1e-06 );
-  myGeoMin->setMaxValue( 1e+04 );
-  myGeoMin->setLineStep( 1 );
-
-  new QLabel( tr( "BLSURF_HGEOMAX" ), myStdGroup );
-  myGeoMax = new QtxDblSpinBox( myStdGroup );
-  myGeoMax->setMinValue( 1e-04 );
-  myGeoMax->setMaxValue( 1e+06 );
-  myGeoMax->setLineStep( 1 );
-#endif
-
   new QLabel( tr( "BLSURF_GRADATION" ), myStdGroup );
   myGradation = new QtxDblSpinBox( myStdGroup );
   myGradation->setMinValue( 1.1 );
   myGradation->setMaxValue( 2.5 );
   myGradation->setLineStep( 0.1 );
+
+#ifdef WITH_SIZE_BOUNDARIES
+  new QLabel( tr( "BLSURF_HGEOMIN" ), myStdGroup );
+  myGeoMin = new QLineEdit( myStdGroup );
+//   myGeoMin = new QtxDblSpinBox( myStdGroup );
+//   myGeoMin->setMinValue( 1e-06 );
+//   myGeoMin->setMaxValue( 1e+04 );
+//   myGeoMin->setLineStep( 1 );
+
+  new QLabel( tr( "BLSURF_HGEOMAX" ), myStdGroup );
+  myGeoMax = new QLineEdit( myStdGroup );
+//   myGeoMax = new QtxDblSpinBox( myStdGroup );
+//   myGeoMax->setMinValue( 1e-04 );
+//   myGeoMax->setMaxValue( 1e+06 );
+//   myGeoMax->setLineStep( 1 );
+#endif
 
   myAllowQuadrangles = new QCheckBox( tr( "BLSURF_ALLOW_QUADRANGLES" ), myStdGroup );
   myStdGroup->addSpace(0);
@@ -280,10 +308,14 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
   myPhysicalMesh    ->setCurrentItem( data.myPhysicalMesh );
   myPhySize         ->setValue      ( data.myPhySize );
 #ifdef WITH_SIZE_BOUNDARIES
-  myPhyMin          ->setValue      ( data.myPhyMin );
-  myPhyMax          ->setValue      ( data.myPhyMax );
-  myGeoMin          ->setValue      ( data.myGeoMin );
-  myGeoMax          ->setValue      ( data.myGeoMax );
+  myPhyMin          ->setText       ( data.myPhyMin );
+  myPhyMax          ->setText       ( data.myPhyMax );
+  myGeoMin          ->setText       ( data.myGeoMin );
+  myGeoMax          ->setText       ( data.myGeoMax );
+//   myPhyMin          ->setValue      ( data.myPhyMin );
+//   myPhyMax          ->setValue      ( data.myPhyMax );
+//   myGeoMin          ->setValue      ( data.myGeoMin );
+//   myGeoMax          ->setValue      ( data.myGeoMax );
 #endif
   myGeometricMesh   ->setCurrentItem( data.myGeometricMesh );
   myAngleMeshS      ->setValue      ( data.myAngleMeshS);
@@ -342,12 +374,6 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   h_data.myTopology         = (int) h->GetTopology();
   h_data.myPhysicalMesh     = (int) h->GetPhysicalMesh();
   h_data.myPhySize          = h->GetPhySize();
-#ifdef WITH_SIZE_BOUNDARIES
-  h_data.myPhyMin           = h->GetPhyMin();
-  h_data.myPhyMax           = h->GetPhyMax();
-  h_data.myGeoMin           = h->GetGeoMin();
-  h_data.myGeoMax           = h->GetGeoMax();
-#endif
   h_data.myGeometricMesh    = (int) h->GetGeometricMesh();
   h_data.myAngleMeshS       = h->GetAngleMeshS();
   h_data.myAngleMeshC       = h->GetAngleMeshC();
@@ -355,6 +381,22 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   h_data.myAllowQuadrangles = h->GetQuadAllowed();
   h_data.myDecimesh         = h->GetDecimesh();
   h_data.myVerbosity        = h->GetVerbosity();
+
+#ifdef WITH_SIZE_BOUNDARIES
+  double PhyMin = h->GetPhyMin();
+  double PhyMax = h->GetPhyMax();
+  double GeoMin = h->GetGeoMin();
+  double GeoMax = h->GetGeoMax();
+  if ( PhyMin > 0 )
+  h_data.myPhyMin = PhyMin > 0 ? QString::number( h->GetPhyMin() ) : QString("");
+  h_data.myPhyMax = PhyMax > 0 ? QString::number( h->GetPhyMax() ) : QString("");
+  h_data.myGeoMin = GeoMin > 0 ? QString::number( h->GetGeoMin() ) : QString("");
+  h_data.myGeoMax = GeoMax > 0 ? QString::number( h->GetGeoMax() ) : QString("");
+//   h_data.myPhyMin           = h->GetPhyMin();
+//   h_data.myPhyMax           = h->GetPhyMax();
+//   h_data.myGeoMin           = h->GetGeoMin();
+//   h_data.myGeoMax           = h->GetGeoMax();
+#endif
 
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
   that->myOptions = h->GetOptionValues();
@@ -401,14 +443,30 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
         h->SetAngleMeshC( h_data.myAngleMeshC );
     }
 #ifdef WITH_SIZE_BOUNDARIES
-      if ( h->GetPhyMin() != h_data.myPhyMin )
-        h->SetPhyMin( h_data.myPhyMin );
-      if ( h->GetPhyMax() != h_data.myPhyMax )
-        h->SetPhyMax( h_data.myPhyMax );
-      if ( h->GetGeoMin() != h_data.myGeoMin )
-        h->SetGeoMin( h_data.myGeoMin );
-      if ( h->GetGeoMax() != h_data.myGeoMax )
-        h->SetGeoMax( h_data.myGeoMax );
+    if ( !isDouble( h_data.myPhyMin ))
+      h->SetPhyMin( -1 );
+    else if ( h->GetPhyMin() != h_data.myPhyMin.toDouble() )
+      h->SetPhyMin( h_data.myPhyMin.toDouble() );
+    if ( !isDouble( h_data.myPhyMax ))
+      h->SetPhyMax( -1 );
+    else if ( h->GetPhyMax() != h_data.myPhyMax.toDouble() )
+      h->SetPhyMax( h_data.myPhyMax.toDouble() );
+    if ( !isDouble( h_data.myGeoMin ))
+      h->SetGeoMin( -1 );
+    else if ( h->GetGeoMin() != h_data.myGeoMin.toDouble() )
+      h->SetGeoMin( h_data.myGeoMin.toDouble() );
+    if ( !isDouble( h_data.myGeoMax ))
+      h->SetGeoMax( -1 );
+    else if ( h->GetGeoMax() != h_data.myGeoMax.toDouble() )
+      h->SetGeoMax( h_data.myGeoMax.toDouble() );
+//       if ( h->GetPhyMin() != h_data.myPhyMin )
+//         h->SetPhyMin( h_data.myPhyMin );
+//       if ( h->GetPhyMax() != h_data.myPhyMax )
+//         h->SetPhyMax( h_data.myPhyMax );
+//       if ( h->GetGeoMin() != h_data.myGeoMin )
+//         h->SetGeoMin( h_data.myGeoMin );
+//       if ( h->GetGeoMax() != h_data.myGeoMax )
+//         h->SetGeoMax( h_data.myGeoMax );
 #endif
 
     h->SetOptionValues( myOptions );
@@ -428,10 +486,14 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
   h_data.myPhysicalMesh     = myPhysicalMesh->currentItem();
   h_data.myPhySize          = myPhySize->value();
 #ifdef WITH_SIZE_BOUNDARIES
-  h_data.myPhyMin           = myPhyMin->value();
-  h_data.myPhyMax           = myPhyMax->value();
-  h_data.myGeoMin           = myGeoMin->value();
-  h_data.myGeoMax           = myGeoMax->value();
+  h_data.myPhyMin           = myPhyMin->text();
+  h_data.myPhyMax           = myPhyMax->text();
+  h_data.myGeoMin           = myGeoMin->text();
+  h_data.myGeoMax           = myGeoMax->text();
+//   h_data.myPhyMin           = myPhyMin->value();
+//   h_data.myPhyMax           = myPhyMax->value();
+//   h_data.myGeoMin           = myGeoMin->value();
+//   h_data.myGeoMax           = myGeoMax->value();
 #endif
   h_data.myGeometricMesh    = myGeometricMesh->currentItem();
   h_data.myAngleMeshS       = myAngleMeshS->value();
@@ -451,10 +513,10 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
   guiHyp += tr("BLSURF_ALLOW_QUADRANGLES") + " = " + QString(h_data.myAllowQuadrangles ? "yes" : "no") + "; ";
   guiHyp += tr("BLSURF_DECIMESH") + " = " + QString(h_data.myDecimesh ? "yes" : "no") + "; ";
 #ifdef WITH_SIZE_BOUNDARIES
-  guiHyp += "hphymin = " + QString::number( h_data.myPhyMin ) + "; ";
-  guiHyp += "hphymax = " + QString::number( h_data.myPhyMax ) + "; ";
-  guiHyp += "hgeomin = " + QString::number( h_data.myGeoMin ) + "; ";
-  guiHyp += "hgeomax = " + QString::number( h_data.myGeoMax ) + "; ";
+  if ( isDouble( h_data.myPhyMin )) guiHyp += "hphymin = " + h_data.myPhyMin + "; ";
+  if ( isDouble( h_data.myPhyMax )) guiHyp += "hphymax = " + h_data.myPhyMax + "; ";
+  if ( isDouble( h_data.myGeoMin )) guiHyp += "hgeomin = " + h_data.myGeoMin + "; ";
+  if ( isDouble( h_data.myGeoMax )) guiHyp += "hgeomax = " + h_data.myGeoMax + "; ";
 #endif
 
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;

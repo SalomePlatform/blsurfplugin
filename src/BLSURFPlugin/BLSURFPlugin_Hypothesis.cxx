@@ -479,13 +479,13 @@ double BLSURFPlugin_Hypothesis::GetDefaultPhySize()
 //======================================================================
 double BLSURFPlugin_Hypothesis::GetDefaultMaxSize()
 {
-  return 1e+4;
+  return undefinedDouble(); // 1e+4;
 }
 
 //======================================================================
 double BLSURFPlugin_Hypothesis::GetDefaultMinSize()
 {
-  return 1e-4;
+  return undefinedDouble(); //1e-4;
 }
 
 //======================================================================

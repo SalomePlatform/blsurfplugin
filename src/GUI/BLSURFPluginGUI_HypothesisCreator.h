@@ -44,8 +44,9 @@ typedef struct
 {
   int     myTopology, myVerbosity;
   int     myPhysicalMesh, myGeometricMesh;
-  double  myPhySize, myPhyMin, myPhyMax, myAngleMeshS, myAngleMeshC, myGradation;
-  double  myGeoMin, myGeoMax;
+  double  myPhySize, myAngleMeshS, myAngleMeshC, myGradation;
+  QString myGeoMin, myGeoMax, myPhyMin, myPhyMax;
+//   double  myGeoMin, myGeoMax, myPhyMin, myPhyMax;
   bool    myAllowQuadrangles, myDecimesh;
   QString myName;
 
@@ -96,13 +97,17 @@ private:
   QLineEdit*       myName;
   QtxComboBox*     myPhysicalMesh;
   QtxDblSpinBox*   myPhySize;
-  QtxDblSpinBox*   myPhyMin;
-  QtxDblSpinBox*   myPhyMax;
+//   QtxDblSpinBox*   myPhyMin;
+//   QtxDblSpinBox*   myPhyMax;
+  QLineEdit*       myPhyMin;
+  QLineEdit*       myPhyMax;
   QtxComboBox*     myGeometricMesh;
   QtxDblSpinBox*   myAngleMeshS;
   QtxDblSpinBox*   myAngleMeshC;
-  QtxDblSpinBox*   myGeoMin;
-  QtxDblSpinBox*   myGeoMax;
+  QLineEdit*       myGeoMin;
+  QLineEdit*       myGeoMax;
+//   QtxDblSpinBox*   myGeoMin;
+//   QtxDblSpinBox*   myGeoMax;
   QtxDblSpinBox*   myGradation;
   QCheckBox*       myAllowQuadrangles;
   QCheckBox*       myDecimesh;

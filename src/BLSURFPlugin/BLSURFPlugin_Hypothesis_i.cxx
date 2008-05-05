@@ -159,8 +159,10 @@ CORBA::Double BLSURFPlugin_Hypothesis_i::GetPhySize()
 void BLSURFPlugin_Hypothesis_i::SetPhyMin(CORBA::Double theMinSize)
 {
   ASSERT(myBaseImpl);
-  this->GetImpl()->SetPhyMin(theMinSize);
-  SMESH::TPythonDump() << _this() << ".SetPhyMin( " << theMinSize << " )";
+  if ( GetPhyMin() != theMinSize ) {
+    this->GetImpl()->SetPhyMin(theMinSize);
+    SMESH::TPythonDump() << _this() << ".SetPhyMin( " << theMinSize << " )";
+  }
 }
 
 //=============================================================================
@@ -175,8 +177,10 @@ CORBA::Double BLSURFPlugin_Hypothesis_i::GetPhyMin()
 void BLSURFPlugin_Hypothesis_i::SetPhyMax(CORBA::Double theMaxSize)
 {
   ASSERT(myBaseImpl);
-  this->GetImpl()->SetPhyMax(theMaxSize);
-  SMESH::TPythonDump() << _this() << ".SetPhyMax( " << theMaxSize << " )";
+  if ( GetPhyMax() != theMaxSize ) {
+    this->GetImpl()->SetPhyMax(theMaxSize);
+    SMESH::TPythonDump() << _this() << ".SetPhyMax( " << theMaxSize << " )";
+  }
 }
 
 //=============================================================================
@@ -264,8 +268,11 @@ CORBA::Double BLSURFPlugin_Hypothesis_i::GetAngleMeshC()
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetGeoMin(CORBA::Double theMinSize)
 {
-  this->GetImpl()->SetGeoMin(theMinSize);
-  SMESH::TPythonDump() << _this() << ".SetGeoMin( " << theMinSize << " )";
+  ASSERT(myBaseImpl);
+  if ( GetGeoMin() != theMinSize ) {
+    this->GetImpl()->SetGeoMin(theMinSize);
+    SMESH::TPythonDump() << _this() << ".SetGeoMin( " << theMinSize << " )";
+  }
 }
 
 //=============================================================================
@@ -278,8 +285,11 @@ CORBA::Double BLSURFPlugin_Hypothesis_i::GetGeoMin()
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetGeoMax(CORBA::Double theMaxSize)
 {
-  this->GetImpl()->SetGeoMax(theMaxSize);
-  SMESH::TPythonDump() << _this() << ".SetGeoMax( " << theMaxSize << " )";
+  ASSERT(myBaseImpl);
+  if ( GetGeoMax() != theMaxSize ) {
+    this->GetImpl()->SetGeoMax(theMaxSize);
+    SMESH::TPythonDump() << _this() << ".SetGeoMax( " << theMaxSize << " )";
+  }
 }
 
 //=============================================================================

@@ -119,3 +119,5 @@ msgstr "Option"
 msgid "OPTION_VALUE_COLUMN"
 msgstr "Value"
 
+msgid "OBIGATORY_VALUE"
+msgstr "(Obigatory value)"

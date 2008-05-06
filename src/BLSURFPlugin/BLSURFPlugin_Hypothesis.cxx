@@ -56,7 +56,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis (int hypId, int studyId,
   //_phyMin = _phyMax = _hgeoMin = _hgeoMax = undefinedDouble();
   
 
-  const char* optionNames[] = {
+  const char* intOptionNames[] = {
     "addsurf_ivertex",
     "background",
     "CheckAdjacentEdges",
@@ -83,6 +83,9 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis (int hypId, int studyId,
     "surforient",
     "tconf",
     "topo_collapse",
+    "" // mark of end
+  };
+  const char* doubleOptionNames[] = {
     "addsurf_angle",
     "addsurf_R",
     "addsurf_H",
@@ -98,16 +101,30 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis (int hypId, int studyId,
     "LSS",
     "topo_eps1",
     "topo_eps2",
+    "" // mark of end
+  };
+  const char* charOptionNames[] = {
     "export_format",
     "export_option",
     "import_option",
     "prefix",
     "" // mark of end
   };
-  int i = 0;
-  while ( optionNames[i][0] )
-    _option2value[ optionNames[i++] ].clear();
 
+  int i = 0;
+  while ( intOptionNames[i][0] )
+    _option2value[ intOptionNames[i++] ].clear();
+
+  i = 0;
+  while ( doubleOptionNames[i][0] ) {
+    _doubleOptions.insert( doubleOptionNames[i] );
+    _option2value[ doubleOptionNames[i++] ].clear();
+  }
+  i = 0;
+  while ( charOptionNames[i][0] ) {
+    _charOptions.insert( charOptionNames[i] );
+    _option2value[ charOptionNames[i++] ].clear();
+  }
 }
 
 //=============================================================================
@@ -251,15 +268,50 @@ void BLSURFPlugin_Hypothesis::SetVerbosity(int theVal)
 }
 //=============================================================================
 void BLSURFPlugin_Hypothesis::SetOptionValue(const string& optionName,
-                                             const string& optionValue) throw (SALOME_Exception)
+                                             const string& optionValue)
+  throw (std::invalid_argument)
 {
   TOptionValues::iterator op_val = _option2value.find( optionName );
   if ( op_val == _option2value.end() ) {
-    string msg = "Unknown BLSURF option: <";
-    msg += optionName + ">";
-    throw SALOME_Exception(msg.c_str());
+    string msg = "Unknown BLSURF option: '" + optionName + "'";
+    throw std::invalid_argument(msg);
   }
   if ( op_val->second != optionValue ) {
+    const char* ptr = optionValue.c_str();
+    // strip white spaces
+    while ( ptr[0] == ' ' )
+      ptr++;
+    int i = strlen( ptr );
+    while ( i != 0 && ptr[i-1] == ' ')
+      i--;
+    // check value type
+    bool typeOk = true;
+    string typeName;
+    if ( i == 0 ) {
+      // empty string
+    }
+    else if ( _charOptions.find( optionName ) != _charOptions.end() ) {
+      // do not check strings
+    }
+    else if ( _doubleOptions.find( optionName ) != _doubleOptions.end() ) {
+      // check if value is double
+      char * endPtr;
+      strtod(ptr, &endPtr);
+      typeOk = ( ptr != endPtr );
+      typeName = "real";
+    }
+    else {
+      // check if value is int
+      char * endPtr;
+      strtol(ptr, &endPtr,10);
+      typeOk = ( ptr != endPtr );
+      typeName = "integer";
+    }
+    if ( !typeOk ) {
+      string msg = "Advanced option '" + optionName + "' = '" + optionValue +
+        "' but must be " + typeName;
+      throw std::invalid_argument(msg);
+    }
     op_val->second = optionValue;
     NotifySubMeshesHypothesisModification();
   }
@@ -267,13 +319,13 @@ void BLSURFPlugin_Hypothesis::SetOptionValue(const string& optionName,
 
 //=============================================================================
 string BLSURFPlugin_Hypothesis::GetOptionValue(const string& optionName)
-  throw (SALOME_Exception)
+  throw (std::invalid_argument)
 {
   TOptionValues::iterator op_val = _option2value.find( optionName );
   if ( op_val == _option2value.end() ) {
     string msg = "Unknown BLSURF option: <";
     msg += optionName + ">";
-    throw SALOME_Exception(msg.c_str());
+    throw std::invalid_argument(msg);
   }
   return op_val->second;
 }

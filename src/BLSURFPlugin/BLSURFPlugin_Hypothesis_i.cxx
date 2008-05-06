@@ -33,6 +33,8 @@ using namespace std;
 #include "Utils_CorbaException.hxx"
 #include "utilities.h"
 
+#include <stdexcept>
+
 //=============================================================================
 /*!
  *  BLSURFPlugin_Hypothesis_i::BLSURFPlugin_Hypothesis_i
@@ -418,6 +420,14 @@ void BLSURFPlugin_Hypothesis_i::SetOptionValue(const char* optionName,
     if ( valueChanged )
       this->GetImpl()->SetOptionValue(optionName, optionValue);
   }
+  catch (const std::invalid_argument& ex) {
+    SALOME::ExceptionStruct ExDescription;
+    ExDescription.text = ex.what();
+    ExDescription.type = SALOME::BAD_PARAM;
+    ExDescription.sourceFile = "BLSURFPlugin_Hypothesis::SetOptionValue(name,value)";
+    ExDescription.lineNumber = 0;
+    throw SALOME::SALOME_Exception(ExDescription);
+  }
   catch (SALOME_Exception& ex) {
     THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
   }
@@ -434,6 +444,14 @@ char* BLSURFPlugin_Hypothesis_i::GetOptionValue(const char* optionName)
   ASSERT(myBaseImpl);
   try {
     return CORBA::string_dup( this->GetImpl()->GetOptionValue(optionName).c_str() );
+  }
+  catch (const std::invalid_argument& ex) {
+    SALOME::ExceptionStruct ExDescription;
+    ExDescription.text = ex.what();
+    ExDescription.type = SALOME::BAD_PARAM;
+    ExDescription.sourceFile = "BLSURFPlugin_Hypothesis::GetOptionValue(name)";
+    ExDescription.lineNumber = 0;
+    throw SALOME::SALOME_Exception(ExDescription);
   }
   catch (SALOME_Exception& ex) {
     THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );

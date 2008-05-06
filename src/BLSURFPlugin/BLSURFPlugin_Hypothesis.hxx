@@ -31,8 +31,9 @@
 #define _BLSURFPlugin_Hypothesis_HXX_
 
 #include "SMESH_Hypothesis.hxx"
-#include "Utils_SALOME_Exception.hxx"
 #include <map>
+#include <set>
+#include <stdexcept>
 
 //  Parameters for work of BLSURF
 
@@ -115,10 +116,11 @@ public:
   static double undefinedDouble() { return -1.0; }
 
   typedef std::map< std::string, std::string > TOptionValues;
+  typedef std::set< std::string >              TOptionNames;
 
   void SetOptionValue(const std::string& optionName,
-                      const std::string& optionValue) throw (SALOME_Exception);
-  string GetOptionValue(const std::string& optionName) throw (SALOME_Exception);
+                      const std::string& optionValue) throw (std::invalid_argument);
+  string GetOptionValue(const std::string& optionName) throw (std::invalid_argument);
   void ClearOption(const std::string& optionName);
   const TOptionValues& GetOptionValues() const { return _option2value; }
 
@@ -147,6 +149,7 @@ private:
   bool          _decimesh;
   int           _verb;
   TOptionValues _option2value;
+  TOptionNames  _doubleOptions, _charOptions;
 };
 
 #endif

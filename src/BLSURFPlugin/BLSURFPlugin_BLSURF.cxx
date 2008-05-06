@@ -204,8 +204,12 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
     const BLSURFPlugin_Hypothesis::TOptionValues & opts = hyp->GetOptionValues();
     BLSURFPlugin_Hypothesis::TOptionValues::const_iterator opIt;
     for ( opIt = opts.begin(); opIt != opts.end(); ++opIt )
-      if ( !opIt->second.empty() )
+      if ( !opIt->second.empty() ) {
+#ifdef _DEBUG_
+        cout << "blsurf_set_param(): " << opIt->first << " = " << opIt->second << endl;
+#endif
         blsurf_set_param(bls, opIt->first.c_str(), opIt->second.c_str());
+      }
 
   } else {
     MESSAGE("BLSURFPlugin_BLSURF::SetParameters using defaults");

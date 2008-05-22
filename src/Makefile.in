@@ -30,6 +30,10 @@ VPATH=.:@srcdir@
 
 @COMMENCE@
 
-SUBDIRS = BLSURFPlugin GUI
+SUBDIRS = BLSURFPlugin
+
+ifeq (@WITHIHM@,yes)
+  SUBDIRS += GUI
+endif
 
 @MODULE@

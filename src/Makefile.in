@@ -32,7 +32,7 @@ VPATH=.:@srcdir@
 
 SUBDIRS = BLSURFPlugin
 
-ifeq (@WITHIHM@,yes)
+ifeq (@WITHGUI@,yes)
   SUBDIRS += GUI
 endif
 

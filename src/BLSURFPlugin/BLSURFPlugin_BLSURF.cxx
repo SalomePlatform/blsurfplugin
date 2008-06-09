@@ -69,6 +69,10 @@ extern "C"{
 #include <TopTools_IndexedMapOfShape.hxx>
 #include <BRepTools.hxx>
 
+#ifndef WNT
+#include <fenv.h>
+#endif
+
 //=============================================================================
 /*!
  *  
@@ -343,20 +347,24 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   cout << "Beginning of Surface Mesh generation" << endl;
   cout << endl;
 
-  status_t status = STATUS_ERROR;
+  // Issue 0019864. On DebianSarge, FE signals do not obey to OSD::SetSignal(false)
+#ifndef WNT
+  feclearexcept( FE_ALL_EXCEPT );
+  int oldFEFlags = fedisableexcept( FE_ALL_EXCEPT );
+#endif
+
+    status_t status = STATUS_ERROR;
 
   try {
     OCC_CATCH_SIGNALS;
+
     status = blsurf_compute_mesh(bls);
+
   }
   catch ( std::exception& exc ) {
-//     if ( !_comment.empty() )
-//       _comment += "\n";
     _comment += exc.what();
   }
   catch (Standard_Failure& ex) {
-//     if ( !_comment.empty() )
-//       _comment += "\n";
     _comment += ex.DynamicType()->Name();
     if ( ex.GetMessageString() && strlen( ex.GetMessageString() )) {
       _comment += ": ";
@@ -373,7 +381,6 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     context_delete(ctx);
 
     return error(_comment);
-    //return false;
   }
 
   cout << endl;
@@ -486,6 +493,13 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   cad_delete(c);
 
   context_delete(ctx);
+
+  // Issue 0019864. On DebianSarge, FE signals do not obey to OSD::SetSignal(false)
+#ifndef WNT
+  if ( oldFEFlags > 0 )    
+    feenableexcept( oldFEFlags );
+  feclearexcept( FE_ALL_EXCEPT );
+#endif
 
   return true;
 }

@@ -302,6 +302,8 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       cad_edge_t *edg = cad_edge_new(fce, ic, tmin, tmax, curv_fun, curves.back());
       cad_edge_set_tag(edg, ic);
       cad_edge_set_property(edg, EDGE_PROPERTY_SOFT_REQUIRED);
+      if (e.Orientation() == TopAbs_INTERNAL)
+        cad_edge_set_property(edg, EDGE_PROPERTY_INTERNAL);
 
       int npts = 0;
       int ip1, ip2, *ip;

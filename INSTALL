@@ -1,5 +1,1 @@
-This is the version 4.1.0 of BLSURFPLUGIN
-Compatible with :
-	- KERNEL 4.1.0
-	- GUI 4.1.0
-        - SMESH 4.1.0
+SALOME2 : BLSURFPLUGIN module (SMESH plugin)

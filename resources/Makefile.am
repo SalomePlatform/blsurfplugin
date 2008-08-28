@@ -26,10 +26,14 @@
 include $(top_srcdir)/adm_local/unix/make_common_starter.am
 
 dist_salomeres_DATA =			\
+	BLSURFPlugin.xml		\
+	SalomeApp.xml
+
+if BLSURFPLUGIN_ENABLE_GUI
+  dist_salomeres_DATA +=		\
 	BLSURF.png			\
 	mesh_algo_BLSURF.png		\
 	mesh_hypo_BLSURF.png		\
 	mesh_tree_algo_BLSURF.png	\
-	mesh_tree_hypo_BLSURF.png	\
-	BLSURFPlugin.xml		\
-	SalomeApp.xml
+	mesh_tree_hypo_BLSURF.png
+endif

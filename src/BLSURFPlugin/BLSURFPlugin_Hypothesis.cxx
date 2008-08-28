@@ -1,32 +1,29 @@
-//  BLSURFPlugin : C++ implementation
+// Copyright (C) 2006-2008 OPEN CASCADE, CEA/DEN, EDF R&D
 //
-//  Copyright (C) 2006  OPEN CASCADE, CEA/DEN, EDF R&D
-// 
-//  This library is free software; you can redistribute it and/or 
-//  modify it under the terms of the GNU Lesser General Public 
-//  License as published by the Free Software Foundation; either 
-//  version 2.1 of the License. 
-// 
-//  This library is distributed in the hope that it will be useful, 
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU 
-//  Lesser General Public License for more details. 
-// 
-//  You should have received a copy of the GNU Lesser General Public 
-//  License along with this library; if not, write to the Free Software 
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA 
-// 
-//  See http://www.opencascade.org/SALOME/ or email : webmaster.salome@opencascade.org 
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License.
 //
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
 //
-// File      : BLSURFPlugin_Hypothesis.cxx
-// Authors   : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
-//             & Aurelien ALLEAUME (DISTENE)
-// Date      : 28/03/2006
-// Project   : SALOME
-//=============================================================================
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//
+// See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
+//
+// ---
+//
+// File    : BLSURFPlugin_Hypothesis.cxx
+// Authors : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
+//           & Aurelien ALLEAUME (DISTENE)
+//
+// ---
 
-using namespace std;
 #include <BLSURFPlugin_Hypothesis.hxx>
 #include <utilities.h>
 
@@ -267,13 +264,13 @@ void BLSURFPlugin_Hypothesis::SetVerbosity(int theVal)
   }
 }
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetOptionValue(const string& optionName,
-                                             const string& optionValue)
+void BLSURFPlugin_Hypothesis::SetOptionValue(const std::string& optionName,
+                                             const std::string& optionValue)
   throw (std::invalid_argument)
 {
   TOptionValues::iterator op_val = _option2value.find( optionName );
   if ( op_val == _option2value.end() ) {
-    string msg = "Unknown BLSURF option: '" + optionName + "'";
+    std::string msg = "Unknown BLSURF option: '" + optionName + "'";
     throw std::invalid_argument(msg);
   }
   if ( op_val->second != optionValue ) {
@@ -286,7 +283,7 @@ void BLSURFPlugin_Hypothesis::SetOptionValue(const string& optionName,
       i--;
     // check value type
     bool typeOk = true;
-    string typeName;
+    std::string typeName;
     if ( i == 0 ) {
       // empty string
     }
@@ -308,7 +305,7 @@ void BLSURFPlugin_Hypothesis::SetOptionValue(const string& optionName,
       typeName = "integer";
     }
     if ( !typeOk ) {
-      string msg = "Advanced option '" + optionName + "' = '" + optionValue +
+      std::string msg = "Advanced option '" + optionName + "' = '" + optionValue +
         "' but must be " + typeName;
       throw std::invalid_argument(msg);
     }
@@ -318,12 +315,12 @@ void BLSURFPlugin_Hypothesis::SetOptionValue(const string& optionName,
 }
 
 //=============================================================================
-string BLSURFPlugin_Hypothesis::GetOptionValue(const string& optionName)
+std::string BLSURFPlugin_Hypothesis::GetOptionValue(const std::string& optionName)
   throw (std::invalid_argument)
 {
   TOptionValues::iterator op_val = _option2value.find( optionName );
   if ( op_val == _option2value.end() ) {
-    string msg = "Unknown BLSURF option: <";
+    std::string msg = "Unknown BLSURF option: <";
     msg += optionName + ">";
     throw std::invalid_argument(msg);
   }
@@ -331,7 +328,7 @@ string BLSURFPlugin_Hypothesis::GetOptionValue(const string& optionName)
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::ClearOption(const string& optionName)
+void BLSURFPlugin_Hypothesis::ClearOption(const std::string& optionName)
 {
   TOptionValues::iterator op_val = _option2value.find( optionName );
   if ( op_val != _option2value.end() )
@@ -339,7 +336,7 @@ void BLSURFPlugin_Hypothesis::ClearOption(const string& optionName)
 }
 
 //=============================================================================
-ostream & BLSURFPlugin_Hypothesis::SaveTo(ostream & save)
+std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save)
 {
   save << " " << (int)_topology
        << " " << (int)_physicalMesh
@@ -367,7 +364,7 @@ ostream & BLSURFPlugin_Hypothesis::SaveTo(ostream & save)
 }
 
 //=============================================================================
-istream & BLSURFPlugin_Hypothesis::LoadFrom(istream & load)
+std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
 {
   bool isOK = true;
   int i;
@@ -377,93 +374,93 @@ istream & BLSURFPlugin_Hypothesis::LoadFrom(istream & load)
   if (isOK)
     _topology = (Topology) i;
   else
-    load.clear(ios::badbit | load.rdstate());
+    load.clear(std::ios::badbit | load.rdstate());
 
   isOK = (load >> i);
   if (isOK)
     _physicalMesh = (PhysicalMesh) i;
   else
-    load.clear(ios::badbit | load.rdstate());
+    load.clear(std::ios::badbit | load.rdstate());
 
   isOK = (load >> i);
   if (isOK)
     _geometricMesh = (GeometricMesh) i;
   else
-    load.clear(ios::badbit | load.rdstate());
+    load.clear(std::ios::badbit | load.rdstate());
 
   isOK = (load >> val);
   if (isOK)
     _phySize = val;
   else
-    load.clear(ios::badbit | load.rdstate());
+    load.clear(std::ios::badbit | load.rdstate());
 
   isOK = (load >> val);
   if (isOK)
     _angleMeshS = val;
   else
-    load.clear(ios::badbit | load.rdstate());
+    load.clear(std::ios::badbit | load.rdstate());
 
   isOK = (load >> val);
   if (isOK)
     _gradation = val;
   else
-    load.clear(ios::badbit | load.rdstate());
+    load.clear(std::ios::badbit | load.rdstate());
 
   isOK = (load >> i);
   if (isOK)
     _quadAllowed = (bool) i;
   else
-    load.clear(ios::badbit | load.rdstate());
+    load.clear(std::ios::badbit | load.rdstate());
 
   isOK = (load >> i);
   if (isOK)
     _decimesh = (bool) i;
   else
-    load.clear(ios::badbit | load.rdstate());
+    load.clear(std::ios::badbit | load.rdstate());
 
   isOK = (load >> val);
   if (isOK)
     _phyMin = val;
   else
-    load.clear(ios::badbit | load.rdstate());
+    load.clear(std::ios::badbit | load.rdstate());
   
   isOK = (load >> val);
   if (isOK)
     _phyMax = val;
   else
-    load.clear(ios::badbit | load.rdstate());
+    load.clear(std::ios::badbit | load.rdstate());
   
   isOK = (load >> val);
   if (isOK)
     _angleMeshC = val;
   else
-    load.clear(ios::badbit | load.rdstate());
+    load.clear(std::ios::badbit | load.rdstate());
   
   isOK = (load >> val);
   if (isOK)
     _hgeoMin = val;
   else
-    load.clear(ios::badbit | load.rdstate());
+    load.clear(std::ios::badbit | load.rdstate());
   
   isOK = (load >> val);
   if (isOK)
     _hgeoMax = val;
   else
-    load.clear(ios::badbit | load.rdstate());
+    load.clear(std::ios::badbit | load.rdstate());
   
   isOK = (load >> i);
   if (isOK)
     _verb = i;
   else
-    load.clear(ios::badbit | load.rdstate());
+    load.clear(std::ios::badbit | load.rdstate());
 
-  string optName, optValue;
+  std::string optName, optValue;
   while (isOK) {
     isOK = (load >> optName);
     if (isOK)
       isOK = (load >> optValue);
     if (isOK) {
-      string & value = _option2value[ optName ];
+      std::string & value = _option2value[ optName ];
       value = optValue;
       int len = value.size();
       // continue reading until "%#" encountered
@@ -487,13 +484,13 @@ istream & BLSURFPlugin_Hypothesis::LoadFrom(istream & load)
 }
 
 //=============================================================================
-ostream & operator <<(ostream & save, BLSURFPlugin_Hypothesis & hyp)
+std::ostream & operator <<(std::ostream & save, BLSURFPlugin_Hypothesis & hyp)
 {
   return hyp.SaveTo( save );
 }
 
 //=============================================================================
-istream & operator >>(istream & load, BLSURFPlugin_Hypothesis & hyp)
+std::istream & operator >>(std::istream & load, BLSURFPlugin_Hypothesis & hyp)
 {
   return hyp.LoadFrom( load );
 }

@@ -1,31 +1,28 @@
-//  BLSURFPlugin : C++ implementation
+// Copyright (C) 2006-2008 OPEN CASCADE, CEA/DEN, EDF R&D
 //
-//  Copyright (C) 2006  OPEN CASCADE, CEA/DEN, EDF R&D
-// 
-//  This library is free software; you can redistribute it and/or 
-//  modify it under the terms of the GNU Lesser General Public 
-//  License as published by the Free Software Foundation; either 
-//  version 2.1 of the License. 
-// 
-//  This library is distributed in the hope that it will be useful, 
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU 
-//  Lesser General Public License for more details. 
-// 
-//  You should have received a copy of the GNU Lesser General Public 
-//  License along with this library; if not, write to the Free Software 
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA 
-// 
-//  See http://www.opencascade.org/SALOME/ or email : webmaster.salome@opencascade.org 
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License.
 //
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
 //
-// File      : BLSURFPlugin_Hypothesis.hxx
-// Authors   : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
-//             & Aurelien ALLEAUME (DISTENE)
-// Date      : 27/03/2006
-// Project   : SALOME
-// $Header$
-//=============================================================================
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//
+// See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
+//
+// ---
+//
+// File    : BLSURFPlugin_Hypothesis.hxx
+// Authors : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
+//           & Aurelien ALLEAUME (DISTENE)
+//
+// ---
 
 #ifndef _BLSURFPlugin_Hypothesis_HXX_
 #define _BLSURFPlugin_Hypothesis_HXX_
@@ -34,6 +31,7 @@
 #include <map>
 #include <set>
 #include <stdexcept>
+#include <string>
 
 //  Parameters for work of BLSURF
 
@@ -120,15 +118,15 @@ public:
 
   void SetOptionValue(const std::string& optionName,
                       const std::string& optionValue) throw (std::invalid_argument);
-  string GetOptionValue(const std::string& optionName) throw (std::invalid_argument);
+  std::string GetOptionValue(const std::string& optionName) throw (std::invalid_argument);
   void ClearOption(const std::string& optionName);
   const TOptionValues& GetOptionValues() const { return _option2value; }
 
   // Persistence
-  virtual ostream & SaveTo(ostream & save);
-  virtual istream & LoadFrom(istream & load);
-  friend ostream & operator <<(ostream & save, BLSURFPlugin_Hypothesis & hyp);
-  friend istream & operator >>(istream & load, BLSURFPlugin_Hypothesis & hyp);
+  virtual std::ostream & SaveTo(std::ostream & save);
+  virtual std::istream & LoadFrom(std::istream & load);
+  friend std::ostream & operator <<(std::ostream & save, BLSURFPlugin_Hypothesis & hyp);
+  friend std::istream & operator >>(std::istream & load, BLSURFPlugin_Hypothesis & hyp);
 
   /*!
    * \brief Does nothing

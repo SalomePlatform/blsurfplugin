@@ -1,3 +1,0 @@
-#------ BLSURFplugin-Src ------
-export BLSURFPLUGIN_SRC_DIR=${INSTALL_ROOT}/BLSURFPLUGIN_SRC
-##

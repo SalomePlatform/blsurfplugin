@@ -1,57 +1,69 @@
-//  BLSURFPlugin GUI: GUI for plugged-in mesher BLSURFPlugin
+//  Copyright (C) 2007-2008  CEA/DEN, EDF R&D
 //
-//  Copyright (C) 2003  CEA
-// 
-//  This library is free software; you can redistribute it and/or 
-//  modify it under the terms of the GNU Lesser General Public 
-//  License as published by the Free Software Foundation; either 
-//  version 2.1 of the License. 
-// 
-//  This library is distributed in the hope that it will be useful, 
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU 
-//  Lesser General Public License for more details. 
-// 
-//  You should have received a copy of the GNU Lesser General Public 
-//  License along with this library; if not, write to the Free Software 
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA 
-// 
-//  See http://www.salome-platform.org or email : webmaster.salome@opencascade.org
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License.
 //
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  Lesser General Public License for more details.
 //
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 //
-//  File   : BLSURFPluginGUI_HypothesisCreator.h
+//  See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
+//
+// ---
+// File    : BLSURFPluginGUI_HypothesisCreator.h
 // Authors : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
 //           & Aurelien ALLEAUME (DISTENE)
-//  Module : BLSURFPlugin
-//  $Header: 
+// ---
+//
+#ifndef BLSURFPLUGINGUI_HypothesisCreator_H
+#define BLSURFPLUGINGUI_HypothesisCreator_H
 
-#ifndef BLSURFPLUGINGUI_HypothesisCreator_HeaderFile
-#define BLSURFPLUGINGUI_HypothesisCreator_HeaderFile
+#ifdef WIN32
+  #ifdef BLSURFPLUGIN_GUI_EXPORTS
+    #define BLSURFPLUGIN_GUI_EXPORT __declspec( dllexport )
+  #else
+    #define BLSURFPLUGIN_GUI_EXPORT __declspec( dllimport )
+  #endif
+#else
+  #define BLSURFPLUGIN_GUI_EXPORT
+#endif
 
 #include <SMESHGUI_Hypotheses.h>
+#include <SALOMEconfig.h>
+#include CORBA_SERVER_HEADER(BLSURFPlugin_Algorithm)
 
-class QtxDblSpinBox;
-class QtxComboBox;
+class QGroupBox;
+class QtxDoubleSpinBox;
+class QComboBox;
 class QCheckBox;
 class QLineEdit;
+class QTableWidget;
+class QSpinBox;
+class QMenu;
+class QAction;
 
 typedef struct
 {
-  int     myTopology;
+  int     myTopology, myVerbosity;
   int     myPhysicalMesh, myGeometricMesh;
-  double  myPhySize, myAngleMeshS, myGradation;
+  double  myAngleMeshS, myAngleMeshC, myGradation;
+  QString myPhySize, myGeoMin, myGeoMax, myPhyMin, myPhyMax;
   bool    myAllowQuadrangles, myDecimesh;
   QString myName;
+
 } BlsurfHypothesisData;
 
 /*!
  * \brief Class for creation of BLSURF hypotheses
 */
-
-class BLSURFPlugin_Hypothesis;
-
-class BLSURFPluginGUI_HypothesisCreator : public SMESHGUI_GenericHypothesisCreator
+class BLSURFPLUGIN_GUI_EXPORT BLSURFPluginGUI_HypothesisCreator : public SMESHGUI_GenericHypothesisCreator
 {
   Q_OBJECT
 
@@ -59,7 +71,8 @@ public:
   BLSURFPluginGUI_HypothesisCreator( const QString& );
   virtual ~BLSURFPluginGUI_HypothesisCreator();
 
-  virtual bool checkParams() const;
+  virtual bool     checkParams() const;
+  virtual QString  helpPage() const;
 
 protected:
   virtual QFrame*  buildFrame    ();
@@ -71,26 +84,39 @@ protected:
   virtual QString  type() const;
 
 protected slots:
-  virtual void onPhysicalMeshChanged();
-  virtual void onGeometricMeshChanged();
+  void             onPhysicalMeshChanged();
+  void             onGeometricMeshChanged();
+  void             onAddOption();
+  void             onDeleteOption();
+  void             onOptionChosenInPopup( QAction* );
 
 private:
-  bool readParamsFromHypo( BlsurfHypothesisData& ) const;
-  bool readParamsFromWidgets( BlsurfHypothesisData& ) const;
-  bool storeParamsToHypo( const BlsurfHypothesisData& ) const;
+  bool             readParamsFromHypo( BlsurfHypothesisData& ) const;
+  QString          readParamsFromWidgets( BlsurfHypothesisData& ) const;
+  bool             storeParamsToHypo( const BlsurfHypothesisData& ) const;
 
 private:
- QLineEdit*       myName;
- QtxComboBox*     myTopology;
- QtxComboBox*     myPhysicalMesh;
- QtxDblSpinBox*   myPhySize;
- QtxComboBox*     myGeometricMesh;
- QtxDblSpinBox*   myAngleMeshS;
- QtxDblSpinBox*   myGradation;
- QCheckBox*       myAllowQuadrangles;
- QCheckBox*       myDecimesh;
+  QWidget*            myStdGroup;
+  QLineEdit*          myName;
+  QComboBox*          myPhysicalMesh;
+  QLineEdit*          myPhySize;
+  QLineEdit*          myPhyMin;
+  QLineEdit*          myPhyMax;
+  QComboBox*          myGeometricMesh;
+  QtxDoubleSpinBox*   myAngleMeshS;
+  QtxDoubleSpinBox*   myAngleMeshC;
+  QLineEdit*          myGeoMin;
+  QLineEdit*          myGeoMax;
+  QtxDoubleSpinBox*   myGradation;
+  QCheckBox*          myAllowQuadrangles;
+  QCheckBox*          myDecimesh;
 
- bool myIs2D;
+  QWidget*            myAdvGroup;
+  QComboBox*          myTopology;
+  QSpinBox*           myVerbosity;
+  QTableWidget*       myOptionTable;
+
+  BLSURFPlugin::string_array_var myOptions;
 };
 
-#endif
+#endif // BLSURFPLUGINGUI_HypothesisCreator_H

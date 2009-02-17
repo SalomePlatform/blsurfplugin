@@ -1,0 +1,61 @@
+#  Copyright (C) 2007-2008  CEA/DEN, EDF R&D
+#
+#  This library is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU Lesser General Public
+#  License as published by the Free Software Foundation; either
+#  version 2.1 of the License.
+#
+#  This library is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#  Lesser General Public License for more details.
+#
+#  You should have received a copy of the GNU Lesser General Public
+#  License along with this library; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+#
+#  See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
+#
+# ---
+# File   : Makefile.am
+# Author : Vadim SANDLER, Open CASCADE S.A.S (vadim.sandler@opencascade.com)
+# ---
+#
+include $(top_srcdir)/adm_local/unix/make_common_starter.am
+
+# header files 
+salomeinclude_HEADERS =
+
+# Libraries targets
+lib_LTLIBRARIES = libBLSURFEngine.la
+
+dist_libBLSURFEngine_la_SOURCES =	\
+	BLSURFPlugin_BLSURF.hxx		\
+	BLSURFPlugin_BLSURF.cxx		\
+	BLSURFPlugin_BLSURF_i.hxx	\
+	BLSURFPlugin_BLSURF_i.cxx	\
+	BLSURFPlugin_Hypothesis.hxx	\
+	BLSURFPlugin_Hypothesis.cxx	\
+	BLSURFPlugin_Hypothesis_i.hxx	\
+	BLSURFPlugin_Hypothesis_i.cxx	\
+	BLSURFPlugin_i.cxx
+
+libBLSURFEngine_la_CPPFLAGS =	\
+        $(KERNEL_CXXFLAGS)	\
+        $(GUI_CXXFLAGS)		\
+	$(MED_CXXFLAGS)		\
+	$(GEOM_CXXFLAGS)	\
+	$(CAS_CPPFLAGS)		\
+	$(BLSURF_INCLUDES)	\
+	$(SMESH_CXXFLAGS)	\
+	$(CORBA_CXXFLAGS)	\
+	$(CORBA_INCLUDES)	\
+	$(BOOST_CPPFLAGS)	\
+	-I$(top_builddir)/idl	\
+	-I$(top_builddir)/salome_adm/unix
+
+libBLSURFEngine_la_LDFLAGS  =			\
+	../../idl/libSalomeIDLBLSURFPLUGIN.la	\
+	$(BLSURF_LIBS)				\
+	$(SMESH_LDFLAGS) -lSMESHimpl -lSMESHEngine -lStdMeshersEngine	\
+	$(KERNEL_LDFLAGS) -lSalomeGenericObj

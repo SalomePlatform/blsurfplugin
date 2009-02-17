@@ -1,37 +1,39 @@
-//  Copyright (C) 2003  OPEN CASCADE, EADS/CCR, LIP6, CEA/DEN,
-//  CEDRAT, EDF R&D, LEG, PRINCIPIA R&D, BUREAU VERITAS 
-// 
-//  This library is free software; you can redistribute it and/or 
-//  modify it under the terms of the GNU Lesser General Public 
-//  License as published by the Free Software Foundation; either 
-//  version 2.1 of the License. 
-// 
-//  This library is distributed in the hope that it will be useful, 
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU 
-//  Lesser General Public License for more details. 
-// 
-//  You should have received a copy of the GNU Lesser General Public 
-//  License along with this library; if not, write to the Free Software 
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA 
-// 
-//  See http://www.opencascade.org/SALOME/ or email : webmaster.salome@opencascade.org 
+//  Copyright (C) 2007-2008  CEA/DEN, EDF R&D
 //
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License.
 //
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  Lesser General Public License for more details.
 //
-//  File    : BLSURFPlugin_Algorithm.idl
-//  Authors : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
-
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//
+//  See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
+//
+// ---
+// File    : BLSURFPlugin_Algorithm.idl
+// Authors : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
+// ---
+//
 #ifndef _SMESH_BLSURFALGORITHM_IDL_
 #define _SMESH_BLSURFALGORITHM_IDL_
 
 #include "SMESH_Hypothesis.idl"
+#include "SALOME_Exception.idl"
 
 /*!
  * BLSURFPlugin: interfaces to BLSURF related hypotheses and algorithms
  */
 module BLSURFPlugin
 {
+  typedef sequence<string> string_array;
+
   /*!
    * BLSURFPlugin_BLSURF: interface of BLSURF algorithm
    */
@@ -44,29 +46,120 @@ module BLSURFPlugin
    */
   interface BLSURFPlugin_Hypothesis : SMESH::SMESH_Hypothesis
   {
-    void SetTopology(in long value);
+    /*!
+     * Sets topology usage way defining how mesh conformity is assured
+     * value=0 - mesh conformity is assured by conformity of a shape
+     * value=1,2 - mesh conformity is assured by pre-processing a CAD model
+     */
+    void SetTopology(in long way);
     long GetTopology();
 
-    void SetPhysicalMesh(in long value);
+    /*!
+     * Sets a way to define size of mesh elements to generate
+     * 0 - size is defined automatically
+     * 1 - size is set by SetPhySize() method
+     */
+    void SetPhysicalMesh(in long isCustom);
     long GetPhysicalMesh();
 
-    void SetPhySize(in double value);
+    /*!
+     * Sets size of mesh elements to generate
+     */
+    void SetPhySize(in double size);
     double GetPhySize();
 
-    void SetGeometricMesh(in long value);
+    /*!
+     * Sets lower boundary of mesh element size (PhySize)
+     */
+    void SetPhyMin(in double theMinSize);
+    double GetPhyMin();
+
+    /*!
+     * Sets upper boundary of mesh element size (PhySize)
+     */
+    void SetPhyMax(in double theMaxSize);
+    double GetPhyMax();
+
+    /*!
+     * Sets a way to define maximum angular deflection of mesh from CAD model
+     * 0 - deflection is defined automatically
+     * 1 - deflection is set by SetAngleMeshS() and SetAngleMeshC() methods
+     */
+    void SetGeometricMesh(in long isCustom);
     long GetGeometricMesh();
 
-    void SetAngleMeshS(in double value);
+    /*!
+     * Sets angular deflection (in degrees) of a mesh face from CAD surface
+     */
+    void SetAngleMeshS(in double angle);
     double GetAngleMeshS();
 
-    void SetGradation(in double value);
+    /*!
+     * Sets angular deflection (in degrees) of a mesh edge from CAD curve
+     */
+    void SetAngleMeshC(in double angle);
+    double GetAngleMeshC();
+
+    /*!
+     * Sets lower boundary of mesh element size computed to respect angular deflection
+     */
+    void SetGeoMin(in double theMinSize);
+    double GetGeoMin();
+
+    /*!
+     * Sets upper boundary of mesh element size computed to respect angular deflection
+     */
+    void SetGeoMax(in double theMaxSize);
+    double GetGeoMax();
+
+    /*!
+     * Sets maximal allowed ratio between the lengths of two adjacent edges
+     */
+    void SetGradation(in double ratio);
     double GetGradation();
 
-    void SetQuadAllowed(in boolean value);
+    /*!
+     * Sets to create quadrilateral elements or not
+     */
+    void SetQuadAllowed(in boolean allowed);
     boolean GetQuadAllowed();
 
-    void SetDecimesh(in boolean value);
+    /*!
+     * To respect geometrical edges or not
+     */
+    void SetDecimesh(in boolean toIgnoreEdges);
     boolean GetDecimesh();
+
+    /*!
+     * Sets verbosity level in the range 0 to 100.
+     */
+    void SetVerbosity(in short theVal) raises (SALOME::SALOME_Exception);
+    short GetVerbosity();
+
+    /*!
+     * Sets advanced option value
+     */
+    void SetOptionValue(in string optionName,
+                        in string optionValue) raises (SALOME::SALOME_Exception);
+    string GetOptionValue(in string optionName) raises (SALOME::SALOME_Exception);
+    /*!
+     * Unsets advanced option
+     */
+    void UnsetOption(in string optionName);
+
+    /*!
+     * Return array of strings each of which is option name concatenated
+     * with option value devided by semicolon - "option_name:option_value".
+     * Option value is empty if an option is not set.
+     * Note: the method is mostly for interaction with GUI.
+     */
+    string_array GetOptionValues();
+
+    /*!
+     * Set option values each in the form "option_name[:option_value]".
+     * Note: the method is mostly for interaction with GUI.
+     */
+    void SetOptionValues(in string_array options);
   };
 
 };

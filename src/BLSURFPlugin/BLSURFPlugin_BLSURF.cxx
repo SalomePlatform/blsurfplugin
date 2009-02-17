@@ -1,32 +1,27 @@
-//  BLSURFPlugin : C++ implementation
+//  Copyright (C) 2007-2008  CEA/DEN, EDF R&D
 //
-//  Copyright (C) 2006  OPEN CASCADE, CEA/DEN, EDF R&D
-// 
-//  This library is free software; you can redistribute it and/or 
-//  modify it under the terms of the GNU Lesser General Public 
-//  License as published by the Free Software Foundation; either 
-//  version 2.1 of the License. 
-// 
-//  This library is distributed in the hope that it will be useful, 
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU 
-//  Lesser General Public License for more details. 
-// 
-//  You should have received a copy of the GNU Lesser General Public 
-//  License along with this library; if not, write to the Free Software 
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA 
-// 
-//  See http://www.opencascade.org/SALOME/ or email : webmaster.salome@opencascade.org 
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License.
 //
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  Lesser General Public License for more details.
 //
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//
+//  See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
+//
+// ---
 // File    : BLSURFPlugin_BLSURF.cxx
 // Authors : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
 //           & Aurelien ALLEAUME (DISTENE)
-// Date    : 20/03/2006
-// Project : SALOME
-//=============================================================================
-using namespace std;
-
+// ---
+//
 #include "BLSURFPlugin_BLSURF.hxx"
 #include "BLSURFPlugin_Hypothesis.hxx"
 
@@ -48,6 +43,7 @@ using namespace std;
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
 #include <NCollection_Map.hxx>
+#include <Standard_ErrorHandler.hxx>
 
 extern "C"{
 #include <distene/api.h>
@@ -67,6 +63,10 @@ extern "C"{
 #include <gp_Pnt2d.hxx>
 #include <TopTools_IndexedMapOfShape.hxx>
 #include <BRepTools.hxx>
+
+#ifndef WNT
+#include <fenv.h>
+#endif
 
 //=============================================================================
 /*!
@@ -132,7 +132,12 @@ bool BLSURFPlugin_BLSURF::CheckHypothesis
   {
     _hypothesis = static_cast<const BLSURFPlugin_Hypothesis*> (theHyp);
     ASSERT(_hypothesis);
-    aStatus = SMESH_Hypothesis::HYP_OK;
+    if ( _hypothesis->GetPhysicalMesh() == BLSURFPlugin_Hypothesis::DefaultSize &&
+         _hypothesis->GetGeometricMesh() == BLSURFPlugin_Hypothesis::DefaultGeom )
+      //  hphy_flag = 0 and hgeo_flag = 0 is not allowed (spec)
+      aStatus = SMESH_Hypothesis::HYP_BAD_PARAMETER;
+    else
+      aStatus = SMESH_Hypothesis::HYP_OK;
   }
   else
     aStatus = SMESH_Hypothesis::HYP_INCOMPATIBLE;
@@ -160,50 +165,75 @@ inline std::string to_string(int i)
    return o.str();
 }
 
-void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsurf_session_t *bls) {
+void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsurf_session_t *bls)
+{
+  int    _topology      = BLSURFPlugin_Hypothesis::GetDefaultTopology();
+  int    _physicalMesh  = BLSURFPlugin_Hypothesis::GetDefaultPhysicalMesh();
+  double _phySize       = BLSURFPlugin_Hypothesis::GetDefaultPhySize();
+  int    _geometricMesh = BLSURFPlugin_Hypothesis::GetDefaultGeometricMesh();
+  double _angleMeshS    = BLSURFPlugin_Hypothesis::GetDefaultAngleMeshS();
+  double _angleMeshC    = BLSURFPlugin_Hypothesis::GetDefaultAngleMeshC();
+  double _gradation     = BLSURFPlugin_Hypothesis::GetDefaultGradation();
+  bool   _quadAllowed   = BLSURFPlugin_Hypothesis::GetDefaultQuadAllowed();
+  bool   _decimesh      = BLSURFPlugin_Hypothesis::GetDefaultDecimesh();
+  int    _verb          = BLSURFPlugin_Hypothesis::GetDefaultVerbosity();
+
   if (hyp) {
     MESSAGE("BLSURFPlugin_BLSURF::SetParameters");
-    _topology = (int) hyp->GetTopology();
-    _physicalMesh = (int) hyp->GetPhysicalMesh();
-    _phySize = hyp->GetPhySize();
+    _topology      = (int) hyp->GetTopology();
+    _physicalMesh  = (int) hyp->GetPhysicalMesh();
+    _phySize       = hyp->GetPhySize();
     _geometricMesh = (int) hyp->GetGeometricMesh();
-    _angleMeshS = hyp->GetAngleMeshS();
-    _gradation = hyp->GetGradation();
-    _quadAllowed = hyp->GetQuadAllowed();
-    _decimesh = hyp->GetDecimesh();
+    _angleMeshS    = hyp->GetAngleMeshS();
+    _angleMeshC    = hyp->GetAngleMeshC();
+    _gradation     = hyp->GetGradation();
+    _quadAllowed   = hyp->GetQuadAllowed();
+    _decimesh      = hyp->GetDecimesh();
+    _verb          = hyp->GetVerbosity();
+
+    if ( hyp->GetPhyMin() != ::BLSURFPlugin_Hypothesis::undefinedDouble() )
+      blsurf_set_param(bls, "hphymin", to_string(hyp->GetPhyMin()).c_str());
+    if ( hyp->GetPhyMax() != ::BLSURFPlugin_Hypothesis::undefinedDouble() )
+      blsurf_set_param(bls, "hphymax", to_string(hyp->GetPhyMax()).c_str());
+    if ( hyp->GetGeoMin() != ::BLSURFPlugin_Hypothesis::undefinedDouble() )
+      blsurf_set_param(bls, "hgeomin", to_string(hyp->GetGeoMin()).c_str());
+    if ( hyp->GetGeoMax() != ::BLSURFPlugin_Hypothesis::undefinedDouble() )
+      blsurf_set_param(bls, "hgeomax", to_string(hyp->GetGeoMax()).c_str());
+
+    const BLSURFPlugin_Hypothesis::TOptionValues & opts = hyp->GetOptionValues();
+    BLSURFPlugin_Hypothesis::TOptionValues::const_iterator opIt;
+    for ( opIt = opts.begin(); opIt != opts.end(); ++opIt )
+      if ( !opIt->second.empty() ) {
+#ifdef _DEBUG_
+        cout << "blsurf_set_param(): " << opIt->first << " = " << opIt->second << endl;
+#endif
+        blsurf_set_param(bls, opIt->first.c_str(), opIt->second.c_str());
+      }
+
   } else {
     MESSAGE("BLSURFPlugin_BLSURF::SetParameters using defaults");
-    _topology = BLSURFPlugin_Hypothesis::GetDefaultTopology();
-    _physicalMesh = BLSURFPlugin_Hypothesis::GetDefaultPhysicalMesh();
-    _phySize = BLSURFPlugin_Hypothesis::GetDefaultPhySize();
-    _geometricMesh = BLSURFPlugin_Hypothesis::GetDefaultGeometricMesh();
-    _angleMeshS = BLSURFPlugin_Hypothesis::GetDefaultAngleMeshS();
-    _gradation = BLSURFPlugin_Hypothesis::GetDefaultGradation();
-    _quadAllowed = BLSURFPlugin_Hypothesis::GetDefaultQuadAllowed();
-    _decimesh = BLSURFPlugin_Hypothesis::GetDefaultDecimesh();
-
   }
   
-  blsurf_set_param(bls, "topo_points", _topology > 0 ? "1" : "0");
-  blsurf_set_param(bls, "topo_curves", _topology > 0 ? "1" : "0");
-  blsurf_set_param(bls, "topo_project", _topology > 0 ? "1" : "0");
-  blsurf_set_param(bls, "clean_boundary", _topology > 1 ? "1" : "0");
-  blsurf_set_param(bls, "close_boundary", _topology > 1 ? "1" : "0");
-  blsurf_set_param(bls, "hphy_flag", to_string(_physicalMesh).c_str());
-  blsurf_set_param(bls, "hphydef", to_string(_phySize).c_str());
-  blsurf_set_param(bls, "hgeo_flag", to_string(_geometricMesh).c_str());
-  blsurf_set_param(bls, "angle_meshs", to_string(_angleMeshS).c_str());
-  blsurf_set_param(bls, "angle_meshc", to_string(_angleMeshS).c_str());
-  blsurf_set_param(bls, "gradation", to_string(_gradation).c_str());
-  //  blsurf_set_param(bls, "patch_independent", to_string(_decimesh).c_str());
+  blsurf_set_param(bls, "topo_points",       _topology > 0 ? "1" : "0");
+  blsurf_set_param(bls, "topo_curves",       _topology > 0 ? "1" : "0");
+  blsurf_set_param(bls, "topo_project",      _topology > 0 ? "1" : "0");
+  blsurf_set_param(bls, "clean_boundary",    _topology > 1 ? "1" : "0");
+  blsurf_set_param(bls, "close_boundary",    _topology > 1 ? "1" : "0");
+  blsurf_set_param(bls, "hphy_flag",         to_string(_physicalMesh).c_str());
+  blsurf_set_param(bls, "hphydef",           to_string(_phySize).c_str());
+  blsurf_set_param(bls, "hgeo_flag",         to_string(_geometricMesh).c_str());
+  blsurf_set_param(bls, "angle_meshs",       to_string(_angleMeshS).c_str());
+  blsurf_set_param(bls, "angle_meshc",       to_string(_angleMeshC).c_str());
+  blsurf_set_param(bls, "gradation",         to_string(_gradation).c_str());
   blsurf_set_param(bls, "patch_independent", _decimesh ? "1" : "0");
-  blsurf_set_param(bls, "element",  _quadAllowed ? "q1.0" : "p1");
-  blsurf_set_param(bls, "verb", "10");
+  blsurf_set_param(bls, "element",           _quadAllowed ? "q1.0" : "p1");
+  blsurf_set_param(bls, "verb",              to_string(_verb).c_str());
 }
 
 status_t curv_fun(real t, real *uv, real *dt, real *dtt, void *user_data);
 status_t surf_fun(real *uv, real *xyz, real*du, real *dv,
 		  real *duu, real *duv, real *dvv, void *user_data);
+status_t message_callback(message_t *msg, void *user_data);
 
 //=============================================================================
 /*!
@@ -223,8 +253,10 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   };
 
   context_t *ctx =  context_new();
-  cad_t *c = cad_new(ctx);
+  context_set_message_callback(ctx, message_callback, &_comment);
 
+  cad_t *c = cad_new(ctx);
+ 
   TopTools_IndexedMapOfShape fmap;
   TopTools_IndexedMapOfShape emap;
   TopTools_IndexedMapOfShape pmap;
@@ -265,6 +297,8 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       cad_edge_t *edg = cad_edge_new(fce, ic, tmin, tmax, curv_fun, curves.back());
       cad_edge_set_tag(edg, ic);
       cad_edge_set_property(edg, EDGE_PROPERTY_SOFT_REQUIRED);
+      if (e.Orientation() == TopAbs_INTERNAL)
+        cad_edge_set_property(edg, EDGE_PROPERTY_INTERNAL);
 
       int npts = 0;
       int ip1, ip2, *ip;
@@ -297,7 +331,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       }
     } // for edge
   } //for face
- 
+
 
 
 
@@ -310,12 +344,40 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   cout << "Beginning of Surface Mesh generation" << endl;
   cout << endl;
 
-  if (blsurf_compute_mesh(bls) != STATUS_OK){
+  // Issue 0019864. On DebianSarge, FE signals do not obey to OSD::SetSignal(false)
+#ifndef WNT
+  feclearexcept( FE_ALL_EXCEPT );
+  int oldFEFlags = fedisableexcept( FE_ALL_EXCEPT );
+#endif
+
+    status_t status = STATUS_ERROR;
+
+  try {
+    OCC_CATCH_SIGNALS;
+
+    status = blsurf_compute_mesh(bls);
+
+  }
+  catch ( std::exception& exc ) {
+    _comment += exc.what();
+  }
+  catch (Standard_Failure& ex) {
+    _comment += ex.DynamicType()->Name();
+    if ( ex.GetMessageString() && strlen( ex.GetMessageString() )) {
+      _comment += ": ";
+      _comment += ex.GetMessageString();
+    }
+  }
+  catch (...) {
+    if ( _comment.empty() )
+      _comment = "Exception in blsurf_compute_mesh()";
+  }
+  if ( status != STATUS_OK) {
     blsurf_session_delete(bls);
     cad_delete(c);
     context_delete(ctx);
 
-    return false;
+    return error(_comment);
   }
 
   cout << endl;
@@ -329,7 +391,8 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     cad_delete(c);
     context_delete(ctx);
     
-    return false;
+    return error(_comment);
+    //return false;
   }
   
   integer nv, ne, nt, nq, vtx[4], tag;
@@ -427,6 +490,13 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   cad_delete(c);
 
   context_delete(ctx);
+
+  // Issue 0019864. On DebianSarge, FE signals do not obey to OSD::SetSignal(false)
+#ifndef WNT
+  if ( oldFEFlags > 0 )    
+    feenableexcept( oldFEFlags );
+  feclearexcept( FE_ALL_EXCEPT );
+#endif
 
   return true;
 }
@@ -532,4 +602,26 @@ status_t surf_fun(real *uv, real *xyz, real*du, real *dv,
   }
 
   return 0;
+}
+
+status_t message_callback(message_t *msg, void *user_data)
+{
+  integer errnumber = 0;
+  char *desc;
+  message_get_number(msg, &errnumber);
+  message_get_description(msg, &desc);
+  if ( errnumber < 0 ) {
+    string * error = (string*)user_data;
+//   if ( !error->empty() )
+//     *error += "\n";
+    // remove ^A from the tail
+    int len = strlen( desc );
+    while (len > 0 && desc[len-1] != '\n')
+      len--;
+    error->append( desc, len );
+  }
+  else {
+    cout << desc;
+  }
+  return STATUS_OK;
 }

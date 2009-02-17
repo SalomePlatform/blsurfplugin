@@ -1,0 +1,127 @@
+SALOME platform
+BLSURF meshing plugin
+------------------------------
+
+Contents:
+
+1. Pre-requisites
+2. Installation
+3. Launch SALOME with BLSURFPLUGIN
+4. BLSURFPLUGIN plugin usage
+
+-----------------
+1. Pre-requisites
+-----------------
+
+The information in this file assumes that:
+
+* The SALOME platform is installed to the directory <salome>
+* The blsurf product is installed to the directory <salome>/blsurf
+* The decimesh binary is vaiable via environment variable PATH
+
+---------------
+2. Installation
+---------------
+
+2.1. Unpack BLSURFPLUGIN module sources
+
+cd <salome>
+tar zxf BLSURFPLUGIN_SRC.tgz
+
+2.2. Build BLSURFPLUGIN module
+
+* set environment 
+
+bash
+cd <salome>
+source env_build.sh
+export BLSURFHOME=<salome>/blsurf
+
+Note: you can avoid setting BLSURFHOME environment variable but use
+--with-blsurf key of configure script instead.
+
+* configure build system
+
+cd BLSURFPLUGIN_SRC
+./build_configure
+
+cd ..
+mkdir BLSURFPLUGIN_BUILD
+cd BLSURFPLUGIN_BUILD
+../BLSURFPLUGIN_SRC/configure --prefix=<salome>/BLSURFPLUGIN_INSTALL
+
+Note: you can use --with-blsurf option to pass the root directory of
+blsurf product to the confogure script. In this case you can avoid
+setting BLSURFHOME environment variable. Try 'configure --help'
+command to learn more about available configure script options.
+
+Check "Summary" area in the log output of the configure script to
+verify that all pre-requisites required for the successful compilation
+of BLSURFPLUFIN module have been found. All pre-requisite products
+should have status "yes". If any product has status "no", the
+compilation procedure will fail.
+
+* compile and install plugin module 
+
+make
+make install
+
+exit
+
+If the compilation is finished successfully (make and make install
+steps are finished without errors) the BLSURFPLUGIN meshing module
+should be installed in the directory <salome>/BLSURFPLUGIN_INSTALL.
+
+----------------------------------
+3. Launch SALOME with BLSURFPLUGIN
+----------------------------------
+
+* set environment
+
+bash
+cd <salome>
+source env_products.sh
+
+export BLSURFPLUGIN_ROOT_DIR=<salome>/BLSURFPLUGIN_INSTALL
+export SalomeAppConfig=${BLSURFPLUGIN_ROOT_DIR}/share/salome/resources/blsurfplugin
+export DISTENE_LICENSE_FILE=<salome>/dlim8.key
+
+Note: DISTENE_LICENSE_FILE environment variable should point to the
+blsurf product license file.
+
+* run SALOME
+
+runSalome
+
+----------------------------
+4. BLSURFPLUGIN plugin usage
+----------------------------
+
+* Create new study
+
+* Activate Geometry module and create simple geometry object
+
+* Activate Mesh module
+
+* Invoke menu "Mesh/Create Mesh"
+
+* Select previously created geometry object by clicking it with the
+mouse in the Object Browser
+
+* In the "Create mesh" dialog box:
+- activate "2D" page
+- In the "Algorithm" combo box select "BLSURF"
+- Click on the button at the right of the "Hypothesis" combo box and
+select "BLSURF parameters" item in the drop-down menu
+
+* In the "Hypothesis Construction" dialog box set parameters of BLSURF
+  meshing algorithm and click "OK" button
+
+* In the "Create mesh" dialog box Click "Apply & Close" button to
+  define mesh and close the dialog box
+
+* In the Object Browser select "Mesh_1" object, invoke context popup
+menu for it by clicking right mouse button and select "Compute" item
+
+The resulting mesh created with BLSURF plugin will be shown in the 3D
+viewer.

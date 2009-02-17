@@ -1,37 +1,35 @@
-//  BLSURFPlugin : C++ implementation
+//  Copyright (C) 2007-2008  CEA/DEN, EDF R&D
 //
-//  Copyright (C) 2006  OPEN CASCADE, CEA/DEN, EDF R&D
-// 
-//  This library is free software; you can redistribute it and/or 
-//  modify it under the terms of the GNU Lesser General Public 
-//  License as published by the Free Software Foundation; either 
-//  version 2.1 of the License. 
-// 
-//  This library is distributed in the hope that it will be useful, 
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU 
-//  Lesser General Public License for more details. 
-// 
-//  You should have received a copy of the GNU Lesser General Public 
-//  License along with this library; if not, write to the Free Software 
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA 
-// 
-//  See http://www.opencascade.org/SALOME/ or email : webmaster.salome@opencascade.org 
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License.
 //
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  Lesser General Public License for more details.
 //
-// File      : BLSURFPlugin_Hypothesis.hxx
-// Authors   : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
-//             & Aurelien ALLEAUME (DISTENE)
-// Date      : 27/03/2006
-// Project   : SALOME
-// $Header$
-//=============================================================================
-
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//
+//  See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
+//
+// ---
+// File    : BLSURFPlugin_Hypothesis.hxx
+// Authors : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
+//           & Aurelien ALLEAUME (DISTENE)
+// ---
+//
 #ifndef _BLSURFPlugin_Hypothesis_HXX_
 #define _BLSURFPlugin_Hypothesis_HXX_
 
 #include "SMESH_Hypothesis.hxx"
-#include "Utils_SALOME_Exception.hxx"
+#include <map>
+#include <set>
+#include <stdexcept>
+#include <string>
 
 //  Parameters for work of BLSURF
 
@@ -65,11 +63,26 @@ public:
   void SetPhySize(double thePhySize);
   double GetPhySize() const { return _phySize; }
 
+  void SetPhyMin(double theMinSize);
+  double GetPhyMin() const { return _phyMin; }
+
+  void SetPhyMax(double theMaxSize);
+  double GetPhyMax() const { return _phyMax; }
+
   void SetGeometricMesh(GeometricMesh theGeometricMesh);
   GeometricMesh GetGeometricMesh() const { return _geometricMesh; }
 
   void SetAngleMeshS(double theAngle);
   double GetAngleMeshS() const { return _angleMeshS; }
+
+  void SetAngleMeshC(double theAngle);
+  double GetAngleMeshC() const { return _angleMeshC; }
+
+  void SetGeoMin(double theMinSize);
+  double GetGeoMin() const { return _hgeoMin; }
+
+  void SetGeoMax(double theMaxSize);
+  double GetGeoMax() const { return _hgeoMax; }
 
   void SetGradation(double theGradation);
   double GetGradation() const { return _gradation; }
@@ -80,20 +93,38 @@ public:
   void SetDecimesh(bool theVal);
   bool GetDecimesh() const { return _decimesh; }
 
-  static Topology GetDefaultTopology();
-  static PhysicalMesh GetDefaultPhysicalMesh();
-  static double GetDefaultPhySize();
+  void SetVerbosity(int theVal);
+  int GetVerbosity() const { return _verb; }
+
+  static Topology      GetDefaultTopology();
+  static PhysicalMesh  GetDefaultPhysicalMesh();
+  static double        GetDefaultPhySize();
+  static double        GetDefaultMaxSize();
+  static double        GetDefaultMinSize();
   static GeometricMesh GetDefaultGeometricMesh();
-  static double GetDefaultAngleMeshS();
-  static double GetDefaultGradation();
-  static bool GetDefaultQuadAllowed();
-  static bool GetDefaultDecimesh();
+  static double        GetDefaultAngleMeshS();
+  static double        GetDefaultAngleMeshC() { return GetDefaultAngleMeshS(); }
+  static double        GetDefaultGradation();
+  static bool          GetDefaultQuadAllowed();
+  static bool          GetDefaultDecimesh();
+  static int           GetDefaultVerbosity() { return 10; }
+
+  static double undefinedDouble() { return -1.0; }
+
+  typedef std::map< std::string, std::string > TOptionValues;
+  typedef std::set< std::string >              TOptionNames;
+
+  void SetOptionValue(const std::string& optionName,
+                      const std::string& optionValue) throw (std::invalid_argument);
+  std::string GetOptionValue(const std::string& optionName) throw (std::invalid_argument);
+  void ClearOption(const std::string& optionName);
+  const TOptionValues& GetOptionValues() const { return _option2value; }
 
   // Persistence
-  virtual ostream & SaveTo(ostream & save);
-  virtual istream & LoadFrom(istream & load);
-  friend ostream & operator <<(ostream & save, BLSURFPlugin_Hypothesis & hyp);
-  friend istream & operator >>(istream & load, BLSURFPlugin_Hypothesis & hyp);
+  virtual std::ostream & SaveTo(std::ostream & save);
+  virtual std::istream & LoadFrom(std::istream & load);
+  friend std::ostream & operator <<(std::ostream & save, BLSURFPlugin_Hypothesis & hyp);
+  friend std::istream & operator >>(std::istream & load, BLSURFPlugin_Hypothesis & hyp);
 
   /*!
    * \brief Does nothing
@@ -103,15 +134,24 @@ public:
    */
   virtual bool SetParametersByMesh(const SMESH_Mesh* theMesh, const TopoDS_Shape& theShape);
 
+  /*!
+   * \brief Initialize my parameter values by default parameters.
+   *  \retval bool - true if parameter values have been successfully defined
+   */
+  virtual bool SetParametersByDefaults(const TDefaults& dflts, const SMESH_Mesh* theMesh=0);
+
 private:
   Topology      _topology;
   PhysicalMesh  _physicalMesh;
-  double        _phySize;
+  double        _phySize, _phyMin, _phyMax;
   GeometricMesh _geometricMesh;
-  double        _angleMeshS;
+  double        _angleMeshS, _angleMeshC, _hgeoMin, _hgeoMax;
   double        _gradation;
   bool          _quadAllowed;
   bool          _decimesh;
+  int           _verb;
+  TOptionValues _option2value;
+  TOptionNames  _doubleOptions, _charOptions;
 };
 
 #endif

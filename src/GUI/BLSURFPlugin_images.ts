@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='us-ascii'?>
-<!DOCTYPE meshers PUBLIC "" "desktop.dtd">
+<!DOCTYPE TS>
 <!--
   Copyright (C) 2007-2008  CEA/DEN, EDF R&D
 
@@ -20,29 +19,20 @@
   See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 
 -->
-
-<!--  GUI customization for BLSURF Plugin  -->
-
-<meshers>
-
-<meshers-group name="BLSURF"
-               resources="BLSURFPlugin"
-               server-lib="BLSURFEngine"
-               gui-lib="BLSURFPluginGUI">
-  <hypotheses>
-    <hypothesis type="BLSURF_Parameters"
-		label-id="BLSURF Parameters"
-		icon-id="mesh_hypo_BLSURF.png"
-		dim="2"/>
-  </hypotheses>
-  <algorithms>
-    <algorithm type="BLSURF"
-               label-id="BLSURF"
-               icon-id="mesh_algo_BLSURF.png"
-               opt-hypos="BLSURF_Parameters"
-               output="TRIA,QUAD"
-               dim="2"/>
-  </algorithms>
-</meshers-group>
-
-</meshers>
+<TS version="1.1" >
+    <context>
+        <name>@default</name>
+        <message>
+            <source>ICON_DLG_BLSURF_PARAMETERS</source>
+            <translation>mesh_hypo_BLSURF.png</translation>
+        </message>
+        <message>
+            <source>ICON_SMESH_TREE_ALGO_BLSURF</source>
+            <translation>mesh_tree_algo_BLSURF.png</translation>
+        </message>
+        <message>
+            <source>ICON_SMESH_TREE_HYPO_BLSURF_Parameters</source>
+            <translation>mesh_tree_hypo_BLSURF.png</translation>
+        </message>
+    </context>
+</TS>

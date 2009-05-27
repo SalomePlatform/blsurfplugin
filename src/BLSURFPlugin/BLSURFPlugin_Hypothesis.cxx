@@ -22,8 +22,9 @@
 //           & Aurelien ALLEAUME (DISTENE)
 // ---
 //
-#include <BLSURFPlugin_Hypothesis.hxx>
+#include "BLSURFPlugin_Hypothesis.hxx"
 #include <utilities.h>
+#include <cstring>
 
 //=============================================================================
 BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis (int hypId, int studyId,

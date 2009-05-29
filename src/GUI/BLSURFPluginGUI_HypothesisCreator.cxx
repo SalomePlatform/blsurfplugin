@@ -1,4 +1,4 @@
-//  Copyright (C) 2007-2008  CEA/DEN, EDF R&D
+	//  Copyright (C) 2007-2008  CEA/DEN, EDF R&D
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -20,12 +20,14 @@
 // File    : BLSURFPluginGUI_HypothesisCreator.cxx
 // Authors : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
 //           & Aurelien ALLEAUME (DISTENE)
+//           Size maps developement: Nicolas GEIMER (OCC) & Gilles DAVID (EURIWARE)
 // ---
 //
 #include "BLSURFPluginGUI_HypothesisCreator.h"
 
 #include <SMESHGUI_Utils.h>
 #include <SMESHGUI_HypothesesUtils.h>
+#include <SMESHGUI_Dialog.h>
 
 #include <SUIT_Session.h>
 #include <SUIT_MessageBox.h>
@@ -48,19 +50,33 @@
 #include <QTableWidget>
 #include <QHeaderView>
 #include <QApplication>
+#include <QRadioButton>
 
+#include <LightApp_SelectionMgr.h>
+#include <SalomeApp_Application.h> 
+#include <SALOME_ListIO.hxx>
+#include <SALOME_ListIteratorOfListIO.hxx>
+
+#include <GEOM_Client.hxx>
+#include <TopoDS_Shape.hxx>
+#include <SMESH_Gen_i.hxx>
+#include <boost/shared_ptr.hpp> 
+#include <structmember.h>
+
+// #include <GeomSelectionTools.h>
 #define WITH_SIZE_BOUNDARIES
 
 enum Topology {
     FromCAD,
     Process,
     Process2
-  };
+  } ;
 
 enum PhysicalMesh
   {
     DefaultSize = 0,
-    PhysicalUserDefined
+    PhysicalUserDefined,
+    SizeMap
   };
 
 enum GeometricMesh
@@ -72,19 +88,186 @@ enum GeometricMesh
 enum {
   STD_TAB = 0,
   ADV_TAB,
+  SMP_TAB,
   OPTION_ID_COLUMN = 0,
   OPTION_NAME_COLUMN,
   OPTION_VALUE_COLUMN,
-  NB_COLUMNS
+  NB_COLUMNS,
+  SMP_ENTRY_COLUMN = 0,
+  SMP_NAME_COLUMN,
+  SMP_SIZEMAP_COLUMN,
+  SMP_NB_COLUMNS
 };
 
+enum {
+  SMP_BTNS = 0,
+//   SMP_ATTRACTOR_BTN,
+//   SMP_SEPARATOR1,
+  SMP_POINT_BTN,
+  SMP_EDGE_BTN,
+  SMP_SURFACE_BTN,
+  SMP_SEPARATOR2,
+  SMP_REMOVE_BTN,
+};
+
+/**************************************************
+ Begin initialization Python structures and objects 
+***************************************************/
+
+typedef struct {
+  PyObject_HEAD
+  int softspace;
+  std::string *out;
+  } PyStdOut;
+
+static void
+PyStdOut_dealloc(PyStdOut *self)
+{
+  PyObject_Del(self);
+}
+
+static PyObject *
+PyStdOut_write(PyStdOut *self, PyObject *args)
+{
+  char *c;
+  int l;
+  if (!PyArg_ParseTuple(args, "t#:write",&c, &l))
+    return NULL;
+
+  //std::cerr << c ;
+  *(self->out)=*(self->out)+c;
+
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+static PyMethodDef PyStdOut_methods[] = {
+  {"write",  (PyCFunction)PyStdOut_write,  METH_VARARGS,
+    PyDoc_STR("write(string) -> None")},
+  {NULL,    NULL}   /* sentinel */
+};
+
+static PyMemberDef PyStdOut_memberlist[] = {
+  {"softspace", T_INT,  offsetof(PyStdOut, softspace), 0,
+   "flag indicating that a space needs to be printed; used by print"},
+  {NULL} /* Sentinel */
+};
+
+static PyTypeObject PyStdOut_Type = {
+  /* The ob_type field must be initialized in the module init function
+   * to be portable to Windows without using C++. */
+  PyObject_HEAD_INIT(NULL)
+  0,                            /*ob_size*/
+  "PyOut",                      /*tp_name*/
+  sizeof(PyStdOut),             /*tp_basicsize*/
+  0,                            /*tp_itemsize*/
+  /* methods */
+  (destructor)PyStdOut_dealloc, /*tp_dealloc*/
+  0,                            /*tp_print*/
+  0,                            /*tp_getattr*/
+  0,                            /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number*/
+  0,                            /*tp_as_sequence*/
+  0,                            /*tp_as_mapping*/
+  0,                            /*tp_hash*/
+  0,                            /*tp_call*/
+  0,                            /*tp_str*/
+  PyObject_GenericGetAttr,      /*tp_getattro*/
+  /* softspace is writable:  we must supply tp_setattro */
+  PyObject_GenericSetAttr,      /* tp_setattro */
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT,           /*tp_flags*/
+  0,                            /*tp_doc*/
+  0,                            /*tp_traverse*/
+  0,                            /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  PyStdOut_methods,             /*tp_methods*/
+  PyStdOut_memberlist,          /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/
+};
+
+PyObject * newPyStdOut( std::string& out )
+{
+  PyStdOut *self;
+  self = PyObject_New(PyStdOut, &PyStdOut_Type);
+  if (self == NULL)
+    return NULL;
+  self->softspace = 0;
+  self->out=&out;
+  return (PyObject*)self;
+}
+
+/*************************************************
+End initialization Python structures and objects 
+**************************************************/
+
+/**
+ * \brief {BLSURFPluginGUI_HypothesisCreator constructor}
+ * @param theHypType Name of the hypothesis type (here BLSURF_Parameters)
+ * 
+ * */
 BLSURFPluginGUI_HypothesisCreator::BLSURFPluginGUI_HypothesisCreator( const QString& theHypType )
   : SMESHGUI_GenericHypothesisCreator( theHypType )
 {
+  MESSAGE("BLSURFPluginGUI_HypothesisCreator::BLSURFPluginGUI_HypothesisCreator"); 
+  this->mySMPMap.clear();
+
+  GeomToolSelected = NULL;
+  GeomToolSelected = getGeomSelectionTool();
+
+  aSel = GeomToolSelected->selectionMgr();
+
+  /* Initialize the Python interpreter */
+  if (not Py_IsInitialized())
+    throw ("Error: Python interpreter is not initialized");
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+  
+  main_mod = NULL;
+  main_mod = PyImport_AddModule("__main__");
+  
+  main_dict = NULL;
+  main_dict = PyModule_GetDict(main_mod);
+  
+  PyRun_SimpleString("from math import *");
+  PyGILState_Release(gstate);
+
 }
 
 BLSURFPluginGUI_HypothesisCreator::~BLSURFPluginGUI_HypothesisCreator()
 {
+}
+
+/**
+ * \brief {Get or create the geom selection tool for active study}
+ * */
+GeomSelectionTools* BLSURFPluginGUI_HypothesisCreator::getGeomSelectionTool()
+{
+  MESSAGE("BLSURFPluginGUI_HypothesisCreator::getGeomSelectionTool"); 
+  BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
+  _PTR(Study) aStudy = SMESH::GetActiveStudyDocument();
+  if (that->GeomToolSelected == NULL or that->GeomToolSelected->getMyStudy() != aStudy) {
+    MESSAGE("GeomToolSelected is created");
+    that->GeomToolSelected = new GeomSelectionTools(aStudy);
+  }
+  else
+    MESSAGE("GeomToolSelected already exists");
+  return that->GeomToolSelected;
 }
 
 namespace {
@@ -99,8 +282,10 @@ namespace {
   }
 }
 
+
 bool BLSURFPluginGUI_HypothesisCreator::checkParams() const
 {
+  MESSAGE("BLSURFPluginGUI_HypothesisCreator::checkParams"); 
   bool ok = true;
   if ( !isDouble( myPhySize->text(), false )) {
     if ( myPhySize->text().isEmpty() )
@@ -153,11 +338,49 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams() const
     h->SetOptionValues( myOptions ); // restore values
   }
 
+  // SizeMap
+  if ( ok )
+  {
+    mySizeMapTable->setFocus();
+    QApplication::instance()->processEvents();
+
+    BLSURFPlugin::BLSURFPlugin_Hypothesis_var h = BLSURFPlugin::BLSURFPlugin_Hypothesis::_narrow( initParamsHypothesis() );
+    BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
+
+    int row = 0, nbRows = mySizeMapTable->rowCount();
+    for ( ; row < nbRows; ++row )
+    {
+      QString entry   = mySizeMapTable->item( row, SMP_ENTRY_COLUMN )->text();
+      QString sizeMap = mySizeMapTable->item( row, SMP_SIZEMAP_COLUMN )->text().trimmed();
+      if ( !sizeMap.isEmpty() ) {
+        if (that->sizeMapValidationFromRow(row))
+        {
+          try {
+            const char* e = entry.toLatin1().constData();
+            const char* s = that->mySMPMap[entry].toLatin1().constData();
+            h->SetSizeMapEntry( e, s );
+          }
+          catch ( const SALOME::SALOME_Exception& ex )
+          {
+            SUIT_MessageBox::critical( dlg(),
+                                       tr("SMESH_ERROR"),
+                                       ex.details.text.in() );
+            ok = false;
+          }
+        }
+        else {
+          ok = false;
+        }
+      }
+    }
+  }
+
   return ok;
 }
 
 QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 {
+  MESSAGE("BLSURFPluginGUI_HypothesisCreator::buildFrame");
   QFrame* fr = new QFrame( 0 );
   QVBoxLayout* lay = new QVBoxLayout( fr );
   lay->setMargin( 5 );
@@ -187,7 +410,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   myPhysicalMesh = new QComboBox( myStdGroup );
   aStdLayout->addWidget( myPhysicalMesh, row++, 1, 1, 1 );
   QStringList physicalTypes;
-  physicalTypes << tr( "BLSURF_DEFAULT_USER" ) << tr( "BLSURF_CUSTOM_USER" );
+  physicalTypes << tr( "BLSURF_DEFAULT_USER" ) << tr( "BLSURF_CUSTOM_USER" ) << tr( "BLSURF_SIZE_MAP");
   myPhysicalMesh->addItems( physicalTypes );
 
   aStdLayout->addWidget( new QLabel( tr( "BLSURF_HPHYDEF" ), myStdGroup), row, 0, 1, 1 );
@@ -289,9 +512,54 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   anAdvLayout->setRowStretch( 4, 5 );
   anAdvLayout->setColumnStretch( 1, 5 );
 
+  // Size Maps parameters
+  
+  mySmpGroup = new QWidget();
+  QGridLayout* anSmpLayout = new QGridLayout(mySmpGroup);
+
+  mySizeMapTable = new QTableWidget( 0, SMP_NB_COLUMNS, mySmpGroup );
+  anSmpLayout->addWidget(mySizeMapTable, 1, 0, 8, 1);
+  QStringList sizeMapHeaders;
+  sizeMapHeaders << tr( "SMP_ENTRY_COLUMN" )<< tr( "SMP_NAME_COLUMN" ) << tr( "SMP_SIZEMAP_COLUMN" ); 
+  mySizeMapTable->setHorizontalHeaderLabels(sizeMapHeaders);
+  mySizeMapTable->horizontalHeader()->hideSection( SMP_ENTRY_COLUMN );
+  mySizeMapTable->resizeColumnToContents(SMP_NAME_COLUMN);
+  mySizeMapTable->resizeColumnToContents(SMP_SIZEMAP_COLUMN);
+  mySizeMapTable->setAlternatingRowColors(true);
+  mySizeMapTable->verticalHeader()->hide();
+
+/*
+  addAttractorButton = new QPushButton(tr("BLSURF_SM_ATTRACTOR"),mySmpGroup);
+  anSmpLayout->addWidget(addAttractorButton, SMP_ATTRACTOR_BTN, 1, 1, 1);
+
+  QFrame *line = new QFrame(mySmpGroup);
+  line->setFrameShape(QFrame::HLine);
+  line->setFrameShadow(QFrame::Sunken);
+  anSmpLayout->addWidget(line, SMP_SEPARATOR1, 1, 1, 1);
+*/
+  addSurfaceButton = new QPushButton(tr("BLSURF_SM_SURFACE"),mySmpGroup);
+  anSmpLayout->addWidget(addSurfaceButton, SMP_SURFACE_BTN, 1, 1, 1);
+
+  addEdgeButton = new QPushButton(tr("BLSURF_SM_EDGE"),mySmpGroup);
+  anSmpLayout->addWidget(addEdgeButton, SMP_EDGE_BTN, 1, 1, 1);
+
+  addPointButton = new QPushButton(tr("BLSURF_SM_POINT"),mySmpGroup);
+  anSmpLayout->addWidget(addPointButton, SMP_POINT_BTN, 1, 1, 1);
+
+  QFrame *line2 = new QFrame(mySmpGroup);
+  line2->setFrameShape(QFrame::HLine);
+  line2->setFrameShadow(QFrame::Sunken);
+  anSmpLayout->addWidget(line2, SMP_SEPARATOR2, 1, 1, 1);
+
+  removeButton = new QPushButton(tr("BLSURF_SM_REMOVE"),mySmpGroup);
+  anSmpLayout->addWidget(removeButton, SMP_REMOVE_BTN, 1, 1, 1);
+  
+
   // ---
   tab->insertTab( STD_TAB, myStdGroup, tr( "SMESH_ARGUMENTS" ) );
-  tab->insertTab( ADV_TAB, myAdvGroup, tr( "GHS3D_ADV_ARGS" ) );
+  tab->insertTab( ADV_TAB, myAdvGroup, tr( "BLSURF_ADV_ARGS" ) );
+  tab->insertTab( SMP_TAB, mySmpGroup, tr( "BLSURF_SIZE_MAP" ) );
+
   tab->setCurrentIndex( STD_TAB );
 
   // ---
@@ -300,12 +568,19 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   connect( addBtn->menu(),  SIGNAL( aboutToShow() ),    this, SLOT( onAddOption() ) );
   connect( addBtn->menu(),  SIGNAL( triggered( QAction* ) ), this, SLOT( onOptionChosenInPopup( QAction* ) ) );
   connect( rmBtn,           SIGNAL( clicked()),         this, SLOT( onDeleteOption() ) );
+  
+  connect(addSurfaceButton, SIGNAL(clicked()), this, SLOT(onAddMapOnSurface()));
+  connect(addEdgeButton, SIGNAL(clicked()), this, SLOT(onAddMapOnEdge()));
+  connect(addPointButton, SIGNAL(clicked()), this, SLOT(onAddMapOnPoint()));
+  connect(removeButton, SIGNAL(clicked()), this, SLOT(onRemoveMap()));
+  connect(mySizeMapTable, SIGNAL(cellChanged ( int, int  )),this,SLOT (onSetSizeMap(int,int )));
 
   return fr;
 }
 
 void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
 {
+  MESSAGE("BLSURFPluginGUI_HypothesisCreator::retrieveParams");
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
 
   BlsurfHypothesisData data;
@@ -332,7 +607,7 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
   myAllowQuadrangles->setChecked( data.myAllowQuadrangles );
   myDecimesh->setChecked( data.myDecimesh );
   myVerbosity->setValue( data.myVerbosity );
-
+  
   if ( myOptions.operator->() ) {
     printf("retrieveParams():myOptions->length()=%d\n",myOptions->length());
     for ( int i = 0, nb = myOptions->length(); i < nb; ++i ) {
@@ -355,6 +630,29 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
   }
   myOptionTable->resizeColumnToContents( OPTION_NAME_COLUMN );
 
+  printf("retrieveParams():that->mySMPMap.size()=%d\n",that->mySMPMap.size());
+  QMapIterator<QString, QString> i(that->mySMPMap);
+  GeomSelectionTools* myGeomToolSelected = that->getGeomSelectionTool();
+  while (i.hasNext()) {
+    i.next();
+    const QString entry = i.key();
+    string shapeName = myGeomToolSelected->getNameFromEntry(entry.toStdString());
+    const QString sizeMap = i.value();
+    int row = mySizeMapTable->rowCount();
+    mySizeMapTable->setRowCount( row+1 );
+    mySizeMapTable->setItem( row, SMP_ENTRY_COLUMN, new QTableWidgetItem( entry ) );
+    mySizeMapTable->item( row, SMP_ENTRY_COLUMN )->setFlags( 0 );
+    mySizeMapTable->setItem( row, SMP_NAME_COLUMN, new QTableWidgetItem( QString::fromStdString(shapeName) ) );
+    mySizeMapTable->item( row, SMP_NAME_COLUMN )->setFlags( 0 );
+    mySizeMapTable->setItem( row, SMP_SIZEMAP_COLUMN, new QTableWidgetItem( sizeMap ) );
+    mySizeMapTable->item( row, SMP_SIZEMAP_COLUMN )->setFlags( Qt::ItemIsSelectable |
+                                                               Qt::ItemIsEditable   |
+                                                               Qt::ItemIsEnabled );
+    }
+  
+  mySizeMapTable->resizeColumnToContents( SMP_NAME_COLUMN );
+  mySizeMapTable->resizeColumnToContents(SMP_SIZEMAP_COLUMN);
+
   // update widgets
   that->onPhysicalMeshChanged();
   that->onGeometricMeshChanged();
@@ -373,6 +671,7 @@ QString BLSURFPluginGUI_HypothesisCreator::storeParams() const
 
 bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData& h_data ) const
 {
+  MESSAGE("BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo");
   BLSURFPlugin::BLSURFPlugin_Hypothesis_var h =
     BLSURFPlugin::BLSURFPlugin_Hypothesis::_narrow( initParamsHypothesis() );
 
@@ -405,11 +704,66 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
   that->myOptions = h->GetOptionValues();
 
+  that->mySMPMap.clear();
+
+  // classic size maps
+  BLSURFPlugin::string_array_var mySizeMaps = h->GetSizeMapEntries();
+  MESSAGE("mySizeMaps->length() = " << mySizeMaps->length());
+  QString fullSizeMaps;
+  QStringList fullSizeMapList;
+  GeomSelectionTools* myGeomToolSelected = that->getGeomSelectionTool();
+  for ( int i = 0;i<mySizeMaps->length(); ++i ) {
+    fullSizeMaps =  mySizeMaps[i].in();
+    MESSAGE("fullSizeMaps: " << fullSizeMaps.toStdString());
+    fullSizeMapList = fullSizeMaps.split( "|", QString::KeepEmptyParts );
+    if ( fullSizeMapList.count() > 1 ) {
+      string fullSizeMap = fullSizeMapList[1].toStdString();
+      int pos = fullSizeMap.find("return")+7;
+      QString sizeMap = QString::fromStdString(fullSizeMap.substr(pos, fullSizeMap.size()-pos));
+      that->mySMPMap[fullSizeMapList[0]] = sizeMap;
+      MESSAGE("mySMPMap[" << fullSizeMapList[0].toStdString() << "] = " << sizeMap.toStdString());
+      that->mySMPShapeTypeMap[fullSizeMapList[0]] = myGeomToolSelected->entryToShape(fullSizeMapList[0].toStdString()).ShapeType();
+      MESSAGE("mySMPShapeTypeMap[" << fullSizeMapList[0].toStdString() << "] = " << that->mySMPShapeTypeMap[fullSizeMapList[0]]);
+    }
+  }
+
+  // custom size maps
+/*
+  BLSURFPlugin::string_array_var myCustomSizeMaps = h->GetCustomSizeMapEntries();
+  MESSAGE("myCustomSizeMaps->length() = " << myCustomSizeMaps->length());
+
+  for ( int i = 0;i<myCustomSizeMaps->length(); ++i ) {
+    QString fullCustomSizeMaps =  myCustomSizeMaps[i].in();
+    QStringList fullCustomSizeMapList = fullCustomSizeMaps.split( "|", QString::KeepEmptyParts );
+    if ( fullCustomSizeMapList.count() > 1 ) {
+      that->mySMPMap[fullCustomSizeMapList[0]] = fullCustomSizeMapList[1];
+      that->mySMPShapeTypeMap[fullCustomSizeMapList[0]] = GeomToolSelected->entryToShape(fullCustomSizeMapList[0].toStdString()).ShapeType();
+      MESSAGE("mySMPMap[" << fullCustomSizeMapList[0].toStdString() << "] = " << fullCustomSizeMapList[1].toStdString());
+      MESSAGE("mySMPShapeTypeMap[" << fullCustomSizeMapList[0].toStdString() << "] = " << that->mySMPShapeTypeMap[fullCustomSizeMapList[0]]);
+    }
+  }
+*/
+  // attractor
+  BLSURFPlugin::string_array_var allMyAttractors = h->GetAttractorEntries();
+  MESSAGE("myAttractors->length() = " << allMyAttractors->length());
+
+  for ( int i = 0;i<allMyAttractors->length(); ++i ) {
+    QString myAttractors =  allMyAttractors[i].in();
+    QStringList myAttractorList = myAttractors.split( "|", QString::KeepEmptyParts );
+    if ( myAttractorList.count() > 1 ) {
+      that->mySMPMap[myAttractorList[0]] = myAttractorList[1];
+      that->mySMPShapeTypeMap[myAttractorList[0]] = myGeomToolSelected->entryToShape(myAttractorList[0].toStdString()).ShapeType();
+      MESSAGE("mySMPMap[" << myAttractorList[0].toStdString() << "] = " << myAttractorList[1].toStdString());
+      MESSAGE("mySMPShapeTypeMap[" << myAttractorList[0].toStdString() << "] = " << that->mySMPShapeTypeMap[myAttractorList[0]]);
+    }
+  }
+
   return true;
 }
 
 bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesisData& h_data ) const
 {
+  MESSAGE("BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo");
   BLSURFPlugin::BLSURFPlugin_Hypothesis_var h =
     BLSURFPlugin::BLSURFPlugin_Hypothesis::_narrow( hypothesis() );
 
@@ -434,7 +788,7 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
     if ( h->GetVerbosity() != h_data.myVerbosity )
       h->SetVerbosity( h_data.myVerbosity );
 
-    if( (int) h_data.myPhysicalMesh == PhysicalUserDefined ) {
+    if( ((int) h_data.myPhysicalMesh == PhysicalUserDefined)||((int) h_data.myPhysicalMesh == SizeMap) ) {
       if ( h->GetPhySize() != h_data.myPhySize.toDouble() )
         h->SetPhySize( h_data.myPhySize.toDouble() );
     }
@@ -463,8 +817,43 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
       h->SetGeoMax( h_data.myGeoMax.toDouble() );
 #endif
 
-    printf("storeParamsToHypo():myOptions->length()=%d\n",myOptions->length());
+    //printf("storeParamsToHypo():myOptions->length()=%d\n",myOptions->length());
     h->SetOptionValues( myOptions ); // is set in checkParams()
+
+    BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
+    QMapIterator<QString,QString> i(that->mySMPMap);
+    // Iterate over each size map
+    while (i.hasNext()) {
+      i.next();
+      const QString entry = i.key();
+      const QString sizeMap = i.value();
+
+      if (sizeMap == "__TO_DELETE__") {
+        MESSAGE("Delete entry " << entry.toStdString() << " from engine");
+        h->UnsetEntry(entry.toLatin1().constData());
+      }
+      else if (sizeMap.startsWith("ATTRACTOR")) {
+        MESSAGE("SetAttractorEntry(" << entry.toStdString() << ")= " << sizeMap.toStdString());
+        h->SetAttractorEntry( entry.toLatin1().constData(), sizeMap.toLatin1().constData() );
+      }
+      else if (sizeMap.startsWith("def")) {
+        MESSAGE("SetCustomSizeMapEntry(" << entry.toStdString() << ")= " << sizeMap.toStdString());
+//        h->SetCustomSizeMapEntry( entry.toLatin1().constData(), sizeMap.toLatin1().constData() );
+      }
+      else {
+        QString fullSizeMap;
+        fullSizeMap = QString("");
+        if (that->mySMPShapeTypeMap[entry]  == TopAbs_FACE)
+          fullSizeMap = QString("def f(u,v): return ") + sizeMap;
+        else if (that->mySMPShapeTypeMap[entry]  == TopAbs_EDGE)
+          fullSizeMap = QString("def f(t): return ") + sizeMap;
+        else if (that->mySMPShapeTypeMap[entry] == TopAbs_VERTEX)
+          fullSizeMap = QString("def f(): return ") + sizeMap;
+
+        MESSAGE("SetSizeMapEntry("<<entry.toStdString()<<") = " <<fullSizeMap.toStdString());
+        h->SetSizeMapEntry( entry.toLatin1().constData(), fullSizeMap.toLatin1().constData() );
+      }
+    }
   }
   catch(const SALOME::SALOME_Exception& ex)
   {
@@ -476,6 +865,7 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
 
 QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothesisData& h_data ) const
 {
+  MESSAGE("BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets");
   h_data.myName             = myName ? myName->text() : "";
   h_data.myTopology         = myTopology->currentIndex();
   h_data.myPhysicalMesh     = myPhysicalMesh->currentIndex();
@@ -526,14 +916,24 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
         guiHyp += name + " = " + value + "; ";
     }
   }
-
-  cout << "guiHyp : " << guiHyp.toLatin1().data() << endl;
+  
+  // SizeMap
+  row = 0, nbRows = mySizeMapTable->rowCount();
+  for ( ; row < nbRows; ++row )
+  {
+      QString entry   = mySizeMapTable->item( row, SMP_ENTRY_COLUMN )->text();
+      if ( that->mySMPMap.contains(entry) )
+        guiHyp += entry + " = " + that->mySMPMap[entry] + "; ";
+  }
+  
+  MESSAGE("guiHyp : " << guiHyp.toLatin1().data());
 
   return guiHyp;
 }
 
 void BLSURFPluginGUI_HypothesisCreator::onPhysicalMeshChanged() {
-  bool isCustom = (myPhysicalMesh->currentIndex() == PhysicalUserDefined);
+  MESSAGE("BLSURFPluginGUI_HypothesisCreator::onPhysicalMeshChanged");
+  bool isCustom = ((myPhysicalMesh->currentIndex() == PhysicalUserDefined) || (myPhysicalMesh->currentIndex() == SizeMap)) ;
   myPhySize->setEnabled(isCustom);
   myPhyMax->setEnabled(isCustom);
   myPhyMin->setEnabled(isCustom);
@@ -559,6 +959,7 @@ void BLSURFPluginGUI_HypothesisCreator::onPhysicalMeshChanged() {
 }
 
 void BLSURFPluginGUI_HypothesisCreator::onGeometricMeshChanged() {
+  MESSAGE("BLSURFPluginGUI_HypothesisCreator::onGeometricMeshChanged");
   bool isCustom = (myGeometricMesh->currentIndex() == UserDefined);
   myAngleMeshS->setEnabled(isCustom);
   myAngleMeshC->setEnabled(isCustom);
@@ -661,6 +1062,308 @@ void BLSURFPluginGUI_HypothesisCreator::onDeleteOption()
     myOptionTable->removeRow( it.previous() );
 }
 
+// **********************
+// *** BEGIN SIZE MAP ***
+// **********************
+
+
+void BLSURFPluginGUI_HypothesisCreator::onRemoveMap()
+{
+  MESSAGE("BLSURFPluginGUI_HypothesisCreator::onRemoveMap()");
+  QList<int> selectedRows;
+  QList<QTableWidgetItem*> selected = mySizeMapTable->selectedItems();
+  QTableWidgetItem* item;
+  int row;
+  foreach( item, selected ) {
+    row = item->row();
+    if ( !selectedRows.contains( row ) ) 
+      selectedRows.append( row );
+  }
+
+  BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
+
+  qSort( selectedRows );
+  QListIterator<int> it( selectedRows );
+  it.toBack();
+  while ( it.hasPrevious() ) {
+      row = it.previous();
+      QString entry = mySizeMapTable->item(row,SMP_ENTRY_COLUMN)->text();
+      if (that->mySMPMap.contains(entry))
+        that->mySMPMap[entry] = "__TO_DELETE__";
+      if (that->mySMPShapeTypeMap.contains(entry))
+        that->mySMPShapeTypeMap.remove(entry);
+      mySizeMapTable->removeRow(row );
+  }
+  mySizeMapTable->resizeColumnToContents(SMP_NAME_COLUMN);
+  mySizeMapTable->resizeColumnToContents(SMP_SIZEMAP_COLUMN);
+}
+
+void BLSURFPluginGUI_HypothesisCreator::onSetSizeMap(int row,int col)
+{
+  MESSAGE("BLSURFPluginGUI_HypothesisCreator::onSetSizeMap("<< row << "," << col << ")");
+  if (col == SMP_SIZEMAP_COLUMN) {
+    BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
+    QString entry   = that->mySizeMapTable->item(row, SMP_ENTRY_COLUMN)->text();
+    QString sizeMap = that->mySizeMapTable->item(row, SMP_SIZEMAP_COLUMN)->text().trimmed();
+    MESSAGE("entry: " << entry.toStdString() << ", sizeMap: " << sizeMap.toStdString());
+    if (not that->mySMPShapeTypeMap.contains(entry))
+      return;
+    if (that->mySMPMap.contains(entry))
+      if (that->mySMPMap[entry] == sizeMap)
+        return;
+    QColor* bgColor = new QColor("white");
+    QColor* fgColor = new QColor("black");
+    if (not sizeMap.isEmpty()) {
+      that->mySMPMap[entry] = sizeMap;
+      if (not sizeMapValidationFromRow(row)) {
+        bgColor->setRgb(255,0,0);
+        fgColor->setRgb(255,255,255);
+      }
+    }
+    else {
+      MESSAGE("Size map empty: reverse to precedent value" );
+      that->mySizeMapTable->item(row, SMP_SIZEMAP_COLUMN)->setText(that->mySMPMap[entry]);
+    }
+    that->mySizeMapTable->item(row, SMP_NAME_COLUMN)->setBackground(QBrush(*bgColor));
+    that->mySizeMapTable->item(row, SMP_SIZEMAP_COLUMN)->setBackground(QBrush(*bgColor));
+    that->mySizeMapTable->item(row, SMP_NAME_COLUMN)->setForeground(QBrush(*fgColor));
+    that->mySizeMapTable->item(row, SMP_SIZEMAP_COLUMN)->setForeground(QBrush(*fgColor));
+    mySizeMapTable->resizeColumnToContents(SMP_SIZEMAP_COLUMN);
+  }
+}
+
+void BLSURFPluginGUI_HypothesisCreator::onAddMapOnSurface()
+{
+ insertElementType(TopAbs_FACE);
+}
+
+void BLSURFPluginGUI_HypothesisCreator::onAddMapOnEdge()
+{
+ insertElementType(TopAbs_EDGE);
+}
+
+void BLSURFPluginGUI_HypothesisCreator::onAddMapOnPoint()
+{
+ insertElementType(TopAbs_VERTEX);
+}
+
+void BLSURFPluginGUI_HypothesisCreator::insertElementType(TopAbs_ShapeEnum typeShapeAsked)
+{
+  MESSAGE("BLSURFPluginGUI_HypothesisCreator::insertElementType()");
+
+  BLSURFPlugin::BLSURFPlugin_Hypothesis_var h =
+    BLSURFPlugin::BLSURFPlugin_Hypothesis::_narrow( initParamsHypothesis());
+
+  BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
+
+  TopoDS_Shape S;
+  string entry, shapeName;
+//  LightApp_SelectionMgr* aSel = GeomToolSelected->selectionMgr();
+
+  SALOME_ListIO ListSelectedObjects;
+  aSel->selectedObjects(ListSelectedObjects, NULL, false );
+  if (!ListSelectedObjects.IsEmpty())
+  {
+    SALOME_ListIteratorOfListIO Object_It(ListSelectedObjects);
+    GeomSelectionTools* myGeomToolSelected = getGeomSelectionTool();
+    for (; Object_It.More(); Object_It.Next()) 
+    {
+      Handle(SALOME_InteractiveObject) anObject = Object_It.Value();
+      entry     = myGeomToolSelected->getEntryOfObject(anObject);
+      shapeName = anObject->getName();
+      S         = myGeomToolSelected->entryToShape(entry);
+      if ((! S.IsNull()) && (S.ShapeType() == typeShapeAsked)) 
+      { 
+        mySizeMapTable->setFocus();
+        QString shapeEntry;
+        shapeEntry = QString::fromStdString(entry);
+        double phySize = h->GetPhySize();
+        std::ostringstream oss;
+        oss << phySize;
+        QString sizeMap;
+        sizeMap  = QString::fromStdString(oss.str());
+        if (that->mySMPMap.contains(shapeEntry)) {
+          if (that->mySMPMap[shapeEntry] != "__TO_DELETE__") {
+            MESSAGE("Size map for shape with name(entry): "<< shapeName << "(" << entry << ")");
+            break;
+          }
+        }
+        that->mySMPMap[shapeEntry] = sizeMap;
+        that->mySMPShapeTypeMap[shapeEntry] = typeShapeAsked; 
+        int row = mySizeMapTable->rowCount() ;
+        mySizeMapTable->setRowCount( row+1 );
+        mySizeMapTable->setItem( row, SMP_ENTRY_COLUMN, new QTableWidgetItem( shapeEntry ) );
+        mySizeMapTable->item( row, SMP_ENTRY_COLUMN )->setFlags( 0 );
+        mySizeMapTable->setItem( row, SMP_NAME_COLUMN, new QTableWidgetItem( QString::fromStdString(shapeName) ) );
+        mySizeMapTable->item( row, SMP_NAME_COLUMN )->setFlags( 0 );
+        mySizeMapTable->setItem( row, SMP_SIZEMAP_COLUMN, new QTableWidgetItem( sizeMap ) );
+        mySizeMapTable->item( row, SMP_SIZEMAP_COLUMN )->setFlags( Qt::ItemIsSelectable |Qt::ItemIsEditable   |Qt::ItemIsEnabled );
+        mySizeMapTable->resizeColumnToContents( SMP_NAME_COLUMN );
+        mySizeMapTable->resizeColumnToContents(SMP_SIZEMAP_COLUMN);
+        mySizeMapTable->clearSelection();
+        mySizeMapTable->scrollToItem( mySizeMapTable->item( row, SMP_SIZEMAP_COLUMN ) );
+
+        if ( myPhysicalMesh->currentIndex() != SizeMap ) {
+          myPhysicalMesh->setCurrentIndex( SizeMap );
+          onPhysicalMeshChanged();
+        }
+      }
+    }
+  }
+}
+
+bool BLSURFPluginGUI_HypothesisCreator::sizeMapsValidation()
+{
+  MESSAGE("BLSURFPluginGUI_HypothesisCreator::sizeMapsValidation()");
+  int row = 0, nbRows = mySizeMapTable->rowCount();
+  for ( ; row < nbRows; ++row )
+    if (not sizeMapValidationFromRow(row))
+      return false;
+  return true;
+}
+
+bool BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromRow(int myRow, bool displayError)
+{
+  MESSAGE("BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromRow()");
+  QString myEntry   = mySizeMapTable->item( myRow, SMP_ENTRY_COLUMN )->text();
+  bool res = sizeMapValidationFromEntry(myEntry,displayError);
+  mySizeMapTable->setFocus();
+  return res; 
+}
+
+bool BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromEntry(QString myEntry, bool displayError)
+{
+  MESSAGE("BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromEntry()");
+
+  BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
+     
+  if (not that->mySMPMap.contains(myEntry)) {
+    MESSAGE("Geometry with entry "<<myEntry.toStdString()<<" was not found.");
+    return false;
+  }
+  if (not that->mySMPShapeTypeMap.contains(myEntry)) {
+    MESSAGE("Shape type with entry "<<myEntry.toStdString()<<" was not found.");
+    return false;
+  }
+
+  string expr;
+
+  if (that->mySMPMap[myEntry].startsWith("def")) {
+    MESSAGE("custom function" );
+    expr = that->mySMPMap[myEntry].toStdString();
+  }
+  else if (that->mySMPMap[myEntry].startsWith("ATTRACTOR")) {
+    MESSAGE("Attractor" );
+//    if ((that->mySMPMap[myEntry].count(QRegExp("ATTRACTOR([0-9])")) != 1))
+    if ((that->mySMPMap[myEntry].count('(') != 1) or 
+        (that->mySMPMap[myEntry].count(')') != 1) or
+        (that->mySMPMap[myEntry].count(';') != 4) or
+        (that->mySMPMap[myEntry].size() == 15)){
+      if (displayError)
+        SUIT_MessageBox::warning( dlg(),"Definition of attractor : Error" ,"An attractor is defined with the following pattern: ATTRACTOR(xa;ya;za;a;b)" );
+      return false;
+    }
+    return true;
+  }
+  else {
+    // case size map is empty
+    if (that->mySMPMap[myEntry].isEmpty()) {
+      if (displayError)
+        SUIT_MessageBox::warning( dlg(),"Definition of size map : Error" , "Size map can't be empty");
+      return false;
+    }
+
+    if ( that->mySMPShapeTypeMap[myEntry] == TopAbs_FACE)
+      expr = "def f(u,v) : return " + that->mySMPMap[myEntry].toStdString();
+    else if ( that->mySMPShapeTypeMap[myEntry] == TopAbs_EDGE)
+      expr = "def f(t) : return " + that->mySMPMap[myEntry].toStdString();
+    else if ( that->mySMPShapeTypeMap[myEntry] == TopAbs_VERTEX)
+      expr = "def f() : return " + that->mySMPMap[myEntry].toStdString();
+  }
+  //assert(Py_IsInitialized());
+  if (not Py_IsInitialized())
+    throw ("Erreur: Python interpreter is not initialized");
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+ 
+  PyObject * obj = NULL;   
+  PyObject* new_stderr = NULL;   
+  string  err_description="";
+  obj= PyRun_String(expr.c_str(), Py_file_input, main_dict, NULL);
+  if (obj == NULL){
+    fflush(stderr);
+    err_description="";
+    new_stderr=newPyStdOut(err_description);
+    PySys_SetObject("stderr", new_stderr);
+    PyErr_Print();
+    PySys_SetObject("stderr", PySys_GetObject("__stderr__"));
+    Py_DECREF(new_stderr);
+    if (displayError)
+      SUIT_MessageBox::warning( dlg(),"Definition of Python Function : Error" ,err_description.c_str() );
+    PyGILState_Release(gstate);
+    return false;
+  }
+  Py_DECREF(obj);
+   
+  PyObject * func = NULL;
+  func = PyObject_GetAttrString(main_mod, "f");
+  if ( func == NULL){
+    fflush(stderr);                                                                            
+    err_description="";                                                                        
+    new_stderr=newPyStdOut(err_description);                                         
+    PySys_SetObject("stderr", new_stderr);                                                     
+    PyErr_Print();                                                                             
+    PySys_SetObject("stderr", PySys_GetObject("__stderr__"));                                  
+    Py_DECREF(new_stderr);
+    if (displayError)
+      SUIT_MessageBox::warning( dlg(),"Python Error" ,err_description.c_str() );
+    PyGILState_Release(gstate);
+    return false;
+  }
+
+  PyGILState_Release(gstate);
+
+  MESSAGE("SizeMap expression "<<expr<<" is valid");
+
+  return true;
+}
+
+/*
+void BLSURFPluginGUI_HypothesisCreator::OnEditMapFunction(QModelIndex* index) {
+  int myRow = index->row();
+  int myColumn = index->column();
+  
+  if (myColumn == 2){
+     if (!myEditor) {
+         myEditor = new BLSURFPluginGUI_MapFunctionEditor(sizeMapModel->item(myRow,0)->text());
+	 connect(myEditor, SIGNAL(FunctionEntered(QString)), this, SLOT(FunctionLightValidation(QString)));
+     }
+     myEditor->exec();
+//      myEditor->show();
+//      myEditor->raise();
+//      myEditor->activateWindow();
+     
+
+//     BLSURFPluginGUI_MapFunctionEditor* myEditor = new BLSURFPluginGUI_MapFunctionEditor(sizeMapModel->item(myRow,0)->text());
+//     myEditor->exec();
+     QString myFunction = myEditor->GetFunctionText();
+     // FIN RECUPERATION FONCTION
+     
+     if (! myFunction.isEmpty()) {
+     
+     // MAJ DE LA MAP
+     
+     BLSURFPlugin::BLSURFPlugin_Hypothesis_var h = 
+       BLSURFPlugin::BLSURFPlugin_Hypothesis::_narrow( initParamsHypothesis());
+
+//     h->SetSizeMapEntry(sizeMapModel->item(myRow,1)->text().toLatin1().constData(),
+//                        item->text().toLatin1().constData());
+     h->SetSizeMapEntry(sizeMapModel->item(myRow,1)->text().toLatin1().constData(),
+                        myFunction.toLatin1().constData());
+     // FIN MAJ DE LA MAP
+     }
+  }
+}*/
  
 QString BLSURFPluginGUI_HypothesisCreator::caption() const
 {
@@ -680,4 +1383,14 @@ QString BLSURFPluginGUI_HypothesisCreator::type() const
 QString BLSURFPluginGUI_HypothesisCreator::helpPage() const
 {
   return "blsurf_hypo_page.html";
+}
+
+LightApp_SelectionMgr* BLSURFPluginGUI_HypothesisCreator::selectionMgr()
+{
+
+  SalomeApp_Application* anApp = dynamic_cast<SalomeApp_Application*>( SUIT_Session::session()->activeApplication() );
+  if( anApp )
+    return dynamic_cast<LightApp_SelectionMgr*>( anApp->selectionMgr() );
+  else
+    return 0;
 }

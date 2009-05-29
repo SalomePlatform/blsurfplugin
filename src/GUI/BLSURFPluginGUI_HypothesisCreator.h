@@ -20,6 +20,7 @@
 // File    : BLSURFPluginGUI_HypothesisCreator.h
 // Authors : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
 //           & Aurelien ALLEAUME (DISTENE)
+//           Size maps developement: Nicolas GEIMER (OCC) & Gilles DAVID (EURIWARE)
 // ---
 //
 #ifndef BLSURFPLUGINGUI_HypothesisCreator_H
@@ -35,8 +36,13 @@
   #define BLSURFPLUGIN_GUI_EXPORT
 #endif
 
+#include <Python.h>
 #include <SMESHGUI_Hypotheses.h>
 #include <SALOMEconfig.h>
+#include <cstring>
+#include <map>
+#include <TopAbs_ShapeEnum.hxx>
+#include <GeomSelectionTools.h>
 #include CORBA_SERVER_HEADER(BLSURFPlugin_Algorithm)
 
 class QGroupBox;
@@ -45,20 +51,23 @@ class QComboBox;
 class QCheckBox;
 class QLineEdit;
 class QTableWidget;
+class QTableView;
+class QModelIndex;
 class QSpinBox;
 class QMenu;
 class QAction;
+class LightApp_SelectionMgr;
 
 typedef struct
 {
   int     myTopology, myVerbosity;
   int     myPhysicalMesh, myGeometricMesh;
   double  myAngleMeshS, myAngleMeshC, myGradation;
-  QString myPhySize, myGeoMin, myGeoMax, myPhyMin, myPhyMax;
-  bool    myAllowQuadrangles, myDecimesh;
+  QString myPhySize, myGeoMin, myGeoMax, myPhyMin,myPhyMax;
+  bool    myAllowQuadrangles, myDecimesh,mySmpsurface,mySmpedge,mySmppoint;
   QString myName;
-
 } BlsurfHypothesisData;
+
 
 /*!
  * \brief Class for creation of BLSURF hypotheses
@@ -71,29 +80,40 @@ public:
   BLSURFPluginGUI_HypothesisCreator( const QString& );
   virtual ~BLSURFPluginGUI_HypothesisCreator();
 
-  virtual bool     checkParams() const;
-  virtual QString  helpPage() const;
+  virtual bool        checkParams() const;
+  virtual QString     helpPage() const;
+  void                insertElementType( TopAbs_ShapeEnum );
+  static LightApp_SelectionMgr* selectionMgr();
 
 protected:
-  virtual QFrame*  buildFrame    ();
-  virtual void     retrieveParams() const;
-  virtual QString  storeParams   () const;
+  virtual QFrame*     buildFrame    ();
+  virtual void        retrieveParams() const;
+  virtual QString     storeParams   () const;
   
-  virtual QString  caption() const;
-  virtual QPixmap  icon() const;
-  virtual QString  type() const;
+  virtual QString     caption() const;
+  virtual QPixmap     icon() const;
+  virtual QString     type() const;
 
 protected slots:
-  void             onPhysicalMeshChanged();
-  void             onGeometricMeshChanged();
-  void             onAddOption();
-  void             onDeleteOption();
-  void             onOptionChosenInPopup( QAction* );
+  void                onPhysicalMeshChanged();
+  void                onGeometricMeshChanged();
+  void                onAddOption();
+  void                onDeleteOption();
+  void                onOptionChosenInPopup( QAction* );
+  void                onAddMapOnSurface();
+  void                onAddMapOnEdge();
+  void                onAddMapOnPoint();
+  void                onRemoveMap();
+  void                onSetSizeMap(int,int);
 
 private:
-  bool             readParamsFromHypo( BlsurfHypothesisData& ) const;
-  QString          readParamsFromWidgets( BlsurfHypothesisData& ) const;
-  bool             storeParamsToHypo( const BlsurfHypothesisData& ) const;
+  bool                readParamsFromHypo( BlsurfHypothesisData& ) const;
+  QString             readParamsFromWidgets( BlsurfHypothesisData& ) const;
+  bool                storeParamsToHypo( const BlsurfHypothesisData& ) const;
+  bool                sizeMapsValidation();
+  bool                sizeMapValidationFromRow(int,bool displayError = true);
+  bool                sizeMapValidationFromEntry(QString,bool displayError = true);
+  GeomSelectionTools* getGeomSelectionTool();
 
 private:
   QWidget*            myStdGroup;
@@ -116,7 +136,24 @@ private:
   QSpinBox*           myVerbosity;
   QTableWidget*       myOptionTable;
 
+  QWidget             *mySmpGroup;  
+  QTableWidget        *mySizeMapTable;
+  QPushButton         *addAttractorButton;
+  QPushButton         *addSurfaceButton;
+  QPushButton         *addEdgeButton;
+  QPushButton         *addPointButton;
+  QPushButton         *removeButton;
+
+  // map =  entry , size map
+  QMap<QString, QString>          mySMPMap;
+  QMap<QString, TopAbs_ShapeEnum> mySMPShapeTypeMap;
+  GeomSelectionTools*             GeomToolSelected;
+  LightApp_SelectionMgr*          aSel;
+
   BLSURFPlugin::string_array_var myOptions;
+
+  PyObject *          main_mod;
+  PyObject *          main_dict;
 };
 
 #endif // BLSURFPLUGINGUI_HypothesisCreator_H

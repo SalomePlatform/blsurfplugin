@@ -95,6 +95,58 @@
             <translation>Physical Mesh</translation>
         </message>
         <message>
+            <source>BLSURF_SIZE_MAP</source>
+            <translation>Size Map</translation>
+        </message>
+        <message>
+            <source>SMP_ENTRY_COLUMN</source>
+            <translation>Entry</translation>
+        </message>
+        <message>
+            <source>SMP_NAME_COLUMN</source>
+            <translation>Name</translation>
+        </message>
+        <message>
+            <source>SMP_SIZEMAP_COLUMN</source>
+            <translation>Size Map</translation>
+        </message>
+        <message>
+            <source>BLSURF_SM_SURFACE</source>
+            <translation>Add Map on Surface</translation>
+        </message>
+        <message>
+            <source>BLSURF_SM_EDGE</source>
+            <translation>Add Map on Edge</translation>
+        </message>
+        <message>
+            <source>BLSURF_SM_POINT</source>
+            <translation>Add Map on Point</translation>
+        </message>
+        <message>
+            <source>BLSURF_SM_ATTRACTOR</source>
+            <translation>Add Attractor</translation>
+        </message>
+        <message>
+            <source>BLSURF_SM_REMOVE</source>
+            <translation>Remove Map</translation>
+        </message>
+        <message>
+            <source>BLSURF_SM_SURF_VALUE</source>
+            <translation>Size on Surface(s)</translation>
+        </message>
+        <message>
+            <source>BLSURF_SM_EDGE_VALUE</source>
+            <translation>Size on Edge(s)</translation>
+        </message>
+        <message>
+            <source>BLSURF_SM_POINT_VALUE</source>
+            <translation>Size on Point(s)</translation>
+        </message>
+        <message>
+            <source>BLSURF_ADV_ARGS</source>
+            <translation>Advanced</translation>
+        </message>
+        <message>
             <source>BLSURF_TITLE</source>
             <translation>Hypothesis Construction</translation>
         </message>

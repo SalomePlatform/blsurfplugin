@@ -19,11 +19,13 @@
 // ---
 // File    : BLSURFPlugin_Hypothesis.cxx
 // Authors : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
+//           Size maps developement: Nicolas GEIMER (OCC) & Gilles DAVID (EURIWARE)
 // ---
 //
 #include "BLSURFPlugin_Hypothesis_i.hxx"
 #include "SMESH_Gen.hxx"
 #include "SMESH_PythonDump.hxx"
+#include "GEOM_Object.hxx"
 
 #include "Utils_CorbaException.hxx"
 #include "utilities.h"
@@ -507,6 +509,273 @@ void BLSURFPlugin_Hypothesis_i::SetOptionValues(const BLSURFPlugin::string_array
   }
 }
 
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::SetSizeMapEntry(const char* entry,const char* sizeMap)
+  throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+  MESSAGE("ENGINE : SETSIZEMAP START ENTRY : " << entry); 
+  bool valueChanged = false;
+  try {
+    valueChanged = ( this->GetImpl()->GetSizeMapEntry(entry) != sizeMap );
+    if ( valueChanged )
+      this->GetImpl()->SetSizeMapEntry(entry, sizeMap);
+  }
+  catch (const std::invalid_argument& ex) {
+    SALOME::ExceptionStruct ExDescription;
+    ExDescription.text = ex.what();
+    ExDescription.type = SALOME::BAD_PARAM;
+    ExDescription.sourceFile = "BLSURFPlugin_Hypothesis::SetSizeMapEntry(entry,sizemap)";
+    ExDescription.lineNumber = 0;
+    throw SALOME::SALOME_Exception(ExDescription);
+  }
+  catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+  MESSAGE("ENGINE : SETSIZEMAP END ENTRY : " << entry);
+  if ( valueChanged )
+    SMESH::TPythonDump() << _this() << ".SetSizeMap("
+                         << entry << ", '" << sizeMap << "' )";
+}
+
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::SetAttractorEntry(const char* entry,const char* attractor )
+  throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+  MESSAGE("ENGINE : SETATTRACTOR START ENTRY : " << entry);
+  bool valueChanged = false;
+  try {
+    valueChanged = ( this->GetImpl()->GetAttractorEntry(entry) != attractor );
+    if ( valueChanged )
+      this->GetImpl()->SetAttractorEntry(entry, attractor);
+  }
+  catch (const std::invalid_argument& ex) {
+    SALOME::ExceptionStruct ExDescription;
+    ExDescription.text = ex.what();
+    ExDescription.type = SALOME::BAD_PARAM;
+    ExDescription.sourceFile = "BLSURFPlugin_Hypothesis::SetAttractorEntry(entry,attractor)";
+    ExDescription.lineNumber = 0;
+    throw SALOME::SALOME_Exception(ExDescription);
+  }
+  catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+  MESSAGE("ENGINE : SETATTRACTOR END ENTRY : " << entry);
+  if ( valueChanged )
+    SMESH::TPythonDump() << _this() << ".SetAttractor("
+                         << entry << ", '" << attractor << "' )";
+}
+
+
+//=============================================================================
+                                                             
+char* BLSURFPlugin_Hypothesis_i::GetSizeMapEntry(const char* entry) 
+  throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+  try {
+    return CORBA::string_dup( this->GetImpl()->GetSizeMapEntry(entry).c_str());
+  }
+  catch (const std::invalid_argument& ex) {
+    SALOME::ExceptionStruct ExDescription;
+    ExDescription.text = ex.what();
+    ExDescription.type = SALOME::BAD_PARAM;
+    ExDescription.sourceFile = "BLSURFPlugin_Hypothesis::GetSizeMapEntry(name)";
+    ExDescription.lineNumber = 0;
+    throw SALOME::SALOME_Exception(ExDescription);
+  }
+  catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+  return 0;
+}
+
+//=============================================================================
+
+char* BLSURFPlugin_Hypothesis_i::GetAttractorEntry(const char* entry)
+  throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+  try {
+    return CORBA::string_dup( this->GetImpl()->GetAttractorEntry(entry).c_str());
+  }
+  catch (const std::invalid_argument& ex) {
+    SALOME::ExceptionStruct ExDescription;
+    ExDescription.text = ex.what();
+    ExDescription.type = SALOME::BAD_PARAM;
+    ExDescription.sourceFile = "BLSURFPlugin_Hypothesis::GetAttractorEntry(name)";
+    ExDescription.lineNumber = 0;
+    throw SALOME::SALOME_Exception(ExDescription);
+  }
+  catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+  return 0;
+}
+
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::UnsetEntry(const char* entry)
+{
+  ASSERT(myBaseImpl); 
+  this->GetImpl()->ClearEntry(entry);
+//  SMESH::TPythonDump() << _this() << ".UnsetSizeMap( " << entry << " )";
+}
+
+//=============================================================================
+
+BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetSizeMapEntries()
+{
+  ASSERT(myBaseImpl);
+  BLSURFPlugin::string_array_var result = new BLSURFPlugin::string_array();
+
+  const ::BLSURFPlugin_Hypothesis::TSizeMap & sizeMaps= this->GetImpl()->GetSizeMapEntries();
+  result->length( sizeMaps.size() );
+
+  ::BLSURFPlugin_Hypothesis::TSizeMap::const_iterator smIt = sizeMaps.begin();
+  for ( int i = 0 ; smIt != sizeMaps.end(); ++smIt, ++i ) {
+    string entry_sizemap = smIt->first;
+    if ( !smIt->second.empty() ) {
+      entry_sizemap += "|";
+      entry_sizemap += smIt->second;
+    }
+    result[i] = CORBA::string_dup(entry_sizemap.c_str());
+  }
+  return result._retn();
+}
+
+//=============================================================================                   
+
+BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetAttractorEntries()
+{
+  ASSERT(myBaseImpl);
+  BLSURFPlugin::string_array_var result = new BLSURFPlugin::string_array();
+
+  const ::BLSURFPlugin_Hypothesis::TSizeMap & attractors= this->GetImpl()->GetAttractorEntries();
+  result->length( attractors.size() );
+
+  ::BLSURFPlugin_Hypothesis::TSizeMap::const_iterator atIt = attractors.begin();
+  for ( int i = 0 ; atIt != attractors.end(); ++atIt, ++i ) {
+    string entry_attractor = atIt->first;
+    if ( !atIt->second.empty() ) {
+      entry_attractor += "|";
+      entry_attractor += atIt->second;
+    }
+    result[i] = CORBA::string_dup(entry_attractor.c_str());
+  }
+  return result._retn();
+}
+
+//=============================================================================                   
+                                                                                                  
+void BLSURFPlugin_Hypothesis_i::SetSizeMapEntries(const BLSURFPlugin::string_array& sizeMaps)        
+  throw (SALOME::SALOME_Exception)                                                                
+{                                                                                                 
+  ASSERT(myBaseImpl);                                                                             
+  for (int i = 0; i < sizeMaps.length(); ++i)                                                      
+  {                                                                                               
+    string entry_sizemap = sizeMaps[i].in();                                                          
+    int colonPos = entry_sizemap.find( '|' );                                                        
+    string entry, sizemap;                                                                           
+    if ( colonPos == string::npos ) // '|' separator not found                                              
+      entry = entry_sizemap;                                                                          
+    else {                                                                                        
+      entry = entry_sizemap.substr( 0, colonPos);                                                     
+      if ( colonPos < entry_sizemap.size()-1 && entry_sizemap[colonPos] != ' ')                         
+        sizemap = entry_sizemap.substr( colonPos+1 );                                                  
+    }                                                                                             
+    this->GetImpl()->SetSizeMapEntry( entry.c_str(), sizemap.c_str() );                                                
+  }                                                                                               
+}                                                                                                 
+
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::ClearSizeMaps()
+{
+  ASSERT(myBaseImpl);
+  this->GetImpl()->ClearSizeMaps();
+}
+
+
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::SetSizeMap(const GEOM::GEOM_Object_ptr GeomObj,const char* sizeMap)
+{
+  ASSERT(myBaseImpl);
+  string entry;
+  entry=GeomObj->GetStudyEntry();
+  MESSAGE("IDL : GetName : " << GeomObj->GetName());
+  MESSAGE("IDL : SETSIZEMAP ( "<< entry << " , " << sizeMap << ")"); 
+  SetSizeMapEntry( entry.c_str(),sizeMap);
+}
+  
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::UnsetSizeMap(const GEOM::GEOM_Object_ptr GeomObj)
+{
+  ASSERT(myBaseImpl);
+  string entry;
+  entry=GeomObj->GetStudyEntry();
+  MESSAGE("IDL : GetName : " << GeomObj->GetName());
+  MESSAGE("IDL : UNSETSIZEMAP ( "<< entry << ")");
+  UnsetEntry( entry.c_str());
+  SMESH::TPythonDump() << _this() << ".UnsetSizeMap( " << entry.c_str() << " )";
+}
+
+
+void BLSURFPlugin_Hypothesis_i::SetAttractor(GEOM::GEOM_Object_ptr GeomObj, const char* attractor)
+{
+  ASSERT(myBaseImpl);
+  string entry;
+  entry=GeomObj->GetStudyEntry();
+  MESSAGE("IDL : GetName : " << GeomObj->GetName());
+  MESSAGE("IDL : SETATTRACTOR ( "<< entry << " , " << attractor << ")");
+  SetAttractorEntry( entry.c_str(),attractor);
+}
+
+void BLSURFPlugin_Hypothesis_i::UnsetAttractor(GEOM::GEOM_Object_ptr GeomObj)
+{
+  ASSERT(myBaseImpl);
+  string entry;
+  entry=GeomObj->GetStudyEntry();
+  MESSAGE("IDL : GetName : " << GeomObj->GetName());
+  MESSAGE("IDL : UNSETATTRACTOR ( "<< entry << ")");
+  UnsetEntry( entry.c_str());
+  SMESH::TPythonDump() << _this() << ".UnsetAttractor( " << entry.c_str() << " )";
+}
+
+
+
+
+/*
+void BLSURFPlugin_Hypothesis_i::SetCustomSizeMap(GEOM::GEOM_Object_ptr GeomObj, const char* sizeMap)
+{}
+
+void BLSURFPlugin_Hypothesis_i::UnsetCustomSizeMap(GEOM::GEOM_Object_ptr GeomObj)
+{}
+
+void BLSURFPlugin_Hypothesis_i::SetCustomSizeMapEntry(const char* entry,const char* sizeMap )  throw (SALOME::SALOME_Exception)
+{}
+
+char* BLSURFPlugin_Hypothesis_i::GetCustomSizeMapEntry(const char* entry)  throw (SALOME::SALOME_Exception)
+{}
+
+void BLSURFPlugin_Hypothesis_i::UnsetCustomSizeMapEntry(const char* entry)
+{
+  ASSERT(myBaseImpl);
+  this->GetImpl()->UnsetCustomSizeMap(entry);
+  SMESH::TPythonDump() << _this() << ".UnsetCustomSizeMap( " << entry << " )";
+}
+
+
+BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetCustomSizeMapEntries()
+{}
+
+*/
+
+     
 //=============================================================================
 /*!
  *  BLSURFPlugin_Hypothesis_i::GetImpl

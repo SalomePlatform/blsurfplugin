@@ -18,55 +18,49 @@
 #
 # ---
 # File   : Makefile.am
-# Author : Vadim SANDLER, Open CASCADE S.A.S (vadim.sandler@opencascade.com)
+# Author : Nicolas GEIMER (OCC)
 # ---
 #
 include $(top_srcdir)/adm_local/unix/make_common_starter.am
 
 # header files 
-salomeinclude_HEADERS =	\
-	BLSURFPluginGUI_HypothesisCreator.h
+salomeinclude_HEADERS =
 
 # Libraries targets
-lib_LTLIBRARIES = libBLSURFPluginGUI.la
+lib_LTLIBRARIES = libGeomSelectionTools.la
 
-dist_libBLSURFPluginGUI_la_SOURCES = \
-	BLSURFPluginGUI.cxx \
-	BLSURFPluginGUI_HypothesisCreator.cxx
+dist_libGeomSelectionTools_la_SOURCES =		\
+	GeomSelectionTools.h            	\
+	GeomSelectionTools.cxx
 
 MOC_FILES = \
 	BLSURFPluginGUI_HypothesisCreator_moc.cxx
 
-nodist_libBLSURFPluginGUI_la_SOURCES = \
+nodist_GeomSelectionTools_la_SOURCES = \
 	$(MOC_FILES)
 
 # additionnal information to compil and link file
 
-libBLSURFPluginGUI_la_CPPFLAGS = 	\
+libGeomSelectionTools_la_CPPFLAGS = 	\
 	$(QT_INCLUDES)			\
 	$(CAS_CPPFLAGS)			\
 	$(PYTHON_INCLUDES)		\
 	$(KERNEL_CXXFLAGS)		\
 	$(GUI_CXXFLAGS)			\
 	$(GEOM_CXXFLAGS)		\
-	$(MED_CXXFLAGS)			\
 	$(SMESH_CXXFLAGS)		\
+	$(MED_CXXFLAGS)   		\
 	$(BOOST_CPPFLAGS)		\
 	$(CORBA_CXXFLAGS)		\
 	$(CORBA_INCLUDES)		\
-	$(BLSURF_INCLUDES)		\
-	-I$(srcdir)/../BLSURFPlugin	\
-	-I$(srcdir)/../PluginUtils  \
 	-I$(top_builddir)/idl		\
 	-I$(top_builddir)/salome_adm/unix
 
-libBLSURFPluginGUI_la_LDFLAGS =			\
-	../BLSURFPlugin/libBLSURFEngine.la	\
-	../PluginUtils/libGeomSelectionTools.la \
+libGeomSelectionTools_la_LDFLAGS =		\
 	${SMESH_LDFLAGS} -lSMESH		\
-	$(CAS_KERNEL) $(BLSURF_LIBS)
+	$(CAS_KERNEL) 
 
 # resources files
-nodist_salomeres_DATA =		\
-	BLSURFPlugin_images.qm	\
-	BLSURFPlugin_msg_en.qm
+#nodist_salomeres_DATA =		\
+#	BLSURFPlugin_images.qm	\
+#	BLSURFPlugin_msg_en.qm

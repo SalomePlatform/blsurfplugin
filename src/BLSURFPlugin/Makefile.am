@@ -24,25 +24,27 @@
 include $(top_srcdir)/adm_local/unix/make_common_starter.am
 
 # header files 
-salomeinclude_HEADERS =
+salomeinclude_HEADERS =	\
+	BLSURFPlugin_BLSURF.hxx	\
+	BLSURFPlugin_BLSURF_i.hxx	\
+	BLSURFPlugin_Hypothesis.hxx	\
+	BLSURFPlugin_Hypothesis_i.hxx
 
 # Libraries targets
 lib_LTLIBRARIES = libBLSURFEngine.la
 
 dist_libBLSURFEngine_la_SOURCES =	\
-	BLSURFPlugin_BLSURF.hxx		\
 	BLSURFPlugin_BLSURF.cxx		\
-	BLSURFPlugin_BLSURF_i.hxx	\
 	BLSURFPlugin_BLSURF_i.cxx	\
-	BLSURFPlugin_Hypothesis.hxx	\
 	BLSURFPlugin_Hypothesis.cxx	\
-	BLSURFPlugin_Hypothesis_i.hxx	\
 	BLSURFPlugin_Hypothesis_i.cxx	\
 	BLSURFPlugin_i.cxx
 
 libBLSURFEngine_la_CPPFLAGS =	\
-        $(KERNEL_CXXFLAGS)	\
-        $(GUI_CXXFLAGS)		\
+   $(QT_INCLUDES)          \
+   $(PYTHON_INCLUDES)      \
+   $(KERNEL_CXXFLAGS)	\
+   $(GUI_CXXFLAGS)		\
 	$(MED_CXXFLAGS)		\
 	$(GEOM_CXXFLAGS)	\
 	$(CAS_CPPFLAGS)		\
@@ -51,11 +53,15 @@ libBLSURFEngine_la_CPPFLAGS =	\
 	$(CORBA_CXXFLAGS)	\
 	$(CORBA_INCLUDES)	\
 	$(BOOST_CPPFLAGS)	\
+   -I$(srcdir)/../PluginUtils  \
 	-I$(top_builddir)/idl	\
-	-I$(top_builddir)/salome_adm/unix
+	-I$(top_builddir)/salome_adm/unix 
+
+#Qt uniquement necessaire pour le getActiveStudyDocument de SMeshGuiUtils.h
 
 libBLSURFEngine_la_LDFLAGS  =			\
 	../../idl/libSalomeIDLBLSURFPLUGIN.la	\
+   ../PluginUtils/libGeomSelectionTools.la \
 	$(BLSURF_LIBS)				\
 	$(SMESH_LDFLAGS) -lSMESHimpl -lSMESHEngine -lStdMeshersEngine	\
 	$(KERNEL_LDFLAGS) -lSalomeGenericObj

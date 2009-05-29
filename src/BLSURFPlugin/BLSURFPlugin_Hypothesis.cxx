@@ -20,6 +20,7 @@
 // File    : BLSURFPlugin_Hypothesis.cxx
 // Authors : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
 //           & Aurelien ALLEAUME (DISTENE)
+//           Size maps developement: Nicolas GEIMER (OCC) & Gilles DAVID (EURIWARE)
 // ---
 //
 #include "BLSURFPlugin_Hypothesis.hxx"
@@ -121,6 +122,8 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis (int hypId, int studyId,
     _charOptions.insert( charOptionNames[i] );
     _option2value[ charOptionNames[i++] ].clear();
   }
+  
+  _sizeMap.clear();
 }
 
 //=============================================================================
@@ -334,6 +337,69 @@ void BLSURFPlugin_Hypothesis::ClearOption(const std::string& optionName)
     op_val->second.clear();
 }
 
+
+void  BLSURFPlugin_Hypothesis::SetSizeMapEntry(const std::string& entry,const std::string& sizeMap)
+{
+  if (_sizeMap[entry].compare(sizeMap) != 0) {
+    _sizeMap[entry]=sizeMap;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+std::string  BLSURFPlugin_Hypothesis::GetSizeMapEntry(const std::string& entry)
+{
+ TSizeMap::iterator it  = _sizeMap.find( entry );
+ if ( it != _sizeMap.end() )
+   return it->second;
+ else
+   return "No_Such_Entry";
+}
+
+void  BLSURFPlugin_Hypothesis::SetAttractorEntry(const std::string& entry,const std::string& attractor)
+{
+  if (_attractors[entry].compare(attractor) != 0) {
+    _attractors[entry]=attractor;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+std::string  BLSURFPlugin_Hypothesis::GetAttractorEntry(const std::string& entry)
+{
+ TSizeMap::iterator it  = _attractors.find( entry );
+ if ( it != _attractors.end() )
+   return it->second;
+ else
+   return "No_Such_Entry";
+}
+
+
+void BLSURFPlugin_Hypothesis::ClearEntry(const std::string& entry)
+{
+ TSizeMap::iterator it  = _sizeMap.find( entry );
+ if ( it != _sizeMap.end() ) {
+   _sizeMap.erase(it);
+   NotifySubMeshesHypothesisModification();
+ }
+ else {
+   TSizeMap::iterator itAt  = _attractors.find( entry );
+   if ( itAt != _attractors.end() ) {
+     _attractors.erase(itAt);
+     NotifySubMeshesHypothesisModification();
+   }
+   else
+     std::cout<<"No_Such_Entry"<<std::endl;
+ }
+}
+
+
+void BLSURFPlugin_Hypothesis::ClearSizeMaps()
+{
+  _sizeMap.clear();
+  _attractors.clear();
+}
+
+
+
 //=============================================================================
 std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save)
 {
@@ -353,12 +419,37 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save)
        << " " << _verb;
 
   TOptionValues::iterator op_val = _option2value.begin();
-  for ( ; op_val != _option2value.end(); ++op_val ) {
-    if ( !op_val->second.empty() )
-      save << " " << op_val->first
-           << " " << op_val->second << "%#"; // "%#" is a mark of value end
+  if (op_val != _option2value.end()) {
+    save << " " << "__OPTIONS_BEGIN__";
+    for ( ; op_val != _option2value.end(); ++op_val ) {
+      if ( !op_val->second.empty() )
+        save << " " << op_val->first
+             << " " << op_val->second << "%#"; // "%#" is a mark of value end
+    }
+    save << " " << "__OPTIONS_END__";
   }
 
+  TSizeMap::iterator it_sm  = _sizeMap.begin();
+  if (it_sm != _sizeMap.end()) {
+    save << " " << "__SIZEMAP_BEGIN__";
+    for ( ; it_sm != _sizeMap.end(); ++it_sm ) {
+        save << " " << it_sm->first
+             << " " << it_sm->second << "%#"; // "%#" is a mark of value end
+    }
+    save << " " << "__SIZEMAP_END__";
+  }
+
+  TSizeMap::iterator it_at  = _attractors.begin();
+  if (it_at != _attractors.end()) {
+    save << " " << "__ATTRACTORS_BEGIN__";
+    for ( ; it_at != _attractors.end(); ++it_at ) {
+        save << " " << it_at->first
+             << " " << it_at->second << "%#"; // "%#" is a mark of value end
+    }
+    save << " " << "__ATTRACTORS_END__";
+  }
+  
+  
   return save;
 }
 
@@ -453,11 +544,28 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
   else
     load.clear(std::ios::badbit | load.rdstate());
 
+  std::string option_or_sm;
+  bool hasOptions = false;
+  bool hasSizeMap = false;
+  bool hasAttractor = false;
+
+  isOK = (load >> option_or_sm);
+  if (isOK)
+    if (option_or_sm == "__OPTIONS_BEGIN__")
+      hasOptions = true;
+    else if (option_or_sm == "__SIZEMAP_BEGIN__")
+      hasSizeMap = true;
+    else if (option_or_sm == "__ATTRACTORS_BEGIN__")
+      hasAttractor = true;
+
   std::string optName, optValue;
-  while (isOK) {
+  while (isOK && hasOptions) {
     isOK = (load >> optName);
-    if (isOK)
+    if (isOK) {
+      if (optName == "__OPTIONS_END__")
+        break;
       isOK = (load >> optValue);
+    }
     if (isOK) {
       std::string & value = _option2value[ optName ];
       value = optValue;
@@ -476,6 +584,79 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
         }
       }
       value[ len-2 ] = '\0'; //cut off "%#"
+    }
+  }
+
+  if (hasOptions) {
+    isOK = (load >> option_or_sm);
+    if (isOK)
+      if (option_or_sm == "__SIZEMAP_BEGIN__")
+        hasSizeMap = true;
+      else if (option_or_sm == "__ATTRACTORS_BEGIN__")
+        hasAttractor = true;
+  }
+
+  std::string smEntry, smValue;
+  while (isOK && hasSizeMap) {
+    isOK = (load >> smEntry);
+    if (isOK) {
+      if (smEntry == "__SIZEMAP_END__")
+        break;
+      isOK = (load >> smValue);
+    }
+    if (isOK) {
+      std::string & value2 = _sizeMap[ smEntry ];
+      value2 = smValue;
+      int len2= value2.size();
+      // continue reading until "%#" encountered
+      while ( value2[len2-1] != '#' || value2[len2-2] != '%' )
+      {
+        isOK = (load >> smValue);
+        if (isOK) {
+          value2 += " ";
+          value2 += smValue;
+          len2 = value2.size();
+        }
+        else {
+          break;
+        }
+      }
+      value2[ len2-2 ] = '\0'; //cut off "%#"
+    }
+  }
+
+  if (hasSizeMap) {
+    isOK = (load >> option_or_sm);
+    if (isOK && option_or_sm == "__ATTRACTORS_BEGIN__")
+      hasAttractor = true;
+  }
+
+  std::string atEntry, atValue;
+  while (isOK && hasAttractor) {
+    isOK = (load >> atEntry);
+    if (isOK) {
+      if (atEntry == "__ATTRACTORS_END__")
+        break;
+      isOK = (load >> atValue);
+    }
+    if (isOK) {
+      std::string & value3 = _attractors[ atEntry ];
+      value3 = atValue;
+      int len3= value3.size();
+      // continue reading until "%#" encountered
+      while ( value3[len3-1] != '#' || value3[len3-2] != '%' )
+      {
+        isOK = (load >> atValue);
+        if (isOK) {
+          value3 += " ";
+          value3 += atValue;
+          len3 = value3.size();
+        }
+        else {
+          break;
+        }
+      }
+      value3[ len3-2 ] = '\0'; //cut off "%#"
     }
   }
 

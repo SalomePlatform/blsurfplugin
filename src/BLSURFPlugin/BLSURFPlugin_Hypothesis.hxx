@@ -20,6 +20,7 @@
 // File    : BLSURFPlugin_Hypothesis.hxx
 // Authors : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
 //           & Aurelien ALLEAUME (DISTENE)
+//           Size maps developement: Nicolas GEIMER (OCC) & Gilles DAVID (EURIWARE)
 // ---
 //
 #ifndef _BLSURFPlugin_Hypothesis_HXX_
@@ -95,6 +96,28 @@ public:
 
   void SetVerbosity(int theVal);
   int GetVerbosity() const { return _verb; }
+  
+  void ClearEntry(const std::string& entry);
+  void ClearSizeMaps();  
+
+  typedef std::map<std::string,std::string> TSizeMap;
+
+  void SetSizeMapEntry(const std::string& entry,const std::string& sizeMap );
+  std::string  GetSizeMapEntry(const std::string& entry);
+  const TSizeMap& GetSizeMapEntries() const { return _sizeMap; }  
+
+
+  void SetAttractorEntry(const std::string& entry,const std::string& attractor );
+  std::string GetAttractorEntry(const std::string& entry);
+  const TSizeMap& GetAttractorEntries() const { return _attractors; };
+
+
+/*
+  void SetCustomSizeMapEntry(const std::string& entry,const std::string& sizeMap );
+  std::string  GetCustomSizeMapEntry(const std::string& entry);
+  void UnsetCustomSizeMap(const std::string& entry);
+  const TSizeMap& GetCustomSizeMapEntries() const { return _customSizeMap; }
+ */
 
   static Topology      GetDefaultTopology();
   static PhysicalMesh  GetDefaultPhysicalMesh();
@@ -152,6 +175,11 @@ private:
   int           _verb;
   TOptionValues _option2value;
   TOptionNames  _doubleOptions, _charOptions;
+  TSizeMap      _sizeMap;
+  TSizeMap      _attractors;
+/*
+  TSizeMap      _customSizeMap;
+*/
 };
 
 #endif

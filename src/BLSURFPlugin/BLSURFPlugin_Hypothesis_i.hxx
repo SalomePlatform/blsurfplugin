@@ -19,6 +19,7 @@
 // ---
 // File    : BLSURFPlugin_Hypothesis.hxx
 // Authors : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
+//           Size maps developement: Nicolas GEIMER (OCC) & Gilles DAVID (EURIWARE)
 // ---
 //
 #ifndef _BLSURFPlugin_Hypothesis_i_HXX_
@@ -31,6 +32,7 @@
 #include "BLSURFPlugin_Hypothesis.hxx"
 
 class SMESH_Gen;
+class GEOM_Object;
 
 // BLSURFPlugin parameters hypothesis
 
@@ -97,6 +99,46 @@ class BLSURFPlugin_Hypothesis_i:
   BLSURFPlugin::string_array* GetOptionValues();
 
   void SetOptionValues(const BLSURFPlugin::string_array& options) throw (SALOME::SALOME_Exception);
+
+  void SetSizeMapEntry(const char* entry,const char* sizeMap )  throw (SALOME::SALOME_Exception);
+  
+  char* GetSizeMapEntry(const char* entry)  throw (SALOME::SALOME_Exception);
+
+  void UnsetEntry(const char* entry);
+
+  BLSURFPlugin::string_array* GetSizeMapEntries();
+
+  void SetSizeMapEntries(const BLSURFPlugin::string_array& options) throw (SALOME::SALOME_Exception);
+
+  void SetSizeMap(GEOM::GEOM_Object_ptr GeomObj, const char* sizeMap);
+
+  void UnsetSizeMap(GEOM::GEOM_Object_ptr GeomObj);
+
+  void ClearSizeMaps();
+
+
+  void SetAttractor(GEOM::GEOM_Object_ptr GeomObj, const char* attractor);
+
+  void UnsetAttractor(GEOM::GEOM_Object_ptr GeomObj);
+
+  void SetAttractorEntry(const char* entry,const char* attractor )  throw (SALOME::SALOME_Exception);
+
+  char* GetAttractorEntry(const char* entry)  throw (SALOME::SALOME_Exception);
+
+  BLSURFPlugin::string_array* GetAttractorEntries();
+
+
+/*
+  void SetCustomSizeMap(GEOM::GEOM_Object_ptr GeomObj, const char* sizeMap);
+
+  void UnsetCustomSizeMap(GEOM::GEOM_Object_ptr GeomObj);
+
+  void SetCustomSizeMapEntry(const char* entry,const char* sizeMap )  throw (SALOME::SALOME_Exception);
+
+  char* GetCustomSizeMapEntry(const char* entry)  throw (SALOME::SALOME_Exception);
+
+  BLSURFPlugin::string_array* GetCustomSizeMapEntries();
+*/
 
   // Get implementation
   ::BLSURFPlugin_Hypothesis* GetImpl();

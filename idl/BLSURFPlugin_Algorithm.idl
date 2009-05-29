@@ -19,12 +19,14 @@
 // ---
 // File    : BLSURFPlugin_Algorithm.idl
 // Authors : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
+//           Size maps developement: Nicolas GEIMER (OCC) & Gilles DAVID (EURIWARE)
 // ---
 //
 #ifndef _SMESH_BLSURFALGORITHM_IDL_
 #define _SMESH_BLSURFALGORITHM_IDL_
 
 #include "SMESH_Hypothesis.idl"
+#include "GEOM_Gen.idl"
 #include "SALOME_Exception.idl"
 
 /*!
@@ -160,8 +162,49 @@ module BLSURFPlugin
      * Note: the method is mostly for interaction with GUI.
      */
     void SetOptionValues(in string_array options);
-  };
 
+    /*!
+     * SizeMap
+     */
+    void SetSizeMapEntries(in string_array sizeMaps);
+    void ClearSizeMaps();
+
+    void UnsetEntry(in string entry);
+
+    /*!
+     * Set a SizeMap on geom object
+     */
+    void         SetSizeMap(in GEOM::GEOM_Object GeomObj, in string sizeMap);
+    void         UnsetSizeMap(in GEOM::GEOM_Object GeomObj);
+    
+    /*!
+     * Set a SizeMap on geom object given by entry
+     */
+    void         SetSizeMapEntry(in string entry, in string sizeMap);
+    string       GetSizeMapEntry(in string entry);
+    string_array GetSizeMapEntries();
+
+    /*!
+     * Set an attractor on geom object
+     */
+    void         SetAttractor(in GEOM::GEOM_Object GeomObj, in string attractor);
+    void         UnsetAttractor(in GEOM::GEOM_Object GeomObj);
+    
+    /*!
+     * Set an attractor on geom object given by entry
+     */
+    void         SetAttractorEntry(in string entry, in string attractor);
+    string       GetAttractorEntry(in string entry);
+    string_array GetAttractorEntries();
+
+/*
+    void         SetCustomSizeMapEntry(in string entry, in string sizeMap);
+    string       GetCustomSizeMapEntry(in string entry);
+    void         SetCustomSizeMap(in GEOM::GEOM_Object GeomObj, in string sizeMap);
+    void         UnsetCustomSizeMap(in GEOM::GEOM_Object GeomObj);
+    string_array GetCustomSizeMapEntries();
+*/
+  };
 };
 
 #endif

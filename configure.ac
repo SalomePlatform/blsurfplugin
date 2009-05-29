@@ -405,11 +405,18 @@ AC_OUTPUT([ \
   adm_local/Makefile \
   adm_local/unix/Makefile \
   adm_local/unix/config_files/Makefile \
+  doc/Makefile \
+  doc/salome/Makefile \
+  doc/salome/gui/Makefile \
+  doc/salome/gui/doxyfile \
+  doc/salome/tui/Makefile \
+  doc/salome/tui/doxyfile \
   bin/VERSION \
   bin/Makefile \
   idl/Makefile \
   resources/Makefile \
   src/Makefile \
+  src/PluginUtils/Makefile \
   src/BLSURFPlugin/Makefile \
   src/GUI/Makefile \
   BLSURFPLUGIN_version.h \

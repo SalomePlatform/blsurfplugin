@@ -38,9 +38,9 @@ else !BLSURFPLUGIN_ENABLE_GUI
                     -I ${SMESH_ROOT_DIR}/adm_local/unix/config_files
 endif
 
-SUBDIRS = idl adm_local resources src bin
+SUBDIRS = idl adm_local resources src bin doc
 
-DIST_SUBDIRS = idl adm_local resources src bin 
+DIST_SUBDIRS = idl adm_local resources src bin doc 
 
 DISTCLEANFILES = a.out aclocal.m4 configure
 
@@ -52,3 +52,12 @@ EXTRA_DIST += \
 
 dist-hook:
 	rm -rf `find $(distdir) -name CVS`
+
+usr_docs:
+	(cd doc && $(MAKE) $(AM_MAKEFLAGS) usr_docs)
+
+docs: usr_docs
+
+dev_docs:
+	(cd doc && $(MAKE) $(AM_MAKEFLAGS) dev_docs)
+

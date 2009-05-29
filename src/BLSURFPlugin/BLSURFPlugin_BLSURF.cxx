@@ -20,14 +20,19 @@
 // File    : BLSURFPlugin_BLSURF.cxx
 // Authors : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
 //           & Aurelien ALLEAUME (DISTENE)
+//           Size maps developement: Nicolas GEIMER (OCC) & Gilles DAVID (EURIWARE)
 // ---
 //
 #include "BLSURFPlugin_BLSURF.hxx"
 #include "BLSURFPlugin_Hypothesis.hxx"
 
+#include <structmember.h>
+
+
 #include <SMESH_Gen.hxx>
 #include <SMESH_Mesh.hxx>
 #include <SMESH_ControlsDef.hxx>
+#include <SMESHGUI_Utils.h>
 
 #include <SMESHDS_Mesh.hxx>
 #include <SMDS_MeshElement.hxx>
@@ -35,8 +40,10 @@
 
 #include <utilities.h>
 
+#include <limits>
 #include <list>
 #include <vector>
+#include <cstdlib>
 
 #include <BRep_Tool.hxx>
 #include <TopExp.hxx>
@@ -68,6 +75,131 @@ extern "C"{
 #include <fenv.h>
 #endif
 
+#include  <GeomSelectionTools.h>
+
+#include <GeomAPI_ProjectPointOnCurve.hxx>
+#include <GeomAPI_ProjectPointOnSurf.hxx>
+#include <gp_XY.hxx>
+#include <gp_XYZ.hxx>
+
+/* ==================================
+ * ===========  PYTHON ==============
+ * ==================================*/
+
+typedef struct {
+  PyObject_HEAD
+  int softspace;
+  std::string *out;
+  } PyStdOut;
+
+static void
+PyStdOut_dealloc(PyStdOut *self)
+{
+  PyObject_Del(self);
+}
+
+static PyObject *
+PyStdOut_write(PyStdOut *self, PyObject *args)
+{
+  char *c;
+  int l;
+  if (!PyArg_ParseTuple(args, "t#:write",&c, &l))
+    return NULL;
+
+  //std::cerr << c ;
+  *(self->out)=*(self->out)+c;
+
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+static PyMethodDef PyStdOut_methods[] = {
+  {"write",  (PyCFunction)PyStdOut_write,  METH_VARARGS,
+    PyDoc_STR("write(string) -> None")},
+  {NULL,    NULL}   /* sentinel */
+};
+
+static PyMemberDef PyStdOut_memberlist[] = {
+  {"softspace", T_INT,  offsetof(PyStdOut, softspace), 0,
+   "flag indicating that a space needs to be printed; used by print"},
+  {NULL} /* Sentinel */
+};
+
+static PyTypeObject PyStdOut_Type = {
+  /* The ob_type field must be initialized in the module init function
+   * to be portable to Windows without using C++. */
+  PyObject_HEAD_INIT(NULL)
+  0,      /*ob_size*/
+  "PyOut",   /*tp_name*/
+  sizeof(PyStdOut),  /*tp_basicsize*/
+  0,      /*tp_itemsize*/
+  /* methods */
+  (destructor)PyStdOut_dealloc, /*tp_dealloc*/
+  0,      /*tp_print*/
+  0, /*tp_getattr*/
+  0, /*tp_setattr*/
+  0,      /*tp_compare*/
+  0,      /*tp_repr*/
+  0,      /*tp_as_number*/
+  0,      /*tp_as_sequence*/
+  0,      /*tp_as_mapping*/
+  0,      /*tp_hash*/
+        0,                      /*tp_call*/
+        0,                      /*tp_str*/
+        PyObject_GenericGetAttr,                      /*tp_getattro*/
+        /* softspace is writable:  we must supply tp_setattro */
+        PyObject_GenericSetAttr,    /* tp_setattro */
+        0,                      /*tp_as_buffer*/
+        Py_TPFLAGS_DEFAULT,     /*tp_flags*/
+        0,                      /*tp_doc*/
+        0,                      /*tp_traverse*/
+        0,                      /*tp_clear*/
+        0,                      /*tp_richcompare*/
+        0,                      /*tp_weaklistoffset*/
+        0,                      /*tp_iter*/
+        0,                      /*tp_iternext*/
+        PyStdOut_methods,                      /*tp_methods*/
+        PyStdOut_memberlist,                      /*tp_members*/
+        0,                      /*tp_getset*/
+        0,                      /*tp_base*/
+        0,                      /*tp_dict*/
+        0,                      /*tp_descr_get*/
+        0,                      /*tp_descr_set*/
+        0,                      /*tp_dictoffset*/
+        0,                      /*tp_init*/
+        0,                      /*tp_alloc*/
+        0,                      /*tp_new*/
+        0,                      /*tp_free*/
+        0,                      /*tp_is_gc*/
+};
+
+PyObject * newPyStdOut( std::string& out )
+{
+  PyStdOut *self;
+  self = PyObject_New(PyStdOut, &PyStdOut_Type);
+  if (self == NULL)
+    return NULL;
+  self->softspace = 0;
+  self->out=&out;
+  return (PyObject*)self;
+}
+
+
+////////////////////////END PYTHON///////////////////////////
+
+//////////////////MY MAPS////////////////////////////////////////
+std::map<int,string> FaceId2SizeMap;
+std::map<int,string> EdgeId2SizeMap;
+std::map<int,string> VertexId2SizeMap;
+std::map<int,PyObject*> FaceId2PythonSmp;
+std::map<int,PyObject*> EdgeId2PythonSmp;
+std::map<int,PyObject*> VertexId2PythonSmp;
+
+
+bool HasSizeMapOnFace=false;
+bool HasSizeMapOnEdge=false;
+bool HasSizeMapOnVertex=false;
+
 //=============================================================================
 /*!
  *  
@@ -86,6 +218,28 @@ BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF(int hypId, int studyId,
   _requireDescretBoundary = false;
   _onlyUnaryInput = false;
   _hypothesis = NULL;
+
+
+  /* Initialize the Python interpreter */
+  assert(Py_IsInitialized());
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+
+  main_mod = NULL;
+  main_mod = PyImport_AddModule("__main__");
+
+  main_dict = NULL;
+  main_dict = PyModule_GetDict(main_mod);
+
+  PyRun_SimpleString("from math import *");
+  PyGILState_Release(gstate);
+  
+  FaceId2SizeMap.clear();
+  EdgeId2SizeMap.clear();
+  VertexId2SizeMap.clear();
+  FaceId2PythonSmp.clear();
+  EdgeId2PythonSmp.clear();
+  VertexId2PythonSmp.clear();
 }
 
 //=============================================================================
@@ -98,6 +252,7 @@ BLSURFPlugin_BLSURF::~BLSURFPlugin_BLSURF()
 {
   MESSAGE("BLSURFPlugin_BLSURF::~BLSURFPlugin_BLSURF");
 }
+
 
 //=============================================================================
 /*!
@@ -165,6 +320,39 @@ inline std::string to_string(int i)
    return o.str();
 }
 
+double _smp_phy_size;
+status_t size_on_surface(integer face_id, real *uv, real *size, void *user_data);
+status_t size_on_edge(integer edge_id, real t, real *size, void *user_data); 
+status_t size_on_vertex(integer vertex_id, real *size, void *user_data);
+
+double my_u_min=1e6,my_v_min=1e6,my_u_max=-1e6,my_v_max=-1e6;
+
+/////////////////////////////////////////////////////////
+gp_XY getUV(const TopoDS_Face& face, const gp_XYZ& point)
+{
+  Handle(Geom_Surface) surface = BRep_Tool::Surface(face);
+  GeomAPI_ProjectPointOnSurf projector( point, surface );
+  if ( !projector.IsDone() || projector.NbPoints()==0 )
+    throw "Can't project";
+
+  Quantity_Parameter u,v;
+  projector.LowerDistanceParameters(u,v);
+  return gp_XY(u,v);
+}
+/////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////
+double getT(const TopoDS_Edge& edge, const gp_XYZ& point)
+{
+  Standard_Real f,l;
+  Handle(Geom_Curve) curve = BRep_Tool::Curve(edge, f,l);
+  GeomAPI_ProjectPointOnCurve projector( point, curve);
+  if ( projector.NbPoints() == 0 )
+    throw;
+  return projector.LowerDistanceParameter();
+}
+/////////////////////////////////////////////////////////
+
 void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsurf_session_t *bls)
 {
   int    _topology      = BLSURFPlugin_Hypothesis::GetDefaultTopology();
@@ -177,7 +365,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
   bool   _quadAllowed   = BLSURFPlugin_Hypothesis::GetDefaultQuadAllowed();
   bool   _decimesh      = BLSURFPlugin_Hypothesis::GetDefaultDecimesh();
   int    _verb          = BLSURFPlugin_Hypothesis::GetDefaultVerbosity();
-
+   
   if (hyp) {
     MESSAGE("BLSURFPlugin_BLSURF::SetParameters");
     _topology      = (int) hyp->GetTopology();
@@ -204,22 +392,142 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
     BLSURFPlugin_Hypothesis::TOptionValues::const_iterator opIt;
     for ( opIt = opts.begin(); opIt != opts.end(); ++opIt )
       if ( !opIt->second.empty() ) {
-#ifdef _DEBUG_
-        cout << "blsurf_set_param(): " << opIt->first << " = " << opIt->second << endl;
-#endif
+        MESSAGE("blsurf_set_param(): " << opIt->first << " = " << opIt->second);
         blsurf_set_param(bls, opIt->first.c_str(), opIt->second.c_str());
       }
 
   } else {
     MESSAGE("BLSURFPlugin_BLSURF::SetParameters using defaults");
   }
-  
+  _smp_phy_size = _phySize;
   blsurf_set_param(bls, "topo_points",       _topology > 0 ? "1" : "0");
   blsurf_set_param(bls, "topo_curves",       _topology > 0 ? "1" : "0");
   blsurf_set_param(bls, "topo_project",      _topology > 0 ? "1" : "0");
   blsurf_set_param(bls, "clean_boundary",    _topology > 1 ? "1" : "0");
   blsurf_set_param(bls, "close_boundary",    _topology > 1 ? "1" : "0");
   blsurf_set_param(bls, "hphy_flag",         to_string(_physicalMesh).c_str());
+//  blsurf_set_param(bls, "hphy_flag",         "2");
+  if ((to_string(_physicalMesh))=="2"){
+    GeomSelectionTools* GeomST = new GeomSelectionTools::GeomSelectionTools( SMESH::GetActiveStudyDocument());
+
+    TopoDS_Shape GeomShape;
+    TopAbs_ShapeEnum GeomType;
+    //
+    // Standard Size Maps
+    //
+    MESSAGE("Setting a Size Map");
+    const BLSURFPlugin_Hypothesis::TSizeMap & sizeMaps = hyp->GetSizeMapEntries();
+    BLSURFPlugin_Hypothesis::TSizeMap::const_iterator smIt;
+    int i=0;
+    for ( smIt = sizeMaps.begin(); smIt != sizeMaps.end(); ++smIt ) {
+      if ( !smIt->second.empty() ) {
+        MESSAGE("blsurf_set_sizeMap(): " << smIt->first << " = " << smIt->second);
+        GeomShape = GeomST->entryToShape(smIt->first);
+        GeomType  = GeomShape.ShapeType();
+        if (GeomType == TopAbs_FACE){
+          HasSizeMapOnFace = true;
+          FaceId2SizeMap[TopoDS::Face(GeomShape).HashCode(471662)] = smIt->second;
+        }
+        if (GeomType == TopAbs_EDGE){
+          HasSizeMapOnEdge = true;
+          HasSizeMapOnFace = true;
+          EdgeId2SizeMap[TopoDS::Edge(GeomShape).HashCode(471662)] = smIt->second;
+        }
+        if (GeomType == TopAbs_VERTEX){
+          HasSizeMapOnVertex = true;
+          HasSizeMapOnEdge   = true;
+          HasSizeMapOnFace   = true;
+          VertexId2SizeMap[TopoDS::Vertex(GeomShape).HashCode(471662)] = smIt->second;
+        }
+      }
+    }
+
+    //
+    // Attractors
+    //
+    MESSAGE("Setting Attractors");
+    const BLSURFPlugin_Hypothesis::TSizeMap & attractors = hyp->GetAttractorEntries();
+    BLSURFPlugin_Hypothesis::TSizeMap::const_iterator atIt;
+    for ( atIt = attractors.begin(); atIt != attractors.end(); ++atIt ) {
+      if ( !atIt->second.empty() ) {
+        MESSAGE("blsurf_set_attractor(): " << atIt->first << " = " << atIt->second);
+        GeomShape = GeomST->entryToShape(atIt->first);
+        GeomType  = GeomShape.ShapeType();
+
+        if (GeomType == TopAbs_FACE){
+          HasSizeMapOnFace = true;
+
+          double xa, ya, za; // Coordinates of attractor point
+          double a, b;       // Attractor parameter
+          int pos1, pos2;
+          // atIt->second has the following pattern:
+          // ATTRACTOR(xa;ya;za;a;b)
+          // where:
+          // xa;ya;za : coordinates of  attractor
+          // a        : desired size on attractor
+          // b        : distance of influence of attractor
+          //
+          // We search the parameters in the string
+          pos1 = atIt->second.find(";");
+          xa = atof(atIt->second.substr(10, pos1-10).c_str());
+          pos2 = atIt->second.find(";", pos1+1);
+          ya = atof(atIt->second.substr(pos1+1, pos2-pos1-1).c_str());
+          pos1 = pos2;
+          pos2 = atIt->second.find(";", pos1+1);
+          za = atof(atIt->second.substr(pos1+1, pos2-pos1-1).c_str());
+          pos1 = pos2;
+          pos2 = atIt->second.find(";", pos1+1);
+          a = atof(atIt->second.substr(pos1+1, pos2-pos1-1).c_str());
+          pos1 = pos2;
+          pos2 = atIt->second.find(")");
+          b = atof(atIt->second.substr(pos1+1, pos2-pos1-1).c_str());
+          
+          // Get the (u,v) values of the attractor on the face
+          gp_XY uvPoint = getUV(TopoDS::Face(GeomShape),gp_XYZ(xa,ya,za));
+          Standard_Real u0 = uvPoint.X();
+          Standard_Real v0 = uvPoint.Y();
+          // We construct the python function
+          ostringstream attractorFunction;
+          attractorFunction << "def f(u,v): return ";
+          attractorFunction << _smp_phy_size << "-(" << _smp_phy_size <<"-" << a << ")";
+          attractorFunction << "*exp(-((u-("<<u0<<"))*(u-("<<u0<<"))+(v-("<<v0<<"))*(v-("<<v0<<")))/(" << b << "*" << b <<"))";  
+
+          MESSAGE("Python function for attractor:" << std::endl << attractorFunction.str());
+
+          FaceId2SizeMap[TopoDS::Face(GeomShape).HashCode(471662)] =attractorFunction.str();
+        }
+/*
+        if (GeomType == TopAbs_EDGE){
+          HasSizeMapOnEdge = true;
+          HasSizeMapOnFace = true;
+        EdgeId2SizeMap[TopoDS::Edge(GeomShape).HashCode(471662)] = atIt->second;
+        }
+        if (GeomType == TopAbs_VERTEX){
+          HasSizeMapOnVertex = true;
+          HasSizeMapOnEdge   = true;
+          HasSizeMapOnFace   = true;
+        VertexId2SizeMap[TopoDS::Vertex(GeomShape).HashCode(471662)] = atIt->second;
+        }
+*/
+      }
+    }    
+
+
+//    if (HasSizeMapOnFace){
+    // In all size map cases (hphy_flag = 2), at least map on face must be defined
+    MESSAGE("Setting Size Map on FACES ");
+    blsurf_data_set_sizemap_iso_cad_face(bls, size_on_surface, &_smp_phy_size);
+//    }
+
+    if (HasSizeMapOnEdge){
+      MESSAGE("Setting Size Map on EDGES ");
+      blsurf_data_set_sizemap_iso_cad_edge(bls, size_on_edge, &_smp_phy_size);
+    }
+    if (HasSizeMapOnVertex){
+      MESSAGE("Setting Size Map on VERTICES ");
+      blsurf_data_set_sizemap_iso_cad_point(bls, size_on_vertex, &_smp_phy_size);
+    }
+  }
   blsurf_set_param(bls, "hphydef",           to_string(_phySize).c_str());
   blsurf_set_param(bls, "hgeo_flag",         to_string(_geometricMesh).c_str());
   blsurf_set_param(bls, "angle_meshs",       to_string(_angleMeshS).c_str());
@@ -246,10 +554,10 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   MESSAGE("BLSURFPlugin_BLSURF::Compute");
 
   if (aShape.ShapeType() == TopAbs_COMPOUND) {
-    cout << "  the shape is a COMPOUND" << endl;
+    MESSAGE("  the shape is a COMPOUND");
   }
   else {
-    cout << "  the shape is UNKNOWN" << endl;
+    MESSAGE("  the shape is UNKNOWN");
   };
 
   context_t *ctx =  context_new();
@@ -257,19 +565,39 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 
   cad_t *c = cad_new(ctx);
  
+  blsurf_session_t *bls = blsurf_session_new(ctx);
+  
+
+  SetParameters(_hypothesis, bls);
+
   TopTools_IndexedMapOfShape fmap;
   TopTools_IndexedMapOfShape emap;
   TopTools_IndexedMapOfShape pmap;
   vector<Handle(Geom2d_Curve)> curves;
   vector<Handle(Geom_Surface)> surfaces;
 
+
+
   fmap.Clear();
+  FaceId2PythonSmp.clear();
   emap.Clear();
+  EdgeId2PythonSmp.clear();
   pmap.Clear();
+  VertexId2PythonSmp.clear();
   surfaces.resize(0);
   curves.resize(0);
 
+  assert(Py_IsInitialized());
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+/*
+  Standard_Real u_min;
+  Standard_Real v_min;
+  Standard_Real u_max;
+  Standard_Real v_max;
+*/
   int iface = 0;
+  string bad_end = "return"; 
   for (TopExp_Explorer face_iter(aShape,TopAbs_FACE);face_iter.More();face_iter.Next()) {
     TopoDS_Face f=TopoDS::Face(face_iter.Current());
     if (fmap.FindIndex(f) > 0)
@@ -278,6 +606,26 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     fmap.Add(f);
     iface++;
     surfaces.push_back(BRep_Tool::Surface(f));
+    // Get bound values of uv surface
+    //BRep_Tool::Surface(f)->Bounds(u_min,u_max,v_min,v_max);
+    //MESSAGE("BRep_Tool::Surface(f)->Bounds(u_min,u_max,v_min,v_max): " << u_min << ", " << u_max << ", " << v_min << ", " << v_max);
+    
+    if ((HasSizeMapOnFace) && FaceId2SizeMap.find(f.HashCode(471662))!=FaceId2SizeMap.end()){
+        MESSAGE("FaceId2SizeMap[f.HashCode(471662)].find(bad_end): " << FaceId2SizeMap[f.HashCode(471662)].find(bad_end));
+        MESSAGE("FaceId2SizeMap[f.HashCode(471662)].size(): " << FaceId2SizeMap[f.HashCode(471662)].size());
+        MESSAGE("bad_end.size(): " << bad_end.size());
+      // check if function ends with "return"
+        if (FaceId2SizeMap[f.HashCode(471662)].find(bad_end) == (FaceId2SizeMap[f.HashCode(471662)].size()-bad_end.size()-1))
+        continue;
+      // Expr To Python function, verification is performed at validation in GUI
+      PyObject * obj = NULL;
+      obj= PyRun_String(FaceId2SizeMap[f.HashCode(471662)].c_str(), Py_file_input, main_dict, NULL);
+      Py_DECREF(obj);
+      PyObject * func = NULL;
+      func = PyObject_GetAttrString(main_mod, "f");
+      FaceId2PythonSmp[iface]=func;
+      FaceId2SizeMap.erase(f.HashCode(471662));
+    }
     cad_face_t *fce = cad_face_new(c, iface, surf_fun, surfaces.back());  
     cad_face_set_tag(fce, iface);
     if(f.Orientation() != TopAbs_FORWARD){
@@ -294,6 +642,18 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       
       double tmin,tmax;
       curves.push_back(BRep_Tool::CurveOnSurface(e, f, tmin, tmax));
+      if ((HasSizeMapOnEdge) && EdgeId2SizeMap.find(e.HashCode(471662))!=EdgeId2SizeMap.end()){
+          if (EdgeId2SizeMap[e.HashCode(471662)].find(bad_end) == (EdgeId2SizeMap[e.HashCode(471662)].size()-bad_end.size()-1))
+          continue;
+        // Expr To Python function, verification is performed at validation in GUI
+        PyObject * obj = NULL;
+        obj= PyRun_String(EdgeId2SizeMap[e.HashCode(471662)].c_str(), Py_file_input, main_dict, NULL);
+        Py_DECREF(obj);
+        PyObject * func = NULL;
+        func = PyObject_GetAttrString(main_mod, "f");
+        EdgeId2PythonSmp[ic]=func;
+        EdgeId2SizeMap.erase(e.HashCode(471662));
+      }
       cad_edge_t *edg = cad_edge_new(fce, ic, tmin, tmax, curv_fun, curves.back());
       cad_edge_set_tag(edg, ic);
       cad_edge_set_property(edg, EDGE_PROPERTY_SOFT_REQUIRED);
@@ -307,7 +667,6 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       Standard_Real d1=0,d2=0;
       for (TopExp_Explorer ex_edge(e ,TopAbs_VERTEX); ex_edge.More(); ex_edge.Next()) {
 	TopoDS_Vertex v = TopoDS::Vertex(ex_edge.Current());
-
 	++npts;
 	if (npts == 1){
 	  ip = &ip1;
@@ -319,10 +678,22 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 	*ip = pmap.FindIndex(v);
 	if(*ip <= 0)
 	  *ip = pmap.Add(v);
+    if ((HasSizeMapOnVertex) && VertexId2SizeMap.find(v.HashCode(471662))!=VertexId2SizeMap.end()){
+        if (VertexId2SizeMap[v.HashCode(471662)].find(bad_end) == (VertexId2SizeMap[v.HashCode(471662)].size()-bad_end.size()-1))
+            continue;
+          // Expr To Python function, verification is performed at validation in GUI
+          PyObject * obj = NULL;
+          obj= PyRun_String(VertexId2SizeMap[v.HashCode(471662)].c_str(), Py_file_input, main_dict, NULL);
+          Py_DECREF(obj);
+          PyObject * func = NULL;
+          func = PyObject_GetAttrString(main_mod, "f");
+          VertexId2PythonSmp[*ip]=func;
+          VertexId2SizeMap.erase(v.HashCode(471662));
+        }
       }
       if (npts != 2) {
 	// should not happen 
-	cout << "An edge does not have 2 extremities." << endl;
+	MESSAGE("An edge does not have 2 extremities.");
       } else {
 	if (d1 < d2)
 	  cad_edge_set_extremities(edg, ip1, ip2);
@@ -333,16 +704,13 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   } //for face
 
 
+  PyGILState_Release(gstate);
 
-
-  blsurf_session_t *bls = blsurf_session_new(ctx);
   blsurf_data_set_cad(bls, c);
 
-  SetParameters(_hypothesis, bls);
-
-  cout << endl;
-  cout << "Beginning of Surface Mesh generation" << endl;
-  cout << endl;
+  std::cout << std::endl;
+  std::cout << "Beginning of Surface Mesh generation" << std::endl;
+  std::cout << std::endl;
 
   // Issue 0019864. On DebianSarge, FE signals do not obey to OSD::SetSignal(false)
 #ifndef WNT
@@ -380,9 +748,9 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     return error(_comment);
   }
 
-  cout << endl;
-  cout << "End of Surface Mesh generation" << endl;
-  cout << endl;
+  std::cout << std::endl;
+  std::cout << "End of Surface Mesh generation" << std::endl;
+  std::cout << std::endl;
 
   mesh_t *msh;
   blsurf_data_get_mesh(bls, &msh);
@@ -604,6 +972,125 @@ status_t surf_fun(real *uv, real *xyz, real*du, real *dv,
   return 0;
 }
 
+
+status_t size_on_surface(integer face_id, real *uv, real *size, void *user_data)
+{
+  if (face_id == 1) {
+    if (my_u_min > uv[0]) {
+      my_u_min = uv[0];
+    }
+    if (my_v_min > uv[1]) {
+      my_v_min = uv[1];
+    }
+    if (my_u_max < uv[0]) {
+      my_u_max = uv[0];
+    }
+    if (my_v_max < uv[1]) {
+      my_v_max = uv[1];
+    }
+  }
+
+  if (FaceId2PythonSmp.count(face_id) != 0){
+    PyObject * pyresult = NULL;
+    PyObject* new_stderr = NULL;
+    assert(Py_IsInitialized());
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+    pyresult = PyObject_CallFunction(FaceId2PythonSmp[face_id],"(f,f)",uv[0],uv[1]);
+    double result;
+    if ( pyresult == NULL){
+      fflush(stderr);
+      string err_description="";
+      new_stderr = newPyStdOut(err_description);
+      PySys_SetObject("stderr", new_stderr);
+      PyErr_Print();
+      PySys_SetObject("stderr", PySys_GetObject("__stderr__"));
+      Py_DECREF(new_stderr);
+      MESSAGE("Can't evaluate f(" << uv[0] << "," << uv[1] << ")" << " error is " << err_description);
+      result = *((double*)user_data);
+      }
+    else {
+      result = PyFloat_AsDouble(pyresult);
+      Py_DECREF(pyresult);
+    }
+    *size = result;
+    //MESSAGE("f(" << uv[0] << "," << uv[1] << ")" << " = " << result);
+    PyGILState_Release(gstate);
+  }
+  else {
+    *size = *((double*)user_data);
+  }
+  return STATUS_OK;
+}
+
+status_t size_on_edge(integer edge_id, real t, real *size, void *user_data)
+{
+  if (EdgeId2PythonSmp.count(edge_id) != 0){
+    PyObject * pyresult = NULL;
+    PyObject* new_stderr = NULL;
+    assert(Py_IsInitialized());
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+    pyresult = PyObject_CallFunction(EdgeId2PythonSmp[edge_id],"(f)",t);
+    double result;
+    if ( pyresult == NULL){
+      fflush(stderr);
+      string err_description="";
+      new_stderr = newPyStdOut(err_description);
+      PySys_SetObject("stderr", new_stderr);
+      PyErr_Print();
+      PySys_SetObject("stderr", PySys_GetObject("__stderr__"));
+      Py_DECREF(new_stderr);
+      MESSAGE("Can't evaluate f(" << t << ")" << " error is " << err_description);
+      result = *((double*)user_data);
+      }
+    else {
+      result = PyFloat_AsDouble(pyresult);
+      Py_DECREF(pyresult);
+    }
+    *size = result;
+    PyGILState_Release(gstate);
+  }
+  else {
+    *size = *((double*)user_data);
+  }
+  return STATUS_OK;
+}
+
+status_t size_on_vertex(integer point_id, real *size, void *user_data)
+{
+  if (VertexId2PythonSmp.count(point_id) != 0){
+    PyObject * pyresult = NULL;
+    PyObject* new_stderr = NULL;
+    assert(Py_IsInitialized());
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+    pyresult = PyObject_CallFunction(VertexId2PythonSmp[point_id],"");
+    double result;
+    if ( pyresult == NULL){
+      fflush(stderr);
+      string err_description="";
+      new_stderr = newPyStdOut(err_description);
+      PySys_SetObject("stderr", new_stderr);
+      PyErr_Print();
+      PySys_SetObject("stderr", PySys_GetObject("__stderr__"));
+      Py_DECREF(new_stderr);
+      MESSAGE("Can't evaluate f()" << " error is " << err_description);
+      result = *((double*)user_data);
+      }
+    else {
+      result = PyFloat_AsDouble(pyresult);
+      Py_DECREF(pyresult);
+    }
+    *size = result;
+    PyGILState_Release(gstate);
+  }
+  else {
+    *size = *((double*)user_data);
+  }
+ return STATUS_OK;
+}
+
 status_t message_callback(message_t *msg, void *user_data)
 {
   integer errnumber = 0;
@@ -621,7 +1108,7 @@ status_t message_callback(message_t *msg, void *user_data)
     error->append( desc, len );
   }
   else {
-    cout << desc;
+      std::cout << desc << std::endl;
   }
   return STATUS_OK;
 }

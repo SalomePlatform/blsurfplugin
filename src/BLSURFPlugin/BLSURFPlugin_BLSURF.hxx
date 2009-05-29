@@ -20,11 +20,13 @@
 // File    : BLSURFPlugin_BLSURF.hxx
 // Authors : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
 //           & Aurelien ALLEAUME (DISTENE)
+//           Size maps developement: Nicolas GEIMER (OCC) & Gilles DAVID (EURIWARE)
 // ---
 //
 #ifndef _BLSURFPlugin_BLSURF_HXX_
 #define _BLSURFPlugin_BLSURF_HXX_
 
+#include <Python.h>
 #include "SMESH_2D_Algo.hxx"
 #include "SMESH_Mesh.hxx"
 #include "Utils_SALOME_Exception.hxx"
@@ -52,9 +54,14 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
     istream & LoadFrom(istream & load);
     friend ostream & operator << (ostream & save, BLSURFPlugin_BLSURF & hyp);
     friend istream & operator >> (istream & load, BLSURFPlugin_BLSURF & hyp);
-
+ 
   protected:
     const BLSURFPlugin_Hypothesis* _hypothesis;
+
+  private:
+      PyObject *          main_mod;
+      PyObject *          main_dict;
+      
 };
 
 #endif

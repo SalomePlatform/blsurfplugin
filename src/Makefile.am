@@ -23,10 +23,10 @@
 #
 include $(top_srcdir)/adm_local/unix/make_common_starter.am
 
-SUBDIRS = PluginUtils BLSURFPlugin
+SUBDIRS = BLSURFPlugin
 
 if BLSURFPLUGIN_ENABLE_GUI
-  SUBDIRS += GUI
+  SUBDIRS += PluginUtils GUI
 endif
 
 DIST_SUBDIRS = PluginUtils BLSURFPlugin GUI

@@ -53,14 +53,14 @@
 #include <QRadioButton>
 
 #include <LightApp_SelectionMgr.h>
-#include <SalomeApp_Application.h> 
+#include <SalomeApp_Application.h>
 #include <SALOME_ListIO.hxx>
 #include <SALOME_ListIteratorOfListIO.hxx>
 
 #include <GEOM_Client.hxx>
 #include <TopoDS_Shape.hxx>
 #include <SMESH_Gen_i.hxx>
-#include <boost/shared_ptr.hpp> 
+#include <boost/shared_ptr.hpp>
 #include <structmember.h>
 
 // #include <GeomSelectionTools.h>
@@ -111,7 +111,7 @@ enum {
 };
 
 /**************************************************
- Begin initialization Python structures and objects 
+ Begin initialization Python structures and objects
 ***************************************************/
 
 typedef struct {
@@ -213,18 +213,18 @@ PyObject * newPyStdOut( std::string& out )
 }
 
 /*************************************************
-End initialization Python structures and objects 
+End initialization Python structures and objects
 **************************************************/
 
 /**
  * \brief {BLSURFPluginGUI_HypothesisCreator constructor}
  * @param theHypType Name of the hypothesis type (here BLSURF_Parameters)
- * 
+ *
  * */
 BLSURFPluginGUI_HypothesisCreator::BLSURFPluginGUI_HypothesisCreator( const QString& theHypType )
   : SMESHGUI_GenericHypothesisCreator( theHypType )
 {
-  MESSAGE("BLSURFPluginGUI_HypothesisCreator::BLSURFPluginGUI_HypothesisCreator"); 
+  MESSAGE("BLSURFPluginGUI_HypothesisCreator::BLSURFPluginGUI_HypothesisCreator");
   this->mySMPMap.clear();
 
   GeomToolSelected = NULL;
@@ -237,13 +237,13 @@ BLSURFPluginGUI_HypothesisCreator::BLSURFPluginGUI_HypothesisCreator( const QStr
     throw ("Error: Python interpreter is not initialized");
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
-  
+
   main_mod = NULL;
   main_mod = PyImport_AddModule("__main__");
-  
+
   main_dict = NULL;
   main_dict = PyModule_GetDict(main_mod);
-  
+
   PyRun_SimpleString("from math import *");
   PyGILState_Release(gstate);
 
@@ -258,15 +258,17 @@ BLSURFPluginGUI_HypothesisCreator::~BLSURFPluginGUI_HypothesisCreator()
  * */
 GeomSelectionTools* BLSURFPluginGUI_HypothesisCreator::getGeomSelectionTool()
 {
-  MESSAGE("BLSURFPluginGUI_HypothesisCreator::getGeomSelectionTool"); 
+  MESSAGE("BLSURFPluginGUI_HypothesisCreator::getGeomSelectionTool");
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
   _PTR(Study) aStudy = SMESH::GetActiveStudyDocument();
+  MESSAGE("aStudy->StudyId(): " << aStudy->StudyId());
   if (that->GeomToolSelected == NULL or that->GeomToolSelected->getMyStudy() != aStudy) {
     MESSAGE("GeomToolSelected is created");
     that->GeomToolSelected = new GeomSelectionTools(aStudy);
   }
   else
     MESSAGE("GeomToolSelected already exists");
+  MESSAGE("that->GeomToolSelected->getMyStudy()->StudyId(): " << that->GeomToolSelected->getMyStudy()->StudyId());
   return that->GeomToolSelected;
 }
 
@@ -285,7 +287,7 @@ namespace {
 
 bool BLSURFPluginGUI_HypothesisCreator::checkParams() const
 {
-  MESSAGE("BLSURFPluginGUI_HypothesisCreator::checkParams"); 
+  MESSAGE("BLSURFPluginGUI_HypothesisCreator::checkParams");
   bool ok = true;
   if ( !isDouble( myPhySize->text(), false )) {
     if ( myPhySize->text().isEmpty() )
@@ -440,14 +442,14 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   myAngleMeshS->setMinimum( 0 );
   myAngleMeshS->setMaximum( 16 );
   myAngleMeshS->setSingleStep( 0.5 );
-  
+
   aStdLayout->addWidget( new QLabel( tr( "BLSURF_ANGLE_MESH_C" ), myStdGroup ), row, 0, 1, 1 );
   myAngleMeshC = new QtxDoubleSpinBox( myStdGroup );
   aStdLayout->addWidget( myAngleMeshC, row++, 1, 1, 1 );
   myAngleMeshC->setMinimum( 0 );
   myAngleMeshC->setMaximum( 16 );
   myAngleMeshC->setSingleStep( 0.5 );
-  
+
   aStdLayout->addWidget( new QLabel( tr( "BLSURF_GRADATION" ), myStdGroup ), row, 0, 1, 1 );
   myGradation = new QtxDoubleSpinBox( myStdGroup );
   aStdLayout->addWidget( myGradation, row++, 1, 1, 1 );
@@ -470,7 +472,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 
   myDecimesh = new QCheckBox( tr( "BLSURF_DECIMESH" ), myStdGroup );
   aStdLayout->addWidget( myDecimesh, row++, 0, 1, 2 );
-  
+
   // advanced parameters
   myAdvGroup = new QWidget();
   QGridLayout* anAdvLayout = new QGridLayout( myAdvGroup );
@@ -513,14 +515,14 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   anAdvLayout->setColumnStretch( 1, 5 );
 
   // Size Maps parameters
-  
+
   mySmpGroup = new QWidget();
   QGridLayout* anSmpLayout = new QGridLayout(mySmpGroup);
 
   mySizeMapTable = new QTableWidget( 0, SMP_NB_COLUMNS, mySmpGroup );
   anSmpLayout->addWidget(mySizeMapTable, 1, 0, 8, 1);
   QStringList sizeMapHeaders;
-  sizeMapHeaders << tr( "SMP_ENTRY_COLUMN" )<< tr( "SMP_NAME_COLUMN" ) << tr( "SMP_SIZEMAP_COLUMN" ); 
+  sizeMapHeaders << tr( "SMP_ENTRY_COLUMN" )<< tr( "SMP_NAME_COLUMN" ) << tr( "SMP_SIZEMAP_COLUMN" );
   mySizeMapTable->setHorizontalHeaderLabels(sizeMapHeaders);
   mySizeMapTable->horizontalHeader()->hideSection( SMP_ENTRY_COLUMN );
   mySizeMapTable->resizeColumnToContents(SMP_NAME_COLUMN);
@@ -553,7 +555,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 
   removeButton = new QPushButton(tr("BLSURF_SM_REMOVE"),mySmpGroup);
   anSmpLayout->addWidget(removeButton, SMP_REMOVE_BTN, 1, 1, 1);
-  
+
 
   // ---
   tab->insertTab( STD_TAB, myStdGroup, tr( "SMESH_ARGUMENTS" ) );
@@ -568,7 +570,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   connect( addBtn->menu(),  SIGNAL( aboutToShow() ),    this, SLOT( onAddOption() ) );
   connect( addBtn->menu(),  SIGNAL( triggered( QAction* ) ), this, SLOT( onOptionChosenInPopup( QAction* ) ) );
   connect( rmBtn,           SIGNAL( clicked()),         this, SLOT( onDeleteOption() ) );
-  
+
   connect(addSurfaceButton, SIGNAL(clicked()), this, SLOT(onAddMapOnSurface()));
   connect(addEdgeButton, SIGNAL(clicked()), this, SLOT(onAddMapOnEdge()));
   connect(addPointButton, SIGNAL(clicked()), this, SLOT(onAddMapOnPoint()));
@@ -607,7 +609,7 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
   myAllowQuadrangles->setChecked( data.myAllowQuadrangles );
   myDecimesh->setChecked( data.myDecimesh );
   myVerbosity->setValue( data.myVerbosity );
-  
+
   if ( myOptions.operator->() ) {
     printf("retrieveParams():myOptions->length()=%d\n",myOptions->length());
     for ( int i = 0, nb = myOptions->length(); i < nb; ++i ) {
@@ -622,11 +624,11 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
 	myOptionTable->setItem( row, OPTION_NAME_COLUMN, new QTableWidgetItem( name_value[0] ) );
 	myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( 0 );
 	myOptionTable->setItem( row, OPTION_VALUE_COLUMN, new QTableWidgetItem( name_value[1] ) );
-	myOptionTable->item( row, OPTION_VALUE_COLUMN )->setFlags( Qt::ItemIsSelectable | 
-								   Qt::ItemIsEditable   | 
+	myOptionTable->item( row, OPTION_VALUE_COLUMN )->setFlags( Qt::ItemIsSelectable |
+								   Qt::ItemIsEditable   |
 								   Qt::ItemIsEnabled );
       }
-    } 
+    }
   }
   myOptionTable->resizeColumnToContents( OPTION_NAME_COLUMN );
 
@@ -649,7 +651,7 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
                                                                Qt::ItemIsEditable   |
                                                                Qt::ItemIsEnabled );
     }
-  
+
   mySizeMapTable->resizeColumnToContents( SMP_NAME_COLUMN );
   mySizeMapTable->resizeColumnToContents(SMP_SIZEMAP_COLUMN);
 
@@ -916,7 +918,7 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
         guiHyp += name + " = " + value + "; ";
     }
   }
-  
+
   // SizeMap
   row = 0, nbRows = mySizeMapTable->rowCount();
   for ( ; row < nbRows; ++row )
@@ -925,7 +927,7 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
       if ( that->mySMPMap.contains(entry) )
         guiHyp += entry + " = " + that->mySMPMap[entry] + "; ";
   }
-  
+
   MESSAGE("guiHyp : " << guiHyp.toLatin1().data());
 
   return guiHyp;
@@ -1009,7 +1011,7 @@ void BLSURFPluginGUI_HypothesisCreator::onOptionChosenInPopup( QAction* a )
 {
   myOptionTable->setFocus();
   QMenu* menu = (QMenu*)( a->parent() );
-  
+
   int idx = menu->actions().indexOf( a );
   QString idStr = QString("%1").arg( idx );
   QString option = myOptions[idx].in();
@@ -1028,8 +1030,8 @@ void BLSURFPluginGUI_HypothesisCreator::onOptionChosenInPopup( QAction* a )
     myOptionTable->setItem( row, OPTION_NAME_COLUMN, new QTableWidgetItem( optionName ) );
     myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( 0 );
     myOptionTable->setItem( row, OPTION_VALUE_COLUMN, new QTableWidgetItem( "" ) );
-    myOptionTable->item( row, OPTION_VALUE_COLUMN )->setFlags( Qt::ItemIsSelectable | 
-							       Qt::ItemIsEditable   | 
+    myOptionTable->item( row, OPTION_VALUE_COLUMN )->setFlags( Qt::ItemIsSelectable |
+							       Qt::ItemIsEditable   |
 							       Qt::ItemIsEnabled );
     myOptionTable->resizeColumnToContents( OPTION_NAME_COLUMN );
   }
@@ -1039,12 +1041,12 @@ void BLSURFPluginGUI_HypothesisCreator::onOptionChosenInPopup( QAction* a )
   myOptionTable->setCurrentCell( row, OPTION_VALUE_COLUMN );
   //myOptionTable->openPersistentEditor( myOptionTable->item( row, OPTION_VALUE_COLUMN ) );
 }
-    
+
 void BLSURFPluginGUI_HypothesisCreator::onDeleteOption()
 {
   // clear option values and remember selected row
   QList<int> selectedRows;
-  QList<QTableWidgetItem*> selected = myOptionTable->selectedItems(); 
+  QList<QTableWidgetItem*> selected = myOptionTable->selectedItems();
   QTableWidgetItem* item;
   foreach( item, selected ) {
     int row = item->row();
@@ -1076,7 +1078,7 @@ void BLSURFPluginGUI_HypothesisCreator::onRemoveMap()
   int row;
   foreach( item, selected ) {
     row = item->row();
-    if ( !selectedRows.contains( row ) ) 
+    if ( !selectedRows.contains( row ) )
       selectedRows.append( row );
   }
 
@@ -1158,22 +1160,23 @@ void BLSURFPluginGUI_HypothesisCreator::insertElementType(TopAbs_ShapeEnum typeS
 
   TopoDS_Shape S;
   string entry, shapeName;
-//  LightApp_SelectionMgr* aSel = GeomToolSelected->selectionMgr();
+  GeomSelectionTools* myGeomToolSelected = that->getGeomSelectionTool();
+
+  LightApp_SelectionMgr* mySel = myGeomToolSelected->selectionMgr();
 
   SALOME_ListIO ListSelectedObjects;
-  aSel->selectedObjects(ListSelectedObjects, NULL, false );
+  mySel->selectedObjects(ListSelectedObjects, NULL, false );
   if (!ListSelectedObjects.IsEmpty())
   {
     SALOME_ListIteratorOfListIO Object_It(ListSelectedObjects);
-    GeomSelectionTools* myGeomToolSelected = getGeomSelectionTool();
-    for (; Object_It.More(); Object_It.Next()) 
+    for (; Object_It.More(); Object_It.Next())
     {
       Handle(SALOME_InteractiveObject) anObject = Object_It.Value();
       entry     = myGeomToolSelected->getEntryOfObject(anObject);
       shapeName = anObject->getName();
       S         = myGeomToolSelected->entryToShape(entry);
-      if ((! S.IsNull()) && (S.ShapeType() == typeShapeAsked)) 
-      { 
+      if ((! S.IsNull()) && (S.ShapeType() == typeShapeAsked))
+      {
         mySizeMapTable->setFocus();
         QString shapeEntry;
         shapeEntry = QString::fromStdString(entry);
@@ -1189,7 +1192,7 @@ void BLSURFPluginGUI_HypothesisCreator::insertElementType(TopAbs_ShapeEnum typeS
           }
         }
         that->mySMPMap[shapeEntry] = sizeMap;
-        that->mySMPShapeTypeMap[shapeEntry] = typeShapeAsked; 
+        that->mySMPShapeTypeMap[shapeEntry] = typeShapeAsked;
         int row = mySizeMapTable->rowCount() ;
         mySizeMapTable->setRowCount( row+1 );
         mySizeMapTable->setItem( row, SMP_ENTRY_COLUMN, new QTableWidgetItem( shapeEntry ) );
@@ -1228,7 +1231,7 @@ bool BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromRow(int myRow, bool
   QString myEntry   = mySizeMapTable->item( myRow, SMP_ENTRY_COLUMN )->text();
   bool res = sizeMapValidationFromEntry(myEntry,displayError);
   mySizeMapTable->setFocus();
-  return res; 
+  return res;
 }
 
 bool BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromEntry(QString myEntry, bool displayError)
@@ -1236,7 +1239,7 @@ bool BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromEntry(QString myEnt
   MESSAGE("BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromEntry()");
 
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
-     
+
   if (not that->mySMPMap.contains(myEntry)) {
     MESSAGE("Geometry with entry "<<myEntry.toStdString()<<" was not found.");
     return false;
@@ -1255,7 +1258,7 @@ bool BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromEntry(QString myEnt
   else if (that->mySMPMap[myEntry].startsWith("ATTRACTOR")) {
     MESSAGE("Attractor" );
 //    if ((that->mySMPMap[myEntry].count(QRegExp("ATTRACTOR([0-9])")) != 1))
-    if ((that->mySMPMap[myEntry].count('(') != 1) or 
+    if ((that->mySMPMap[myEntry].count('(') != 1) or
         (that->mySMPMap[myEntry].count(')') != 1) or
         (that->mySMPMap[myEntry].count(';') != 4) or
         (that->mySMPMap[myEntry].size() == 15)){
@@ -1285,9 +1288,9 @@ bool BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromEntry(QString myEnt
     throw ("Erreur: Python interpreter is not initialized");
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
- 
-  PyObject * obj = NULL;   
-  PyObject* new_stderr = NULL;   
+
+  PyObject * obj = NULL;
+  PyObject* new_stderr = NULL;
   string  err_description="";
   obj= PyRun_String(expr.c_str(), Py_file_input, main_dict, NULL);
   if (obj == NULL){
@@ -1304,16 +1307,16 @@ bool BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromEntry(QString myEnt
     return false;
   }
   Py_DECREF(obj);
-   
+
   PyObject * func = NULL;
   func = PyObject_GetAttrString(main_mod, "f");
   if ( func == NULL){
-    fflush(stderr);                                                                            
-    err_description="";                                                                        
-    new_stderr=newPyStdOut(err_description);                                         
-    PySys_SetObject("stderr", new_stderr);                                                     
-    PyErr_Print();                                                                             
-    PySys_SetObject("stderr", PySys_GetObject("__stderr__"));                                  
+    fflush(stderr);
+    err_description="";
+    new_stderr=newPyStdOut(err_description);
+    PySys_SetObject("stderr", new_stderr);
+    PyErr_Print();
+    PySys_SetObject("stderr", PySys_GetObject("__stderr__"));
     Py_DECREF(new_stderr);
     if (displayError)
       SUIT_MessageBox::warning( dlg(),"Python Error" ,err_description.c_str() );
@@ -1332,7 +1335,7 @@ bool BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromEntry(QString myEnt
 void BLSURFPluginGUI_HypothesisCreator::OnEditMapFunction(QModelIndex* index) {
   int myRow = index->row();
   int myColumn = index->column();
-  
+
   if (myColumn == 2){
      if (!myEditor) {
          myEditor = new BLSURFPluginGUI_MapFunctionEditor(sizeMapModel->item(myRow,0)->text());
@@ -1342,18 +1345,18 @@ void BLSURFPluginGUI_HypothesisCreator::OnEditMapFunction(QModelIndex* index) {
 //      myEditor->show();
 //      myEditor->raise();
 //      myEditor->activateWindow();
-     
+
 
 //     BLSURFPluginGUI_MapFunctionEditor* myEditor = new BLSURFPluginGUI_MapFunctionEditor(sizeMapModel->item(myRow,0)->text());
 //     myEditor->exec();
      QString myFunction = myEditor->GetFunctionText();
      // FIN RECUPERATION FONCTION
-     
+
      if (! myFunction.isEmpty()) {
-     
+
      // MAJ DE LA MAP
-     
-     BLSURFPlugin::BLSURFPlugin_Hypothesis_var h = 
+
+     BLSURFPlugin::BLSURFPlugin_Hypothesis_var h =
        BLSURFPlugin::BLSURFPlugin_Hypothesis::_narrow( initParamsHypothesis());
 
 //     h->SetSizeMapEntry(sizeMapModel->item(myRow,1)->text().toLatin1().constData(),
@@ -1364,7 +1367,7 @@ void BLSURFPluginGUI_HypothesisCreator::OnEditMapFunction(QModelIndex* index) {
      }
   }
 }*/
- 
+
 QString BLSURFPluginGUI_HypothesisCreator::caption() const
 {
   return tr( "BLSURF_TITLE" );
@@ -1394,3 +1397,4 @@ LightApp_SelectionMgr* BLSURFPluginGUI_HypothesisCreator::selectionMgr()
   else
     return 0;
 }
+

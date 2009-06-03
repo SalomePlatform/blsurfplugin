@@ -19,17 +19,18 @@
 // File    : GeomSelectionTools.h
 // Authors : Nicolas GEIMER (OCC)
 // ---
-
-
+#ifndef _GEOMSELECTIONTOOLS_H_
+#define _GEOMSELECTIONTOOLS_H_
 
 #include "SALOMEDSClient.hxx"
 #include "SALOME_InteractiveObject.hxx"
 #include <SALOME_ListIO.hxx>
+#include <SalomeApp_Application.h>
 
 #include <TopoDS_Shape.hxx>
 #include <GeomAbs_SurfaceType.hxx>
 
-class LightApp_SelectionMgr;  
+class LightApp_SelectionMgr;
 
 
 /*!
@@ -44,12 +45,13 @@ class GeomSelectionTools
 {
 
 private:
- 
-  _PTR(Study) myStudy; 
+
+  _PTR(Study) myStudy;
 
 public:
 
-  GeomSelectionTools(_PTR(Study)); 
+  GeomSelectionTools(_PTR(Study));
+  static SalomeApp_Application*  GetSalomeApplication();
   static LightApp_SelectionMgr* selectionMgr();
   SALOME_ListIO* getSelectedSalomeObjects();
   Handle(SALOME_InteractiveObject) getFirstSelectedSalomeObject();
@@ -65,3 +67,4 @@ public:
 };
 
 
+#endif // _GEOMSELECTIONTOOLS_H_

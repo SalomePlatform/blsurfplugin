@@ -29,16 +29,23 @@
 #include <Python.h>
 #include "SMESH_2D_Algo.hxx"
 #include "SMESH_Mesh.hxx"
+#include <SMESH_Gen_i.hxx>
+#include <SALOMEconfig.h>
+#include CORBA_CLIENT_HEADER(SALOMEDS)
+#include CORBA_CLIENT_HEADER(GEOM_Gen)
 #include "Utils_SALOME_Exception.hxx"
 extern "C"{
 #include "distene/api.h"
 }
 
 class BLSURFPlugin_Hypothesis;
+class TopoDS_Shape;
 
 class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
   public:
     BLSURFPlugin_BLSURF(int hypId, int studyId, SMESH_Gen* gen);
+
+    TopoDS_Shape entryToShape(std::string entry);
 
     virtual ~BLSURFPlugin_BLSURF();
 
@@ -54,14 +61,15 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
     istream & LoadFrom(istream & load);
     friend ostream & operator << (ostream & save, BLSURFPlugin_BLSURF & hyp);
     friend istream & operator >> (istream & load, BLSURFPlugin_BLSURF & hyp);
- 
+
   protected:
     const BLSURFPlugin_Hypothesis* _hypothesis;
 
   private:
       PyObject *          main_mod;
       PyObject *          main_dict;
-      
+      SALOMEDS::Study_var myStudy;
+      SMESH_Gen_i*        smeshGen_i;
 };
 
 #endif

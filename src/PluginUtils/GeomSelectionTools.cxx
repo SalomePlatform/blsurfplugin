@@ -24,26 +24,28 @@
 
 
 #include "GeomSelectionTools.h"
-#include <sstream>
 
-#include <LightApp_SelectionMgr.h> 
-#include <SalomeApp_Application.h> 
-#include <SUIT_Session.h> 
+#include <LightApp_SelectionMgr.h>
+#include <SalomeApp_Application.h>
+#include <SUIT_Session.h>
 
-#include <SALOME_ListIteratorOfListIO.hxx> 
+#include <SALOME_ListIteratorOfListIO.hxx>
 #include <GEOM_Client.hxx>
-#include <SMESH_Gen_i.hxx> 
 #include <SMESHGUI_Utils.h>
-#include <boost/shared_ptr.hpp> 
+#include <boost/shared_ptr.hpp>
 
 #include <TopoDS.hxx>
 #include <BRep_Tool.hxx>
 #include <Handle_Geom_Surface.hxx>
 #include <BRepAdaptor_Surface.hxx>
 
+#include "utilities.h"
+
+#include "SALOME_LifeCycleCORBA.hxx"
+#include <sstream>
 
 /*!
- * Constructor 
+ * Constructor
  * @param aStudy pointer to the Study
  *
  */
@@ -62,16 +64,29 @@ _PTR(Study) GeomSelectionTools::getMyStudy()
 }
 
 /*!
- * Allows to get the selection manager from LightApp 
+ * Allows to get the Salome Application
+ * @return A LightApp_SelectionMgr Pointer or 0 if it can't get it.
+ */
+SalomeApp_Application*  GeomSelectionTools::GetSalomeApplication()
+{
+  SalomeApp_Application* anApp = dynamic_cast<SalomeApp_Application*>( SUIT_Session::session()->activeApplication() );
+  if (anApp)
+    return anApp;
+  else
+    return 0;
+}
+
+/*!
+ * Allows to get the selection manager from LightApp
  * @return A LightApp_SelectionMgr Pointer or 0 if it can't get it.
  */
 LightApp_SelectionMgr*  GeomSelectionTools::selectionMgr()
 {
-  SalomeApp_Application* anApp = dynamic_cast<SalomeApp_Application*>( SUIT_Session::session()->activeApplication() );
-  if (anApp)
-    return dynamic_cast<LightApp_SelectionMgr*>( anApp->selectionMgr() ); 
-  else  
-    return 0;
+   SalomeApp_Application* anApp = GetSalomeApplication();
+   if (anApp)
+     return dynamic_cast<LightApp_SelectionMgr*>( anApp->selectionMgr() );
+   else
+     return 0;
 }
 
 /*!
@@ -95,7 +110,7 @@ Handle(SALOME_InteractiveObject) GeomSelectionTools::getFirstSelectedSalomeObjec
   SALOME_ListIO selected;
   LightApp_SelectionMgr* aSel = selectionMgr();
   aSel->selectedObjects( selected, NULL, false );
-  if (!selected.IsEmpty()){  
+  if (!selected.IsEmpty()){
     SALOME_ListIteratorOfListIO anIt(selected);
     Handle(SALOME_InteractiveObject) anIO;
     anIO = anIt.Value();
@@ -107,7 +122,7 @@ Handle(SALOME_InteractiveObject) GeomSelectionTools::getFirstSelectedSalomeObjec
 /*!
  * Return the entry of the first selected Object
  * @return the entry of the first selected Object
- */ 
+ */
 std::string GeomSelectionTools::getFirstSelectedEntry()
 {
   Handle(SALOME_InteractiveObject) anIO;
@@ -124,7 +139,7 @@ std::string GeomSelectionTools::getFirstSelectedEntry()
 std::string GeomSelectionTools::getEntryOfObject(Handle(SALOME_InteractiveObject) anIO){
   std::string entry="";
   _PTR(SObject) aSO = myStudy->FindObjectID(anIO->getEntry());
-  if (aSO){   
+  if (aSO){
     _PTR(SObject) aRefSObj;
     // If selected object is a reference
     if ( aSO->ReferencedObject( aRefSObj ))
@@ -135,7 +150,7 @@ std::string GeomSelectionTools::getEntryOfObject(Handle(SALOME_InteractiveObject
   }
   return entry;
 }
-  
+
 /*!
  * Retrieve the name from the entry of the object
  * @param entry the entry of the object
@@ -166,14 +181,14 @@ std::string GeomSelectionTools::getFirstSelectedComponentDataType()
   Handle(SALOME_InteractiveObject) anIO;
   std::string DataType="";
   anIO=GeomSelectionTools::getFirstSelectedSalomeObject();
-  _PTR(SObject) aSO = myStudy->FindObjectID(anIO->getEntry()); 
+  _PTR(SObject) aSO = myStudy->FindObjectID(anIO->getEntry());
   if (aSO){
     _PTR(SObject) aRefSObj;
-    // If selected object is a reference 
+    // If selected object is a reference
     if ( aSO->ReferencedObject( aRefSObj ))
       DataType= aRefSObj->GetFatherComponent()->ComponentDataType();
-    // If selected object is a reference is not a reference 
-    else 
+    // If selected object is a reference is not a reference
+    else
       DataType=anIO->getComponentDataType();
  }
  return DataType;
@@ -195,28 +210,39 @@ TopoDS_Shape GeomSelectionTools::getFirstSelectedTopoDSShape()
  * @return the TopoDS shape from the entry, empty TopoDS Shape if the entry does not define a shape.
  */
 TopoDS_Shape GeomSelectionTools::entryToShape(std::string entry){
+  MESSAGE("GeomSelectionTools::entryToShape"<<entry );
   TopoDS_Shape S = TopoDS_Shape();
    _PTR(SObject) aSO = myStudy->FindObjectID(entry);
-  if (aSO){ 
+  if (aSO){
     _PTR(SObject) aRefSObj;
     GEOM::GEOM_Object_var aShape;
-    // If selected object is a reference 
-    if ( aSO->ReferencedObject( aRefSObj )){
-      if (aRefSObj->GetFatherComponent()->ComponentDataType() == "GEOM")  
-        aShape=SMESH::SObjectToInterface<GEOM::GEOM_Object>(aRefSObj);
+    MESSAGE("Got a SO");
+    // If selected object is a reference
+    if ( aSO->ReferencedObject( aRefSObj ))
+      aSO = aRefSObj;
+    MESSAGE("aSO->GetFatherComponent()->ComponentDataType(): " << aSO->GetFatherComponent()->ComponentDataType());
+    if (  strcmp(aSO->GetFatherComponent()->ComponentDataType().c_str(),"GEOM") == 0)
+      aShape = SMESH::SObjectToInterface<GEOM::GEOM_Object>(aSO);
+    if ( !aShape->_is_nil() ){
+      MESSAGE("Got a Shape as Geom Object ");
+
+     SalomeApp_Application* anApp = GetSalomeApplication();
+     if (anApp) {
+       MESSAGE("Got Application");
+       Engines::Component_var component = anApp->lcc()->FindOrLoad_Component( "FactoryServer","GEOM" );
+       GEOM::GEOM_Gen_var _geomEngine = GEOM::GEOM_Gen::_narrow(component);
+       MESSAGE("Got GEOM engine");
+       GEOM_Client* aClient = new GEOM_Client();
+       if ( aClient && !_geomEngine->_is_nil() ) {
+         MESSAGE("GEOM client is OK and GEOM engine is not null");
+         S = aClient->GetShape( _geomEngine, aShape );
+       }
      }
-     // If selected object is a reference is not a reference
-     else {
-       if (  aSO->GetFatherComponent()->ComponentDataType() == "GEOM") 
-         aShape = SMESH::SObjectToInterface<GEOM::GEOM_Object>(aSO);
-     }
-     if ( !aShape->_is_nil() ){
-       if (SMESH_Gen_i* gen = SMESH_Gen_i::GetSMESHGen())
-          S=gen->GeomObjectToShape( aShape.in() );
     }
   }
   return S;
 }
+
 
 /*!
  * Gives the ShapeType of the first Selected Object, return TopAbs_SHAPE if the first selected object does not define a shape.
@@ -241,8 +267,8 @@ TopAbs_ShapeEnum GeomSelectionTools:: getFirstSelectedShapeType()
  *  U and V number of poles
  *  U and V number of knots
  *  U or V is Rational ?
- *  
- */  
+ *
+ */
 GeomAbs_SurfaceType GeomSelectionTools::getFaceInformation()
 {
   TopoDS_Shape S=getFirstSelectedTopoDSShape();
@@ -251,23 +277,26 @@ GeomAbs_SurfaceType GeomSelectionTools::getFaceInformation()
     TopoDS_Face f=TopoDS::Face(S);
     Handle(Geom_Surface) surf = BRep_Tool::Surface(f);
     BRepAdaptor_Surface surf_adap=BRepAdaptor_Surface::BRepAdaptor_Surface(f);
-    
+
     /* Global Information */
-    cout << "GLOBAL INFORMATION" << endl;
-    cout << "******************" << endl;
-    stringstream buffer;
+    std::cout << "GLOBAL INFORMATION" << std::endl;
+    std::cout << "******************" << std::endl;
+    std::stringstream buffer;
     buffer << "Degre U : " <<  surf_adap.UDegree();
    //conversion nécessaire pour affichage
-    cout << buffer.str() << endl;
-    cout <<  " Degre V : " <<  surf_adap.VDegree() << endl;
-    cout <<  " Nb Poles U : " <<  surf_adap.NbUPoles() << endl;
-    cout <<  " Nb Poles V : " <<  surf_adap.NbVPoles() << endl;    
-    cout <<  " Nb Noeuds U : " <<  surf_adap.NbUKnots() << endl; 
-    cout <<  " Nb Noeuds V : " <<  surf_adap.NbVKnots() << endl;
-    cout <<  " U Rationnel ? " <<  surf_adap.IsURational() << endl;
-    cout <<  " V Rationnel ? " <<  surf_adap.IsVRational() << endl;
+    std::cout << buffer.str() << std::endl;
+    std::cout <<  " Degre V : " <<  surf_adap.VDegree() << std::endl;
+    std::cout <<  " Nb Poles U : " <<  surf_adap.NbUPoles() << std::endl;
+    std::cout <<  " Nb Poles V : " <<  surf_adap.NbVPoles() << std::endl;
+    std::cout <<  " Nb Noeuds U : " <<  surf_adap.NbUKnots() << std::endl;
+    std::cout <<  " Nb Noeuds V : " <<  surf_adap.NbVKnots() << std::endl;
+    std::cout <<  " U Rationnel ? " <<  surf_adap.IsURational() << std::endl;
+    std::cout <<  " V Rationnel ? " <<  surf_adap.IsVRational() << std::endl;
 
     surf_type=surf_adap.GetType();
   }
   return surf_type;
 }
+
+
+

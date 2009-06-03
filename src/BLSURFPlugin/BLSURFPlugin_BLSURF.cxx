@@ -32,7 +32,6 @@
 #include <SMESH_Gen.hxx>
 #include <SMESH_Mesh.hxx>
 #include <SMESH_ControlsDef.hxx>
-#include <SMESHGUI_Utils.h>
 
 #include <SMESHDS_Mesh.hxx>
 #include <SMDS_MeshElement.hxx>
@@ -74,8 +73,6 @@ extern "C"{
 #ifndef WNT
 #include <fenv.h>
 #endif
-
-#include  <GeomSelectionTools.h>
 
 #include <GeomAPI_ProjectPointOnCurve.hxx>
 #include <GeomAPI_ProjectPointOnSurf.hxx>
@@ -202,7 +199,7 @@ bool HasSizeMapOnVertex=false;
 
 //=============================================================================
 /*!
- *  
+ *
  */
 //=============================================================================
 
@@ -219,6 +216,15 @@ BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF(int hypId, int studyId,
   _onlyUnaryInput = false;
   _hypothesis = NULL;
 
+  smeshGen_i = SMESH_Gen_i::GetSMESHGen();
+  CORBA::Object_var anObject = smeshGen_i->GetNS()->Resolve("/myStudyManager");
+  SALOMEDS::StudyManager_var aStudyMgr = SALOMEDS::StudyManager::_narrow(anObject);
+
+  MESSAGE("studyid = " << _studyId);
+
+  myStudy = NULL;
+  myStudy = aStudyMgr->GetStudyByID(_studyId);
+  MESSAGE("myStudy->StudyId() = " << myStudy->StudyId());
 
   /* Initialize the Python interpreter */
   assert(Py_IsInitialized());
@@ -233,7 +239,7 @@ BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF(int hypId, int studyId,
 
   PyRun_SimpleString("from math import *");
   PyGILState_Release(gstate);
-  
+
   FaceId2SizeMap.clear();
   EdgeId2SizeMap.clear();
   VertexId2SizeMap.clear();
@@ -244,7 +250,7 @@ BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF(int hypId, int studyId,
 
 //=============================================================================
 /*!
- *  
+ *
  */
 //=============================================================================
 
@@ -256,7 +262,7 @@ BLSURFPlugin_BLSURF::~BLSURFPlugin_BLSURF()
 
 //=============================================================================
 /*!
- *  
+ *
  */
 //=============================================================================
 
@@ -322,7 +328,7 @@ inline std::string to_string(int i)
 
 double _smp_phy_size;
 status_t size_on_surface(integer face_id, real *uv, real *size, void *user_data);
-status_t size_on_edge(integer edge_id, real t, real *size, void *user_data); 
+status_t size_on_edge(integer edge_id, real t, real *size, void *user_data);
 status_t size_on_vertex(integer vertex_id, real *size, void *user_data);
 
 double my_u_min=1e6,my_v_min=1e6,my_u_max=-1e6,my_v_max=-1e6;
@@ -351,6 +357,39 @@ double getT(const TopoDS_Edge& edge, const gp_XYZ& point)
     throw;
   return projector.LowerDistanceParameter();
 }
+
+/////////////////////////////////////////////////////////
+TopoDS_Shape BLSURFPlugin_BLSURF::entryToShape(std::string entry)
+{
+    MESSAGE("BLSURFPlugin_BLSURF::entryToShape"<<entry );
+    TopoDS_Shape S = TopoDS_Shape();
+    SALOMEDS::SObject_var aSO = myStudy->FindObjectID(entry.c_str());
+    SALOMEDS::GenericAttribute_var anAttr;
+    if (!aSO->_is_nil()){
+      SALOMEDS::SObject_var aRefSObj;
+      GEOM::GEOM_Object_var aShape;
+      SALOMEDS::AttributeIOR_var myAttribute;
+      CORBA::String_var myAttrValue;
+      CORBA::Object_var myCorbaObj;
+      // If selected object is a reference
+      if ( aSO->ReferencedObject( aRefSObj ))
+        aSO = aRefSObj;
+      SALOMEDS::SComponent_var myFatherCpnt = aSO->GetFatherComponent();
+      CORBA::String_var myFatherCpntDataType = myFatherCpnt->ComponentDataType();
+      if (  strcmp(myFatherCpntDataType,"GEOM")==0) {
+        MESSAGE("aSO father component is GEOM");
+        if (!aSO->FindAttribute(anAttr, "AttributeIOR")) return S;
+        myAttribute=SALOMEDS::AttributeIOR::_narrow(anAttr);
+        myAttrValue=myAttribute->Value();
+        MESSAGE("aSO IOR: "<< myAttrValue);
+        myCorbaObj=smeshGen_i->GetORB()->string_to_object(myAttrValue);
+        aShape = GEOM::GEOM_Object::_narrow(myCorbaObj);
+      }
+      if ( !aShape->_is_nil() )
+        S=smeshGen_i->GeomObjectToShape( aShape.in() );
+    }
+    return S;
+}
 /////////////////////////////////////////////////////////
 
 void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsurf_session_t *bls)
@@ -365,7 +404,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
   bool   _quadAllowed   = BLSURFPlugin_Hypothesis::GetDefaultQuadAllowed();
   bool   _decimesh      = BLSURFPlugin_Hypothesis::GetDefaultDecimesh();
   int    _verb          = BLSURFPlugin_Hypothesis::GetDefaultVerbosity();
-   
+
   if (hyp) {
     MESSAGE("BLSURFPlugin_BLSURF::SetParameters");
     _topology      = (int) hyp->GetTopology();
@@ -408,7 +447,6 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
   blsurf_set_param(bls, "hphy_flag",         to_string(_physicalMesh).c_str());
 //  blsurf_set_param(bls, "hphy_flag",         "2");
   if ((to_string(_physicalMesh))=="2"){
-    GeomSelectionTools* GeomST = new GeomSelectionTools::GeomSelectionTools( SMESH::GetActiveStudyDocument());
 
     TopoDS_Shape GeomShape;
     TopAbs_ShapeEnum GeomType;
@@ -422,7 +460,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
     for ( smIt = sizeMaps.begin(); smIt != sizeMaps.end(); ++smIt ) {
       if ( !smIt->second.empty() ) {
         MESSAGE("blsurf_set_sizeMap(): " << smIt->first << " = " << smIt->second);
-        GeomShape = GeomST->entryToShape(smIt->first);
+        GeomShape = entryToShape(smIt->first);
         GeomType  = GeomShape.ShapeType();
         if (GeomType == TopAbs_FACE){
           HasSizeMapOnFace = true;
@@ -451,7 +489,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
     for ( atIt = attractors.begin(); atIt != attractors.end(); ++atIt ) {
       if ( !atIt->second.empty() ) {
         MESSAGE("blsurf_set_attractor(): " << atIt->first << " = " << atIt->second);
-        GeomShape = GeomST->entryToShape(atIt->first);
+        GeomShape = entryToShape(atIt->first);
         GeomType  = GeomShape.ShapeType();
 
         if (GeomType == TopAbs_FACE){
@@ -481,7 +519,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
           pos1 = pos2;
           pos2 = atIt->second.find(")");
           b = atof(atIt->second.substr(pos1+1, pos2-pos1-1).c_str());
-          
+
           // Get the (u,v) values of the attractor on the face
           gp_XY uvPoint = getUV(TopoDS::Face(GeomShape),gp_XYZ(xa,ya,za));
           Standard_Real u0 = uvPoint.X();
@@ -490,7 +528,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
           ostringstream attractorFunction;
           attractorFunction << "def f(u,v): return ";
           attractorFunction << _smp_phy_size << "-(" << _smp_phy_size <<"-" << a << ")";
-          attractorFunction << "*exp(-((u-("<<u0<<"))*(u-("<<u0<<"))+(v-("<<v0<<"))*(v-("<<v0<<")))/(" << b << "*" << b <<"))";  
+          attractorFunction << "*exp(-((u-("<<u0<<"))*(u-("<<u0<<"))+(v-("<<v0<<"))*(v-("<<v0<<")))/(" << b << "*" << b <<"))";
 
           MESSAGE("Python function for attractor:" << std::endl << attractorFunction.str());
 
@@ -510,7 +548,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
         }
 */
       }
-    }    
+    }
 
 
 //    if (HasSizeMapOnFace){
@@ -564,9 +602,9 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   context_set_message_callback(ctx, message_callback, &_comment);
 
   cad_t *c = cad_new(ctx);
- 
+
   blsurf_session_t *bls = blsurf_session_new(ctx);
-  
+
 
   SetParameters(_hypothesis, bls);
 
@@ -597,19 +635,19 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   Standard_Real v_max;
 */
   int iface = 0;
-  string bad_end = "return"; 
+  string bad_end = "return";
   for (TopExp_Explorer face_iter(aShape,TopAbs_FACE);face_iter.More();face_iter.Next()) {
     TopoDS_Face f=TopoDS::Face(face_iter.Current());
     if (fmap.FindIndex(f) > 0)
       continue;
-    
+
     fmap.Add(f);
     iface++;
     surfaces.push_back(BRep_Tool::Surface(f));
     // Get bound values of uv surface
     //BRep_Tool::Surface(f)->Bounds(u_min,u_max,v_min,v_max);
     //MESSAGE("BRep_Tool::Surface(f)->Bounds(u_min,u_max,v_min,v_max): " << u_min << ", " << u_max << ", " << v_min << ", " << v_max);
-    
+
     if ((HasSizeMapOnFace) && FaceId2SizeMap.find(f.HashCode(471662))!=FaceId2SizeMap.end()){
         MESSAGE("FaceId2SizeMap[f.HashCode(471662)].find(bad_end): " << FaceId2SizeMap[f.HashCode(471662)].find(bad_end));
         MESSAGE("FaceId2SizeMap[f.HashCode(471662)].size(): " << FaceId2SizeMap[f.HashCode(471662)].size());
@@ -626,20 +664,20 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       FaceId2PythonSmp[iface]=func;
       FaceId2SizeMap.erase(f.HashCode(471662));
     }
-    cad_face_t *fce = cad_face_new(c, iface, surf_fun, surfaces.back());  
+    cad_face_t *fce = cad_face_new(c, iface, surf_fun, surfaces.back());
     cad_face_set_tag(fce, iface);
     if(f.Orientation() != TopAbs_FORWARD){
       cad_face_set_orientation(fce, CAD_ORIENTATION_REVERSED);
     } else {
       cad_face_set_orientation(fce, CAD_ORIENTATION_FORWARD);
     }
-    
+
     for (TopExp_Explorer edge_iter(f,TopAbs_EDGE);edge_iter.More();edge_iter.Next()) {
       TopoDS_Edge e = TopoDS::Edge(edge_iter.Current());
       int ic = emap.FindIndex(e);
       if (ic <= 0)
 	ic = emap.Add(e);
-      
+
       double tmin,tmax;
       curves.push_back(BRep_Tool::CurveOnSurface(e, f, tmin, tmax));
       if ((HasSizeMapOnEdge) && EdgeId2SizeMap.find(e.HashCode(471662))!=EdgeId2SizeMap.end()){
@@ -692,7 +730,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
         }
       }
       if (npts != 2) {
-	// should not happen 
+	// should not happen
 	MESSAGE("An edge does not have 2 extremities.");
       } else {
 	if (d1 < d2)
@@ -758,11 +796,11 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     blsurf_session_delete(bls);
     cad_delete(c);
     context_delete(ctx);
-    
+
     return error(_comment);
     //return false;
   }
-  
+
   integer nv, ne, nt, nq, vtx[4], tag;
   real xyz[3];
 
@@ -771,14 +809,14 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   mesh_get_triangle_count(msh, &nt);
   mesh_get_quadrangle_count(msh, &nq);
 
-  
+
   SMESHDS_Mesh* meshDS = aMesh.GetMeshDS();
   SMDS_MeshNode** nodes = new SMDS_MeshNode*[nv+1];
   bool* tags = new bool[nv+1];
 
   for(int iv=1;iv<=nv;iv++) {
     mesh_get_vertex_coordinates(msh, iv, xyz);
-    mesh_get_vertex_tag(msh, iv, &tag);    
+    mesh_get_vertex_tag(msh, iv, &tag);
     nodes[iv] = meshDS->AddNode(xyz[0], xyz[1], xyz[2]);
     // internal point are tagged to zero
     if(tag){
@@ -792,7 +830,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   for(int it=1;it<=ne;it++) {
     mesh_get_edge_vertices(msh, it, vtx);
     SMDS_MeshEdge* edg = meshDS->AddEdge(nodes[vtx[0]], nodes[vtx[1]]);
-    mesh_get_edge_tag(msh, it, &tag);    
+    mesh_get_edge_tag(msh, it, &tag);
 
     if (tags[vtx[0]]) {
       meshDS->SetNodeOnEdge(nodes[vtx[0]], TopoDS::Edge(emap(tag)));
@@ -803,13 +841,13 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       tags[vtx[1]] = false;
     };
     meshDS->SetMeshElementOnShape(edg, TopoDS::Edge(emap(tag)));
-    
+
   }
 
   for(int it=1;it<=nt;it++) {
     mesh_get_triangle_vertices(msh, it, vtx);
     SMDS_MeshFace* tri = meshDS->AddFace(nodes[vtx[0]], nodes[vtx[1]], nodes[vtx[2]]);
-    mesh_get_triangle_tag(msh, it, &tag);    
+    mesh_get_triangle_tag(msh, it, &tag);
     meshDS->SetMeshElementOnShape(tri, TopoDS::Face(fmap(tag)));
     if (tags[vtx[0]]) {
       meshDS->SetNodeOnFace(nodes[vtx[0]], TopoDS::Face(fmap(tag)));
@@ -828,7 +866,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   for(int it=1;it<=nq;it++) {
     mesh_get_quadrangle_vertices(msh, it, vtx);
     SMDS_MeshFace* quad = meshDS->AddFace(nodes[vtx[0]], nodes[vtx[1]], nodes[vtx[2]], nodes[vtx[3]]);
-    mesh_get_quadrangle_tag(msh, it, &tag);    
+    mesh_get_quadrangle_tag(msh, it, &tag);
     meshDS->SetMeshElementOnShape(quad, TopoDS::Face(fmap(tag)));
     if (tags[vtx[0]]) {
       meshDS->SetNodeOnFace(nodes[vtx[0]], TopoDS::Face(fmap(tag)));
@@ -861,7 +899,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 
   // Issue 0019864. On DebianSarge, FE signals do not obey to OSD::SetSignal(false)
 #ifndef WNT
-  if ( oldFEFlags > 0 )    
+  if ( oldFEFlags > 0 )
     feenableexcept( oldFEFlags );
   feclearexcept( FE_ALL_EXCEPT );
 #endif
@@ -871,7 +909,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 
 //=============================================================================
 /*!
- *  
+ *
  */
 //=============================================================================
 
@@ -882,7 +920,7 @@ ostream & BLSURFPlugin_BLSURF::SaveTo(ostream & save)
 
 //=============================================================================
 /*!
- *  
+ *
  */
 //=============================================================================
 
@@ -893,7 +931,7 @@ istream & BLSURFPlugin_BLSURF::LoadFrom(istream & load)
 
 //=============================================================================
 /*!
- *  
+ *
  */
 //=============================================================================
 
@@ -904,7 +942,7 @@ ostream & operator << (ostream & save, BLSURFPlugin_BLSURF & hyp)
 
 //=============================================================================
 /*!
- *  
+ *
  */
 //=============================================================================
 
@@ -952,7 +990,7 @@ status_t surf_fun(real *uv, real *xyz, real*du, real *dv,
   if(du && dv){
     gp_Pnt P;
     gp_Vec D1U,D1V;
-    
+
     geometry->D1(uv[0],uv[1],P,D1U,D1V);
     du[0]=D1U.X(); du[1]=D1U.Y(); du[2]=D1U.Z();
     dv[0]=D1V.X(); dv[1]=D1V.Y(); dv[2]=D1V.Z();
@@ -962,11 +1000,11 @@ status_t surf_fun(real *uv, real *xyz, real*du, real *dv,
     gp_Pnt P;
     gp_Vec D1U,D1V;
     gp_Vec D2U,D2V,D2UV;
-    
+
     geometry->D2(uv[0],uv[1],P,D1U,D1V,D2U,D2V,D2UV);
     duu[0]=D2U.X(); duu[1]=D2U.Y(); duu[2]=D2U.Z();
     duv[0]=D2UV.X(); duv[1]=D2UV.Y(); duv[2]=D2UV.Z();
-    dvv[0]=D2V.X(); dvv[1]=D2V.Y(); dvv[2]=D2V.Z();    
+    dvv[0]=D2V.X(); dvv[1]=D2V.Y(); dvv[2]=D2V.Z();
   }
 
   return 0;

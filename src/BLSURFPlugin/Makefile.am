@@ -23,7 +23,7 @@
 #
 include $(top_srcdir)/adm_local/unix/make_common_starter.am
 
-# header files 
+# header files
 salomeinclude_HEADERS =	\
 	BLSURFPlugin_BLSURF.hxx	\
 	BLSURFPlugin_BLSURF_i.hxx	\
@@ -53,15 +53,13 @@ libBLSURFEngine_la_CPPFLAGS =	\
 	$(CORBA_CXXFLAGS)	\
 	$(CORBA_INCLUDES)	\
 	$(BOOST_CPPFLAGS)	\
-   -I$(srcdir)/../PluginUtils  \
 	-I$(top_builddir)/idl	\
-	-I$(top_builddir)/salome_adm/unix 
+	-I$(top_builddir)/salome_adm/unix
 
 #Qt uniquement necessaire pour le getActiveStudyDocument de SMeshGuiUtils.h
 
 libBLSURFEngine_la_LDFLAGS  =			\
 	../../idl/libSalomeIDLBLSURFPLUGIN.la	\
-   ../PluginUtils/libGeomSelectionTools.la \
 	$(BLSURF_LIBS)				\
 	$(SMESH_LDFLAGS) -lSMESHimpl -lSMESHEngine -lStdMeshersEngine	\
 	$(KERNEL_LDFLAGS) -lSalomeGenericObj

@@ -36,7 +36,7 @@ dist_libGeomSelectionTools_la_SOURCES =		\
 MOC_FILES = \
 	BLSURFPluginGUI_HypothesisCreator_moc.cxx
 
-nodist_GeomSelectionTools_la_SOURCES = \
+nodist_libGeomSelectionTools_la_SOURCES = \
 	$(MOC_FILES)
 
 # additionnal information to compil and link file

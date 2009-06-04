@@ -33,12 +33,6 @@ dist_libGeomSelectionTools_la_SOURCES =		\
 	GeomSelectionTools.h            	\
 	GeomSelectionTools.cxx
 
-MOC_FILES = \
-	BLSURFPluginGUI_HypothesisCreator_moc.cxx
-
-nodist_libGeomSelectionTools_la_SOURCES = \
-	$(MOC_FILES)
-
 # additionnal information to compil and link file
 
 libGeomSelectionTools_la_CPPFLAGS = 	\

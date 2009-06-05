@@ -405,6 +405,7 @@ AC_OUTPUT([ \
   adm_local/Makefile \
   adm_local/unix/Makefile \
   adm_local/unix/config_files/Makefile \
+  adm_local/cmake_files/Makefile \
   doc/Makefile \
   doc/salome/Makefile \
   doc/salome/gui/Makefile \

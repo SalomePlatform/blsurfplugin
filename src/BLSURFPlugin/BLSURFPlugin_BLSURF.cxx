@@ -69,6 +69,9 @@ extern "C"{
 #include <gp_Pnt2d.hxx>
 #include <TopTools_IndexedMapOfShape.hxx>
 #include <BRepTools.hxx>
+#include <TopTools_DataMapOfShapeInteger.hxx>
+#include <GProp_GProps.hxx>
+#include <BRepGProp.hxx>
 
 #ifndef WNT
 #include <fenv.h>
@@ -1149,4 +1152,135 @@ status_t message_callback(message_t *msg, void *user_data)
       std::cout << desc << std::endl;
   }
   return STATUS_OK;
+}
+
+
+//=============================================================================
+/*!
+ *  
+ */
+//=============================================================================
+bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh& aMesh,
+				   const TopoDS_Shape& aShape,
+				   MapShapeNbElems& aResMap)
+{
+  int    _physicalMesh  = BLSURFPlugin_Hypothesis::GetDefaultPhysicalMesh();
+  double _phySize       = BLSURFPlugin_Hypothesis::GetDefaultPhySize();
+  //int    _geometricMesh = BLSURFPlugin_Hypothesis::GetDefaultGeometricMesh();
+  //double _angleMeshS    = BLSURFPlugin_Hypothesis::GetDefaultAngleMeshS();
+  double _angleMeshC    = BLSURFPlugin_Hypothesis::GetDefaultAngleMeshC();
+  if(_hypothesis) {
+    _physicalMesh  = (int) _hypothesis->GetPhysicalMesh();
+    _phySize       = _hypothesis->GetPhySize();
+    //_geometricMesh = (int) hyp->GetGeometricMesh();
+    //_angleMeshS    = hyp->GetAngleMeshS();
+    _angleMeshC    = _hypothesis->GetAngleMeshC();
+  }
+
+  bool IsQuadratic = false;
+
+  // ----------------
+  // evaluate 1D 
+  // ----------------
+  TopTools_DataMapOfShapeInteger EdgesMap;
+  double fullLen = 0.0;
+  double fullNbSeg = 0;
+  for (TopExp_Explorer exp(aShape, TopAbs_EDGE); exp.More(); exp.Next()) {
+    TopoDS_Edge E = TopoDS::Edge( exp.Current() );
+    if( EdgesMap.IsBound(E) )
+      continue;
+    SMESH_subMesh *sm = aMesh.GetSubMesh(E);
+    double aLen = SMESH_Algo::EdgeLength(E);
+    fullLen += aLen;
+    int nb1d = 0;
+    if(_physicalMesh==1) {
+       nb1d = (int)aLen/_phySize + 1;
+    }
+    else {
+      // use geometry
+      double f,l;
+      Handle(Geom_Curve) C = BRep_Tool::Curve(E,f,l);
+      double fullAng = 0.0;
+      double dp = (l-f)/200;
+      gp_Pnt P1,P2,P3;
+      C->D0(f,P1);
+      C->D0(f+dp,P2);
+      gp_Vec V1(P1,P2);
+      for(int j=2; j<=200; j++) {
+	C->D0(f+dp*j,P3);
+	gp_Vec V2(P2,P3);
+	fullAng += fabs(V1.Angle(V2));
+	V1 = V2;
+	P2 = P3;
+      }
+      nb1d = fullAng/_angleMeshC + 1;
+    }
+    fullNbSeg += nb1d;
+    std::vector<int> aVec(17);
+    for(int i=0; i<17; i++) aVec[i]=0;
+    if( IsQuadratic > 0 ) {
+      aVec[0] = 2*nb1d - 1;
+      aVec[2] = nb1d;
+    }
+    else {
+      aVec[0] = nb1d - 1;
+      aVec[1] = nb1d;
+    }
+    aResMap.insert(std::make_pair(sm,aVec));
+    EdgesMap.Bind(E,nb1d);
+  }
+  double ELen = fullLen/fullNbSeg;
+  // ----------------
+  // evaluate 2D 
+  // ----------------
+  // try to evaluate as in MEFISTO
+  for (TopExp_Explorer exp(aShape, TopAbs_FACE); exp.More(); exp.Next()) {
+    TopoDS_Face F = TopoDS::Face( exp.Current() );
+    SMESH_subMesh *sm = aMesh.GetSubMesh(F);
+    GProp_GProps G;
+    BRepGProp::SurfaceProperties(F,G);
+    double anArea = G.Mass();
+    int nb1d = 0;
+    for (TopExp_Explorer exp1(F,TopAbs_EDGE); exp1.More(); exp1.Next()) {
+      nb1d += EdgesMap.Find(exp1.Current());
+    }
+    int nbFaces = (int) anArea/(ELen*ELen*sqrt(3)/4);
+    int nbNodes = (int) ( nbFaces*3 - (nb1d-1)*2 ) / 6 + 1;
+    std::vector<int> aVec(17);
+    for(int i=0; i<17; i++) aVec[i]=0;
+    if( IsQuadratic ) {
+      int nb1d_in = (nbFaces*3 - nb1d) / 2;
+      aVec[0] = nbNodes + nb1d_in;
+      aVec[4] = nbFaces;
+    }
+    else {
+      aVec[0] = nbNodes;
+      aVec[3] = nbFaces;
+    }
+    aResMap.insert(std::make_pair(sm,aVec));
+  }
+
+  // ----------------
+  // evaluate 3D
+  // ----------------
+  GProp_GProps G;
+  BRepGProp::VolumeProperties(aShape,G);
+  double aVolume = G.Mass();
+  double tetrVol = 0.1179*ELen*ELen*ELen;
+  int nbVols = (int)aVolume/tetrVol;
+  int nb1d_in = (int) ( nbVols*6 - fullNbSeg ) / 6;
+  std::vector<int> aVec(17);
+  for(int i=0; i<17; i++) aVec[i]=0;
+  if( IsQuadratic ) {
+    aVec[0] = nb1d_in/3 + 1 + nb1d_in;
+    aVec[9] = nbVols;
+  }
+  else {
+    aVec[0] = nb1d_in/3 + 1;
+    aVec[8] = nbVols;
+  }
+  SMESH_subMesh *sm = aMesh.GetSubMesh(aShape);
+  aResMap.insert(std::make_pair(sm,aVec));
+
+  return true;
 }

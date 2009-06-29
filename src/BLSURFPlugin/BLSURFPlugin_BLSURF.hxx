@@ -57,6 +57,9 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
 
     virtual bool Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape);
 
+    virtual bool Evaluate(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape,
+			  MapShapeNbElems& aResMap);
+
     ostream & SaveTo(ostream & save);
     istream & LoadFrom(istream & load);
     friend ostream & operator << (ostream & save, BLSURFPlugin_BLSURF & hyp);

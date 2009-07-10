@@ -459,7 +459,6 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
     MESSAGE("Setting a Size Map");
     const BLSURFPlugin_Hypothesis::TSizeMap & sizeMaps = hyp->GetSizeMapEntries();
     BLSURFPlugin_Hypothesis::TSizeMap::const_iterator smIt;
-    int i=0;
     for ( smIt = sizeMaps.begin(); smIt != sizeMaps.end(); ++smIt ) {
       if ( !smIt->second.empty() ) {
         MESSAGE("blsurf_set_sizeMap(): " << smIt->first << " = " << smIt->second);
@@ -1194,7 +1193,7 @@ bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh& aMesh,
     fullLen += aLen;
     int nb1d = 0;
     if(_physicalMesh==1) {
-       nb1d = (int)aLen/_phySize + 1;
+       nb1d = (int)( aLen/_phySize + 1 );
     }
     else {
       // use geometry
@@ -1213,7 +1212,7 @@ bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh& aMesh,
 	V1 = V2;
 	P2 = P3;
       }
-      nb1d = fullAng/_angleMeshC + 1;
+      nb1d = (int)( fullAng/_angleMeshC + 1 );
     }
     fullNbSeg += nb1d;
     std::vector<int> aVec(17);
@@ -1244,8 +1243,8 @@ bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh& aMesh,
     for (TopExp_Explorer exp1(F,TopAbs_EDGE); exp1.More(); exp1.Next()) {
       nb1d += EdgesMap.Find(exp1.Current());
     }
-    int nbFaces = (int) anArea/(ELen*ELen*sqrt(3)/4);
-    int nbNodes = (int) ( nbFaces*3 - (nb1d-1)*2 ) / 6 + 1;
+    int nbFaces = (int) ( anArea/( ELen*ELen*sqrt(3.) / 4 ) );
+    int nbNodes = (int) ( ( nbFaces*3 - (nb1d-1)*2 ) / 6 + 1 );
     std::vector<int> aVec(17);
     for(int i=0; i<17; i++) aVec[i]=0;
     if( IsQuadratic ) {
@@ -1268,7 +1267,7 @@ bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh& aMesh,
   double aVolume = G.Mass();
   double tetrVol = 0.1179*ELen*ELen*ELen;
   int nbVols = (int)aVolume/tetrVol;
-  int nb1d_in = (int) ( nbVols*6 - fullNbSeg ) / 6;
+  int nb1d_in = (int) ( ( nbVols*6 - fullNbSeg ) / 6 );
   std::vector<int> aVec(17);
   for(int i=0; i<17; i++) aVec[i]=0;
   if( IsQuadratic ) {

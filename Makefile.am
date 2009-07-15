@@ -48,7 +48,9 @@ salomeinclude_DATA = BLSURFPLUGIN_version.h
 
 EXTRA_DIST += \
 	build_configure \
-	clean_configure
+	clean_configure \
+	build_cmake	\
+	build_cmake.bat
 
 dist-hook:
 	rm -rf `find $(distdir) -name CVS`

@@ -33,10 +33,6 @@
 #include <SMESH_Mesh.hxx>
 #include <SMESH_ControlsDef.hxx>
 
-#include <SMESHDS_Mesh.hxx>
-#include <SMDS_MeshElement.hxx>
-#include <SMDS_MeshNode.hxx>
-
 #include <utilities.h>
 
 #include <limits>
@@ -47,13 +43,8 @@
 #include <BRep_Tool.hxx>
 #include <TopExp.hxx>
 #include <TopExp_Explorer.hxx>
-#include <TopoDS.hxx>
 #include <NCollection_Map.hxx>
 #include <Standard_ErrorHandler.hxx>
-
-extern "C"{
-#include <distene/api.h>
-}
 
 #include <Geom_Surface.hxx>
 #include <Handle_Geom_Surface.hxx>
@@ -61,11 +52,6 @@ extern "C"{
 #include <Handle_Geom2d_Curve.hxx>
 #include <Geom_Curve.hxx>
 #include <Handle_Geom_Curve.hxx>
-#include <TopoDS_Vertex.hxx>
-#include <TopoDS_Edge.hxx>
-#include <TopoDS_Wire.hxx>
-#include <TopoDS_Face.hxx>
-#include <TopoDS_Shape.hxx>
 #include <gp_Pnt2d.hxx>
 #include <TopTools_IndexedMapOfShape.hxx>
 #include <BRepTools.hxx>
@@ -570,6 +556,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
   }
   blsurf_set_param(bls, "hphydef",           to_string(_phySize).c_str());
   blsurf_set_param(bls, "hgeo_flag",         to_string(_geometricMesh).c_str());
+  blsurf_set_param(bls, "relax_size",        _decimesh ? "0": to_string(_geometricMesh).c_str());
   blsurf_set_param(bls, "angle_meshs",       to_string(_angleMeshS).c_str());
   blsurf_set_param(bls, "angle_meshc",       to_string(_angleMeshC).c_str());
   blsurf_set_param(bls, "gradation",         to_string(_gradation).c_str());
@@ -835,11 +822,11 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     mesh_get_edge_tag(msh, it, &tag);
 
     if (tags[vtx[0]]) {
-      meshDS->SetNodeOnEdge(nodes[vtx[0]], TopoDS::Edge(emap(tag)));
+      Set_NodeOnEdge(meshDS, nodes[vtx[0]], emap(tag));
       tags[vtx[0]] = false;
     };
     if (tags[vtx[1]]) {
-      meshDS->SetNodeOnEdge(nodes[vtx[1]], TopoDS::Edge(emap(tag)));
+      Set_NodeOnEdge(meshDS, nodes[vtx[1]], emap(tag));
       tags[vtx[1]] = false;
     };
     meshDS->SetMeshElementOnShape(edg, TopoDS::Edge(emap(tag)));
@@ -907,6 +894,32 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 #endif
 
   return true;
+}
+
+//=============================================================================
+/*!
+ *  SetNodeOnEdge
+ */
+//=============================================================================
+
+void BLSURFPlugin_BLSURF::Set_NodeOnEdge(SMESHDS_Mesh* meshDS, SMDS_MeshNode* node, const TopoDS_Shape& ed) {
+  const TopoDS_Edge edge = TopoDS::Edge(ed);
+
+  gp_Pnt pnt(node->X(), node->Y(), node->Z());
+
+  Standard_Real p0 = 0.0;
+  Standard_Real p1 = 1.0;
+  Handle(Geom_Curve) curve = BRep_Tool::Curve(edge, p0, p1);
+
+  GeomAPI_ProjectPointOnCurve proj(pnt, curve);
+
+  double pa = (double)proj.Parameter(1);
+
+  GProp_GProps LProps;
+  BRepGProp::LinearProperties(ed, LProps);
+  double lg = (double)LProps.Mass();
+
+  meshDS->SetNodeOnEdge(node, edge, pa);
 }
 
 //=============================================================================

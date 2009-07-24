@@ -26,20 +26,31 @@
 #ifndef _BLSURFPlugin_BLSURF_HXX_
 #define _BLSURFPlugin_BLSURF_HXX_
 
+#include <TopoDS.hxx>
+#include <TopoDS_Vertex.hxx>
+#include <TopoDS_Edge.hxx>
+#include <TopoDS_Wire.hxx>
+#include <TopoDS_Face.hxx>
+#include <TopoDS_Shape.hxx>
+
 #include <Python.h>
 #include "SMESH_2D_Algo.hxx"
 #include "SMESH_Mesh.hxx"
+#include <SMESHDS_Mesh.hxx>
+#include <SMDS_MeshElement.hxx>
+#include <SMDS_MeshNode.hxx>
 #include <SMESH_Gen_i.hxx>
 #include <SALOMEconfig.h>
 #include CORBA_CLIENT_HEADER(SALOMEDS)
 #include CORBA_CLIENT_HEADER(GEOM_Gen)
 #include "Utils_SALOME_Exception.hxx"
+
 extern "C"{
+#include "distene/blsurf.h"
 #include "distene/api.h"
 }
 
 class BLSURFPlugin_Hypothesis;
-class TopoDS_Shape;
 
 class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
   public:
@@ -67,6 +78,9 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
 
   protected:
     const BLSURFPlugin_Hypothesis* _hypothesis;
+
+  private:
+    void Set_NodeOnEdge(SMESHDS_Mesh* meshDS, SMDS_MeshNode* node, const TopoDS_Shape& ed);
 
   private:
       PyObject *          main_mod;

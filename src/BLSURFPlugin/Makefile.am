@@ -41,10 +41,10 @@ dist_libBLSURFEngine_la_SOURCES =	\
 	BLSURFPlugin_i.cxx
 
 libBLSURFEngine_la_CPPFLAGS =	\
-   $(QT_INCLUDES)          \
-   $(PYTHON_INCLUDES)      \
-   $(KERNEL_CXXFLAGS)	\
-   $(GUI_CXXFLAGS)		\
+	$(QT_INCLUDES)          \
+	$(PYTHON_INCLUDES)      \
+	$(KERNEL_CXXFLAGS)	\
+	$(GUI_CXXFLAGS)		\
 	$(MED_CXXFLAGS)		\
 	$(GEOM_CXXFLAGS)	\
 	$(CAS_CPPFLAGS)		\
@@ -53,8 +53,7 @@ libBLSURFEngine_la_CPPFLAGS =	\
 	$(CORBA_CXXFLAGS)	\
 	$(CORBA_INCLUDES)	\
 	$(BOOST_CPPFLAGS)	\
-	-I$(top_builddir)/idl	\
-	-I$(top_builddir)/salome_adm/unix
+	-I$(top_builddir)/idl
 
 #Qt uniquement necessaire pour le getActiveStudyDocument de SMeshGuiUtils.h
 

@@ -56,9 +56,8 @@ libBLSURFPluginGUI_la_CPPFLAGS = 	\
 	$(CORBA_INCLUDES)		\
 	$(BLSURF_INCLUDES)		\
 	-I$(srcdir)/../BLSURFPlugin	\
-	-I$(srcdir)/../PluginUtils  \
-	-I$(top_builddir)/idl		\
-	-I$(top_builddir)/salome_adm/unix
+	-I$(srcdir)/../PluginUtils	\
+	-I$(top_builddir)/idl
 
 libBLSURFPluginGUI_la_LDFLAGS =			\
 	../BLSURFPlugin/libBLSURFEngine.la	\

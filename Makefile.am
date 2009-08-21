@@ -42,7 +42,7 @@ SUBDIRS = idl adm_local resources src bin doc
 
 DIST_SUBDIRS = idl adm_local resources src bin doc 
 
-DISTCLEANFILES = a.out aclocal.m4 configure
+DISTCLEANFILES = a.out aclocal.m4 configure local-install.sh
 
 salomeinclude_DATA = BLSURFPLUGIN_version.h
 

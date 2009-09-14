@@ -26,6 +26,11 @@
 #include "BLSURFPlugin_BLSURF.hxx"
 #include "BLSURFPlugin_Hypothesis.hxx"
 
+extern "C"{
+#include "distene/blsurf.h"
+#include <distene/api.h>
+}
+
 #include <structmember.h>
 
 

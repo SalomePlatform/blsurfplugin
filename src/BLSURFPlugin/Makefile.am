@@ -59,6 +59,9 @@ libBLSURFEngine_la_CPPFLAGS =	\
 
 libBLSURFEngine_la_LDFLAGS  =			\
 	../../idl/libSalomeIDLBLSURFPLUGIN.la	\
+	$(PYTHON_LIBS) \
+	$(CAS_KERNEL) -lTKBRep -lTKGeomBase -lTKGeomAlgo -lTKTopAlgo -lTKLCAF -lTKXSBase -lTKG2d -lTKG3d \
 	$(BLSURF_LIBS)				\
-	$(SMESH_LDFLAGS) -lSMESHimpl -lSMESHEngine -lStdMeshersEngine	\
-	$(KERNEL_LDFLAGS) -lSalomeGenericObj
+	$(SMESH_LDFLAGS) -lSMESHimpl -lSMESHEngine -lStdMeshersEngine -lSMDS -lSMESHDS	\
+	$(GEOM_LDFLAGS) -lGEOMbasic \
+	$(KERNEL_LDFLAGS) -lSalomeGenericObj -lSalomeNS -lSALOMELocalTrace

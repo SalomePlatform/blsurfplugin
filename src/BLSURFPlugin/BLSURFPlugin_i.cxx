@@ -23,6 +23,16 @@
 //
 #include "utilities.h"
 
+#ifdef WIN32
+  #if defined BLSURFPLUGIN_EXPORTS || defined BLSURFEngine_EXPORTS
+    #define BLSURFPLUGIN_EXPORT __declspec( dllexport )
+  #else
+    #define BLSURFPLUGIN_EXPORT __declspec( dllimport )
+  #endif
+#else
+  #define BLSURFPLUGIN_EXPORT
+#endif
+
 #include "BLSURFPlugin_BLSURF_i.hxx"
 #include "BLSURFPlugin_Hypothesis_i.hxx"
 
@@ -40,6 +50,7 @@ template <class T> class BLSURFPlugin_Creator_i:public HypothesisCreator_i<T>
 
 extern "C"
 {
+  BLSURFPLUGIN_EXPORT
   GenericHypothesisCreator_i* GetHypothesisCreator (const char* aHypName)
   {
     MESSAGE("GetHypothesisCreator " << aHypName);

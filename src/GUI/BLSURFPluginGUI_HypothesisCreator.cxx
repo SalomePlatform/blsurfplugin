@@ -233,7 +233,7 @@ BLSURFPluginGUI_HypothesisCreator::BLSURFPluginGUI_HypothesisCreator( const QStr
   aSel = GeomToolSelected->selectionMgr();
 
   /* Initialize the Python interpreter */
-  if (not Py_IsInitialized())
+  if (! Py_IsInitialized())
     throw ("Error: Python interpreter is not initialized");
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
@@ -262,7 +262,7 @@ GeomSelectionTools* BLSURFPluginGUI_HypothesisCreator::getGeomSelectionTool()
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
   _PTR(Study) aStudy = SMESH::GetActiveStudyDocument();
   MESSAGE("aStudy->StudyId(): " << aStudy->StudyId());
-  if (that->GeomToolSelected == NULL or that->GeomToolSelected->getMyStudy() != aStudy) {
+  if (that->GeomToolSelected == NULL || that->GeomToolSelected->getMyStudy() != aStudy) {
     MESSAGE("GeomToolSelected is created");
     that->GeomToolSelected = new GeomSelectionTools(aStudy);
   }
@@ -1108,16 +1108,16 @@ void BLSURFPluginGUI_HypothesisCreator::onSetSizeMap(int row,int col)
     QString entry   = that->mySizeMapTable->item(row, SMP_ENTRY_COLUMN)->text();
     QString sizeMap = that->mySizeMapTable->item(row, SMP_SIZEMAP_COLUMN)->text().trimmed();
     MESSAGE("entry: " << entry.toStdString() << ", sizeMap: " << sizeMap.toStdString());
-    if (not that->mySMPShapeTypeMap.contains(entry))
+    if (! that->mySMPShapeTypeMap.contains(entry))
       return;
     if (that->mySMPMap.contains(entry))
       if (that->mySMPMap[entry] == sizeMap)
         return;
     QColor* bgColor = new QColor("white");
     QColor* fgColor = new QColor("black");
-    if (not sizeMap.isEmpty()) {
+    if (! sizeMap.isEmpty()) {
       that->mySMPMap[entry] = sizeMap;
-      if (not sizeMapValidationFromRow(row)) {
+      if (! sizeMapValidationFromRow(row)) {
         bgColor->setRgb(255,0,0);
         fgColor->setRgb(255,255,255);
       }
@@ -1220,7 +1220,7 @@ bool BLSURFPluginGUI_HypothesisCreator::sizeMapsValidation()
   MESSAGE("BLSURFPluginGUI_HypothesisCreator::sizeMapsValidation()");
   int row = 0, nbRows = mySizeMapTable->rowCount();
   for ( ; row < nbRows; ++row )
-    if (not sizeMapValidationFromRow(row))
+    if (! sizeMapValidationFromRow(row))
       return false;
   return true;
 }
@@ -1240,11 +1240,11 @@ bool BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromEntry(QString myEnt
 
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
 
-  if (not that->mySMPMap.contains(myEntry)) {
+  if (! that->mySMPMap.contains(myEntry)) {
     MESSAGE("Geometry with entry "<<myEntry.toStdString()<<" was not found.");
     return false;
   }
-  if (not that->mySMPShapeTypeMap.contains(myEntry)) {
+  if (! that->mySMPShapeTypeMap.contains(myEntry)) {
     MESSAGE("Shape type with entry "<<myEntry.toStdString()<<" was not found.");
     return false;
   }
@@ -1258,9 +1258,9 @@ bool BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromEntry(QString myEnt
   else if (that->mySMPMap[myEntry].startsWith("ATTRACTOR")) {
     MESSAGE("Attractor" );
 //    if ((that->mySMPMap[myEntry].count(QRegExp("ATTRACTOR([0-9])")) != 1))
-    if ((that->mySMPMap[myEntry].count('(') != 1) or
-        (that->mySMPMap[myEntry].count(')') != 1) or
-        (that->mySMPMap[myEntry].count(';') != 4) or
+    if ((that->mySMPMap[myEntry].count('(') != 1) ||
+        (that->mySMPMap[myEntry].count(')') != 1) ||
+        (that->mySMPMap[myEntry].count(';') != 4) ||
         (that->mySMPMap[myEntry].size() == 15)){
       if (displayError)
         SUIT_MessageBox::warning( dlg(),"Definition of attractor : Error" ,"An attractor is defined with the following pattern: ATTRACTOR(xa;ya;za;a;b)" );
@@ -1284,7 +1284,7 @@ bool BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromEntry(QString myEnt
       expr = "def f() : return " + that->mySMPMap[myEntry].toStdString();
   }
   //assert(Py_IsInitialized());
-  if (not Py_IsInitialized())
+  if (! Py_IsInitialized())
     throw ("Erreur: Python interpreter is not initialized");
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();

@@ -50,8 +50,13 @@ libGeomSelectionTools_la_CPPFLAGS = 	\
 	-I$(top_builddir)/idl
 
 libGeomSelectionTools_la_LDFLAGS =		\
+	$(QT_LIBS) \
+	$(CORBA_LIBS) \
+	$(KERNEL_LDFLAGS) -lSalomeIDLKernel -lSALOMELocalTrace -lSalomeLifeCycleCORBA \
+	$(GUI_LDFLAGS) -lSalomeObject -lsuit -lLightApp -lSalomeApp \
+	$(GEOM_LDFLAGS) -lSalomeIDLGEOM -lGEOMClient \
 	${SMESH_LDFLAGS} -lSMESH		\
-	$(CAS_KERNEL) 
+	$(CAS_KERNEL) -lTKBRep -lTKG3d
 
 # resources files
 #nodist_salomeres_DATA =		\

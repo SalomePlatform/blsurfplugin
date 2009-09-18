@@ -22,6 +22,16 @@
 #ifndef _GEOMSELECTIONTOOLS_H_
 #define _GEOMSELECTIONTOOLS_H_
 
+#ifdef WIN32
+#  ifdef GeomSelectionTools_EXPORTS
+#    define GEOMSELECTIONTOOLS_EXPORT __declspec( dllexport )
+#  else
+#    define GEOMSELECTIONTOOLS_EXPORT __declspec( dllimport )
+#  endif
+#else
+#  define GEOMSELECTIONTOOLS_EXPORT
+#endif
+
 #include "SALOMEDSClient.hxx"
 #include "SALOME_InteractiveObject.hxx"
 #include <SALOME_ListIO.hxx>
@@ -41,7 +51,7 @@ class LightApp_SelectionMgr;
  *
  */
 
-class GeomSelectionTools
+class GEOMSELECTIONTOOLS_EXPORT GeomSelectionTools
 {
 
 private:

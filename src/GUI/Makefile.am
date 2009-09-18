@@ -62,6 +62,7 @@ libBLSURFPluginGUI_la_CPPFLAGS = 	\
 libBLSURFPluginGUI_la_LDFLAGS =			\
 	../BLSURFPlugin/libBLSURFEngine.la	\
 	../PluginUtils/libGeomSelectionTools.la \
+	$(GUI_LDFLAGS) -lqtx -lSalomeApp \
 	${SMESH_LDFLAGS} -lSMESH		\
 	$(CAS_KERNEL) $(BLSURF_LIBS)
 

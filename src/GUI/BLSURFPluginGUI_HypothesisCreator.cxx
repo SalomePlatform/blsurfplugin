@@ -686,6 +686,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   sizeMapHeaders << tr( "SMP_ENTRY_COLUMN" )<< tr( "SMP_NAME_COLUMN" ) << tr( "SMP_SIZEMAP_COLUMN" );
   mySizeMapTable->setHorizontalHeaderLabels(sizeMapHeaders);
   mySizeMapTable->horizontalHeader()->hideSection( SMP_ENTRY_COLUMN );
+  mySizeMapTable->horizontalHeader()->setResizeMode(QHeaderView::Interactive);
 //   mySizeMapTable->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
   mySizeMapTable->resizeColumnToContents(SMP_NAME_COLUMN);
   mySizeMapTable->resizeColumnToContents(SMP_SIZEMAP_COLUMN);

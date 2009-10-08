@@ -27,6 +27,7 @@
 #define _BLSURFPlugin_Hypothesis_HXX_
 
 #include "SMESH_Hypothesis.hxx"
+#include <vector>
 #include <map>
 #include <set>
 #include <stdexcept>
@@ -98,18 +99,26 @@ public:
   int GetVerbosity() const { return _verb; }
   
   void ClearEntry(const std::string& entry);
-  void ClearSizeMaps();  
+  void ClearSizeMaps();
 
   typedef std::map<std::string,std::string> TSizeMap;
 
   void SetSizeMapEntry(const std::string& entry,const std::string& sizeMap );
   std::string  GetSizeMapEntry(const std::string& entry);
-  const TSizeMap& GetSizeMapEntries() const { return _sizeMap; }  
+  const TSizeMap& _GetSizeMapEntries() const { return _sizeMap; }
+  /*!
+   * \brief Return the size maps
+   */
+  static TSizeMap GetSizeMapEntries(const BLSURFPlugin_Hypothesis* hyp);
 
 
   void SetAttractorEntry(const std::string& entry,const std::string& attractor );
   std::string GetAttractorEntry(const std::string& entry);
-  const TSizeMap& GetAttractorEntries() const { return _attractors; };
+  const TSizeMap& _GetAttractorEntries() const { return _attractors; };
+  /*!
+   * \brief Return the attractors
+   */
+  static TSizeMap GetAttractorEntries(const BLSURFPlugin_Hypothesis* hyp);
 
 
 /*
@@ -119,18 +128,43 @@ public:
   const TSizeMap& GetCustomSizeMapEntries() const { return _customSizeMap; }
  */
 
-  static Topology      GetDefaultTopology();
-  static PhysicalMesh  GetDefaultPhysicalMesh();
-  static double        GetDefaultPhySize();
-  static double        GetDefaultMaxSize();
-  static double        GetDefaultMinSize();
-  static GeometricMesh GetDefaultGeometricMesh();
-  static double        GetDefaultAngleMeshS();
-  static double        GetDefaultAngleMeshC() { return GetDefaultAngleMeshS(); }
-  static double        GetDefaultGradation();
-  static bool          GetDefaultQuadAllowed();
-  static bool          GetDefaultDecimesh();
-  static int           GetDefaultVerbosity() { return 10; }
+  /*!
+   * To set/get/unset an enforced vertex
+   */
+  typedef std::vector<double> TEnforcedVertex;
+  typedef std::set< TEnforcedVertex > TEnforcedVertexList;
+  typedef std::map< std::string, TEnforcedVertexList > TEnforcedVertexMap;
+  
+  void SetEnforcedVertex(const std::string& entry, double x, double y, double z);
+//   void SetEnforcedVertexList(const std::string& entry, const TEnforcedVertexList vertexList);
+  TEnforcedVertexList GetEnforcedVertices(const std::string& entry) throw (std::invalid_argument);
+  void ClearEnforcedVertex(const std::string& entry, double x, double y, double z) throw (std::invalid_argument);
+//   void ClearEnforcedVertexList(const std::string& entry, TEnforcedVertexList vertexList) throw (std::invalid_argument);
+  void ClearEnforcedVertices(const std::string& entry) throw (std::invalid_argument);
+
+  void ClearAllEnforcedVertices();
+  const TEnforcedVertexMap _GetAllEnforcedVertices() const { return _enforcedVertices; }
+
+  /*!
+   * \brief Return the enforced vertices
+   */
+  static TEnforcedVertexMap GetAllEnforcedVertices(const BLSURFPlugin_Hypothesis* hyp);
+
+
+  static Topology        GetDefaultTopology();
+  static PhysicalMesh    GetDefaultPhysicalMesh();
+  static double          GetDefaultPhySize();
+  static double          GetDefaultMaxSize();
+  static double          GetDefaultMinSize();
+  static GeometricMesh   GetDefaultGeometricMesh();
+  static double          GetDefaultAngleMeshS();
+  static double          GetDefaultAngleMeshC() { return GetDefaultAngleMeshS(); }
+  static double          GetDefaultGradation();
+  static bool            GetDefaultQuadAllowed();
+  static bool            GetDefaultDecimesh();
+  static int             GetDefaultVerbosity() { return 10; }
+  static TSizeMap        GetDefaultSizeMap() { return TSizeMap();}
+  static TEnforcedVertexMap GetDefaultEnforcedVertexMap() { return TEnforcedVertexMap(); }
 
   static double undefinedDouble() { return -1.0; }
 
@@ -164,19 +198,20 @@ public:
   virtual bool SetParametersByDefaults(const TDefaults& dflts, const SMESH_Mesh* theMesh=0);
 
 private:
-  Topology      _topology;
-  PhysicalMesh  _physicalMesh;
-  double        _phySize, _phyMin, _phyMax;
-  GeometricMesh _geometricMesh;
-  double        _angleMeshS, _angleMeshC, _hgeoMin, _hgeoMax;
-  double        _gradation;
-  bool          _quadAllowed;
-  bool          _decimesh;
-  int           _verb;
-  TOptionValues _option2value;
-  TOptionNames  _doubleOptions, _charOptions;
-  TSizeMap      _sizeMap;
-  TSizeMap      _attractors;
+  Topology        _topology;
+  PhysicalMesh    _physicalMesh;
+  double          _phySize, _phyMin, _phyMax;
+  GeometricMesh   _geometricMesh;
+  double          _angleMeshS, _angleMeshC, _hgeoMin, _hgeoMax;
+  double          _gradation;
+  bool            _quadAllowed;
+  bool            _decimesh;
+  int             _verb;
+  TOptionValues   _option2value;
+  TOptionNames    _doubleOptions, _charOptions;
+  TSizeMap        _sizeMap;
+  TSizeMap        _attractors;
+  TEnforcedVertexMap _enforcedVertices;
 /*
   TSizeMap      _customSizeMap;
 */

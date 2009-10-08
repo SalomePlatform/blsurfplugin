@@ -50,7 +50,13 @@ extern "C"{
 #include "distene/api.h"
 }
 
+#include <BRepClass_FaceClassifier.hxx>
+#include <BRepAdaptor_Surface.hxx>
+#include <BRepTools.hxx>
+#include <BRepAdaptor_HSurface.hxx>
+
 class BLSURFPlugin_Hypothesis;
+class TopoDS_Shape;
 
 class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
   public:
@@ -81,6 +87,7 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
 
   private:
     void Set_NodeOnEdge(SMESHDS_Mesh* meshDS, SMDS_MeshNode* node, const TopoDS_Shape& ed);
+    void BRepClass_FaceClassifierPerform(BRepClass_FaceClassifier* fc, const TopoDS_Face& face, const gp_Pnt& P, const Standard_Real Tol);
 
   private:
       PyObject *          main_mod;

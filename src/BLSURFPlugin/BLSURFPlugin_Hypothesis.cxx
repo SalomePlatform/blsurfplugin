@@ -26,6 +26,8 @@
 #include "BLSURFPlugin_Hypothesis.hxx"
 #include <utilities.h>
 #include <cstring>
+#include <iostream>
+#include <sstream>
 
 //=============================================================================
 BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis (int hypId, int studyId,
@@ -44,14 +46,17 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis (int hypId, int studyId,
     _gradation(GetDefaultGradation()),
     _quadAllowed(GetDefaultQuadAllowed()),
     _decimesh(GetDefaultDecimesh()),
-    _verb( GetDefaultVerbosity() )
+    _verb( GetDefaultVerbosity() ),
+    _sizeMap(GetDefaultSizeMap()),
+    _attractors(GetDefaultSizeMap()),
+    _enforcedVertices(GetDefaultEnforcedVertexMap())
 {
   _name = "BLSURF_Parameters";
   _param_algo_dim = 2;
 
   // to desable writing boundaries
   //_phyMin = _phyMax = _hgeoMin = _hgeoMax = undefinedDouble();
-  
+
 
   const char* intOptionNames[] = {
     "addsurf_ivertex",
@@ -122,7 +127,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis (int hypId, int studyId,
     _charOptions.insert( charOptionNames[i] );
     _option2value[ charOptionNames[i++] ].clear();
   }
-  
+
   _sizeMap.clear();
 }
 
@@ -144,6 +149,7 @@ void BLSURFPlugin_Hypothesis::SetPhysicalMesh(PhysicalMesh thePhysicalMesh)
       case DefaultSize:
       default:
         _phySize = GetDefaultPhySize();
+        _gradation  = GetDefaultGradation();
         break;
       }
     NotifySubMeshesHypothesisModification();
@@ -337,7 +343,9 @@ void BLSURFPlugin_Hypothesis::ClearOption(const std::string& optionName)
     op_val->second.clear();
 }
 
-
+//=======================================================================
+//function : SetSizeMapEntry
+//=======================================================================
 void  BLSURFPlugin_Hypothesis::SetSizeMapEntry(const std::string& entry,const std::string& sizeMap)
 {
   if (_sizeMap[entry].compare(sizeMap) != 0) {
@@ -346,6 +354,9 @@ void  BLSURFPlugin_Hypothesis::SetSizeMapEntry(const std::string& entry,const st
   }
 }
 
+//=======================================================================
+//function : GetSizeMapEntry
+//=======================================================================
 std::string  BLSURFPlugin_Hypothesis::GetSizeMapEntry(const std::string& entry)
 {
  TSizeMap::iterator it  = _sizeMap.find( entry );
@@ -355,6 +366,17 @@ std::string  BLSURFPlugin_Hypothesis::GetSizeMapEntry(const std::string& entry)
    return "No_Such_Entry";
 }
 
+  /*!
+   * \brief Return the size maps
+   */
+BLSURFPlugin_Hypothesis::TSizeMap BLSURFPlugin_Hypothesis::GetSizeMapEntries(const BLSURFPlugin_Hypothesis* hyp)
+{
+    return hyp ? hyp->_GetSizeMapEntries():GetDefaultSizeMap();
+}
+
+//=======================================================================
+//function : SetAttractorEntry
+//=======================================================================
 void  BLSURFPlugin_Hypothesis::SetAttractorEntry(const std::string& entry,const std::string& attractor)
 {
   if (_attractors[entry].compare(attractor) != 0) {
@@ -363,6 +385,9 @@ void  BLSURFPlugin_Hypothesis::SetAttractorEntry(const std::string& entry,const 
   }
 }
 
+//=======================================================================
+//function : GetAttractorEntry
+//=======================================================================
 std::string  BLSURFPlugin_Hypothesis::GetAttractorEntry(const std::string& entry)
 {
  TSizeMap::iterator it  = _attractors.find( entry );
@@ -371,6 +396,15 @@ std::string  BLSURFPlugin_Hypothesis::GetAttractorEntry(const std::string& entry
  else
    return "No_Such_Entry";
 }
+
+  /*!
+   * \brief Return the attractors
+   */
+BLSURFPlugin_Hypothesis::TSizeMap BLSURFPlugin_Hypothesis::GetAttractorEntries(const BLSURFPlugin_Hypothesis* hyp)
+{
+    return hyp ? hyp->_GetAttractorEntries():GetDefaultSizeMap();
+}
+
 
 
 void BLSURFPlugin_Hypothesis::ClearEntry(const std::string& entry)
@@ -400,6 +434,174 @@ void BLSURFPlugin_Hypothesis::ClearSizeMaps()
 
 
 
+//=======================================================================
+//function : SetEnforcedVertex
+//=======================================================================
+
+void BLSURFPlugin_Hypothesis::SetEnforcedVertex(const std::string& entry, double x, double y, double z)
+{
+  BLSURFPlugin_Hypothesis::TEnforcedVertex coord;
+  coord.push_back(x);
+  coord.push_back(y);
+  coord.push_back(z);
+  bool toNotify = false;
+  if (_enforcedVertices.count(entry)>0)
+    if (_enforcedVertices[entry].count(coord)==0)
+      toNotify = true;
+  else
+    toNotify = true;
+  
+  _enforcedVertices[entry].insert(coord);
+  if (toNotify)
+    NotifySubMeshesHypothesisModification();
+}
+
+/*
+//=======================================================================
+//function : SetEnforcedVertexList
+//=======================================================================
+
+void BLSURFPlugin_Hypothesis::SetEnforcedVertexList(const std::string& entry, const BLSURFPlugin_Hypothesis::TEnforcedVertexList vertexList)
+{
+  BLSURFPlugin_Hypothesis::TEnforcedVertexList::const_iterator it;
+  bool toNotify = false;
+  for(it = vertexList.begin();it!=vertexList.end();++it) {
+    if (_enforcedVertices.count(entry)>0)
+      if (_enforcedVertices[entry].count(*it)==0)
+        toNotify = true;
+    else
+      toNotify = true;
+    _enforcedVertices[entry].insert(*it);
+  }
+  if (toNotify)
+    NotifySubMeshesHypothesisModification();
+}
+*/
+
+//=======================================================================
+//function : GetEnforcedVertices
+//=======================================================================
+
+BLSURFPlugin_Hypothesis::TEnforcedVertexList BLSURFPlugin_Hypothesis::GetEnforcedVertices(const std::string& entry)
+  throw (std::invalid_argument)
+{
+  if (_enforcedVertices.count(entry)>0)
+    return _enforcedVertices[entry];
+  std::ostringstream msg ;
+  msg << "No enforced vertex for entry " << entry ;
+  throw std::invalid_argument(msg.str());
+}
+
+//=======================================================================
+//function : ClearEnforcedVertex
+//=======================================================================
+
+void BLSURFPlugin_Hypothesis::ClearEnforcedVertex(const std::string& entry, double x, double y, double z)
+  throw (std::invalid_argument)
+{
+  BLSURFPlugin_Hypothesis::TEnforcedVertex coord;
+  coord.push_back(x);
+  coord.push_back(y);
+  coord.push_back(z);
+  BLSURFPlugin_Hypothesis::TEnforcedVertexList::iterator it;
+  bool toNotify = false;
+
+  BLSURFPlugin_Hypothesis::TEnforcedVertexMap::iterator it_enf = _enforcedVertices.find(entry);
+  if (it_enf != _enforcedVertices.end()) {
+    it = _enforcedVertices[entry].find(coord);
+    if (it != _enforcedVertices[entry].end()) {
+      toNotify = true;
+      _enforcedVertices[entry].erase(it);
+      if (_enforcedVertices[entry].size() == 0)
+        _enforcedVertices.erase(it_enf);
+    }
+    if (toNotify)
+      NotifySubMeshesHypothesisModification();
+    return;
+  }
+
+  std::ostringstream msg ;
+  msg << "No enforced vertex for " << entry;
+  throw std::invalid_argument(msg.str());
+}
+/*
+//=======================================================================
+//function : ClearEnforcedVertexList
+//=======================================================================
+
+void BLSURFPlugin_Hypothesis::ClearEnforcedVertexList(const std::string& entry, BLSURFPlugin_Hypothesis::TEnforcedVertexList vertexList)
+  throw (std::invalid_argument)
+{
+  BLSURFPlugin_Hypothesis::TEnforcedVertex coord;
+  BLSURFPlugin_Hypothesis::TEnforcedVertexList::const_iterator it_toRemove;
+  BLSURFPlugin_Hypothesis::TEnforcedVertexList::iterator it;
+  bool toNotify = false;
+
+  BLSURFPlugin_Hypothesis::TEnforcedVertexMap::iterator it_enf = _enforcedVertices.find(entry);
+  if (it_enf != _enforcedVertices.end()) {
+    for (it_toRemove = vertexList.begin() ; it_toRemove != vertexList.end() ; ++it_toRemove) {
+      coord = *it_toRemove;
+      it = _enforcedVertices[entry].find(coord);
+      if (it != _enforcedVertices[entry].end()) {
+        toNotify = true;
+        _enforcedVertices[entry].erase(it);
+      }
+    }
+    if (_enforcedVertices[entry].size() == 0) {
+      toNotify = true;
+      _enforcedVertices.erase(it_enf);
+    }
+    if (toNotify)
+      NotifySubMeshesHypothesisModification();
+    return;
+  }
+
+  std::ostringstream msg ;
+  msg << "No enforced vertex for " << entry;
+  throw std::invalid_argument(msg.str());
+}
+*/
+//=======================================================================
+//function : ClearEnforcedVertices
+//=======================================================================
+
+void BLSURFPlugin_Hypothesis::ClearEnforcedVertices(const std::string& entry)
+  throw (std::invalid_argument)
+{
+  BLSURFPlugin_Hypothesis::TEnforcedVertexMap::iterator it_enf = _enforcedVertices.find(entry);
+  if (it_enf != _enforcedVertices.end()) {
+    _enforcedVertices.erase(it_enf);
+    NotifySubMeshesHypothesisModification();
+    return;
+  }
+
+  std::ostringstream msg ;
+  msg << "No enforced vertex for " << entry;
+  throw std::invalid_argument(msg.str());
+}
+
+//=======================================================================
+//function : ClearAllEnforcedVertices
+//=======================================================================
+void BLSURFPlugin_Hypothesis::ClearAllEnforcedVertices()
+{
+    _enforcedVertices.clear();
+    NotifySubMeshesHypothesisModification();
+}
+
+//================================================================================
+/*!
+* \brief Return the enforced vertices
+*/
+//================================================================================
+
+BLSURFPlugin_Hypothesis::TEnforcedVertexMap BLSURFPlugin_Hypothesis::GetAllEnforcedVertices(const BLSURFPlugin_Hypothesis* hyp)
+{
+    return hyp ? hyp->_GetAllEnforcedVertices():GetDefaultEnforcedVertexMap();
+}
+
+
+
 //=============================================================================
 std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save)
 {
@@ -407,9 +609,9 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save)
        << " " << (int)_physicalMesh
        << " " << (int)_geometricMesh
        << " " << _phySize
-       << " " << _angleMeshS   
-       << " " << _gradation     
-       << " " << (int)_quadAllowed 
+       << " " << _angleMeshS
+       << " " << _gradation
+       << " " << (int)_quadAllowed
        << " " << (int)_decimesh;
   save << " " << _phyMin
        << " " << _phyMax
@@ -448,8 +650,27 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save)
     }
     save << " " << "__ATTRACTORS_END__";
   }
-  
-  
+
+  TEnforcedVertexMap::const_iterator it_enf = _enforcedVertices.begin();
+  if (it_enf != _enforcedVertices.end()) {
+    save << " " << "__ENFORCED_VERTICES_BEGIN__";
+    for ( ; it_enf != _enforcedVertices.end(); ++it_enf ) {
+      save << " " << it_enf->first;
+      TEnforcedVertexList evl = it_enf->second;
+      TEnforcedVertexList::const_iterator it_evl = evl.begin();
+      if (it_evl != evl.end()) {
+        for ( ; it_evl != evl.end() ; ++it_evl) {
+          save << " " << (*it_evl)[0];
+          save << " " << (*it_evl)[1];
+          save << " " << (*it_evl)[2];
+          save << "$"; // "$" is a mark of enforced vertex end
+        }
+      }
+      save << "#"; // "#" is a mark of enforced shape end
+    }
+    save << " " << "__ENFORCED_VERTICES_END__";
+  }
+
   return save;
 }
 
@@ -513,31 +734,31 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
     _phyMin = val;
   else
     load.clear(std::ios::badbit | load.rdstate());
-  
+
   isOK = (load >> val);
   if (isOK)
     _phyMax = val;
   else
     load.clear(std::ios::badbit | load.rdstate());
-  
+
   isOK = (load >> val);
   if (isOK)
     _angleMeshC = val;
   else
     load.clear(std::ios::badbit | load.rdstate());
-  
+
   isOK = (load >> val);
   if (isOK)
     _hgeoMin = val;
   else
     load.clear(std::ios::badbit | load.rdstate());
-  
+
   isOK = (load >> val);
   if (isOK)
     _hgeoMax = val;
   else
     load.clear(std::ios::badbit | load.rdstate());
-  
+
   isOK = (load >> i);
   if (isOK)
     _verb = i;
@@ -548,6 +769,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
   bool hasOptions = false;
   bool hasSizeMap = false;
   bool hasAttractor = false;
+  bool hasEnforcedVertex = false;
 
   isOK = (load >> option_or_sm);
   if (isOK)
@@ -557,6 +779,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
       hasSizeMap = true;
     else if (option_or_sm == "__ATTRACTORS_BEGIN__")
       hasAttractor = true;
+    else if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
+      hasEnforcedVertex = true;
 
   std::string optName, optValue;
   while (isOK && hasOptions) {
@@ -594,6 +818,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
         hasSizeMap = true;
       else if (option_or_sm == "__ATTRACTORS_BEGIN__")
         hasAttractor = true;
+      else if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
+        hasEnforcedVertex = true;
   }
 
   std::string smEntry, smValue;
@@ -627,8 +853,11 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
 
   if (hasSizeMap) {
     isOK = (load >> option_or_sm);
-    if (isOK && option_or_sm == "__ATTRACTORS_BEGIN__")
-      hasAttractor = true;
+    if (isOK)
+      if (option_or_sm == "__ATTRACTORS_BEGIN__")
+        hasAttractor = true;
+      else if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
+        hasEnforcedVertex = true;
   }
 
   std::string atEntry, atValue;
@@ -658,6 +887,67 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
       }
       value3[ len3-2 ] = '\0'; //cut off "%#"
     }
+  }
+  
+  if (hasAttractor) {
+    isOK = (load >> option_or_sm);
+    if (isOK)
+      if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
+        hasEnforcedVertex = true;
+  }
+  
+  std::string enfEntry, enfValue, trace;
+  std::ostringstream oss;
+  while (isOK && hasEnforcedVertex) {
+    isOK = (load >> enfEntry);
+    if (isOK) {
+      if (enfEntry == "__ENFORCED_VERTICES_END__")
+        break;
+
+      enfValue = "begin";
+      int len4 = enfValue.size();
+
+      TEnforcedVertexList & evl = _enforcedVertices[enfEntry];
+      evl.clear();
+      TEnforcedVertex enfVertex;
+
+      // continue reading until "#" encountered
+      while ( enfValue[len4-1] != '#') {
+        // New vector begin
+        enfVertex.clear();
+        while ( enfValue[len4-1] != '$') {
+          isOK = (load >> enfValue);
+          if (isOK) {
+            len4 = enfValue.size();
+            // End of vertex list
+            if (enfValue[len4-1] == '#')
+              break;
+            if (enfValue[len4-1] != '$') {
+              // Add to vertex
+              enfVertex.push_back(atof(enfValue.c_str()));
+            }
+          }
+          else
+            break;
+        }
+        if (enfValue[len4-1] == '$') {
+          // Remove '$' and add to vertex
+          enfValue[len4-1] = '\0'; //cut off "$#"
+          enfVertex.push_back(atof(enfValue.c_str()));
+          // Add vertex to list of vertex
+          evl.insert(enfVertex);
+        }
+      }
+      if (enfValue[len4-1] == '#') {
+        // Remove '$#' and add to vertex
+        enfValue[len4-2] = '\0'; //cut off "$#"
+        enfVertex.push_back(atof(enfValue.c_str()));
+        // Add vertex to list of vertex
+        evl.insert(enfVertex);
+      }
+    }
+    else
+      break;
   }
 
   return load;

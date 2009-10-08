@@ -65,3 +65,4 @@ libBLSURFEngine_la_LDFLAGS  =			\
 	$(SMESH_LDFLAGS) -lSMESHimpl -lSMESHEngine -lStdMeshersEngine -lSMDS -lSMESHDS	\
 	$(GEOM_LDFLAGS) -lGEOMbasic \
 	$(KERNEL_LDFLAGS) -lSalomeGenericObj -lSalomeNS -lSALOMELocalTrace
+	$(BOOST_LIB_REGEX)

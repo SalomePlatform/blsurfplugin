@@ -33,6 +33,7 @@
 #include <GEOM_Client.hxx>
 #include <SMESHGUI_Utils.h>
 #include <boost/shared_ptr.hpp>
+#include <GEOMImpl_Types.hxx>
 
 #include <TopoDS.hxx>
 #include <BRep_Tool.hxx>
@@ -195,54 +196,54 @@ std::string GeomSelectionTools::getFirstSelectedComponentDataType()
 }
 
 /*!
- *  Retrieve the TopoDS shape from the first selected object
- *  @return the TopoDS shape from the first selected object, empty TopoDS Shape if a shape is not selected.
+ * Retrieve the shape type from the entry
+ * @return the shape type from the entry, return TopAbs_SHAPE if the object does not define a shape or a group.
  */
-TopoDS_Shape GeomSelectionTools::getFirstSelectedTopoDSShape()
-{
- Handle(SALOME_InteractiveObject) anIO;
- anIO=GeomSelectionTools::getFirstSelectedSalomeObject();
- return entryToShape(anIO->getEntry());
-}
-
-/*!
- * Retrieve the TopoDS shape from the entry
- * @return the TopoDS shape from the entry, empty TopoDS Shape if the entry does not define a shape.
- */
-TopoDS_Shape GeomSelectionTools::entryToShape(std::string entry){
-  MESSAGE("GeomSelectionTools::entryToShape"<<entry );
+TopAbs_ShapeEnum GeomSelectionTools::entryToShapeType(std::string entry){
+//   MESSAGE("GeomSelectionTools::entryToShapeType"<<entry );
   TopoDS_Shape S = TopoDS_Shape();
+  TopAbs_ShapeEnum ShapeType = TopAbs_SHAPE;
    _PTR(SObject) aSO = myStudy->FindObjectID(entry);
   if (aSO){
     _PTR(SObject) aRefSObj;
     GEOM::GEOM_Object_var aShape;
-    MESSAGE("Got a SO");
+    // MESSAGE("Got a SO");
     // If selected object is a reference
     if ( aSO->ReferencedObject( aRefSObj ))
       aSO = aRefSObj;
-    MESSAGE("aSO->GetFatherComponent()->ComponentDataType(): " << aSO->GetFatherComponent()->ComponentDataType());
+    // MESSAGE("aSO->GetFatherComponent()->ComponentDataType(): " << aSO->GetFatherComponent()->ComponentDataType());
     if (  strcmp(aSO->GetFatherComponent()->ComponentDataType().c_str(),"GEOM") == 0)
       aShape = SMESH::SObjectToInterface<GEOM::GEOM_Object>(aSO);
     if ( !aShape->_is_nil() ){
-      MESSAGE("Got a Shape as Geom Object ");
-
-     SalomeApp_Application* anApp = GetSalomeApplication();
-     if (anApp) {
-       MESSAGE("Got Application");
-       Engines::Component_var component = anApp->lcc()->FindOrLoad_Component( "FactoryServer","GEOM" );
-       GEOM::GEOM_Gen_var _geomEngine = GEOM::GEOM_Gen::_narrow(component);
-       MESSAGE("Got GEOM engine");
-       GEOM_Client* aClient = new GEOM_Client();
-       if ( aClient && !_geomEngine->_is_nil() ) {
-         MESSAGE("GEOM client is OK and GEOM engine is not null");
-         S = aClient->GetShape( _geomEngine, aShape );
-       }
-     }
+      // MESSAGE("Got the Geom Object ");
+      // MESSAGE("Geom Object Type "<< aShape->GetType());
+      SalomeApp_Application* anApp = GetSalomeApplication();
+      if (anApp) {
+//         MESSAGE("Got Application");
+        Engines::Component_var component = anApp->lcc()->FindOrLoad_Component( "FactoryServer","GEOM" );
+        GEOM::GEOM_Gen_var _geomEngine = GEOM::GEOM_Gen::_narrow(component);
+//         MESSAGE("Got GEOM engine");
+        // if the Geom Object is a group
+        if (aShape->GetType() == GEOM_GROUP){
+//           MESSAGE("It's a group");  
+          GEOM::GEOM_IGroupOperations_var aGroupOp = _geomEngine->GetIGroupOperations(myStudy->StudyId());
+          ShapeType= (TopAbs_ShapeEnum)aGroupOp->GetType(aShape);
+        } 
+        // if not
+        else { 
+          GEOM_Client* aClient = new GEOM_Client();
+          if ( aClient && !_geomEngine->_is_nil() ) {
+//             MESSAGE("GEOM client is OK and GEOM engine is not null");
+            S = aClient->GetShape( _geomEngine, aShape );
+            ShapeType=S.ShapeType();
+          }
+        }
+      }
     }
   }
-  return S;
+//   MESSAGE("ShapeType returned is " << ShapeType);
+  return ShapeType;
 }
-
 
 /*!
  * Gives the ShapeType of the first Selected Object, return TopAbs_SHAPE if the first selected object does not define a shape.
@@ -250,16 +251,15 @@ TopoDS_Shape GeomSelectionTools::entryToShape(std::string entry){
  */
 TopAbs_ShapeEnum GeomSelectionTools:: getFirstSelectedShapeType()
 {
- TopoDS_Shape S=getFirstSelectedTopoDSShape();
- if (!S.IsNull())
-   return S.ShapeType();
- else
-   return TopAbs_SHAPE;
+ Handle(SALOME_InteractiveObject) anIO;
+ anIO=GeomSelectionTools::getFirstSelectedSalomeObject();
+ return entryToShapeType(anIO->getEntry());
 }
 
 /*!
- *  Print information to std output of the face (if the first selected object is a face)
+ *  Print information to std output of the face
  *  and return the OCC type of face: Plane, Cylinder,Cone, Sphere, Torus, BezierSurface,BSplineSurface, SurfaceOfRevolution,SurfaceOfExtrusion, OtherSurface
+ *  @param TopoDS_Shape S Face we want information about.
  *  @return the OCC type of face: Plane, Cylinder,Cone, Sphere, Torus, BezierSurface,BSplineSurface, SurfaceOfRevolution,SurfaceOfExtrusion, OtherSurface
  *  return Other_Surface if the selected face is not a face.
  *  Information printed is :
@@ -269,9 +269,8 @@ TopAbs_ShapeEnum GeomSelectionTools:: getFirstSelectedShapeType()
  *  U or V is Rational ?
  *
  */
-GeomAbs_SurfaceType GeomSelectionTools::getFaceInformation()
+GeomAbs_SurfaceType GeomSelectionTools::getFaceInformation(TopoDS_Shape S)
 {
-  TopoDS_Shape S=getFirstSelectedTopoDSShape();
   GeomAbs_SurfaceType surf_type=GeomAbs_OtherSurface ;
   if (!S.IsNull() &&  S.ShapeType()==TopAbs_FACE){
     TopoDS_Face f=TopoDS::Face(S);
@@ -297,6 +296,7 @@ GeomAbs_SurfaceType GeomSelectionTools::getFaceInformation()
   }
   return surf_type;
 }
+
 
 
 

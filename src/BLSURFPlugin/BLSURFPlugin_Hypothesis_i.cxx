@@ -31,6 +31,7 @@
 #include "utilities.h"
 
 #include <stdexcept>
+#include "boost/regex.hpp"
 
 //=============================================================================
 /*!
@@ -549,8 +550,12 @@ void BLSURFPlugin_Hypothesis_i::SetAttractorEntry(const char* entry,const char* 
   bool valueChanged = false;
   try {
     valueChanged = ( this->GetImpl()->GetAttractorEntry(entry) != attractor );
-    if ( valueChanged )
+    if ( valueChanged ) {
+      boost::regex re("^ATTRACTOR\\((?:(-?0(\\.\\d*)*|-?[1-9]+\\d*(\\.\\d*)*|-?\\.(\\d)+);){5}(True|False)\\)$");
+      if (!boost::regex_match(string(attractor), re))
+        throw std::invalid_argument("Error: an attractor is defined with the following pattern: ATTRACTOR(xa;ya;za;a;b;True|False)");
       this->GetImpl()->SetAttractorEntry(entry, attractor);
+    }
   }
   catch (const std::invalid_argument& ex) {
     SALOME::ExceptionStruct ExDescription;
@@ -571,7 +576,7 @@ void BLSURFPlugin_Hypothesis_i::SetAttractorEntry(const char* entry,const char* 
 
 
 //=============================================================================
-                                                             
+
 char* BLSURFPlugin_Hypothesis_i::GetSizeMapEntry(const char* entry) 
   throw (SALOME::SALOME_Exception)
 {
@@ -632,7 +637,7 @@ BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetSizeMapEntries()
   ASSERT(myBaseImpl);
   BLSURFPlugin::string_array_var result = new BLSURFPlugin::string_array();
 
-  const ::BLSURFPlugin_Hypothesis::TSizeMap & sizeMaps= this->GetImpl()->GetSizeMapEntries();
+  const ::BLSURFPlugin_Hypothesis::TSizeMap sizeMaps= this->GetImpl()->_GetSizeMapEntries();
   result->length( sizeMaps.size() );
 
   ::BLSURFPlugin_Hypothesis::TSizeMap::const_iterator smIt = sizeMaps.begin();
@@ -647,14 +652,14 @@ BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetSizeMapEntries()
   return result._retn();
 }
 
-//=============================================================================                   
+//=============================================================================
 
 BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetAttractorEntries()
 {
   ASSERT(myBaseImpl);
   BLSURFPlugin::string_array_var result = new BLSURFPlugin::string_array();
 
-  const ::BLSURFPlugin_Hypothesis::TSizeMap & attractors= this->GetImpl()->GetAttractorEntries();
+  const ::BLSURFPlugin_Hypothesis::TSizeMap attractors= this->GetImpl()->_GetAttractorEntries();
   result->length( attractors.size() );
 
   ::BLSURFPlugin_Hypothesis::TSizeMap::const_iterator atIt = attractors.begin();
@@ -669,27 +674,27 @@ BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetAttractorEntries()
   return result._retn();
 }
 
-//=============================================================================                   
-                                                                                                  
-void BLSURFPlugin_Hypothesis_i::SetSizeMapEntries(const BLSURFPlugin::string_array& sizeMaps)        
-  throw (SALOME::SALOME_Exception)                                                                
-{                                                                                                 
-  ASSERT(myBaseImpl);                                                                             
-  for (int i = 0; i < sizeMaps.length(); ++i)                                                      
-  {                                                                                               
-    string entry_sizemap = sizeMaps[i].in();                                                          
-    int colonPos = entry_sizemap.find( '|' );                                                        
-    string entry, sizemap;                                                                           
-    if ( colonPos == string::npos ) // '|' separator not found                                              
-      entry = entry_sizemap;                                                                          
-    else {                                                                                        
-      entry = entry_sizemap.substr( 0, colonPos);                                                     
-      if ( colonPos < entry_sizemap.size()-1 && entry_sizemap[colonPos] != ' ')                         
-        sizemap = entry_sizemap.substr( colonPos+1 );                                                  
-    }                                                                                             
-    this->GetImpl()->SetSizeMapEntry( entry.c_str(), sizemap.c_str() );                                                
-  }                                                                                               
-}                                                                                                 
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::SetSizeMapEntries(const BLSURFPlugin::string_array& sizeMaps)
+  throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+  for (int i = 0; i < sizeMaps.length(); ++i)
+  {
+    string entry_sizemap = sizeMaps[i].in();
+    int colonPos = entry_sizemap.find( '|' );
+    string entry, sizemap;
+    if ( colonPos == string::npos ) // '|' separator not found
+      entry = entry_sizemap;
+    else {
+      entry = entry_sizemap.substr( 0, colonPos);
+      if ( colonPos < entry_sizemap.size()-1 && entry_sizemap[colonPos] != ' ')
+        sizemap = entry_sizemap.substr( colonPos+1 );
+    }
+    this->GetImpl()->SetSizeMapEntry( entry.c_str(), sizemap.c_str() );
+  }
+}
 
 //=============================================================================
 
@@ -775,7 +780,287 @@ BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetCustomSizeMapEntries()
 
 */
 
-     
+
+///////////////////////
+// ENFORCED VERTEXES //
+///////////////////////
+
+BLSURFPlugin::TEnforcedVertexMap* BLSURFPlugin_Hypothesis_i::GetAllEnforcedVertices()
+{
+  MESSAGE("IDL: GetAllEnforcedVertices()");
+  ASSERT(myBaseImpl);
+  BLSURFPlugin::TEnforcedVertexMap_var resultMap = new BLSURFPlugin::TEnforcedVertexMap();
+  const ::BLSURFPlugin_Hypothesis::TEnforcedVertexMap enforcedVertexMap = this->GetImpl()->_GetAllEnforcedVertices();
+  resultMap->length(enforcedVertexMap.size());
+  MESSAGE("Enforced Vertex map size is " << enforcedVertexMap.size());
+
+  ::BLSURFPlugin_Hypothesis::TEnforcedVertexList enforcedVertexList;
+  ::BLSURFPlugin_Hypothesis::TEnforcedVertexMap::const_iterator evmIt = enforcedVertexMap.begin();
+  for ( int i = 0 ; evmIt != enforcedVertexMap.end(); ++evmIt, ++i ) {
+    string entry = evmIt->first;
+    MESSAGE("Entry: " << entry);
+    enforcedVertexList = evmIt->second;
+
+    BLSURFPlugin::TEnforcedVertexMapElement_var mapElement = new BLSURFPlugin::TEnforcedVertexMapElement();
+
+    BLSURFPlugin::TEnforcedVertexList_var vertexList = new BLSURFPlugin::TEnforcedVertexList();
+    vertexList->length(enforcedVertexList.size());
+    MESSAGE("Number of enforced vertices: " << enforcedVertexList.size());
+
+    ::BLSURFPlugin_Hypothesis::TEnforcedVertexList::const_iterator evlIt = enforcedVertexList.begin();
+    for ( int j = 0 ; evlIt != enforcedVertexList.end(); ++evlIt, ++j ) {
+      MESSAGE("Enforced Vertex #" << j);
+      BLSURFPlugin::TEnforcedVertex_var enforcedVertex = new BLSURFPlugin::TEnforcedVertex();
+      enforcedVertex->length(3);
+      enforcedVertex[0] = (*evlIt)[0];
+      enforcedVertex[1] = (*evlIt)[1];
+      enforcedVertex[2] = (*evlIt)[2];
+      vertexList[j] = enforcedVertex;
+      MESSAGE("Enforced vertex: " << enforcedVertex[0] << ", " << enforcedVertex[1] << ", " << enforcedVertex[2]);
+    }
+
+    mapElement->entry = CORBA::string_dup(entry.c_str());
+    mapElement->vertexList = vertexList;
+
+    resultMap[i] = mapElement;
+
+  }
+  return resultMap._retn();
+}
+
+void BLSURFPlugin_Hypothesis_i::ClearAllEnforcedVertices()
+{
+  ASSERT(myBaseImpl);
+  this->GetImpl()->ClearAllEnforcedVertices();
+  SMESH::TPythonDump() << _this() << ".ClearAllEnforcedVertices()";
+}
+
+/*!
+  * Set/get/unset an enforced vertex on geom object
+  */
+void BLSURFPlugin_Hypothesis_i::SetEnforcedVertex(GEOM::GEOM_Object_ptr GeomObj, CORBA::Double x, CORBA::Double y, CORBA::Double z)
+  throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+  // TODO check that GeomObj is a face => in engine ?
+  string entry = GeomObj->GetStudyEntry();
+  MESSAGE("IDL : GetName : " << GeomObj->GetName());
+  MESSAGE("IDL : SetEnforcedVertex ( "<< entry << ", " << x << ", " << y << ", " << z << ")");
+  try {
+    SetEnforcedVertexEntry(entry.c_str(), x, y, z);
+  }
+  catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+}
+
+
+BLSURFPlugin::TEnforcedVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVertices(GEOM::GEOM_Object_ptr GeomObj)
+  throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+  string entry = GeomObj->GetStudyEntry();
+  MESSAGE("IDL : GetName : " << GeomObj->GetName());
+  MESSAGE("IDL : GetEnforcedVertexList ( "<< entry << ")");
+  try {
+    return GetEnforcedVerticesEntry(entry.c_str());
+  }
+  catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+}
+
+
+void BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertex(GEOM::GEOM_Object_ptr GeomObj, CORBA::Double x, CORBA::Double y, CORBA::Double z)
+  throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+  string entry = GeomObj->GetStudyEntry();
+  MESSAGE("IDL : GetName : " << GeomObj->GetName());
+  MESSAGE("IDL : UnsetEnforcedVertex ( "<< entry << ", " << x << ", " << y << ", " << z << ")");
+
+  try {
+    UnsetEnforcedVertexEntry(entry.c_str(), x, y, z);
+  }
+  catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+}
+
+
+void BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertices(GEOM::GEOM_Object_ptr GeomObj)
+  throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);;
+  string entry = GeomObj->GetStudyEntry();
+  MESSAGE("IDL : GetName : " << GeomObj->GetName());
+  MESSAGE("IDL : UnsetEnforcedVertices ( "<< entry << ")");
+
+  try {
+    UnsetEnforcedVerticesEntry(entry.c_str());
+  }
+  catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+}
+
+
+/*!
+  * Set/get/unset an enforced vertex on geom object given by entry
+  */
+void BLSURFPlugin_Hypothesis_i::SetEnforcedVertexEntry(const char* entry, double x, double y, double z)
+  throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+  MESSAGE("IDL : SETENFORCEDVERTEX START - ENTRY: " << entry << " VERTEX: " << x << " " << y << " " << z);
+  bool newValue = false;
+  
+  try {
+    ::BLSURFPlugin_Hypothesis::TEnforcedVertexList vertexList = this->GetImpl()->GetEnforcedVertices(entry);
+    ::BLSURFPlugin_Hypothesis::TEnforcedVertex vertex;
+    vertex.push_back(x);
+    vertex.push_back(y);
+    vertex.push_back(z);
+    if (vertexList.find(vertex) == vertexList.end()) {
+      MESSAGE("Vertex not found: add it in vertexList")
+      newValue = true;
+    }
+    else
+      MESSAGE("Vertex already found")
+  }
+  catch (const std::invalid_argument& ex) {
+    // no enforced vertex for entry
+    MESSAGE("Entry not found : add it to the list")
+    newValue = true;
+  }
+  catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+  
+  if ( newValue ) {
+    this->GetImpl()->SetEnforcedVertex(entry, x, y, z);
+    SMESH::TPythonDump() << _this() << ".SetEnforcedVertex("
+                         << entry << ", "
+                         << x << ", "
+                         << y << ", "
+                         << z << ")";
+  }
+  MESSAGE("IDL : SETENFORCEDVERTEX END - ENTRY: " << entry);
+}
+/*
+void BLSURFPlugin_Hypothesis_i::SetEnforcedVertexListEntry(const char* entry, BLSURFPlugin::TEnforcedVertexList& vertexList)
+  throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+}
+*/
+
+BLSURFPlugin::TEnforcedVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVerticesEntry(const char* entry)
+  throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+  MESSAGE("ENGINE : GETENFORCEDVERTICES START ENTRY : " << entry);
+  
+  try {
+    BLSURFPlugin::TEnforcedVertexList_var vertexList = new BLSURFPlugin::TEnforcedVertexList();
+    ::BLSURFPlugin_Hypothesis::TEnforcedVertexList _vList = this->GetImpl()->GetEnforcedVertices(entry);
+    vertexList->length(_vList.size());
+    MESSAGE("Number of enforced vertices: " << _vList.size());
+    ::BLSURFPlugin_Hypothesis::TEnforcedVertexList::const_iterator evlIt = _vList.begin();
+    for ( int i = 0; evlIt != _vList.end() ; ++evlIt, ++i ) {
+      BLSURFPlugin::TEnforcedVertex_var enforcedVertex = new BLSURFPlugin::TEnforcedVertex();
+      enforcedVertex->length(3);
+      MESSAGE("Enforced vertex #" << i << ": "<< (*evlIt)[0] << ", " << (*evlIt)[1] << ", " << (*evlIt)[2]);
+      enforcedVertex[0] = (*evlIt)[0];
+      enforcedVertex[1] = (*evlIt)[1];
+      enforcedVertex[2] = (*evlIt)[2];
+      vertexList[i] = enforcedVertex;
+    }
+    return vertexList._retn();
+  }
+  catch (const std::invalid_argument& ex) {
+    SALOME::ExceptionStruct ExDescription;
+    ExDescription.text = ex.what();
+    ExDescription.type = SALOME::BAD_PARAM;
+    ExDescription.sourceFile = "BLSURFPlugin_Hypothesis_i::GetEnforcedVerticesEntry(entry)";
+    ExDescription.lineNumber = 945;
+    throw SALOME::SALOME_Exception(ExDescription);
+  }
+  catch(const std::exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+
+  MESSAGE("ENGINE : GETENFORCEDVERTICES END ENTRY : " << entry);
+}
+
+
+void BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexEntry(const char* entry, CORBA::Double x, CORBA::Double y, CORBA::Double z)
+  throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+  MESSAGE("ENGINE : UNSETENFORCEDVERTEX START ENTRY : " << entry);
+  
+  try {
+    this->GetImpl()->ClearEnforcedVertex(entry, x, y, z);
+    SMESH::TPythonDump() << _this() << ".UnsetEnforcedVertex("
+                         << entry << ", "
+                         << x << ", "
+                         << y << ", "
+                         << z << ")";
+  }
+  catch (const std::invalid_argument& ex) {
+    SALOME::ExceptionStruct ExDescription;
+    ExDescription.text = ex.what();
+    ExDescription.type = SALOME::BAD_PARAM;
+    ExDescription.sourceFile = "BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexEntry(entry,x,y,z)";
+    ExDescription.lineNumber = 1003;
+    throw SALOME::SALOME_Exception(ExDescription);
+  }
+  catch(const std::exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+
+  MESSAGE("ENGINE : UNSETENFORCEDVERTEX END ENTRY : " << entry);
+}
+/*
+void BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexListEntry(const char* entry, BLSURFPlugin::TEnforcedVertexList& vertexList)
+  throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+}
+*/
+void BLSURFPlugin_Hypothesis_i::UnsetEnforcedVerticesEntry(const char* entry)
+  throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+  MESSAGE("ENGINE : UNSETENFORCEDVERTICES START ENTRY : " << entry);
+  
+  try {
+    this->GetImpl()->ClearEnforcedVertices(entry);
+    SMESH::TPythonDump() << _this() << ".UnsetEnforcedVertices(" << entry << ")";
+  }
+  catch (const std::invalid_argument& ex) {
+    SALOME::ExceptionStruct ExDescription;
+    ExDescription.text = ex.what();
+    ExDescription.type = SALOME::BAD_PARAM;
+    ExDescription.sourceFile = "BLSURFPlugin_Hypothesis_i::UnsetEnforcedVerticesEntry(entry)";
+    ExDescription.lineNumber = 1051;
+    throw SALOME::SALOME_Exception(ExDescription);
+  }
+  catch(const std::exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+
+  MESSAGE("ENGINE : UNSETENFORCEDVERTICES END ENTRY : " << entry);
+}
+
+
+///////////////////////
+
+
+
+
+
 //=============================================================================
 /*!
  *  BLSURFPlugin_Hypothesis_i::GetImpl

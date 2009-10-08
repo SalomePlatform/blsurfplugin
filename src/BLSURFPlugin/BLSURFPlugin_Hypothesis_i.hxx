@@ -140,9 +140,37 @@ class BLSURFPlugin_Hypothesis_i:
   BLSURFPlugin::string_array* GetCustomSizeMapEntries();
 */
 
+  ///////////////////////
+  // ENFORCED VERTEXES //
+  ///////////////////////
+  
+  BLSURFPlugin::TEnforcedVertexMap* GetAllEnforcedVertices();
+  void                              ClearAllEnforcedVertices();
+
+  /*!
+    * Set/get/unset an enforced vertex on geom object
+    */
+  void         SetEnforcedVertex(GEOM::GEOM_Object_ptr GeomObj, CORBA::Double x, CORBA::Double y, CORBA::Double z) throw (SALOME::SALOME_Exception);
+//   void         SetEnforcedVertexList(GEOM::GEOM_Object_ptr GeomObj, const BLSURFPlugin::TEnforcedVertexList& vertexList) throw (SALOME::SALOME_Exception);
+  BLSURFPlugin::TEnforcedVertexList* GetEnforcedVertices(GEOM::GEOM_Object_ptr GeomObj) throw (SALOME::SALOME_Exception);
+  void         UnsetEnforcedVertex(GEOM::GEOM_Object_ptr GeomObj, CORBA::Double x, CORBA::Double y, CORBA::Double z) throw (SALOME::SALOME_Exception);
+//   void         UnsetEnforcedVertexList(GEOM::GEOM_Object_ptr GeomObj, BLSURFPlugin::TEnforcedVertexList& vertexList) throw (SALOME::SALOME_Exception);
+  void         UnsetEnforcedVertices(GEOM::GEOM_Object_ptr GeomObj) throw (SALOME::SALOME_Exception);
+
+  /*!
+    * Set/get/unset an enforced vertex on geom object given by entry
+    */
+  void         SetEnforcedVertexEntry(const char* entry, double x, double y, double z) throw (SALOME::SALOME_Exception);
+//   void         SetEnforcedVertexListEntry(const char* entry, BLSURFPlugin::TEnforcedVertexList& vertexList) throw (SALOME::SALOME_Exception);
+  BLSURFPlugin::TEnforcedVertexList* GetEnforcedVerticesEntry(const char* entry) throw (SALOME::SALOME_Exception);
+  void         UnsetEnforcedVertexEntry(const char* entry, CORBA::Double x, CORBA::Double y, CORBA::Double z) throw (SALOME::SALOME_Exception);
+//   void         UnsetEnforcedVertexListEntry(const char* entry, BLSURFPlugin::TEnforcedVertexList& vertexList) throw (SALOME::SALOME_Exception);
+  void         UnsetEnforcedVerticesEntry(const char* entry) throw (SALOME::SALOME_Exception);
+  ///////////////////////
+
   // Get implementation
   ::BLSURFPlugin_Hypothesis* GetImpl();
-  
+
   // Verify whether hypothesis supports given entity type 
   CORBA::Boolean IsDimSupported( SMESH::Dimension type );
 };

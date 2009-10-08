@@ -43,6 +43,7 @@ extern "C"{
 #include <limits>
 #include <list>
 #include <vector>
+#include <set>
 #include <cstdlib>
 
 #include <BRep_Tool.hxx>
@@ -50,6 +51,11 @@ extern "C"{
 #include <TopExp_Explorer.hxx>
 #include <NCollection_Map.hxx>
 #include <Standard_ErrorHandler.hxx>
+
+extern "C"{
+#include "distene/blsurf.h"
+#include <distene/api.h>
+}
 
 #include <Geom_Surface.hxx>
 #include <Handle_Geom_Surface.hxx>
@@ -72,6 +78,8 @@ extern "C"{
 #include <GeomAPI_ProjectPointOnSurf.hxx>
 #include <gp_XY.hxx>
 #include <gp_XYZ.hxx>
+// #include <BRepClass_FaceClassifier.hxx>
+#include <TopTools_MapOfShape.hxx>
 
 /* ==================================
  * ===========  PYTHON ==============
@@ -120,48 +128,48 @@ static PyTypeObject PyStdOut_Type = {
   /* The ob_type field must be initialized in the module init function
    * to be portable to Windows without using C++. */
   PyObject_HEAD_INIT(NULL)
-  0,      /*ob_size*/
-  "PyOut",   /*tp_name*/
-  sizeof(PyStdOut),  /*tp_basicsize*/
-  0,      /*tp_itemsize*/
+  0,                            /*ob_size*/
+  "PyOut",                      /*tp_name*/
+  sizeof(PyStdOut),             /*tp_basicsize*/
+  0,                            /*tp_itemsize*/
   /* methods */
   (destructor)PyStdOut_dealloc, /*tp_dealloc*/
-  0,      /*tp_print*/
-  0, /*tp_getattr*/
-  0, /*tp_setattr*/
-  0,      /*tp_compare*/
-  0,      /*tp_repr*/
-  0,      /*tp_as_number*/
-  0,      /*tp_as_sequence*/
-  0,      /*tp_as_mapping*/
-  0,      /*tp_hash*/
-        0,                      /*tp_call*/
-        0,                      /*tp_str*/
-        PyObject_GenericGetAttr,                      /*tp_getattro*/
-        /* softspace is writable:  we must supply tp_setattro */
-        PyObject_GenericSetAttr,    /* tp_setattro */
-        0,                      /*tp_as_buffer*/
-        Py_TPFLAGS_DEFAULT,     /*tp_flags*/
-        0,                      /*tp_doc*/
-        0,                      /*tp_traverse*/
-        0,                      /*tp_clear*/
-        0,                      /*tp_richcompare*/
-        0,                      /*tp_weaklistoffset*/
-        0,                      /*tp_iter*/
-        0,                      /*tp_iternext*/
-        PyStdOut_methods,                      /*tp_methods*/
-        PyStdOut_memberlist,                      /*tp_members*/
-        0,                      /*tp_getset*/
-        0,                      /*tp_base*/
-        0,                      /*tp_dict*/
-        0,                      /*tp_descr_get*/
-        0,                      /*tp_descr_set*/
-        0,                      /*tp_dictoffset*/
-        0,                      /*tp_init*/
-        0,                      /*tp_alloc*/
-        0,                      /*tp_new*/
-        0,                      /*tp_free*/
-        0,                      /*tp_is_gc*/
+  0,                            /*tp_print*/
+  0,                            /*tp_getattr*/
+  0,                            /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number*/
+  0,                            /*tp_as_sequence*/
+  0,                            /*tp_as_mapping*/
+  0,                            /*tp_hash*/
+  0,                            /*tp_call*/
+  0,                            /*tp_str*/
+  PyObject_GenericGetAttr,      /*tp_getattro*/
+  /* softspace is writable:  we must supply tp_setattro */
+  PyObject_GenericSetAttr,      /* tp_setattro */
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT,           /*tp_flags*/
+  0,                            /*tp_doc*/
+  0,                            /*tp_traverse*/
+  0,                            /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  PyStdOut_methods,             /*tp_methods*/
+  PyStdOut_memberlist,          /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/
 };
 
 PyObject * newPyStdOut( std::string& out )
@@ -179,13 +187,21 @@ PyObject * newPyStdOut( std::string& out )
 ////////////////////////END PYTHON///////////////////////////
 
 //////////////////MY MAPS////////////////////////////////////////
+TopTools_IndexedMapOfShape FacesWithSizeMap;
 std::map<int,string> FaceId2SizeMap;
+TopTools_IndexedMapOfShape EdgesWithSizeMap;
 std::map<int,string> EdgeId2SizeMap;
+TopTools_IndexedMapOfShape VerticesWithSizeMap;
 std::map<int,string> VertexId2SizeMap;
+
 std::map<int,PyObject*> FaceId2PythonSmp;
 std::map<int,PyObject*> EdgeId2PythonSmp;
 std::map<int,PyObject*> VertexId2PythonSmp;
 
+std::map<int,std::vector<double> > FaceId2AttractorCoords;
+
+TopTools_IndexedMapOfShape FacesWithEnforcedVertices;
+std::map< int, std::set< std::vector<double> > > FaceId2EnforcedVertexCoords;
 
 bool HasSizeMapOnFace=false;
 bool HasSizeMapOnEdge=false;
@@ -234,12 +250,19 @@ BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF(int hypId, int studyId,
   PyRun_SimpleString("from math import *");
   PyGILState_Release(gstate);
 
+  FacesWithSizeMap.Clear();
   FaceId2SizeMap.clear();
+  EdgesWithSizeMap.Clear();
   EdgeId2SizeMap.clear();
+  VerticesWithSizeMap.Clear();
   VertexId2SizeMap.clear();
   FaceId2PythonSmp.clear();
   EdgeId2PythonSmp.clear();
   VertexId2PythonSmp.clear();
+  FaceId2AttractorCoords.clear();
+  FacesWithEnforcedVertices.Clear();
+  FaceId2EnforcedVertexCoords.clear();
+
 }
 
 //=============================================================================
@@ -327,9 +350,14 @@ status_t size_on_vertex(integer vertex_id, real *size, void *user_data);
 
 double my_u_min=1e6,my_v_min=1e6,my_u_max=-1e6,my_v_max=-1e6;
 
+typedef struct {
+	gp_XY uv;
+	gp_XYZ xyz;
+} projectionPoint;
 /////////////////////////////////////////////////////////
-gp_XY getUV(const TopoDS_Face& face, const gp_XYZ& point)
+projectionPoint getProjectionPoint(const TopoDS_Face& face, const gp_XYZ& point)
 {
+  projectionPoint myPoint;
   Handle(Geom_Surface) surface = BRep_Tool::Surface(face);
   GeomAPI_ProjectPointOnSurf projector( point, surface );
   if ( !projector.IsDone() || projector.NbPoints()==0 )
@@ -337,7 +365,11 @@ gp_XY getUV(const TopoDS_Face& face, const gp_XYZ& point)
 
   Quantity_Parameter u,v;
   projector.LowerDistanceParameters(u,v);
-  return gp_XY(u,v);
+  myPoint.uv = gp_XY(u,v);
+  gp_Pnt aPnt = projector.NearestPoint();
+  myPoint.xyz = gp_XYZ(aPnt.X(),aPnt.Y(),aPnt.Z());
+  //return gp_XY(u,v);
+  return myPoint;
 }
 /////////////////////////////////////////////////////////
 
@@ -384,6 +416,186 @@ TopoDS_Shape BLSURFPlugin_BLSURF::entryToShape(std::string entry)
     }
     return S;
 }
+
+/////////////////////////////////////////////////////////
+TopoDS_Shape BLSURFPlugin_BLSURF::entryToShape(std::string entry)
+{
+  MESSAGE("BLSURFPlugin_BLSURF::entryToShape"<<entry );
+  GEOM::GEOM_Object_var aGeomObj;
+  TopoDS_Shape S = TopoDS_Shape();
+  SALOMEDS::SObject_var aSObj = myStudy->FindObjectID( entry.c_str() );
+  SALOMEDS::GenericAttribute_var anAttr;
+
+  if (!aSObj->_is_nil() && aSObj->FindAttribute(anAttr, "AttributeIOR")) {
+    SALOMEDS::AttributeIOR_var anIOR = SALOMEDS::AttributeIOR::_narrow(anAttr);
+    CORBA::String_var aVal = anIOR->Value();
+    CORBA::Object_var obj = myStudy->ConvertIORToObject(aVal);
+    aGeomObj = GEOM::GEOM_Object::_narrow(obj);
+  }
+  if ( !aGeomObj->_is_nil() )
+    S = smeshGen_i->GeomObjectToShape( aGeomObj.in() );
+  return S;
+}
+
+/////////////////////////////////////////////////////////
+void createEnforcedVertexOnFace(TopoDS_Shape GeomShape, BLSURFPlugin_Hypothesis::TEnforcedVertexList enforcedVertexList)
+{
+  double xe, ye, ze;
+  std::vector<double> coords;
+  BLSURFPlugin_Hypothesis::TEnforcedVertex enforcedVertex;
+  BLSURFPlugin_Hypothesis::TEnforcedVertexList::const_iterator evlIt = enforcedVertexList.begin();
+
+  for( ; evlIt != enforcedVertexList.end() ; ++evlIt ) {
+    coords.clear();
+    enforcedVertex = *evlIt;
+    xe = enforcedVertex[0];
+    ye = enforcedVertex[1];
+    ze = enforcedVertex[2];
+    MESSAGE("Enforced Vertex: " << xe << ", " << ye << ", " << ze);
+    // Get the (u,v) values of the enforced vertex on the face
+    projectionPoint myPoint = getProjectionPoint(TopoDS::Face(GeomShape),gp_XYZ(xe,ye,ze));
+    gp_XY uvPoint = myPoint.uv;
+    gp_XYZ xyzPoint = myPoint.xyz;
+    Standard_Real u0 = uvPoint.X();
+    Standard_Real v0 = uvPoint.Y();
+    Standard_Real x0 = xyzPoint.X();
+    Standard_Real y0 = xyzPoint.Y();
+    Standard_Real z0 = xyzPoint.Z();
+    MESSAGE("Projected Vertex: " << x0 << ", " << y0 << ", " << z0);
+    coords.push_back(u0);
+    coords.push_back(v0);
+    coords.push_back(x0);
+    coords.push_back(y0);
+    coords.push_back(z0);
+  
+    int key = 0;
+    if (! FacesWithEnforcedVertices.Contains(TopoDS::Face(GeomShape))) {
+      key = FacesWithEnforcedVertices.Add(TopoDS::Face(GeomShape));
+    }
+    else {
+      key = FacesWithEnforcedVertices.FindIndex(TopoDS::Face(GeomShape));
+    }
+
+    // If a node is already created by an attractor, do not create enforced vertex
+    int attractorKey = FacesWithSizeMap.FindIndex(TopoDS::Face(GeomShape));
+    bool sameAttractor = false;
+    if (attractorKey >= 0)
+      if (FaceId2AttractorCoords.count(attractorKey) > 0)
+        if (FaceId2AttractorCoords[attractorKey] == coords)
+          sameAttractor = true;
+
+    if (FaceId2EnforcedVertexCoords.find(key) != FaceId2EnforcedVertexCoords.end()) {
+      MESSAGE("Map of enf. vertex has key " << key)
+      MESSAGE("Enf. vertex list size is: " << FaceId2EnforcedVertexCoords[key].size())
+      if (not sameAttractor)
+        FaceId2EnforcedVertexCoords[key].insert(coords); // there should be no redondant coords here (see std::set management)
+      else
+        MESSAGE("An attractor node is already defined: I don't add the enforced vertex");
+      MESSAGE("New Enf. vertex list size is: " << FaceId2EnforcedVertexCoords[key].size())
+    }
+    else {
+      MESSAGE("Map of enf. vertex has not key " << key << ": creating it")
+      if (not sameAttractor) {
+        std::set< std::vector<double> > ens;
+        ens.insert(coords);
+        FaceId2EnforcedVertexCoords[key] = ens;
+      }
+      else
+        MESSAGE("An attractor node is already defined: I don't add the enforced vertex");
+    }
+  }
+}
+
+/////////////////////////////////////////////////////////
+void createAttractorOnFace(TopoDS_Shape GeomShape, std::string AttractorFunction)
+{
+  MESSAGE("Attractor function: "<< AttractorFunction);
+  double xa, ya, za; // Coordinates of attractor point
+  double a, b;       // Attractor parameter
+  bool createNode=false; // To create a node on attractor projection
+  int pos1, pos2;
+  const char *sep = ";";
+  // atIt->second has the following pattern:
+  // ATTRACTOR(xa;ya;za;a;b)
+  // where:
+  // xa;ya;za : coordinates of  attractor
+  // a        : desired size on attractor
+  // b        : distance of influence of attractor
+  //
+  // We search the parameters in the string
+  // xa
+  pos1 = AttractorFunction.find(sep);
+  if (pos1!=string::npos)
+  xa = atof(AttractorFunction.substr(10, pos1-10).c_str());
+  // ya
+  pos2 = AttractorFunction.find(sep, pos1+1);
+  if (pos2!=string::npos) {
+  ya = atof(AttractorFunction.substr(pos1+1, pos2-pos1-1).c_str());
+  pos1 = pos2;
+    }
+  // za
+  pos2 = AttractorFunction.find(sep, pos1+1);
+  if (pos2!=string::npos) {
+  za = atof(AttractorFunction.substr(pos1+1, pos2-pos1-1).c_str());
+  pos1 = pos2;
+  }
+  // a
+  pos2 = AttractorFunction.find(sep, pos1+1);
+  if (pos2!=string::npos) {
+  a = atof(AttractorFunction.substr(pos1+1, pos2-pos1-1).c_str());
+  pos1 = pos2;
+  }
+  // b
+  pos2 = AttractorFunction.find(sep, pos1+1);
+  if (pos2!=string::npos) {
+  b = atof(AttractorFunction.substr(pos1+1, pos2-pos1-1).c_str());
+    pos1 = pos2;
+  }
+  // createNode
+  pos2 = AttractorFunction.find(")");
+  if (pos2!=string::npos) {
+    string createNodeStr = AttractorFunction.substr(pos1+1, pos2-pos1-1);
+    MESSAGE("createNode: " << createNodeStr);
+    createNode = (AttractorFunction.substr(pos1+1, pos2-pos1-1) == "True");
+  }
+
+  // Get the (u,v) values of the attractor on the face
+  projectionPoint myPoint = getProjectionPoint(TopoDS::Face(GeomShape),gp_XYZ(xa,ya,za));
+  gp_XY uvPoint = myPoint.uv;
+  gp_XYZ xyzPoint = myPoint.xyz;
+  Standard_Real u0 = uvPoint.X();
+  Standard_Real v0 = uvPoint.Y();
+  Standard_Real x0 = xyzPoint.X();
+  Standard_Real y0 = xyzPoint.Y();
+  Standard_Real z0 = xyzPoint.Z();
+  std::vector<double> coords;
+  coords.push_back(u0);
+  coords.push_back(v0);
+  coords.push_back(x0);
+  coords.push_back(y0);
+  coords.push_back(z0);
+  // We construct the python function
+  ostringstream attractorFunctionStream;
+  attractorFunctionStream << "def f(u,v): return ";
+  attractorFunctionStream << _smp_phy_size << "-(" << _smp_phy_size <<"-" << a << ")";
+  attractorFunctionStream << "*exp(-((u-("<<u0<<"))*(u-("<<u0<<"))+(v-("<<v0<<"))*(v-("<<v0<<")))/(" << b << "*" << b <<"))";
+
+  MESSAGE("Python function for attractor:" << std::endl << attractorFunctionStream.str());
+
+  int key;
+  if (! FacesWithSizeMap.Contains(TopoDS::Face(GeomShape))) {
+    key = FacesWithSizeMap.Add(TopoDS::Face(GeomShape));
+  }
+  else {
+    key = FacesWithSizeMap.FindIndex(TopoDS::Face(GeomShape));
+  }
+  FaceId2SizeMap[key] =attractorFunctionStream.str();
+  if (createNode) {
+    MESSAGE("Creating node on ("<<x0<<","<<y0<<","<<z0<<")");
+    FaceId2AttractorCoords[key] = coords;
+  }
+}
+
 /////////////////////////////////////////////////////////
 
 void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsurf_session_t *bls)
@@ -441,7 +653,6 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
   blsurf_set_param(bls, "hphy_flag",         to_string(_physicalMesh).c_str());
 //  blsurf_set_param(bls, "hphy_flag",         "2");
   if ((to_string(_physicalMesh))=="2"){
-
     TopoDS_Shape GeomShape;
     TopAbs_ShapeEnum GeomType;
     //
@@ -455,20 +666,90 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
         MESSAGE("blsurf_set_sizeMap(): " << smIt->first << " = " << smIt->second);
         GeomShape = entryToShape(smIt->first);
         GeomType  = GeomShape.ShapeType();
+        MESSAGE("Geomtype is " << GeomType);
+        int key = -1;
+        // Group Management
+        if (GeomType == TopAbs_COMPOUND){
+          for (TopoDS_Iterator it (GeomShape); it.More(); it.Next()){
+            // Group of faces
+            if (it.Value().ShapeType() == TopAbs_FACE){
+              HasSizeMapOnFace = true;
+              if (! FacesWithSizeMap.Contains(TopoDS::Face(it.Value()))) {
+                key = FacesWithSizeMap.Add(TopoDS::Face(it.Value()));
+              }
+              else {
+                key = FacesWithSizeMap.FindIndex(TopoDS::Face(it.Value()));
+//                 MESSAGE("Face with key " << key << " already in map");
+              }
+              FaceId2SizeMap[key] = smIt->second;
+            }
+            // Group of edges
+            if (it.Value().ShapeType() == TopAbs_EDGE){
+              HasSizeMapOnEdge = true;
+              HasSizeMapOnFace = true;
+              if (! EdgesWithSizeMap.Contains(TopoDS::Edge(it.Value()))) {
+                key = EdgesWithSizeMap.Add(TopoDS::Edge(it.Value()));
+              }
+              else {
+                key = EdgesWithSizeMap.FindIndex(TopoDS::Edge(it.Value()));
+//                 MESSAGE("Edge with key " << key << " already in map");
+              }
+              EdgeId2SizeMap[key] = smIt->second;
+            }
+            // Group of vertices
+            if (it.Value().ShapeType() == TopAbs_VERTEX){
+              HasSizeMapOnVertex = true;
+              HasSizeMapOnEdge = true;
+              HasSizeMapOnFace = true;
+              if (! VerticesWithSizeMap.Contains(TopoDS::Vertex(it.Value()))) {
+                key = VerticesWithSizeMap.Add(TopoDS::Vertex(it.Value()));
+              }
+              else {
+                key = VerticesWithSizeMap.FindIndex(TopoDS::Vertex(it.Value()));
+//                 MESSAGE("Vertex with key " << key << " already in map");
+              }
+              VertexId2SizeMap[key] = smIt->second;
+            }
+          }
+        }
+        // Single face
         if (GeomType == TopAbs_FACE){
           HasSizeMapOnFace = true;
-          FaceId2SizeMap[TopoDS::Face(GeomShape).HashCode(471662)] = smIt->second;
+          if (! FacesWithSizeMap.Contains(TopoDS::Face(GeomShape))) {
+            key = FacesWithSizeMap.Add(TopoDS::Face(GeomShape));
+          }
+          else {
+            key = FacesWithSizeMap.FindIndex(TopoDS::Face(GeomShape));
+//             MESSAGE("Face with key " << key << " already in map");
+          }
+          FaceId2SizeMap[key] = smIt->second;
         }
+        // Single edge
         if (GeomType == TopAbs_EDGE){
           HasSizeMapOnEdge = true;
           HasSizeMapOnFace = true;
-          EdgeId2SizeMap[TopoDS::Edge(GeomShape).HashCode(471662)] = smIt->second;
+          if (! EdgesWithSizeMap.Contains(TopoDS::Edge(GeomShape))) {
+            key = EdgesWithSizeMap.Add(TopoDS::Edge(GeomShape));
+          }
+          else {
+            key = EdgesWithSizeMap.FindIndex(TopoDS::Edge(GeomShape));
+//             MESSAGE("Edge with key " << key << " already in map");
+          }
+          EdgeId2SizeMap[key] = smIt->second;
         }
+        // Single vertex
         if (GeomType == TopAbs_VERTEX){
           HasSizeMapOnVertex = true;
           HasSizeMapOnEdge   = true;
           HasSizeMapOnFace   = true;
-          VertexId2SizeMap[TopoDS::Vertex(GeomShape).HashCode(471662)] = smIt->second;
+          if (! VerticesWithSizeMap.Contains(TopoDS::Vertex(GeomShape))) {
+            key = VerticesWithSizeMap.Add(TopoDS::Vertex(GeomShape));
+          }
+          else {
+            key = VerticesWithSizeMap.FindIndex(TopoDS::Vertex(GeomShape));
+//             MESSAGE("Vertex with key " << key << " already in map");
+          }
+          VertexId2SizeMap[key] = smIt->second;
         }
       }
     }
@@ -477,72 +758,70 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
     // Attractors
     //
     MESSAGE("Setting Attractors");
-    const BLSURFPlugin_Hypothesis::TSizeMap & attractors = hyp->GetAttractorEntries();
-    BLSURFPlugin_Hypothesis::TSizeMap::const_iterator atIt;
-    for ( atIt = attractors.begin(); atIt != attractors.end(); ++atIt ) {
+    const BLSURFPlugin_Hypothesis::TSizeMap attractors = BLSURFPlugin_Hypothesis::GetAttractorEntries(hyp);
+    BLSURFPlugin_Hypothesis::TSizeMap::const_iterator atIt = attractors.begin();
+    for ( ; atIt != attractors.end(); ++atIt ) {
       if ( !atIt->second.empty() ) {
         MESSAGE("blsurf_set_attractor(): " << atIt->first << " = " << atIt->second);
         GeomShape = entryToShape(atIt->first);
         GeomType  = GeomShape.ShapeType();
-
+        // Group Management
+        if (GeomType == TopAbs_COMPOUND){
+          for (TopoDS_Iterator it (GeomShape); it.More(); it.Next()){
+            if (it.Value().ShapeType() == TopAbs_FACE){
+              HasSizeMapOnFace = true;
+              createAttractorOnFace(it.Value(), atIt->second);
+            }
+          }
+        }
+        	
         if (GeomType == TopAbs_FACE){
           HasSizeMapOnFace = true;
-
-          double xa, ya, za; // Coordinates of attractor point
-          double a, b;       // Attractor parameter
-          int pos1, pos2;
-          // atIt->second has the following pattern:
-          // ATTRACTOR(xa;ya;za;a;b)
-          // where:
-          // xa;ya;za : coordinates of  attractor
-          // a        : desired size on attractor
-          // b        : distance of influence of attractor
-          //
-          // We search the parameters in the string
-          pos1 = atIt->second.find(";");
-          xa = atof(atIt->second.substr(10, pos1-10).c_str());
-          pos2 = atIt->second.find(";", pos1+1);
-          ya = atof(atIt->second.substr(pos1+1, pos2-pos1-1).c_str());
-          pos1 = pos2;
-          pos2 = atIt->second.find(";", pos1+1);
-          za = atof(atIt->second.substr(pos1+1, pos2-pos1-1).c_str());
-          pos1 = pos2;
-          pos2 = atIt->second.find(";", pos1+1);
-          a = atof(atIt->second.substr(pos1+1, pos2-pos1-1).c_str());
-          pos1 = pos2;
-          pos2 = atIt->second.find(")");
-          b = atof(atIt->second.substr(pos1+1, pos2-pos1-1).c_str());
-
-          // Get the (u,v) values of the attractor on the face
-          gp_XY uvPoint = getUV(TopoDS::Face(GeomShape),gp_XYZ(xa,ya,za));
-          Standard_Real u0 = uvPoint.X();
-          Standard_Real v0 = uvPoint.Y();
-          // We construct the python function
-          ostringstream attractorFunction;
-          attractorFunction << "def f(u,v): return ";
-          attractorFunction << _smp_phy_size << "-(" << _smp_phy_size <<"-" << a << ")";
-          attractorFunction << "*exp(-((u-("<<u0<<"))*(u-("<<u0<<"))+(v-("<<v0<<"))*(v-("<<v0<<")))/(" << b << "*" << b <<"))";
-
-          MESSAGE("Python function for attractor:" << std::endl << attractorFunction.str());
-
-          FaceId2SizeMap[TopoDS::Face(GeomShape).HashCode(471662)] =attractorFunction.str();
+          createAttractorOnFace(GeomShape, atIt->second);
         }
 /*
         if (GeomType == TopAbs_EDGE){
           HasSizeMapOnEdge = true;
           HasSizeMapOnFace = true;
-        EdgeId2SizeMap[TopoDS::Edge(GeomShape).HashCode(471662)] = atIt->second;
+        EdgeId2SizeMap[TopoDS::Edge(GeomShape).HashCode(IntegerLast())] = atIt->second;
         }
         if (GeomType == TopAbs_VERTEX){
           HasSizeMapOnVertex = true;
           HasSizeMapOnEdge   = true;
           HasSizeMapOnFace   = true;
-        VertexId2SizeMap[TopoDS::Vertex(GeomShape).HashCode(471662)] = atIt->second;
+        VertexId2SizeMap[TopoDS::Vertex(GeomShape).HashCode(IntegerLast())] = atIt->second;
         }
 */
       }
     }
 
+
+    //
+    // Enforced Vertices
+    //
+    MESSAGE("Setting Enforced Vertices");
+    const BLSURFPlugin_Hypothesis::TEnforcedVertexMap enforcedVertexMap = BLSURFPlugin_Hypothesis::GetAllEnforcedVertices(hyp);
+    BLSURFPlugin_Hypothesis::TEnforcedVertexMap::const_iterator enfIt = enforcedVertexMap.begin();
+    for ( ; enfIt != enforcedVertexMap.end(); ++enfIt ) {
+      if ( !enfIt->second.empty() ) {
+        GeomShape = entryToShape(enfIt->first);
+        GeomType  = GeomShape.ShapeType();
+        // Group Management
+        if (GeomType == TopAbs_COMPOUND){
+          for (TopoDS_Iterator it (GeomShape); it.More(); it.Next()){
+            if (it.Value().ShapeType() == TopAbs_FACE){
+              HasSizeMapOnFace = true;
+              createEnforcedVertexOnFace(it.Value(), enfIt->second);
+            }
+          }
+        }
+            
+        if (GeomType == TopAbs_FACE){
+          HasSizeMapOnFace = true;
+          createEnforcedVertexOnFace(GeomShape, enfIt->second);
+        }
+      }
+    }
 
 //    if (HasSizeMapOnFace){
     // In all size map cases (hphy_flag = 2), at least map on face must be defined
@@ -599,16 +878,22 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 
   blsurf_session_t *bls = blsurf_session_new(ctx);
 
+  FacesWithSizeMap.Clear();
+  FaceId2SizeMap.clear();
+  EdgesWithSizeMap.Clear();
+  EdgeId2SizeMap.clear();
+  VerticesWithSizeMap.Clear();
+  VertexId2SizeMap.clear();
 
+  MESSAGE("BEGIN SetParameters");
   SetParameters(_hypothesis, bls);
+  MESSAGE("END SetParameters");
 
   TopTools_IndexedMapOfShape fmap;
   TopTools_IndexedMapOfShape emap;
   TopTools_IndexedMapOfShape pmap;
   vector<Handle(Geom2d_Curve)> curves;
   vector<Handle(Geom_Surface)> surfaces;
-
-
 
   fmap.Clear();
   FaceId2PythonSmp.clear();
@@ -622,42 +907,25 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   assert(Py_IsInitialized());
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
-/*
-  Standard_Real u_min;
-  Standard_Real v_min;
-  Standard_Real u_max;
-  Standard_Real v_max;
-*/
+
+  string theSizeMapStr;
+  
+  /****************************************************************************************
+                                  FACES
+  *****************************************************************************************/
   int iface = 0;
   string bad_end = "return";
+  int faceKey = -1;
   for (TopExp_Explorer face_iter(aShape,TopAbs_FACE);face_iter.More();face_iter.Next()) {
     TopoDS_Face f=TopoDS::Face(face_iter.Current());
+    
     if (fmap.FindIndex(f) > 0)
       continue;
 
     fmap.Add(f);
     iface++;
     surfaces.push_back(BRep_Tool::Surface(f));
-    // Get bound values of uv surface
-    //BRep_Tool::Surface(f)->Bounds(u_min,u_max,v_min,v_max);
-    //MESSAGE("BRep_Tool::Surface(f)->Bounds(u_min,u_max,v_min,v_max): " << u_min << ", " << u_max << ", " << v_min << ", " << v_max);
 
-    if ((HasSizeMapOnFace) && FaceId2SizeMap.find(f.HashCode(471662))!=FaceId2SizeMap.end()){
-        MESSAGE("FaceId2SizeMap[f.HashCode(471662)].find(bad_end): " << FaceId2SizeMap[f.HashCode(471662)].find(bad_end));
-        MESSAGE("FaceId2SizeMap[f.HashCode(471662)].size(): " << FaceId2SizeMap[f.HashCode(471662)].size());
-        MESSAGE("bad_end.size(): " << bad_end.size());
-      // check if function ends with "return"
-        if (FaceId2SizeMap[f.HashCode(471662)].find(bad_end) == (FaceId2SizeMap[f.HashCode(471662)].size()-bad_end.size()-1))
-        continue;
-      // Expr To Python function, verification is performed at validation in GUI
-      PyObject * obj = NULL;
-      obj= PyRun_String(FaceId2SizeMap[f.HashCode(471662)].c_str(), Py_file_input, main_dict, NULL);
-      Py_DECREF(obj);
-      PyObject * func = NULL;
-      func = PyObject_GetAttrString(main_mod, "f");
-      FaceId2PythonSmp[iface]=func;
-      FaceId2SizeMap.erase(f.HashCode(471662));
-    }
     cad_face_t *fce = cad_face_new(c, iface, surf_fun, surfaces.back());
     cad_face_set_tag(fce, iface);
     if(f.Orientation() != TopAbs_FORWARD){
@@ -665,26 +933,148 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     } else {
       cad_face_set_orientation(fce, CAD_ORIENTATION_FORWARD);
     }
-
+    
+    if (HasSizeMapOnFace){
+      std::cout << "A size map is defined on a face" << std::endl;
+      // Classic size map
+      faceKey = FacesWithSizeMap.FindIndex(f);
+      
+      if (FaceId2SizeMap.find(faceKey)!=FaceId2SizeMap.end()){
+        theSizeMapStr = FaceId2SizeMap[faceKey];
+        // check if function ends with "return"
+        if (theSizeMapStr.find(bad_end) == (theSizeMapStr.size()-bad_end.size()-1))
+          continue;
+        // Expr To Python function, verification is performed at validation in GUI
+        PyObject * obj = NULL;
+        obj= PyRun_String(theSizeMapStr.c_str(), Py_file_input, main_dict, NULL);
+        Py_DECREF(obj);
+        PyObject * func = NULL;
+        func = PyObject_GetAttrString(main_mod, "f");
+        FaceId2PythonSmp[iface]=func;
+        FaceId2SizeMap.erase(faceKey);
+      }
+      
+      // Specific size map = Attractor
+      std::map<int,std::vector<double> >::iterator attractor_iter = FaceId2AttractorCoords.begin();
+      int iatt=0;
+      for (; attractor_iter != FaceId2AttractorCoords.end(); ++attractor_iter) {
+        if (attractor_iter->first == faceKey) {
+          MESSAGE("Face indice: " << iface);
+          MESSAGE("Adding attractor");
+          
+          double xyzCoords[3]  = {attractor_iter->second[2],
+                                  attractor_iter->second[3],
+                                  attractor_iter->second[4]};
+          
+          MESSAGE("Check position of vertex =(" << xyzCoords[0] << "," << xyzCoords[1] << "," << xyzCoords[2] << ")");
+          gp_Pnt P(xyzCoords[0],xyzCoords[1],xyzCoords[2]);
+          BRepClass_FaceClassifier scl(f,P,1e-7);
+          // scl.Perform() is bugged. The function was rewritten
+//          scl.Perform();
+          BRepClass_FaceClassifierPerform(&scl,f,P,1e-7);
+          TopAbs_State result = scl.State();
+          MESSAGE("Position of point on face: "<<result);
+          if ( result == TopAbs_OUT )
+              MESSAGE("Point is out of face: node is not created");
+          if ( result == TopAbs_UNKNOWN )
+              MESSAGE("Point position on face is unknown: node is not created");
+          if ( result == TopAbs_ON )
+              MESSAGE("Point is on border of face: node is not created");
+          if ( result == TopAbs_IN )
+          {
+            // Point is inside face and not on border
+            MESSAGE("Point is in face: node is created");
+            double uvCoords[2]   = {attractor_iter->second[0],attractor_iter->second[1]};
+            iatt++;
+            MESSAGE("Add cad point on (u,v)=(" << uvCoords[0] << "," << uvCoords[1] << ") with id = " << iatt);
+            cad_point_t* point_p = cad_point_new(fce, iatt, uvCoords);
+            cad_point_set_tag(point_p, iatt);
+          }
+          FaceId2AttractorCoords.erase(faceKey);
+        }
+      }
+      
+      // Enforced Vertices
+      faceKey = FacesWithEnforcedVertices.FindIndex(f);
+      std::map<int,std::set<std::vector<double> > >::const_iterator evmIt = FaceId2EnforcedVertexCoords.find(faceKey);
+      if (evmIt != FaceId2EnforcedVertexCoords.end()) {
+        std::cout << "Some enforced vertices are defined" << std::endl;
+        int ienf = 0;
+        std::set<std::vector<double> > evl;
+//         std::vector<double> ev;
+        MESSAGE("Face indice: " << iface);
+        MESSAGE("Adding enforced vertices");
+        evl = evmIt->second;
+        MESSAGE("Number of vertices to add: "<< evl.size())
+        std::set< std::vector<double> >::const_iterator evlIt = evl.begin();
+        for (; evlIt != evl.end(); ++evlIt) {
+//           ev = *evlIt;
+//         for (int i=0; i<evl.size() ; i++) {
+//           ev = evl[i];
+          
+//           double xyzCoords[3]  = {ev[2], ev[3], ev[4]};
+          double xyzCoords[3]  = {evlIt->at(0), evlIt->at(3), evlIt->at(4)};
+          MESSAGE("Check position of vertex =(" << xyzCoords[0] << "," << xyzCoords[1] << "," << xyzCoords[2] << ")");
+          gp_Pnt P(xyzCoords[0],xyzCoords[1],xyzCoords[2]);
+          BRepClass_FaceClassifier scl(f,P,1e-7);
+          // scl.Perform() is bugged. The function was rewritten
+//          scl.Perform();
+          BRepClass_FaceClassifierPerform(&scl,f,P,1e-7);
+          TopAbs_State result = scl.State();
+          MESSAGE("Position of point on face: "<<result);
+          if ( result == TopAbs_OUT )
+              MESSAGE("Point is out of face: node is not created");
+          if ( result == TopAbs_UNKNOWN )
+              MESSAGE("Point position on face is unknown: node is not created");
+          if ( result == TopAbs_ON )
+              MESSAGE("Point is on border of face: node is not created");
+          if ( result == TopAbs_IN )
+          {
+            // Point is inside face and not on border
+            MESSAGE("Point is in face: node is created");
+//             double uvCoords[2]   = {ev[0],ev[1]};
+            double uvCoords[2]   = {evlIt->at(0),evlIt->at(1)};
+            ienf++;
+            MESSAGE("Add cad point on (u,v)=(" << uvCoords[0] << "," << uvCoords[1] << ") with id = " << ienf);
+            cad_point_t* point_p = cad_point_new(fce, ienf, uvCoords);
+            cad_point_set_tag(point_p, ienf);
+          }
+        }
+        FaceId2EnforcedVertexCoords.erase(faceKey);
+      }
+      else
+        std::cout << "No enforced vertex defined" << std::endl;
+    }
+    
+    
+    /****************************************************************************************
+                                    EDGES
+    *****************************************************************************************/
+    int edgeKey = -1;
     for (TopExp_Explorer edge_iter(f,TopAbs_EDGE);edge_iter.More();edge_iter.Next()) {
       TopoDS_Edge e = TopoDS::Edge(edge_iter.Current());
       int ic = emap.FindIndex(e);
       if (ic <= 0)
-	ic = emap.Add(e);
+        ic = emap.Add(e);
 
       double tmin,tmax;
       curves.push_back(BRep_Tool::CurveOnSurface(e, f, tmin, tmax));
-      if ((HasSizeMapOnEdge) && EdgeId2SizeMap.find(e.HashCode(471662))!=EdgeId2SizeMap.end()){
-          if (EdgeId2SizeMap[e.HashCode(471662)].find(bad_end) == (EdgeId2SizeMap[e.HashCode(471662)].size()-bad_end.size()-1))
-          continue;
-        // Expr To Python function, verification is performed at validation in GUI
-        PyObject * obj = NULL;
-        obj= PyRun_String(EdgeId2SizeMap[e.HashCode(471662)].c_str(), Py_file_input, main_dict, NULL);
-        Py_DECREF(obj);
-        PyObject * func = NULL;
-        func = PyObject_GetAttrString(main_mod, "f");
-        EdgeId2PythonSmp[ic]=func;
-        EdgeId2SizeMap.erase(e.HashCode(471662));
+      
+      if (HasSizeMapOnEdge){
+        edgeKey = EdgesWithSizeMap.FindIndex(e);
+        if (EdgeId2SizeMap.find(edgeKey)!=EdgeId2SizeMap.end()) {
+          theSizeMapStr = EdgeId2SizeMap[faceKey];
+          if (theSizeMapStr.find(bad_end) == (theSizeMapStr.size()-bad_end.size()-1))
+            continue;
+          // Expr To Python function, verification is performed at validation in GUI
+          PyObject * obj = NULL;
+          obj= PyRun_String(theSizeMapStr.c_str(), Py_file_input, main_dict, NULL);
+          Py_DECREF(obj);
+          PyObject * func = NULL;
+          func = PyObject_GetAttrString(main_mod, "f");
+          EdgeId2PythonSmp[ic]=func;
+          EdgeId2SizeMap.erase(edgeKey);
+        }
       }
       cad_edge_t *edg = cad_edge_new(fce, ic, tmin, tmax, curv_fun, curves.back());
       cad_edge_set_tag(edg, ic);
@@ -697,40 +1087,52 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       gp_Pnt2d e0 = curves.back()->Value(tmin);
       gp_Pnt ee0 = surfaces.back()->Value(e0.X(), e0.Y());
       Standard_Real d1=0,d2=0;
+      
+      
+      /****************************************************************************************
+                                      VERTICES
+      *****************************************************************************************/
+      int vertexKey = -1;
       for (TopExp_Explorer ex_edge(e ,TopAbs_VERTEX); ex_edge.More(); ex_edge.Next()) {
-	TopoDS_Vertex v = TopoDS::Vertex(ex_edge.Current());
-	++npts;
-	if (npts == 1){
-	  ip = &ip1;
-	  d1 = ee0.SquareDistance(BRep_Tool::Pnt(v));
-	} else {
-	  ip = &ip2;
+        TopoDS_Vertex v = TopoDS::Vertex(ex_edge.Current());
+        ++npts;
+        if (npts == 1){
+          ip = &ip1;
+          d1 = ee0.SquareDistance(BRep_Tool::Pnt(v));
+        } else {
+          ip = &ip2;
           d2 = ee0.SquareDistance(BRep_Tool::Pnt(v));
-	}
-	*ip = pmap.FindIndex(v);
-	if(*ip <= 0)
-	  *ip = pmap.Add(v);
-    if ((HasSizeMapOnVertex) && VertexId2SizeMap.find(v.HashCode(471662))!=VertexId2SizeMap.end()){
-        if (VertexId2SizeMap[v.HashCode(471662)].find(bad_end) == (VertexId2SizeMap[v.HashCode(471662)].size()-bad_end.size()-1))
-            continue;
-          // Expr To Python function, verification is performed at validation in GUI
-          PyObject * obj = NULL;
-          obj= PyRun_String(VertexId2SizeMap[v.HashCode(471662)].c_str(), Py_file_input, main_dict, NULL);
-          Py_DECREF(obj);
-          PyObject * func = NULL;
-          func = PyObject_GetAttrString(main_mod, "f");
-          VertexId2PythonSmp[*ip]=func;
-          VertexId2SizeMap.erase(v.HashCode(471662));
+        }
+        *ip = pmap.FindIndex(v);
+        if(*ip <= 0)
+          *ip = pmap.Add(v);
+        
+        vertexKey = VerticesWithSizeMap.FindIndex(v);
+        if (HasSizeMapOnVertex){
+          vertexKey = VerticesWithSizeMap.FindIndex(v);
+          if (VertexId2SizeMap.find(vertexKey)!=VertexId2SizeMap.end()){
+            theSizeMapStr = VertexId2SizeMap[faceKey];
+            if (theSizeMapStr.find(bad_end) == (theSizeMapStr.size()-bad_end.size()-1))
+              continue;
+            // Expr To Python function, verification is performed at validation in GUI
+            PyObject * obj = NULL;
+            obj= PyRun_String(theSizeMapStr.c_str(), Py_file_input, main_dict, NULL);
+            Py_DECREF(obj);
+            PyObject * func = NULL;
+            func = PyObject_GetAttrString(main_mod, "f");
+            VertexId2PythonSmp[*ip]=func;
+//             VertexId2SizeMap.erase(vertexKey);   // do not erase if using a vector
+          }
         }
       }
       if (npts != 2) {
-	// should not happen
-	MESSAGE("An edge does not have 2 extremities.");
+        // should not happen
+        MESSAGE("An edge does not have 2 extremities.");
       } else {
-	if (d1 < d2)
-	  cad_edge_set_extremities(edg, ip1, ip2);
-	else
-	  cad_edge_set_extremities(edg, ip2, ip1);
+        if (d1 < d2)
+          cad_edge_set_extremities(edg, ip1, ip2);
+        else
+          cad_edge_set_extremities(edg, ip2, ip1);
       }
     } // for edge
   } //for face
@@ -750,7 +1152,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   int oldFEFlags = fedisableexcept( FE_ALL_EXCEPT );
 #endif
 
-    status_t status = STATUS_ERROR;
+  status_t status = STATUS_ERROR;
 
   try {
     OCC_CATCH_SIGNALS;
@@ -897,7 +1299,16 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     feenableexcept( oldFEFlags );
   feclearexcept( FE_ALL_EXCEPT );
 #endif
-
+  
+  std::cout << "FacesWithSizeMap" << std::endl;
+  FacesWithSizeMap.Statistics(std::cout);
+  std::cout << "EdgesWithSizeMap" << std::endl;
+  EdgesWithSizeMap.Statistics(std::cout);
+  std::cout << "VerticesWithSizeMap" << std::endl;
+  VerticesWithSizeMap.Statistics(std::cout);
+  std::cout << "FacesWithEnforcedVertices" << std::endl;
+  FacesWithEnforcedVertices.Statistics(std::cout);
+  
   return true;
 }
 
@@ -1301,3 +1712,53 @@ bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh& aMesh,
 
   return true;
 }
+
+//=============================================================================
+/*!
+ *  Rewritting of the BRepClass_FaceClassifier::Perform function which is bugged (CAS 6.3sp6)
+ *  Following line was added:
+ *        myExtrem.Perform(P);
+ */
+//=============================================================================
+void  BLSURFPlugin_BLSURF::BRepClass_FaceClassifierPerform(BRepClass_FaceClassifier* fc,
+                    const TopoDS_Face& face, 
+                    const gp_Pnt& P, 
+                    const Standard_Real Tol)
+{
+  //-- Voir BRepExtrema_ExtPF.cxx 
+  BRepAdaptor_Surface Surf(face);
+  Standard_Real U1, U2, V1, V2;
+  BRepTools::UVBounds(face, U1, U2, V1, V2);
+  Extrema_ExtPS myExtrem;
+  myExtrem.Initialize(Surf, U1, U2, V1, V2, Tol, Tol);
+  myExtrem.Perform(P);
+  //----------------------------------------------------------
+  //-- On cherche le point le plus proche , PUIS 
+  //-- On le classifie. 
+  Standard_Integer nbv    = 0; // xpu
+  Standard_Real MaxDist   =  RealLast();
+  Standard_Integer indice = 0;
+  if(myExtrem.IsDone()) {
+    nbv = myExtrem.NbExt();
+    for (Standard_Integer i = 1; i <= nbv; i++) {
+      Standard_Real d = myExtrem.Value(i);
+      d = Abs(d);
+      if(d <= MaxDist) { 
+    MaxDist = d;
+    indice = i;
+      }
+    }
+  }
+  if(indice) { 
+    gp_Pnt2d Puv;
+    Standard_Real U1,U2;
+    myExtrem.Point(indice).Parameter(U1, U2);
+    Puv.SetCoord(U1, U2);
+    fc->Perform(face, Puv, Tol);
+  }
+  else { 
+    fc->Perform(face, gp_Pnt2d(U1-1.0,V1 - 1.0), Tol); //-- NYI etc BUG PAS BEAU En attendant l acces a rejected
+    //-- le resultat est TopAbs_OUT;
+  }
+}
+

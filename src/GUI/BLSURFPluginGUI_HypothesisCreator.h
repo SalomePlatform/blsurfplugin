@@ -45,25 +45,32 @@
 #endif
 
 #include <Python.h>
+
+#include <QItemDelegate>
+
 #include <SMESHGUI_Hypotheses.h>
 #include <SALOMEconfig.h>
 #include <cstring>
 #include <map>
+#include <set>
+#include <vector>
 #include <TopAbs_ShapeEnum.hxx>
 #include <GeomSelectionTools.h>
 #include CORBA_SERVER_HEADER(BLSURFPlugin_Algorithm)
 
 class QGroupBox;
-class QtxDoubleSpinBox;
 class QComboBox;
 class QCheckBox;
 class QLineEdit;
 class QTableWidget;
-class QTableView;
+class QTreeWidget;
 class QModelIndex;
 class QSpinBox;
 class QMenu;
 class QAction;
+class QTreeWidgetItem;
+
+class SalomeApp_DoubleSpinBox;
 class LightApp_SelectionMgr;
 
 typedef struct
@@ -72,7 +79,8 @@ typedef struct
   int     myPhysicalMesh, myGeometricMesh;
   double  myAngleMeshS, myAngleMeshC, myGradation;
   QString myPhySize, myGeoMin, myGeoMax, myPhyMin,myPhyMax;
-  bool    myAllowQuadrangles, myDecimesh,mySmpsurface,mySmpedge,mySmppoint;
+  bool    myAllowQuadrangles, myDecimesh,mySmpsurface,mySmpedge,mySmppoint,myEnforcedVertex;
+  std::map<std::string, std::set<std::vector<double> > > enfVertMap;
   QString myName;
 } BlsurfHypothesisData;
 
@@ -108,11 +116,18 @@ protected slots:
   void                onAddOption();
   void                onDeleteOption();
   void                onOptionChosenInPopup( QAction* );
+//  void                onAddAttractor();
   void                onAddMapOnSurface();
   void                onAddMapOnEdge();
   void                onAddMapOnPoint();
   void                onRemoveMap();
   void                onSetSizeMap(int,int);
+
+  void                addEnforcedVertex(std::string, std::string, double, double, double);
+  void                onAddEnforcedVertices();
+  void                onRemoveEnforcedVertex();
+  void                synchronizeCoords();
+  void                update(QTreeWidgetItem* , int );
 
 private:
   bool                readParamsFromHypo( BlsurfHypothesisData& ) const;
@@ -131,11 +146,11 @@ private:
   QLineEdit*          myPhyMin;
   QLineEdit*          myPhyMax;
   QComboBox*          myGeometricMesh;
-  QtxDoubleSpinBox*   myAngleMeshS;
-  QtxDoubleSpinBox*   myAngleMeshC;
+  SalomeApp_DoubleSpinBox*   myAngleMeshS;
+  SalomeApp_DoubleSpinBox*   myAngleMeshC;
   QLineEdit*          myGeoMin;
   QLineEdit*          myGeoMax;
-  QtxDoubleSpinBox*   myGradation;
+  SalomeApp_DoubleSpinBox*   myGradation;
   QCheckBox*          myAllowQuadrangles;
   QCheckBox*          myDecimesh;
 
@@ -144,13 +159,21 @@ private:
   QSpinBox*           myVerbosity;
   QTableWidget*       myOptionTable;
 
-  QWidget             *mySmpGroup;  
+  QWidget             *mySmpGroup;
   QTableWidget        *mySizeMapTable;
   QPushButton         *addAttractorButton;
   QPushButton         *addSurfaceButton;
   QPushButton         *addEdgeButton;
   QPushButton         *addPointButton;
   QPushButton         *removeButton;
+
+  QWidget*            myEnfGroup;
+  QTreeWidget*        myEnforcedTreeWidget;
+  QLineEdit*          myXCoord;
+  QLineEdit*          myYCoord;
+  QLineEdit*          myZCoord;
+  QPushButton*        addVertexButton;
+  QPushButton*        removeVertexButton;
 
   // map =  entry , size map
   QMap<QString, QString>          mySMPMap;
@@ -162,6 +185,27 @@ private:
 
   PyObject *          main_mod;
   PyObject *          main_dict;
+};
+
+
+class EnforcedTreeWidgetDelegate : public QItemDelegate
+{
+    Q_OBJECT
+
+public:
+  EnforcedTreeWidgetDelegate(QObject *parent = 0);
+
+  QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option,
+                        const QModelIndex &index) const;
+
+  void setEditorData(QWidget *editor, const QModelIndex &index) const;
+  void setModelData(QWidget *editor, QAbstractItemModel *model,
+                    const QModelIndex &index) const;
+
+  void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option,
+                    const QModelIndex &index) const;
+  
+  bool vertexExists(QAbstractItemModel *model, const QModelIndex &index, QString value) const;
 };
 
 #endif // BLSURFPLUGINGUI_HypothesisCreator_H

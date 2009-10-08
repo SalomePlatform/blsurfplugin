@@ -35,7 +35,14 @@
 module BLSURFPlugin
 {
   typedef sequence<string> string_array;
-
+  typedef sequence<double,3> TEnforcedVertex;
+  typedef sequence<TEnforcedVertex> TEnforcedVertexList;
+  struct TEnforcedVertexMapElement {
+    string entry;
+    TEnforcedVertexList vertexList;
+  };
+  typedef sequence<TEnforcedVertexMapElement> TEnforcedVertexMap;
+  
   /*!
    * BLSURFPlugin_BLSURF: interface of BLSURF algorithm
    */
@@ -172,7 +179,7 @@ module BLSURFPlugin
     void UnsetEntry(in string entry);
 
     /*!
-     * Set a SizeMap on geom object
+     * Set/unset a SizeMap on geom object
      */
     void         SetSizeMap(in GEOM::GEOM_Object GeomObj, in string sizeMap);
     void         UnsetSizeMap(in GEOM::GEOM_Object GeomObj);
@@ -185,7 +192,7 @@ module BLSURFPlugin
     string_array GetSizeMapEntries();
 
     /*!
-     * Set an attractor on geom object
+     * Set/unset an attractor on geom object
      */
     void         SetAttractor(in GEOM::GEOM_Object GeomObj, in string attractor);
     void         UnsetAttractor(in GEOM::GEOM_Object GeomObj);
@@ -204,6 +211,39 @@ module BLSURFPlugin
     void         UnsetCustomSizeMap(in GEOM::GEOM_Object GeomObj);
     string_array GetCustomSizeMapEntries();
 */
+    ///////////////////////
+    // ENFORCED VERTEXES //
+    ///////////////////////
+    
+    TEnforcedVertexMap GetAllEnforcedVertices();
+    void               ClearAllEnforcedVertices();
+    
+    /*!
+     * Set/get/unset an enforced vertex on geom object
+     */
+    void         SetEnforcedVertex(in GEOM::GEOM_Object GeomObj, in double x, in double y, in double z) raises (SALOME::SALOME_Exception);
+//     void         SetEnforcedVertexList(in GEOM::GEOM_Object GeomObj, in TEnforcedVertexList vertexList) raises (SALOME::SALOME_Exception);
+    
+    TEnforcedVertexList GetEnforcedVertices(in GEOM::GEOM_Object GeomObj) raises (SALOME::SALOME_Exception);
+    
+    void         UnsetEnforcedVertex(in GEOM::GEOM_Object GeomObj, in double x, in double y, in double z) raises (SALOME::SALOME_Exception);
+//     void         UnsetEnforcedVertexList(in GEOM::GEOM_Object GeomObj, in TEnforcedVertexList vertexList) raises (SALOME::SALOME_Exception);
+    void         UnsetEnforcedVertices(in GEOM::GEOM_Object GeomObj) raises (SALOME::SALOME_Exception);
+    
+   /*!
+    * Set/get/unset an enforced vertex on geom object given by entry
+    */
+    void         SetEnforcedVertexEntry(in string entry, in double x, in double y, in double z) raises (SALOME::SALOME_Exception);
+//     void         SetEnforcedVertexListEntry(in string entry, in TEnforcedVertexList vertexList) raises (SALOME::SALOME_Exception);
+//     
+    TEnforcedVertexList GetEnforcedVerticesEntry(in string entry) raises (SALOME::SALOME_Exception);
+//     
+    void         UnsetEnforcedVertexEntry(in string entry, in double x, in double y, in double z) raises (SALOME::SALOME_Exception);
+//     void         UnsetEnforcedVertexListEntry(in string entry, in TEnforcedVertexList vertexList) raises (SALOME::SALOME_Exception);
+    void         UnsetEnforcedVerticesEntry(in string entry) raises (SALOME::SALOME_Exception);
+    
+    ///////////////////////
+
   };
 };
 

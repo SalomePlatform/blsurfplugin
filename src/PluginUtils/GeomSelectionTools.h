@@ -69,12 +69,12 @@ public:
   std::string getEntryOfObject(Handle(SALOME_InteractiveObject));
   std::string getNameFromEntry(std::string);
   std::string getFirstSelectedComponentDataType();
-  TopoDS_Shape getFirstSelectedTopoDSShape();
   TopAbs_ShapeEnum getFirstSelectedShapeType();
-  TopoDS_Shape entryToShape(std::string );
-  GeomAbs_SurfaceType getFaceInformation();
+  TopAbs_ShapeEnum entryToShapeType(std::string );
+  GeomAbs_SurfaceType getFaceInformation(TopoDS_Shape);
   _PTR(Study) getMyStudy();
 };
 
 
 #endif // _GEOMSELECTIONTOOLS_H_
+

@@ -387,39 +387,6 @@ double getT(const TopoDS_Edge& edge, const gp_XYZ& point)
 /////////////////////////////////////////////////////////
 TopoDS_Shape BLSURFPlugin_BLSURF::entryToShape(std::string entry)
 {
-    MESSAGE("BLSURFPlugin_BLSURF::entryToShape"<<entry );
-    TopoDS_Shape S = TopoDS_Shape();
-    SALOMEDS::SObject_var aSO = myStudy->FindObjectID(entry.c_str());
-    SALOMEDS::GenericAttribute_var anAttr;
-    if (!aSO->_is_nil()){
-      SALOMEDS::SObject_var aRefSObj;
-      GEOM::GEOM_Object_var aShape;
-      SALOMEDS::AttributeIOR_var myAttribute;
-      CORBA::String_var myAttrValue;
-      CORBA::Object_var myCorbaObj;
-      // If selected object is a reference
-      if ( aSO->ReferencedObject( aRefSObj ))
-        aSO = aRefSObj;
-      SALOMEDS::SComponent_var myFatherCpnt = aSO->GetFatherComponent();
-      CORBA::String_var myFatherCpntDataType = myFatherCpnt->ComponentDataType();
-      if (  strcmp(myFatherCpntDataType,"GEOM")==0) {
-        MESSAGE("aSO father component is GEOM");
-        if (!aSO->FindAttribute(anAttr, "AttributeIOR")) return S;
-        myAttribute=SALOMEDS::AttributeIOR::_narrow(anAttr);
-        myAttrValue=myAttribute->Value();
-        MESSAGE("aSO IOR: "<< myAttrValue);
-        myCorbaObj=smeshGen_i->GetORB()->string_to_object(myAttrValue);
-        aShape = GEOM::GEOM_Object::_narrow(myCorbaObj);
-      }
-      if ( !aShape->_is_nil() )
-        S=smeshGen_i->GeomObjectToShape( aShape.in() );
-    }
-    return S;
-}
-
-/////////////////////////////////////////////////////////
-TopoDS_Shape BLSURFPlugin_BLSURF::entryToShape(std::string entry)
-{
   MESSAGE("BLSURFPlugin_BLSURF::entryToShape"<<entry );
   GEOM::GEOM_Object_var aGeomObj;
   TopoDS_Shape S = TopoDS_Shape();
@@ -659,9 +626,9 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
     // Standard Size Maps
     //
     MESSAGE("Setting a Size Map");
-    const BLSURFPlugin_Hypothesis::TSizeMap & sizeMaps = hyp->GetSizeMapEntries();
-    BLSURFPlugin_Hypothesis::TSizeMap::const_iterator smIt;
-    for ( smIt = sizeMaps.begin(); smIt != sizeMaps.end(); ++smIt ) {
+    const BLSURFPlugin_Hypothesis::TSizeMap sizeMaps = BLSURFPlugin_Hypothesis::GetSizeMapEntries(hyp);
+    BLSURFPlugin_Hypothesis::TSizeMap::const_iterator smIt = sizeMaps.begin();
+    for ( ; smIt != sizeMaps.end(); ++smIt ) {
       if ( !smIt->second.empty() ) {
         MESSAGE("blsurf_set_sizeMap(): " << smIt->first << " = " << smIt->second);
         GeomShape = entryToShape(smIt->first);

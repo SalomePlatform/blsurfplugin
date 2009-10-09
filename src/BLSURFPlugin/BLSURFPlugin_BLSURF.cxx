@@ -454,7 +454,7 @@ void createEnforcedVertexOnFace(TopoDS_Shape GeomShape, BLSURFPlugin_Hypothesis:
     if (FaceId2EnforcedVertexCoords.find(key) != FaceId2EnforcedVertexCoords.end()) {
       MESSAGE("Map of enf. vertex has key " << key)
       MESSAGE("Enf. vertex list size is: " << FaceId2EnforcedVertexCoords[key].size())
-      if (not sameAttractor)
+      if (! sameAttractor)
         FaceId2EnforcedVertexCoords[key].insert(coords); // there should be no redondant coords here (see std::set management)
       else
         MESSAGE("An attractor node is already defined: I don't add the enforced vertex");
@@ -462,7 +462,7 @@ void createEnforcedVertexOnFace(TopoDS_Shape GeomShape, BLSURFPlugin_Hypothesis:
     }
     else {
       MESSAGE("Map of enf. vertex has not key " << key << ": creating it")
-      if (not sameAttractor) {
+      if (! sameAttractor) {
         std::set< std::vector<double> > ens;
         ens.insert(coords);
         FaceId2EnforcedVertexCoords[key] = ens;

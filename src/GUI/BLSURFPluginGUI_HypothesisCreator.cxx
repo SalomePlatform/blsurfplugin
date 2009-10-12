@@ -289,7 +289,7 @@ void EnforcedTreeWidgetDelegate::setModelData(QWidget *editor, QAbstractItemMode
     index.column() == ENF_VER_Y_COLUMN || \
     index.column() == ENF_VER_Z_COLUMN)
   {
-    if (not vertexExists(model, index, lineEdit->text())) {
+    if (! vertexExists(model, index, lineEdit->text())) {
       bool ok;
       double value = lineEdit->text().toDouble(&ok);
       if (ok)
@@ -298,7 +298,7 @@ void EnforcedTreeWidgetDelegate::setModelData(QWidget *editor, QAbstractItemMode
   }
   else if (index.column() == ENF_VER_NAME_COLUMN) {
     QString value = lineEdit->text();
-    if (not vertexExists(model, index, value))
+    if (! vertexExists(model, index, value))
       model->setData(index, value, Qt::EditRole);
 //     MESSAGE("Value " << value.toString().toStdString() << " was set at index(" << index.row() << "," << index.column() << ")");
   }
@@ -420,7 +420,7 @@ GeomSelectionTools* BLSURFPluginGUI_HypothesisCreator::getGeomSelectionTool()
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
   _PTR(Study) aStudy = SMESH::GetActiveStudyDocument();
 //   MESSAGE("aStudy->StudyId(): " << aStudy->StudyId());
-  if (that->GeomToolSelected == NULL or that->GeomToolSelected->getMyStudy() != aStudy) {
+  if (that->GeomToolSelected == NULL || that->GeomToolSelected->getMyStudy() != aStudy) {
 //     MESSAGE("GeomToolSelected is created");
     that->GeomToolSelected = new GeomSelectionTools(aStudy);
   }
@@ -809,7 +809,7 @@ is synchronized with the coordinates of the enforced vertex clicked in the tree 
 void BLSURFPluginGUI_HypothesisCreator::update(QTreeWidgetItem* item, int column) {
 //   MESSAGE("BLSURFPluginGUI_HypothesisCreator::updateVertexList");
   QVariant x = item->data(ENF_VER_X_COLUMN, Qt::EditRole);
-  if (not x.isNull()) {
+  if (! x.isNull()) {
     QVariant y = item->data(ENF_VER_Y_COLUMN, Qt::EditRole);
     QVariant z = item->data(ENF_VER_Z_COLUMN, Qt::EditRole);
     QVariant vertexName = item->data(ENF_VER_NAME_COLUMN, Qt::EditRole);
@@ -838,12 +838,12 @@ of the enforced vertex clicked in the tree widget.
 void BLSURFPluginGUI_HypothesisCreator::synchronizeCoords() {
 //   MESSAGE("BLSURFPluginGUI_HypothesisCreator::synchronizeCoords");
   QList<QTreeWidgetItem *> items = myEnforcedTreeWidget->selectedItems();
-  if (not items.isEmpty()) {
+  if (! items.isEmpty()) {
     QTreeWidgetItem *item;
     for (int i=0 ; i < items.size() ; i++) {
       item = items[i];
       QVariant x = item->data(ENF_VER_X_COLUMN, Qt::EditRole);
-      if (not x.isNull()) {
+      if (! x.isNull()) {
         QVariant y = item->data(ENF_VER_Y_COLUMN, Qt::EditRole);
         QVariant z = item->data(ENF_VER_Z_COLUMN, Qt::EditRole);
         myXCoord->setText(x.toString());
@@ -886,7 +886,7 @@ void BLSURFPluginGUI_HypothesisCreator::addEnforcedVertex(std::string entry, std
       childValueX = child->data(ENF_VER_X_COLUMN,Qt::EditRole).toDouble();
       childValueY = child->data(ENF_VER_Y_COLUMN,Qt::EditRole).toDouble();
       childValueZ = child->data(ENF_VER_Z_COLUMN,Qt::EditRole).toDouble();
-      if ((childValueX == x) and (childValueY == y) and (childValueZ == z)) {
+      if ((childValueX == x) && (childValueY == y) && (childValueZ == z)) {
         okToCreate = false;
         break;
       }
@@ -938,7 +938,7 @@ void BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices() {
   
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
   
-  if ((myXCoord->text().isEmpty()) or (myYCoord->text().isEmpty()) or (myZCoord->text().isEmpty())) return;
+  if ((myXCoord->text().isEmpty()) || (myYCoord->text().isEmpty()) || (myZCoord->text().isEmpty())) return;
   
   double x = myXCoord->text().toDouble();
   double y = myYCoord->text().toDouble();
@@ -984,7 +984,7 @@ void BLSURFPluginGUI_HypothesisCreator::onRemoveEnforcedVertex() {
 
   foreach( item, selectedItems ) {
     QVariant value = item->data(ENF_VER_X_COLUMN, Qt::EditRole);
-    if (not value.isNull())
+    if (! value.isNull())
       selectedVertices.append(item);
     else
       selectedEntries.insert(item);
@@ -1521,7 +1521,7 @@ void BLSURFPluginGUI_HypothesisCreator::onPhysicalMeshChanged() {
   bool isCustom = (isPhysicalUserDefined || isSizeMap) ;
   bool geomIsCustom = (myGeometricMesh->currentIndex() == UserDefined);
   
-  myGradation->setEnabled(not isPhysicalUserDefined || geomIsCustom);
+  myGradation->setEnabled(! isPhysicalUserDefined || geomIsCustom);
   myPhySize->setEnabled(isCustom);
   myPhyMax->setEnabled(isCustom);
   myPhyMin->setEnabled(isCustom);
@@ -1705,7 +1705,7 @@ void BLSURFPluginGUI_HypothesisCreator::onSetSizeMap(int row,int col)
     QString entry   = that->mySizeMapTable->item(row, SMP_ENTRY_COLUMN)->text();
     QString sizeMap = that->mySizeMapTable->item(row, SMP_SIZEMAP_COLUMN)->text().trimmed();
 //     MESSAGE("entry: " << entry.toStdString() << ", sizeMap: " << sizeMap.toStdString());
-    if (not that->mySMPShapeTypeMap.contains(entry))
+    if (! that->mySMPShapeTypeMap.contains(entry))
       return;
     if (that->mySMPMap.contains(entry))
       if (that->mySMPMap[entry] == sizeMap)
@@ -1838,11 +1838,11 @@ bool BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromEntry(QString myEnt
 
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
 
-  if (not that->mySMPMap.contains(myEntry)) {
+  if (! that->mySMPMap.contains(myEntry)) {
 //     MESSAGE("Geometry with entry "<<myEntry.toStdString()<<" was not found.");
     return false;
   }
-  if (not that->mySMPShapeTypeMap.contains(myEntry)) {
+  if (! that->mySMPShapeTypeMap.contains(myEntry)) {
 //     MESSAGE("Shape type with entry "<<myEntry.toStdString()<<" was not found.");
     return false;
   }

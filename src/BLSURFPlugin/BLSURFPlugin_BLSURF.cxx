@@ -351,8 +351,8 @@ status_t size_on_vertex(integer vertex_id, real *size, void *user_data);
 double my_u_min=1e6,my_v_min=1e6,my_u_max=-1e6,my_v_max=-1e6;
 
 typedef struct {
-	gp_XY uv;
-	gp_XYZ xyz;
+        gp_XY uv;
+        gp_XYZ xyz;
 } projectionPoint;
 /////////////////////////////////////////////////////////
 projectionPoint getProjectionPoint(const TopoDS_Face& face, const gp_XYZ& point)
@@ -741,7 +741,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
             }
           }
         }
-        	
+                
         if (GeomType == TopAbs_FACE){
           HasSizeMapOnFace = true;
           createAttractorOnFace(GeomShape, atIt->second);
@@ -818,7 +818,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
 
 status_t curv_fun(real t, real *uv, real *dt, real *dtt, void *user_data);
 status_t surf_fun(real *uv, real *xyz, real*du, real *dv,
-		  real *duu, real *duv, real *dvv, void *user_data);
+                  real *duu, real *duv, real *dvv, void *user_data);
 status_t message_callback(message_t *msg, void *user_data);
 
 //=============================================================================
@@ -1375,7 +1375,7 @@ status_t curv_fun(real t, real *uv, real *dt, real *dtt, void *user_data)
 }
 
 status_t surf_fun(real *uv, real *xyz, real*du, real *dv,
-		  real *duu, real *duv, real *dvv, void *user_data)
+                  real *duu, real *duv, real *dvv, void *user_data)
 {
   const Geom_Surface* geometry = (const Geom_Surface*) user_data;
 
@@ -1556,8 +1556,8 @@ status_t message_callback(message_t *msg, void *user_data)
  */
 //=============================================================================
 bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh& aMesh,
-				   const TopoDS_Shape& aShape,
-				   MapShapeNbElems& aResMap)
+                                   const TopoDS_Shape& aShape,
+                                   MapShapeNbElems& aResMap)
 {
   int    _physicalMesh  = BLSURFPlugin_Hypothesis::GetDefaultPhysicalMesh();
   double _phySize       = BLSURFPlugin_Hypothesis::GetDefaultPhySize();
@@ -1602,11 +1602,11 @@ bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh& aMesh,
       C->D0(f+dp,P2);
       gp_Vec V1(P1,P2);
       for(int j=2; j<=200; j++) {
-	C->D0(f+dp*j,P3);
-	gp_Vec V2(P2,P3);
-	fullAng += fabs(V1.Angle(V2));
-	V1 = V2;
-	P2 = P3;
+        C->D0(f+dp*j,P3);
+        gp_Vec V2(P2,P3);
+        fullAng += fabs(V1.Angle(V2));
+        V1 = V2;
+        P2 = P3;
       }
       nb1d = (int)( fullAng/_angleMeshC + 1 );
     }

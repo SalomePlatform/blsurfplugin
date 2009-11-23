@@ -56,14 +56,12 @@ libBLSURFPluginGUI_la_CPPFLAGS = 	\
 	$(CORBA_INCLUDES)		\
 	$(BLSURF_INCLUDES)		\
 	-I$(srcdir)/../BLSURFPlugin	\
-	-I$(srcdir)/../PluginUtils	\
 	-I$(top_builddir)/idl
 
 libBLSURFPluginGUI_la_LDFLAGS =			\
 	../BLSURFPlugin/libBLSURFEngine.la	\
-	../PluginUtils/libGeomSelectionTools.la \
-	$(GUI_LDFLAGS) -lqtx -lSalomeApp \
-	${SMESH_LDFLAGS} -lSMESH		\
+	$(GUI_LDFLAGS) -lqtx -lSalomeApp 	\
+	${SMESH_LDFLAGS} -lSMESH -lGeomSelectionTools \
 	$(CAS_KERNEL) $(BLSURF_LIBS)
 
 # resources files

@@ -417,7 +417,6 @@ AC_OUTPUT([ \
   idl/Makefile \
   resources/Makefile \
   src/Makefile \
-  src/PluginUtils/Makefile \
   src/BLSURFPlugin/Makefile \
   src/GUI/Makefile \
   BLSURFPLUGIN_version.h \

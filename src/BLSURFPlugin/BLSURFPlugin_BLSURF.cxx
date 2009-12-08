@@ -361,7 +361,7 @@ projectionPoint getProjectionPoint(const TopoDS_Face& face, const gp_XYZ& point)
   Handle(Geom_Surface) surface = BRep_Tool::Surface(face);
   GeomAPI_ProjectPointOnSurf projector( point, surface );
   if ( !projector.IsDone() || projector.NbPoints()==0 )
-    throw "Can't project";
+    throw "getProjectionPoint: Can't project";
 
   Quantity_Parameter u,v;
   projector.LowerDistanceParameters(u,v);
@@ -387,7 +387,7 @@ double getT(const TopoDS_Edge& edge, const gp_XYZ& point)
 /////////////////////////////////////////////////////////
 TopoDS_Shape BLSURFPlugin_BLSURF::entryToShape(std::string entry)
 {
-  MESSAGE("BLSURFPlugin_BLSURF::entryToShape"<<entry );
+  MESSAGE("BLSURFPlugin_BLSURF::entryToShape "<<entry );
   GEOM::GEOM_Object_var aGeomObj;
   TopoDS_Shape S = TopoDS_Shape();
   SALOMEDS::SObject_var aSObj = myStudy->FindObjectID( entry.c_str() );
@@ -673,8 +673,9 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
               }
               else {
                 key = VerticesWithSizeMap.FindIndex(TopoDS::Vertex(it.Value()));
-//                 MESSAGE("Vertex with key " << key << " already in map");
+                MESSAGE("Group of vertices with key " << key << " already in map");
               }
+              MESSAGE("Group of vertices with key " << key << " has a size map: " << smIt->second);
               VertexId2SizeMap[key] = smIt->second;
             }
           }
@@ -714,8 +715,9 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
           }
           else {
             key = VerticesWithSizeMap.FindIndex(TopoDS::Vertex(GeomShape));
-//             MESSAGE("Vertex with key " << key << " already in map");
+             MESSAGE("Vertex with key " << key << " already in map");
           }
+          MESSAGE("Vertex with key " << key << " has a size map: " << smIt->second);
           VertexId2SizeMap[key] = smIt->second;
         }
       }
@@ -1074,11 +1076,12 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
         if(*ip <= 0)
           *ip = pmap.Add(v);
         
-        vertexKey = VerticesWithSizeMap.FindIndex(v);
+        //vertexKey = VerticesWithSizeMap.FindIndex(v);
         if (HasSizeMapOnVertex){
           vertexKey = VerticesWithSizeMap.FindIndex(v);
           if (VertexId2SizeMap.find(vertexKey)!=VertexId2SizeMap.end()){
-            theSizeMapStr = VertexId2SizeMap[faceKey];
+            theSizeMapStr = VertexId2SizeMap[vertexKey];
+            //MESSAGE("VertexId2SizeMap[faceKey]: " << VertexId2SizeMap[vertexKey]);
             if (theSizeMapStr.find(bad_end) == (theSizeMapStr.size()-bad_end.size()-1))
               continue;
             // Expr To Python function, verification is performed at validation in GUI
@@ -1088,7 +1091,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
             PyObject * func = NULL;
             func = PyObject_GetAttrString(main_mod, "f");
             VertexId2PythonSmp[*ip]=func;
-//             VertexId2SizeMap.erase(vertexKey);   // do not erase if using a vector
+            VertexId2SizeMap.erase(vertexKey);   // do not erase if using a vector
           }
         }
       }
@@ -1292,15 +1295,19 @@ void BLSURFPlugin_BLSURF::Set_NodeOnEdge(SMESHDS_Mesh* meshDS, SMDS_MeshNode* no
 
   Standard_Real p0 = 0.0;
   Standard_Real p1 = 1.0;
-  Handle(Geom_Curve) curve = BRep_Tool::Curve(edge, p0, p1);
+  TopLoc_Location loc;
+  Handle(Geom_Curve) curve = BRep_Tool::Curve(edge, loc, p0, p1);
 
-  GeomAPI_ProjectPointOnCurve proj(pnt, curve);
+  if ( !loc.IsIdentity() ) pnt.Transform( loc.Transformation().Inverted() );
+  GeomAPI_ProjectPointOnCurve proj(pnt, curve, p0, p1);
 
-  double pa = (double)proj.Parameter(1);
+  double pa = 0.;
+  if ( proj.NbPoints() > 0 )
+    pa = (double)proj.LowerDistanceParameter();
 
-  GProp_GProps LProps;
-  BRepGProp::LinearProperties(ed, LProps);
-  double lg = (double)LProps.Mass();
+//   GProp_GProps LProps;
+//   BRepGProp::LinearProperties(ed, LProps);
+//   double lg = (double)LProps.Mass();
 
   meshDS->SetNodeOnEdge(node, edge, pa);
 }
@@ -1662,8 +1669,8 @@ bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh& aMesh,
   BRepGProp::VolumeProperties(aShape,G);
   double aVolume = G.Mass();
   double tetrVol = 0.1179*ELen*ELen*ELen;
-  int nbVols = (int)aVolume/tetrVol;
-  int nb1d_in = (int) ( ( nbVols*6 - fullNbSeg ) / 6 );
+  int nbVols  = int(aVolume/tetrVol);
+  int nb1d_in = int(( nbVols*6 - fullNbSeg ) / 6 );
   std::vector<int> aVec(SMDSEntity_Last);
   for(int i=SMDSEntity_Node; i<SMDSEntity_Last; i++) aVec[i]=0;
   if( IsQuadratic ) {

@@ -1183,6 +1183,11 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   for(int iv=1;iv<=nv;iv++) {
     mesh_get_vertex_coordinates(msh, iv, xyz);
     mesh_get_vertex_tag(msh, iv, &tag);
+    // Issue 0020656. Use vertex coordinates
+    if ( tag ) {
+      gp_Pnt p = BRep_Tool::Pnt( TopoDS::Vertex(pmap(tag)));
+      xyz[0] = p.X(); xyz[1] = p.Y(); xyz[2] = p.Z();
+    }
     nodes[iv] = meshDS->AddNode(xyz[0], xyz[1], xyz[2]);
     // internal point are tagged to zero
     if(tag){
@@ -1303,8 +1308,18 @@ void BLSURFPlugin_BLSURF::Set_NodeOnEdge(SMESHDS_Mesh* meshDS, SMDS_MeshNode* no
 
   double pa = 0.;
   if ( proj.NbPoints() > 0 )
+  {
     pa = (double)proj.LowerDistanceParameter();
-
+    // Issue 0020656. Move node if it is too far from edge
+    gp_Pnt curve_pnt = curve->Value( pa );
+    double dist2 = pnt.SquareDistance( curve_pnt );
+    double tol = BRep_Tool::Tolerance( edge );
+    if ( 1e-12 < dist2 && dist2 <= 2*tol*tol ) // large enough and within tolerance
+    {
+      curve_pnt.Transform( loc );
+      meshDS->MoveNode( node, curve_pnt.X(), curve_pnt.Y(), curve_pnt.Z() );
+    }
+  }
 //   GProp_GProps LProps;
 //   BRepGProp::LinearProperties(ed, LProps);
 //   double lg = (double)LProps.Mass();

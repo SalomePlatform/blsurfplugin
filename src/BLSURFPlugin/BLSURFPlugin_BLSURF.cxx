@@ -1274,7 +1274,8 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     feenableexcept( oldFEFlags );
   feclearexcept( FE_ALL_EXCEPT );
 #endif
-  
+
+  /*  
   std::cout << "FacesWithSizeMap" << std::endl;
   FacesWithSizeMap.Statistics(std::cout);
   std::cout << "EdgesWithSizeMap" << std::endl;
@@ -1283,6 +1284,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   VerticesWithSizeMap.Statistics(std::cout);
   std::cout << "FacesWithEnforcedVertices" << std::endl;
   FacesWithEnforcedVertices.Statistics(std::cout);
+  */
   
   return true;
 }

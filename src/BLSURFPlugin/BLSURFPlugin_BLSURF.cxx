@@ -27,8 +27,9 @@
 #include "BLSURFPlugin_Hypothesis.hxx"
 
 extern "C"{
-#include "distene/blsurf.h"
 #include <distene/api.h>
+#include <distene/precad.h>
+#include <distene/blsurf.h>
 }
 
 #include <structmember.h>
@@ -46,16 +47,12 @@ extern "C"{
 #include <set>
 #include <cstdlib>
 
+// OPENCASCADE includes
 #include <BRep_Tool.hxx>
 #include <TopExp.hxx>
 #include <TopExp_Explorer.hxx>
+#include <TopoDS.hxx>
 #include <NCollection_Map.hxx>
-#include <Standard_ErrorHandler.hxx>
-
-extern "C"{
-#include "distene/blsurf.h"
-#include <distene/api.h>
-}
 
 #include <Geom_Surface.hxx>
 #include <Handle_Geom_Surface.hxx>
@@ -63,9 +60,18 @@ extern "C"{
 #include <Handle_Geom2d_Curve.hxx>
 #include <Geom_Curve.hxx>
 #include <Handle_Geom_Curve.hxx>
+#include <Handle_AIS_InteractiveObject.hxx>
+#include <TopoDS_Vertex.hxx>
+#include <TopoDS_Edge.hxx>
+#include <TopoDS_Wire.hxx>
+#include <TopoDS_Face.hxx>
+
 #include <gp_Pnt2d.hxx>
 #include <TopTools_IndexedMapOfShape.hxx>
+#include <TopoDS_Shape.hxx>
+#include <BRep_Builder.hxx>
 #include <BRepTools.hxx>
+
 #include <TopTools_DataMapOfShapeInteger.hxx>
 #include <GProp_GProps.hxx>
 #include <BRepGProp.hxx>
@@ -74,6 +80,7 @@ extern "C"{
 #include <fenv.h>
 #endif
 
+#include <Standard_ErrorHandler.hxx>
 #include <GeomAPI_ProjectPointOnCurve.hxx>
 #include <GeomAPI_ProjectPointOnSurf.hxx>
 #include <gp_XY.hxx>
@@ -821,7 +828,8 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
 status_t curv_fun(real t, real *uv, real *dt, real *dtt, void *user_data);
 status_t surf_fun(real *uv, real *xyz, real*du, real *dv,
                   real *duu, real *duv, real *dvv, void *user_data);
-status_t message_callback(message_t *msg, void *user_data);
+status_t message_cb(message_t *msg, void *user_data);
+status_t interrupt_cb(integer *interrupt_status, void *user_data);
 
 //=============================================================================
 /*!
@@ -833,16 +841,23 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 
   MESSAGE("BLSURFPlugin_BLSURF::Compute");
 
-  if (aShape.ShapeType() == TopAbs_COMPOUND) {
-    MESSAGE("  the shape is a COMPOUND");
-  }
-  else {
-    MESSAGE("  the shape is UNKNOWN");
-  };
+//   if (aShape.ShapeType() == TopAbs_COMPOUND) {
+//     MESSAGE("  the shape is a COMPOUND");
+//   }
+//   else {
+//     MESSAGE("  the shape is UNKNOWN");
+//   };
 
+  /* create a distene context (generic object) */
+  status_t status = STATUS_ERROR;
+  
   context_t *ctx =  context_new();
-  context_set_message_callback(ctx, message_callback, &_comment);
+  
+  /* Set the message callback in the working context */
+  context_set_message_callback(ctx, message_cb, &_comment);
+  context_set_interrupt_callback(ctx, interrupt_cb, NULL);
 
+  /* create the CAD object we will work on. It is associated to the context ctx. */
   cad_t *c = cad_new(ctx);
 
   blsurf_session_t *bls = blsurf_session_new(ctx);
@@ -858,20 +873,28 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   SetParameters(_hypothesis, bls);
   MESSAGE("END SetParameters");
 
-  TopTools_IndexedMapOfShape fmap;
-  TopTools_IndexedMapOfShape emap;
-  TopTools_IndexedMapOfShape pmap;
+  /* Now fill the CAD object with data from your CAD
+   * environement. This is the most complex part of a successfull
+   * integration.
+   */
+
+  // needed to prevent the opencascade memory managmement from freeing things
   vector<Handle(Geom2d_Curve)> curves;
   vector<Handle(Geom_Surface)> surfaces;
 
+  surfaces.resize(0);
+  curves.resize(0);
+  
+  TopTools_IndexedMapOfShape fmap;
+  TopTools_IndexedMapOfShape emap;
+  TopTools_IndexedMapOfShape pmap;
+  
   fmap.Clear();
   FaceId2PythonSmp.clear();
   emap.Clear();
   EdgeId2PythonSmp.clear();
   pmap.Clear();
   VertexId2PythonSmp.clear();
-  surfaces.resize(0);
-  curves.resize(0);
 
   assert(Py_IsInitialized());
   PyGILState_STATE gstate;
@@ -894,9 +917,19 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     fmap.Add(f);
     iface++;
     surfaces.push_back(BRep_Tool::Surface(f));
-
+    
+    /* create an object representing the face for blsurf */
+    /* where face_id is an integer identifying the face.
+     * surf_function is the function that defines the surface
+     * (For this face, it will be called by blsurf with your_face_object_ptr
+     * as last parameter.
+     */
     cad_face_t *fce = cad_face_new(c, iface, surf_fun, surfaces.back());
+    
+    /* by default a face has no tag (color). The following call sets it to the same value as the face_id : */
     cad_face_set_tag(fce, iface);
+      
+    /* Set face orientation (optional if you want a well oriented output mesh)*/
     if(f.Orientation() != TopAbs_FORWARD){
       cad_face_set_orientation(fce, CAD_ORIENTATION_REVERSED);
     } else {
@@ -1018,6 +1051,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     
     /****************************************************************************************
                                     EDGES
+                   now create the edges associated to this face
     *****************************************************************************************/
     int edgeKey = -1;
     for (TopExp_Explorer edge_iter(f,TopAbs_EDGE);edge_iter.More();edge_iter.Next()) {
@@ -1045,9 +1079,19 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
           EdgeId2SizeMap.erase(edgeKey);
         }
       }
+      
+      /* attach the edge to the current blsurf face */
       cad_edge_t *edg = cad_edge_new(fce, ic, tmin, tmax, curv_fun, curves.back());
+      
+      /* by default an edge has no tag (color). The following call sets it to the same value as the edge_id : */
       cad_edge_set_tag(edg, ic);
+      
+      /* by default, an edge does not necessalry appear in the resulting mesh,
+     unless the following property is set :
+      */
       cad_edge_set_property(edg, EDGE_PROPERTY_SOFT_REQUIRED);
+      
+      /* by default an edge is a boundary edge */
       if (e.Orientation() == TopAbs_INTERNAL)
         cad_edge_set_property(edg, EDGE_PROPERTY_INTERNAL);
 
@@ -1099,10 +1143,16 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
         // should not happen
         MESSAGE("An edge does not have 2 extremities.");
       } else {
-        if (d1 < d2)
+        if (d1 < d2) {
+          // This defines the curves extremity connectivity
           cad_edge_set_extremities(edg, ip1, ip2);
-        else
+          /* set the tag (color) to the same value as the extremity id : */
+          cad_edge_set_extremities_tag(edg, ip1, ip2);
+        }
+        else {
           cad_edge_set_extremities(edg, ip2, ip1);
+          cad_edge_set_extremities_tag(edg, ip2, ip1);
+        }
       }
     } // for edge
   } //for face
@@ -1110,7 +1160,60 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 
   PyGILState_Release(gstate);
 
-  blsurf_data_set_cad(bls, c);
+  // If user requests it, send the CAD through Distene preprocessor : PreCAD
+  cad_t *cleanc = NULL;
+  int topo = 0;
+  if (_hypothesis) {
+    topo = (int) _hypothesis->GetTopology();
+    if (topo > 0) {
+      precad_session_t *pcs = precad_session_new(ctx);
+      precad_data_set_cad(pcs, c);
+      
+      int verb = (int) _hypothesis->GetVerbosity();
+      precad_set_param(pcs, "verbose", to_string(verb).c_str());
+      
+      integer you_want_precad_to_optimize_the_CAD = 1;
+      if(you_want_precad_to_optimize_the_CAD){
+        precad_set_param(pcs, "merge_edges", "1");
+        precad_set_param(pcs, "remove_nano_edges", "1");
+      }
+      // if you want preCAD to compute topology from scratch, without
+      // considering the toplogical information contained in c, you
+      // have to set the folowing option to "1" :
+      //    precad_set_param(pcs, "discard_input_topology", "1");
+      
+      /* You can use these 2 options if you want to help PreCAD treat some
+      * very dirty cases :
+      * if the treated object is manifold set "manifold_geometry" to "1" 
+      * if the object is also closed (imagine a shell), also set "closed_geometry" to "1"
+      */
+      // precad_set_param(pcs, "manifold_geometry", "1");
+      // precad_set_param(pcs, "closed_geometry", "1");
+      
+      /* Now launch the PreCAD process */
+      status = precad_process(pcs);
+      if(status != STATUS_OK){
+        MESSAGE("PreCAD processing failed with error code " << status);
+      }
+      
+      // retrieve the pre-processed CAD object 
+      cleanc = precad_new_cad(pcs);
+      if(!cleanc){
+        MESSAGE("Unable to retrieve PreCAD result");
+      }
+      
+      // Now we can delete the PreCAD session 
+      precad_session_delete(pcs);
+    }
+  }
+
+  if(cleanc){
+    // Give the pre-processed CAD object to the current BLSurf session
+    blsurf_data_set_cad(bls, cleanc);
+  }else{
+    // Use the original one
+    blsurf_data_set_cad(bls, c);
+  }
 
   std::cout << std::endl;
   std::cout << "Beginning of Surface Mesh generation" << std::endl;
@@ -1121,8 +1224,6 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   feclearexcept( FE_ALL_EXCEPT );
   int oldFEFlags = fedisableexcept( FE_ALL_EXCEPT );
 #endif
-
-  status_t status = STATUS_ERROR;
 
   try {
     OCC_CATCH_SIGNALS;
@@ -1145,6 +1246,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       _comment = "Exception in blsurf_compute_mesh()";
   }
   if ( status != STATUS_OK) {
+    // Their was an error while meshing
     blsurf_session_delete(bls);
     cad_delete(c);
     context_delete(ctx);
@@ -1156,7 +1258,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   std::cout << "End of Surface Mesh generation" << std::endl;
   std::cout << std::endl;
 
-  mesh_t *msh;
+  mesh_t *msh = NULL;
   blsurf_data_get_mesh(bls, &msh);
   if(!msh){
     blsurf_session_delete(bls);
@@ -1167,6 +1269,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     //return false;
   }
 
+  /* retrieve mesh data (see distene/mesh.h) */
   integer nv, ne, nt, nq, vtx[4], tag;
   real xyz[3];
 
@@ -1180,6 +1283,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   SMDS_MeshNode** nodes = new SMDS_MeshNode*[nv+1];
   bool* tags = new bool[nv+1];
 
+  /* enumerated vertices */
   for(int iv=1;iv<=nv;iv++) {
     mesh_get_vertex_coordinates(msh, iv, xyz);
     mesh_get_vertex_tag(msh, iv, &tag);
@@ -1198,6 +1302,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     }
   }
 
+  /* enumerate edges */
   for(int it=1;it<=ne;it++) {
     mesh_get_edge_vertices(msh, it, vtx);
     SMDS_MeshEdge* edg = meshDS->AddEdge(nodes[vtx[0]], nodes[vtx[1]]);
@@ -1215,6 +1320,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 
   }
 
+  /* enumerate triangles */
   for(int it=1;it<=nt;it++) {
     mesh_get_triangle_vertices(msh, it, vtx);
     SMDS_MeshFace* tri = meshDS->AddFace(nodes[vtx[0]], nodes[vtx[1]], nodes[vtx[2]]);
@@ -1234,6 +1340,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     };
   }
 
+  /* enumerate quadrangles */
   for(int it=1;it<=nq;it++) {
     mesh_get_quadrangle_vertices(msh, it, vtx);
     SMDS_MeshFace* quad = meshDS->AddFace(nodes[vtx[0]], nodes[vtx[1]], nodes[vtx[2]], nodes[vtx[3]]);
@@ -1373,34 +1480,61 @@ istream & operator >> (istream & load, BLSURFPlugin_BLSURF & hyp)
   return hyp.LoadFrom( load );
 }
 
+/* Curve definition function See cad_curv_t in file distene/cad.h for
+ * more information.
+ * NOTE : if when your CAD systems evaluates second
+ * order derivatives it also computes first order derivatives and
+ * function evaluation, you can optimize this example by making only
+ * one CAD call and filling the necessary uv, dt, dtt arrays.
+ */
 status_t curv_fun(real t, real *uv, real *dt, real *dtt, void *user_data)
 {
+  /* t is given. It contains the t (time) 1D parametric coordintaes
+     of the point PreCAD/BLSurf is querying on the curve */
+  
+  /* user_data identifies the edge PreCAD/BLSurf is querying
+   * (see cad_edge_new later in this example) */
   const Geom2d_Curve*pargeo = (const Geom2d_Curve*) user_data;
 
   if (uv){
+   /* BLSurf is querying the function evaluation */
     gp_Pnt2d P;
     P=pargeo->Value(t);
     uv[0]=P.X(); uv[1]=P.Y();
   }
 
   if(dt) {
+   /* query for the first order derivatives */
     gp_Vec2d V1;
     V1=pargeo->DN(t,1);
     dt[0]=V1.X(); dt[1]=V1.Y();
   }
 
   if(dtt){
+    /* query for the second order derivatives */
     gp_Vec2d V2;
     V2=pargeo->DN(t,2);
     dtt[0]=V2.X(); dtt[1]=V2.Y();
   }
 
-  return 0;
+  return STATUS_OK;
 }
 
+/* Surface definition function.
+ * See cad_surf_t in file distene/cad.h for more information.
+ * NOTE : if when your CAD systems evaluates second order derivatives it also
+ * computes first order derivatives and function evaluation, you can optimize 
+ * this example by making only one CAD call and filling the necessary xyz, du, dv, etc.. 
+ * arrays.
+ */
 status_t surf_fun(real *uv, real *xyz, real*du, real *dv,
                   real *duu, real *duv, real *dvv, void *user_data)
 {
+  /* uv[2] is given. It contains the u,v coordinates of the point
+   * PreCAD/BLSurf is querying on the surface */
+  
+  /* user_data identifies the face PreCAD/BLSurf is querying (see
+   * cad_face_new later in this example)*/
   const Geom_Surface* geometry = (const Geom_Surface*) user_data;
 
   if(xyz){
@@ -1419,6 +1553,7 @@ status_t surf_fun(real *uv, real *xyz, real*du, real *dv,
   }
 
   if(duu && duv && dvv){
+
     gp_Pnt P;
     gp_Vec D1U,D1V;
     gp_Vec D2U,D2V,D2UV;
@@ -1429,7 +1564,45 @@ status_t surf_fun(real *uv, real *xyz, real*du, real *dv,
     dvv[0]=D2V.X(); dvv[1]=D2V.Y(); dvv[2]=D2V.Z();
   }
 
-  return 0;
+//   if(duu && duv && dvv){
+//     /* query for the second order derivatives */
+//     gp_Pnt P;
+//     gp_Vec D1U,D1V;
+//     gp_Vec D2U,D2V,D2UV;
+// 
+//     geometry->D2(uv[0],uv[1],P,D1U,D1V,D2U,D2V,D2UV);
+//     duu[0]=D2U.X(); duu[1]=D2U.Y(); duu[2]=D2U.Z();
+//     duv[0]=D2UV.X(); duv[1]=D2UV.Y(); duv[2]=D2UV.Z();
+//     dvv[0]=D2V.X(); dvv[1]=D2V.Y(); dvv[2]=D2V.Z();
+//     if(du && dv){
+//       geometry->D1(uv[0],uv[1],P,D1U,D1V);
+//       du[0]=D1U.X(); du[1]=D1U.Y(); du[2]=D1U.Z();
+//       dv[0]=D1V.X(); dv[1]=D1V.Y(); dv[2]=D1V.Z();
+//     }
+//     if(xyz){
+//       P = geometry->Value(uv[0],uv[1]);
+//       xyz[0]=P.X(); xyz[1]=P.Y(); xyz[2]=P.Z();
+//     }
+//   } else if(du && dv){
+//    /* query for the first order derivatives */
+//     gp_Pnt P;
+//     gp_Vec D1U,D1V;
+// 
+//     geometry->D1(uv[0],uv[1],P,D1U,D1V);
+//     du[0]=D1U.X(); du[1]=D1U.Y(); du[2]=D1U.Z();
+//     dv[0]=D1V.X(); dv[1]=D1V.Y(); dv[2]=D1V.Z();
+//     if(xyz){
+//       P = geometry->Value(uv[0],uv[1]);
+//       xyz[0]=P.X(); xyz[1]=P.Y(); xyz[2]=P.Z();
+//     }
+//   } else if(xyz){
+//     /* query for the function evaluation */
+//    gp_Pnt P;
+//    P = geometry->Value(uv[0],uv[1]);   // S.D0(U,V,P);
+//    xyz[0]=P.X(); xyz[1]=P.Y(); xyz[2]=P.Z();
+//   }
+
+  return STATUS_OK;
 }
 
 
@@ -1551,7 +1724,12 @@ status_t size_on_vertex(integer point_id, real *size, void *user_data)
  return STATUS_OK;
 }
 
-status_t message_callback(message_t *msg, void *user_data)
+/*
+ * The following function will be called for PreCAD/BLSurf message
+ * printing.  See context_set_message_callback (later in this
+ * template) for how to set user_data.
+ */
+status_t message_cb(message_t *msg, void *user_data)
 {
   integer errnumber = 0;
   char *desc;
@@ -1573,6 +1751,20 @@ status_t message_callback(message_t *msg, void *user_data)
   return STATUS_OK;
 }
 
+/* This is the interrupt callback. PreCAD/BLSurf will call this
+ * function regularily. See the file distene/interrupt.h
+ */
+status_t interrupt_cb(integer *interrupt_status, void *user_data)
+{
+  integer you_want_to_continue = 1;
+
+  if(you_want_to_continue)
+    *interrupt_status = INTERRUPT_CONTINUE;
+  else /* you want to stop BLSurf */
+    *interrupt_status = INTERRUPT_STOP;
+  
+  return STATUS_OK;
+}
 
 //=============================================================================
 /*!

@@ -34,6 +34,8 @@ extern "C"{
 #include <structmember.h>
 
 
+#include <Basics_Utils.hxx>
+
 #include <SMESH_Gen.hxx>
 #include <SMESH_Mesh.hxx>
 #include <SMESH_ControlsDef.hxx>
@@ -846,6 +848,9 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 //   else {
 //     MESSAGE("  the shape is UNKNOWN");
 //   };
+
+  // Fix problem with locales
+  Kernel_Utils::Localizer loc;
 
   /* create a distene context (generic object) */
   status_t status = STATUS_ERROR;

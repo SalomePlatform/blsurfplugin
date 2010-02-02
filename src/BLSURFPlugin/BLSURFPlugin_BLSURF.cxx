@@ -28,7 +28,6 @@
 
 extern "C"{
 #include <distene/api.h>
-#include <distene/precad.h>
 #include <distene/blsurf.h>
 }
 
@@ -1160,60 +1159,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 
   PyGILState_Release(gstate);
 
-  // If user requests it, send the CAD through Distene preprocessor : PreCAD
-  cad_t *cleanc = NULL;
-  int topo = 0;
-  if (_hypothesis) {
-    topo = (int) _hypothesis->GetTopology();
-    if (topo > 0) {
-      precad_session_t *pcs = precad_session_new(ctx);
-      precad_data_set_cad(pcs, c);
-      
-      int verb = (int) _hypothesis->GetVerbosity();
-      precad_set_param(pcs, "verbose", to_string(verb).c_str());
-      
-      integer you_want_precad_to_optimize_the_CAD = 1;
-      if(you_want_precad_to_optimize_the_CAD){
-        precad_set_param(pcs, "merge_edges", "1");
-        precad_set_param(pcs, "remove_nano_edges", "1");
-      }
-      // if you want preCAD to compute topology from scratch, without
-      // considering the toplogical information contained in c, you
-      // have to set the folowing option to "1" :
-      //    precad_set_param(pcs, "discard_input_topology", "1");
-      
-      /* You can use these 2 options if you want to help PreCAD treat some
-      * very dirty cases :
-      * if the treated object is manifold set "manifold_geometry" to "1" 
-      * if the object is also closed (imagine a shell), also set "closed_geometry" to "1"
-      */
-      // precad_set_param(pcs, "manifold_geometry", "1");
-      // precad_set_param(pcs, "closed_geometry", "1");
-      
-      /* Now launch the PreCAD process */
-      status = precad_process(pcs);
-      if(status != STATUS_OK){
-        MESSAGE("PreCAD processing failed with error code " << status);
-      }
-      
-      // retrieve the pre-processed CAD object 
-      cleanc = precad_new_cad(pcs);
-      if(!cleanc){
-        MESSAGE("Unable to retrieve PreCAD result");
-      }
-      
-      // Now we can delete the PreCAD session 
-      precad_session_delete(pcs);
-    }
-  }
-
-  if(cleanc){
-    // Give the pre-processed CAD object to the current BLSurf session
-    blsurf_data_set_cad(bls, cleanc);
-  }else{
-    // Use the original one
-    blsurf_data_set_cad(bls, c);
-  }
+  blsurf_data_set_cad(bls, c);
 
   std::cout << std::endl;
   std::cout << "Beginning of Surface Mesh generation" << std::endl;
@@ -1246,7 +1192,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       _comment = "Exception in blsurf_compute_mesh()";
   }
   if ( status != STATUS_OK) {
-    // Their was an error while meshing
+    // There was an error while meshing
     blsurf_session_delete(bls);
     cad_delete(c);
     context_delete(ctx);
@@ -1563,44 +1509,6 @@ status_t surf_fun(real *uv, real *xyz, real*du, real *dv,
     duv[0]=D2UV.X(); duv[1]=D2UV.Y(); duv[2]=D2UV.Z();
     dvv[0]=D2V.X(); dvv[1]=D2V.Y(); dvv[2]=D2V.Z();
   }
-
-//   if(duu && duv && dvv){
-//     /* query for the second order derivatives */
-//     gp_Pnt P;
-//     gp_Vec D1U,D1V;
-//     gp_Vec D2U,D2V,D2UV;
-// 
-//     geometry->D2(uv[0],uv[1],P,D1U,D1V,D2U,D2V,D2UV);
-//     duu[0]=D2U.X(); duu[1]=D2U.Y(); duu[2]=D2U.Z();
-//     duv[0]=D2UV.X(); duv[1]=D2UV.Y(); duv[2]=D2UV.Z();
-//     dvv[0]=D2V.X(); dvv[1]=D2V.Y(); dvv[2]=D2V.Z();
-//     if(du && dv){
-//       geometry->D1(uv[0],uv[1],P,D1U,D1V);
-//       du[0]=D1U.X(); du[1]=D1U.Y(); du[2]=D1U.Z();
-//       dv[0]=D1V.X(); dv[1]=D1V.Y(); dv[2]=D1V.Z();
-//     }
-//     if(xyz){
-//       P = geometry->Value(uv[0],uv[1]);
-//       xyz[0]=P.X(); xyz[1]=P.Y(); xyz[2]=P.Z();
-//     }
-//   } else if(du && dv){
-//    /* query for the first order derivatives */
-//     gp_Pnt P;
-//     gp_Vec D1U,D1V;
-// 
-//     geometry->D1(uv[0],uv[1],P,D1U,D1V);
-//     du[0]=D1U.X(); du[1]=D1U.Y(); du[2]=D1U.Z();
-//     dv[0]=D1V.X(); dv[1]=D1V.Y(); dv[2]=D1V.Z();
-//     if(xyz){
-//       P = geometry->Value(uv[0],uv[1]);
-//       xyz[0]=P.X(); xyz[1]=P.Y(); xyz[2]=P.Z();
-//     }
-//   } else if(xyz){
-//     /* query for the function evaluation */
-//    gp_Pnt P;
-//    P = geometry->Value(uv[0],uv[1]);   // S.D0(U,V,P);
-//    xyz[0]=P.X(); xyz[1]=P.Y(); xyz[2]=P.Z();
-//   }
 
   return STATUS_OK;
 }

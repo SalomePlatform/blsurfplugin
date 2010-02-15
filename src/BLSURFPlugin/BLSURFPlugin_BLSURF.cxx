@@ -1070,7 +1070,8 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       if (HasSizeMapOnEdge){
         edgeKey = EdgesWithSizeMap.FindIndex(e);
         if (EdgeId2SizeMap.find(edgeKey)!=EdgeId2SizeMap.end()) {
-          theSizeMapStr = EdgeId2SizeMap[faceKey];
+	  MESSAGE("Sizemap defined on edge with index " << edgeKey);
+          theSizeMapStr = EdgeId2SizeMap[edgeKey];
           if (theSizeMapStr.find(bad_end) == (theSizeMapStr.size()-bad_end.size()-1))
             continue;
           // Expr To Python function, verification is performed at validation in GUI

@@ -64,5 +64,6 @@ libBLSURFEngine_la_LDFLAGS  =			\
 	$(BLSURF_LIBS) \
 	$(SMESH_LDFLAGS) -lSMESHimpl -lSMESHEngine -lStdMeshersEngine -lSMDS -lSMESHDS	\
 	$(GEOM_LDFLAGS) -lGEOMbasic \
-	$(KERNEL_LDFLAGS) -lSalomeGenericObj -lSalomeNS -lSALOMELocalTrace \
+	$(MED_LDFLAGS) -lSalomeIDLMED \
+	$(KERNEL_LDFLAGS) -lSalomeGenericObj -lSalomeNS -lSALOMELocalTrace -lSALOMEBasics \
 	$(BOOST_LIB_REGEX)

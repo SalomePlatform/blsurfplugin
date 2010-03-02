@@ -59,8 +59,9 @@ libBLSURFPluginGUI_la_CPPFLAGS = 	\
 	-I$(top_builddir)/idl
 
 libBLSURFPluginGUI_la_LDFLAGS =			\
+	$(QT_LIBS) \
 	../BLSURFPlugin/libBLSURFEngine.la	\
-	$(GUI_LDFLAGS) -lqtx -lSalomeApp 	\
+	$(GUI_LDFLAGS) -lqtx -lSalomeApp -lsuit -lSalomeObject -lLightApp	\
 	${SMESH_LDFLAGS} -lSMESH -lGeomSelectionTools \
 	$(CAS_KERNEL) $(BLSURF_LIBS)
 

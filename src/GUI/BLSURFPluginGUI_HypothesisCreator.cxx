@@ -1,4 +1,4 @@
-	//  Copyright (C) 2007-2008  CEA/DEN, EDF R&D
+//  Copyright (C) 2007-2008  CEA/DEN, EDF R&D
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1521,22 +1521,14 @@ void BLSURFPluginGUI_HypothesisCreator::onPhysicalMeshChanged() {
   bool isCustom = (isPhysicalUserDefined || isSizeMap) ;
   bool geomIsCustom = (myGeometricMesh->currentIndex() == UserDefined);
   
-  myGradation->setEnabled(! isPhysicalUserDefined || geomIsCustom);
+  myGradation->setEnabled(!isPhysicalUserDefined || geomIsCustom);
   myPhySize->setEnabled(isCustom);
   myPhyMax->setEnabled(isCustom);
   myPhyMin->setEnabled(isCustom);
 
-  if ( !isSizeMap) {
-    double gradation;
-    switch( myPhysicalMesh->currentIndex() ) {
-      case DefaultSize:
-      default:
-        gradation = 1.1;
-        break;
-    }
-    myGradation->setValue( gradation );
-  }
-      
+  if ( !myGradation->isEnabled())
+    myGradation->setValue( 1.1 );
+
   if ( !isCustom ) {
     QString aPhySize = "";
     switch( myPhysicalMesh->currentIndex() ) {
@@ -1567,6 +1559,9 @@ void BLSURFPluginGUI_HypothesisCreator::onGeometricMeshChanged() {
   myGradation->setEnabled(isCustom || phyIsSizemap);
   myGeoMax->setEnabled(isCustom);
   myGeoMin->setEnabled(isCustom);
+
+  if ( !myGradation->isEnabled())
+    myGradation->setValue( 1.1 );
 
   if ( ! isCustom ) {
     double aAngleMeshS;

@@ -1686,21 +1686,23 @@ status_t interrupt_cb(integer *interrupt_status, void *user_data)
  *  
  */
 //=============================================================================
-bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh& aMesh,
+bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh&         aMesh,
                                    const TopoDS_Shape& aShape,
-                                   MapShapeNbElems& aResMap)
+                                   MapShapeNbElems&    aResMap)
 {
   int    _physicalMesh  = BLSURFPlugin_Hypothesis::GetDefaultPhysicalMesh();
   double _phySize       = BLSURFPlugin_Hypothesis::GetDefaultPhySize();
   //int    _geometricMesh = BLSURFPlugin_Hypothesis::GetDefaultGeometricMesh();
   //double _angleMeshS    = BLSURFPlugin_Hypothesis::GetDefaultAngleMeshS();
   double _angleMeshC    = BLSURFPlugin_Hypothesis::GetDefaultAngleMeshC();
+  bool   _quadAllowed   = BLSURFPlugin_Hypothesis::GetDefaultQuadAllowed();
   if(_hypothesis) {
     _physicalMesh  = (int) _hypothesis->GetPhysicalMesh();
     _phySize       = _hypothesis->GetPhySize();
     //_geometricMesh = (int) hyp->GetGeometricMesh();
     //_angleMeshS    = hyp->GetAngleMeshS();
     _angleMeshC    = _hypothesis->GetAngleMeshC();
+    _quadAllowed   = _hypothesis->GetQuadAllowed();
   }
 
   bool IsQuadratic = false;
@@ -1767,21 +1769,40 @@ bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh& aMesh,
     BRepGProp::SurfaceProperties(F,G);
     double anArea = G.Mass();
     int nb1d = 0;
+    std::vector<int> nb1dVec;
     for (TopExp_Explorer exp1(F,TopAbs_EDGE); exp1.More(); exp1.Next()) {
-      nb1d += EdgesMap.Find(exp1.Current());
+      int nbSeg = EdgesMap.Find(exp1.Current());
+      nb1d += nbSeg;
+      nb1dVec.push_back( nbSeg );
     }
-    int nbFaces = (int) ( anArea/( ELen*ELen*sqrt(3.) / 4 ) );
-    int nbNodes = (int) ( ( nbFaces*3 - (nb1d-1)*2 ) / 6 + 1 );
-    std::vector<int> aVec(SMDSEntity_Last);
-    for(int i=SMDSEntity_Node; i<SMDSEntity_Last; i++) aVec[i]=0;
+    int nbQuad = 0;
+    int nbTria = (int) ( anArea/( ELen*ELen*sqrt(3.) / 4 ) );
+    int nbNodes = (int) ( ( nbTria*3 - (nb1d-1)*2 ) / 6 + 1 );
+    if ( _quadAllowed )
+    {
+      if ( nb1dVec.size() == 4 ) // quadrangle geom face
+      {
+        int n1 = nb1dVec[0], n2 = nb1dVec[ nb1dVec[1] == nb1dVec[0] ? 2 : 1 ];
+        nbQuad = n1 * n2;
+        nbNodes = (n1 + 1) * (n2 + 1);
+        nbTria = 0;
+      }
+      else
+      {
+        nbTria = nbQuad = nbTria / 3 + 1;
+      }
+    }
+    std::vector<int> aVec(SMDSEntity_Last,0);
     if( IsQuadratic ) {
-      int nb1d_in = (nbFaces*3 - nb1d) / 2;
+      int nb1d_in = (nbTria*3 - nb1d) / 2;
       aVec[SMDSEntity_Node] = nbNodes + nb1d_in;
-      aVec[SMDSEntity_Quad_Triangle] = nbFaces;
+      aVec[SMDSEntity_Quad_Triangle] = nbTria;
+      aVec[SMDSEntity_Quad_Quadrangle] = nbQuad;
     }
     else {
       aVec[SMDSEntity_Node] = nbNodes;
-      aVec[SMDSEntity_Triangle] = nbFaces;
+      aVec[SMDSEntity_Triangle] = nbTria;
+      aVec[SMDSEntity_Quadrangle] = nbQuad;
     }
     aResMap.insert(std::make_pair(sm,aVec));
   }

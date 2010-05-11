@@ -1020,7 +1020,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 //           ev = evl[i];
           
 //           double xyzCoords[3]  = {ev[2], ev[3], ev[4]};
-          double xyzCoords[3]  = {evlIt->at(0), evlIt->at(3), evlIt->at(4)};
+          double xyzCoords[3]  = {evlIt->at(2), evlIt->at(3), evlIt->at(4)};
           MESSAGE("Check position of vertex =(" << xyzCoords[0] << "," << xyzCoords[1] << "," << xyzCoords[2] << ")");
           gp_Pnt P(xyzCoords[0],xyzCoords[1],xyzCoords[2]);
           BRepClass_FaceClassifier scl(f,P,1e-7);

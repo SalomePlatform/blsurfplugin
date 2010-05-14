@@ -1,4 +1,4 @@
-#  Copyright (C) 2007-2008  CEA/DEN, EDF R&D
+#  Copyright (C) 2007-2010  CEA/DEN, EDF R&D
 #
 #  This library is free software; you can redistribute it and/or
 #  modify it under the terms of the GNU Lesser General Public
@@ -16,6 +16,7 @@
 #
 #  See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 #
+
 # ---
 # File   : Makefile.am
 # Author : Vadim SANDLER, Open CASCADE S.A.S (vadim.sandler@opencascade.com)
@@ -64,5 +65,6 @@ libBLSURFEngine_la_LDFLAGS  =			\
 	$(BLSURF_LIBS) \
 	$(SMESH_LDFLAGS) -lSMESHimpl -lSMESHEngine -lStdMeshersEngine -lSMDS -lSMESHDS	\
 	$(GEOM_LDFLAGS) -lGEOMbasic \
-	$(KERNEL_LDFLAGS) -lSalomeGenericObj -lSalomeNS -lSALOMELocalTrace \
+	$(MED_LDFLAGS) -lSalomeIDLMED \
+	$(KERNEL_LDFLAGS) -lSalomeGenericObj -lSalomeNS -lSALOMELocalTrace -lSALOMEBasics \
 	$(BOOST_LIB_REGEX)

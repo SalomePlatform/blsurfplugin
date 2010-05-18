@@ -1242,15 +1242,18 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     mesh_get_vertex_coordinates(msh, iv, xyz);
     mesh_get_vertex_tag(msh, iv, &tag);
     // Issue 0020656. Use vertex coordinates
-    // GDD: commented because enforced vertices
-    // are badly taken into account
-    //if ( tag ) {
-    //  gp_Pnt p = BRep_Tool::Pnt( TopoDS::Vertex(pmap(tag)));
-    //  xyz[0] = p.X(); xyz[1] = p.Y(); xyz[2] = p.Z();
-    //}
+    if ( tag > 0 && tag <= pmap.Extent() ) {
+      TopoDS_Vertex v = TopoDS::Vertex(pmap(tag));
+      double tol = BRep_Tool::Tolerance( v );
+      gp_Pnt p = BRep_Tool::Pnt( v );
+      if ( p.IsEqual( gp_Pnt( xyz[0], xyz[1], xyz[2]), 2*tol))
+        xyz[0] = p.X(), xyz[1] = p.Y(), xyz[2] = p.Z();
+      else
+        tag = 0; // enforced or attracted vertex
+    }
     nodes[iv] = meshDS->AddNode(xyz[0], xyz[1], xyz[2]);
     // internal point are tagged to zero
-    if(tag){
+    if(tag > 0 && tag <= pmap.Extent() ){
       meshDS->SetNodeOnVertex(nodes[iv], TopoDS::Vertex(pmap(tag)));
       tags[iv] = false;
     } else {

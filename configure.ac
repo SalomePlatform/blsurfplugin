@@ -23,7 +23,7 @@
 # Author : Vadim SANDLER, Open CASCADE S.A.S (vadim.sandler@opencascade.com)
 # ---
 #
-AC_INIT([Salome2 Project BLSURFPLUGIN module], [5.1.4], [webmaster.salome@opencascade.com], [SalomeBLSURFPLUGIN])
+AC_INIT([Salome2 Project BLSURFPLUGIN module], [6.1.0], [webmaster.salome@opencascade.com], [SalomeBLSURFPLUGIN])
 AC_CONFIG_AUX_DIR(adm_local/unix/config_files)
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET

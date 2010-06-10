@@ -438,6 +438,7 @@ void createEnforcedVertexOnFace(TopoDS_Shape GeomShape, BLSURFPlugin_Hypothesis:
     Standard_Real y0 = xyzPoint.Y();
     Standard_Real z0 = xyzPoint.Z();
     MESSAGE("Projected Vertex: " << x0 << ", " << y0 << ", " << z0);
+    MESSAGE("Parametric coordinates: " << u0 << ", " << v0 );
     coords.push_back(u0);
     coords.push_back(v0);
     coords.push_back(x0);
@@ -1012,7 +1013,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
         MESSAGE("Face indice: " << iface);
         MESSAGE("Adding enforced vertices");
         evl = evmIt->second;
-        MESSAGE("Number of vertices to add: "<< evl.size())
+        MESSAGE("Number of vertices to add: "<< evl.size());
         std::set< std::vector<double> >::const_iterator evlIt = evl.begin();
         for (; evlIt != evl.end(); ++evlIt) {
 //           ev = *evlIt;
@@ -1020,7 +1021,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 //           ev = evl[i];
           
 //           double xyzCoords[3]  = {ev[2], ev[3], ev[4]};
-          double xyzCoords[3]  = {evlIt->at(0), evlIt->at(3), evlIt->at(4)};
+          double xyzCoords[3]  = {evlIt->at(2), evlIt->at(3), evlIt->at(4)};
           MESSAGE("Check position of vertex =(" << xyzCoords[0] << "," << xyzCoords[1] << "," << xyzCoords[2] << ")");
           gp_Pnt P(xyzCoords[0],xyzCoords[1],xyzCoords[2]);
           BRepClass_FaceClassifier scl(f,P,1e-7);
@@ -1241,13 +1242,18 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     mesh_get_vertex_coordinates(msh, iv, xyz);
     mesh_get_vertex_tag(msh, iv, &tag);
     // Issue 0020656. Use vertex coordinates
-    if ( tag ) {
-      gp_Pnt p = BRep_Tool::Pnt( TopoDS::Vertex(pmap(tag)));
-      xyz[0] = p.X(); xyz[1] = p.Y(); xyz[2] = p.Z();
+    if ( tag > 0 && tag <= pmap.Extent() ) {
+      TopoDS_Vertex v = TopoDS::Vertex(pmap(tag));
+      double tol = BRep_Tool::Tolerance( v );
+      gp_Pnt p = BRep_Tool::Pnt( v );
+      if ( p.IsEqual( gp_Pnt( xyz[0], xyz[1], xyz[2]), 2*tol))
+        xyz[0] = p.X(), xyz[1] = p.Y(), xyz[2] = p.Z();
+      else
+        tag = 0; // enforced or attracted vertex
     }
     nodes[iv] = meshDS->AddNode(xyz[0], xyz[1], xyz[2]);
     // internal point are tagged to zero
-    if(tag){
+    if(tag > 0 && tag <= pmap.Extent() ){
       meshDS->SetNodeOnVertex(nodes[iv], TopoDS::Vertex(pmap(tag)));
       tags[iv] = false;
     } else {

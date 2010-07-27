@@ -243,7 +243,8 @@ BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF(int hypId, int studyId,
 
   myStudy = NULL;
   myStudy = aStudyMgr->GetStudyByID(_studyId);
-  MESSAGE("myStudy->StudyId() = " << myStudy->StudyId());
+  if (myStudy)
+    MESSAGE("myStudy->StudyId() = " << myStudy->StudyId());
 
   /* Initialize the Python interpreter */
   assert(Py_IsInitialized());

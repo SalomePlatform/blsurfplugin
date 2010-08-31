@@ -1,47 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.0" language="en_US">
+<TS version="2.0" language="fr_FR" sourcelanguage="en_US">
 <context>
     <name>@default</name>
     <message>
         <source>ADD_OPTION</source>
-        <translation>Add option</translation>
+        <translation>Ajouter l&apos;option</translation>
     </message>
     <message>
         <source>BLSURF_ALLOW_QUADRANGLES</source>
-        <translation>Allow Quadrangles (Test)</translation>
+        <translation>Permettre les Quadrangles (Teste)</translation>
     </message>
     <message>
         <source>BLSURF_ANGLE_MESH_C</source>
-        <translation>Angle Mesh C</translation>
+        <translation>Angle de Maillage C</translation>
     </message>
     <message>
         <source>BLSURF_ANGLE_MESH_S</source>
-        <translation>Angle Mesh S</translation>
+        <translation>Angle de Maillage S</translation>
     </message>
     <message>
         <source>BLSURF_CUSTOM_GEOM</source>
-        <translation>Custom</translation>
+        <translation>Personnalisé</translation>
     </message>
     <message>
         <source>BLSURF_CUSTOM_USER</source>
-        <translation>Custom</translation>
+        <translation>Personnalisé</translation>
     </message>
     <message>
         <source>BLSURF_DECIMESH</source>
-        <translation>Patch independent</translation>
+        <translation>Chemin indépendent</translation>
     </message>
     <message>
         <source>BLSURF_DEFAULT_GEOM</source>
-        <translation>None</translation>
+        <translation>Défaut</translation>
     </message>
     <message>
         <source>BLSURF_DEFAULT_USER</source>
-        <translation>None</translation>
+        <translation>Défaut</translation>
     </message>
     <message>
         <source>BLSURF_GEOM_MESH</source>
-        <translation>Geometrical Mesh</translation>
+        <translation>Maillage Géométrique</translation>
     </message>
     <message>
         <source>BLSURF_GRADATION</source>
@@ -49,23 +49,23 @@
     </message>
     <message>
         <source>BLSURF_HGEOMAX</source>
-        <translation>Max Geometrical Size</translation>
+        <translation>Taille Géométrique Maximale</translation>
     </message>
     <message>
         <source>BLSURF_HGEOMIN</source>
-        <translation>Min Geometrical Size</translation>
+        <translation>Taille Géométrique Minimale</translation>
     </message>
     <message>
         <source>BLSURF_HPHYDEF</source>
-        <translation>User Size</translation>
+        <translation>Taille d&apos;Utilisateur</translation>
     </message>
     <message>
         <source>BLSURF_HPHYMAX</source>
-        <translation>Max Physical Size</translation>
+        <translation>Taille Physique Maximale</translation>
     </message>
     <message>
         <source>BLSURF_HPHYMIN</source>
-        <translation>Min Physical Size</translation>
+        <translation>Taille Physique Minimale</translation>
     </message>
     <message>
         <source>BLSURF_HYPOTHESIS</source>
@@ -73,39 +73,39 @@
     </message>
     <message>
         <source>BLSURF_PHY_MESH</source>
-        <translation>Physical Mesh</translation>
+        <translation>Maillage Physique</translation>
     </message>
     <message>
         <source>BLSURF_ADV_ARGS</source>
-        <translation>Advanced</translation>
+        <translation>Avancé</translation>
     </message>
     <message>
         <source>BLSURF_TITLE</source>
-        <translation>Hypothesis Construction</translation>
+        <translation>Construction d&apos;une Hypothèse</translation>
     </message>
     <message>
         <source>BLSURF_TOPOLOGY</source>
-        <translation>Topology</translation>
+        <translation>Topologie</translation>
     </message>
     <message>
         <source>BLSURF_TOPOLOGY_CAD</source>
-        <translation>From CAD</translation>
+        <translation>A partir de CAD</translation>
     </message>
     <message>
         <source>BLSURF_TOPOLOGY_PROCESS</source>
-        <translation>Pre-process</translation>
+        <translation>Prétraitement</translation>
     </message>
     <message>
         <source>BLSURF_TOPOLOGY_PROCESS2</source>
-        <translation>Pre-process++</translation>
+        <translation>Prétraitement++</translation>
     </message>
     <message>
         <source>BLSURF_VERBOSITY</source>
-        <translation>Verbosity level</translation>
+        <translation>Niveau de Verbosité</translation>
     </message>
     <message>
         <source>OBLIGATORY_VALUE</source>
-        <translation>(Obligatory value)</translation>
+        <translation>(Valeur Obligatoire)</translation>
     </message>
     <message>
         <source>OPTION_NAME_COLUMN</source>
@@ -113,71 +113,71 @@
     </message>
     <message>
         <source>OPTION_VALUE_COLUMN</source>
-        <translation>Value</translation>
+        <translation>Valeur</translation>
     </message>
     <message>
         <source>REMOVE_OPTION</source>
-        <translation>Clear option</translation>
+        <translation>Effacer l&apos;option</translation>
     </message>
     <message>
         <source>BLSURF_SIZE_MAP</source>
-        <translation>Size Map</translation>
+        <translation>Carte des tailles</translation>
     </message>
     <message>
         <source>SMP_ENTRY_COLUMN</source>
-        <translation>Entry</translation>
+        <translation>Entrée</translation>
     </message>
     <message>
         <source>SMP_NAME_COLUMN</source>
-        <translation>Name</translation>
+        <translation>Nom</translation>
     </message>
     <message>
         <source>SMP_SIZEMAP_COLUMN</source>
-        <translation>Size Map</translation>
+        <translation>Carte des tailles</translation>
     </message>
     <message>
         <source>BLSURF_SM_SURFACE</source>
-        <translation>Add Map on Surface</translation>
+        <translation>Ajouter une Carte sur la Surface</translation>
     </message>
     <message>
         <source>BLSURF_SM_EDGE</source>
-        <translation>Add Map on Edge</translation>
+        <translation>Ajouter une Carte sur l&apos;Arête</translation>
     </message>
     <message>
         <source>BLSURF_SM_POINT</source>
-        <translation>Add Map on Point</translation>
+        <translation>Ajouter une Carte sur le Point</translation>
     </message>
     <message>
         <source>BLSURF_SM_ATTRACTOR</source>
-        <translation>Add Attractor</translation>
+        <translation>Ajouter un Attracteur</translation>
     </message>
     <message>
         <source>BLSURF_SM_REMOVE</source>
-        <translation>Remove Map</translation>
+        <translation>Supprimer une Carte</translation>
     </message>
     <message>
         <source>BLSURF_SM_SURF_VALUE</source>
-        <translation>Size on Surface(s)</translation>
+        <translation>Valeur sur la Surface(s)</translation>
     </message>
     <message>
         <source>BLSURF_SM_EDGE_VALUE</source>
-        <translation>Size on Edge(s)</translation>
+        <translation>Taille sur l&apos;Arête</translation>
     </message>
     <message>
         <source>BLSURF_SM_POINT_VALUE</source>
-        <translation>Size on Point(s)</translation>
+        <translation>Taille sur le Point(s)</translation>
     </message>
     <message>
         <source>BLSURF_ENF_VER</source>
-        <translation>Enforced vertices</translation>
+        <translation>Points Enforcés</translation>
     </message>
     <message>
         <source>BLSURF_ENF_VER_ENTRY_COLUMN</source>
-        <translation>Entry</translation>
+        <translation>Entrée</translation>
     </message>
     <message>
         <source>BLSURF_ENF_VER_NAME_COLUMN</source>
-        <translation>Name</translation>
+        <translation>Nom</translation>
     </message>
     <message>
         <source>BLSURF_ENF_VER_X_COLUMN</source>
@@ -205,11 +205,11 @@
     </message>
     <message>
         <source>BLSURF_ENF_VER_VERTEX</source>
-        <translation>Add enforced vertex</translation>
+        <translation>Ajouter un point enforcé</translation>
     </message>
     <message>
         <source>BLSURF_ENF_VER_REMOVE</source>
-        <translation>Remove vertex</translation>
+        <translation>Supprimer un point</translation>
     </message>
 </context>
 </TS>

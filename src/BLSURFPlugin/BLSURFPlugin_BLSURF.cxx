@@ -576,7 +576,9 @@ void createAttractorOnFace(TopoDS_Shape GeomShape, std::string AttractorFunction
 
 /////////////////////////////////////////////////////////
 
-void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsurf_session_t *bls)
+void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
+                                        blsurf_session_t *             bls,
+                                        SMESH_Mesh&                   mesh)
 {
   int    _topology      = BLSURFPlugin_Hypothesis::GetDefaultTopology();
   int    _physicalMesh  = BLSURFPlugin_Hypothesis::GetDefaultPhysicalMesh();
@@ -620,6 +622,9 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
       }
 
   } else {
+    //0020968: EDF1545 SMESH: Problem in the creation of a mesh group on geometry
+    // GetDefaultPhySize() sometimes leads to computation failure
+    _phySize = mesh.GetShapeDiagonalSize() / _gen->GetBoundaryBoxSegmentation();
     MESSAGE("BLSURFPlugin_BLSURF::SetParameters using defaults");
   }
   _smp_phy_size = _phySize;
@@ -877,7 +882,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   VertexId2SizeMap.clear();
 
   MESSAGE("BEGIN SetParameters");
-  SetParameters(_hypothesis, bls);
+  SetParameters(_hypothesis, bls, aMesh);
   MESSAGE("END SetParameters");
 
   /* Now fill the CAD object with data from your CAD
@@ -1073,7 +1078,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       if (HasSizeMapOnEdge){
         edgeKey = EdgesWithSizeMap.FindIndex(e);
         if (EdgeId2SizeMap.find(edgeKey)!=EdgeId2SizeMap.end()) {
-	  MESSAGE("Sizemap defined on edge with index " << edgeKey);
+          MESSAGE("Sizemap defined on edge with index " << edgeKey);
           theSizeMapStr = EdgeId2SizeMap[edgeKey];
           if (theSizeMapStr.find(bad_end) == (theSizeMapStr.size()-bad_end.size()-1))
             continue;

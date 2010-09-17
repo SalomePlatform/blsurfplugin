@@ -922,6 +922,10 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   int faceKey = -1;
   for (TopExp_Explorer face_iter(aShape,TopAbs_FACE);face_iter.More();face_iter.Next()) {
     TopoDS_Face f=TopoDS::Face(face_iter.Current());
+
+    // make INTERNAL face oriented FORWARD (issue 0020993)
+    if (f.Orientation() != TopAbs_FORWARD && f.Orientation() != TopAbs_REVERSED )
+      f.Orientation(TopAbs_FORWARD);
     
     if (fmap.FindIndex(f) > 0)
       continue;

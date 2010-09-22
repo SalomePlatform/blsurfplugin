@@ -423,3 +423,5 @@ AC_OUTPUT([ \
   BLSURFPLUGIN_version.h \
   Makefile \
 ])
+
+AC_HACK_LIBTOOL

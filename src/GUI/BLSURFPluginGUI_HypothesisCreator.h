@@ -71,17 +71,23 @@ class QMenu;
 class QAction;
 class QTreeWidgetItem;
 
-class SalomeApp_DoubleSpinBox;
+class SMESHGUI_SpinBox;
 class LightApp_SelectionMgr;
+// class DlgBlSurfHyp_Enforced;
 
 typedef struct
 {
   int     myTopology, myVerbosity;
   int     myPhysicalMesh, myGeometricMesh;
   double  myAngleMeshS, myAngleMeshC, myGradation;
-  QString myPhySize, myGeoMin, myGeoMax, myPhyMin,myPhyMax;
+  double  myPhySize, myGeoMin, myGeoMax, myPhyMin,myPhyMax;
   bool    myAllowQuadrangles, myDecimesh,mySmpsurface,mySmpedge,mySmppoint,myEnforcedVertex;
-  std::map<std::string, std::set<std::vector<double> > > enfVertMap;
+  std::set<std::vector<double> > enfVertexList;
+  std::map<std::string, std::set<std::vector<double> > > entryEnfVertexListMap;
+  /* TODO GROUPS
+  std::map<std::string, std::set<std::vector<double> > > groupNameEnfVertexListMap;
+  std::map<std::vector<double> , std::string > enfVertexGroupNameMap;
+  */
   QString myName;
 } BlsurfHypothesisData;
 
@@ -124,6 +130,9 @@ protected slots:
   void                onRemoveMap();
   void                onSetSizeMap(int,int);
 
+  /* TODO GROUPS
+  void                addEnforcedVertex(std::string, std::string, double, double, double, std::string);
+  */
   void                addEnforcedVertex(std::string, std::string, double, double, double);
   void                onAddEnforcedVertices();
   void                onRemoveEnforcedVertex();
@@ -143,15 +152,15 @@ private:
   QWidget*            myStdGroup;
   QLineEdit*          myName;
   QComboBox*          myPhysicalMesh;
-  QLineEdit*          myPhySize;
-  QLineEdit*          myPhyMin;
-  QLineEdit*          myPhyMax;
+  SMESHGUI_SpinBox*   myPhySize;
+  SMESHGUI_SpinBox*   myPhyMin;
+  SMESHGUI_SpinBox*   myPhyMax;
   QComboBox*          myGeometricMesh;
-  SalomeApp_DoubleSpinBox*   myAngleMeshS;
-  SalomeApp_DoubleSpinBox*   myAngleMeshC;
-  QLineEdit*          myGeoMin;
-  QLineEdit*          myGeoMax;
-  SalomeApp_DoubleSpinBox*   myGradation;
+  SMESHGUI_SpinBox*   myAngleMeshS;
+  SMESHGUI_SpinBox*   myAngleMeshC;
+  SMESHGUI_SpinBox*   myGeoMin;
+  SMESHGUI_SpinBox*   myGeoMax;
+  SMESHGUI_SpinBox*   myGradation;
   QCheckBox*          myAllowQuadrangles;
   QCheckBox*          myDecimesh;
 
@@ -169,10 +178,24 @@ private:
   QPushButton         *removeButton;
 
   QWidget*            myEnfGroup;
+  /* TODO FACE AND VERTEX SELECTION
+  QPushButton*        selectFaceButton;
+  QLineEdit*          mySelectedFace;
+//   GEOM::GEOM_Object_var myEnfFace;
+  QPushButton*        selectVertexButton;
+  QLineEdit*          mySelectedEnforcedVertex;
+//   GEOM::GEOM_Object_var myEnfVertex;
+  */
+//   DlgBlSurfHyp_Enforced* myEnforcedVertexWidget;
   QTreeWidget*        myEnforcedTreeWidget;
-  QLineEdit*          myXCoord;
-  QLineEdit*          myYCoord;
-  QLineEdit*          myZCoord;
+  SMESHGUI_SpinBox*   myXCoord;
+  SMESHGUI_SpinBox*   myYCoord;
+  SMESHGUI_SpinBox*   myZCoord;
+  /* TODO GROUPS
+  QLineEdit*          myGroupName;
+  QGroupBox*          makeGroupsCheck;
+  QLineEdit*          myGlobalGroupName;
+  */
   QPushButton*        addVertexButton;
   QPushButton*        removeVertexButton;
 

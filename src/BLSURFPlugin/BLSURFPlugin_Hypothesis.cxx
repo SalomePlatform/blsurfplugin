@@ -50,7 +50,12 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis (int hypId, int studyId,
     _verb( GetDefaultVerbosity() ),
     _sizeMap(GetDefaultSizeMap()),
     _attractors(GetDefaultSizeMap()),
-    _enforcedVertices(GetDefaultEnforcedVertexMap())
+    _enfVertexList(GetDefaultEnfVertexList()),
+    _entryEnfVertexListMap(GetDefaultEntryEnfVertexListMap())
+    /* TODO GROUPS
+    _groupNameEnfVertexListMap(GetDefaultGroupNameEnfVertexListMap()),
+    _enfVertexGroupNameMap(GetDefaultEnfVertexGroupNameMap())
+    */
 {
   _name = "BLSURF_Parameters";
   _param_algo_dim = 2;
@@ -130,6 +135,13 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis (int hypId, int studyId,
   }
 
   _sizeMap.clear();
+  _attractors.clear();
+  _enfVertexList.clear();
+  _entryEnfVertexListMap.clear();
+  /* TODO GROUPS
+  _groupNameEnfVertexListMap.clear();
+  _enfVertexGroupNameMap.clear();
+  */
 }
 
 //=============================================================================
@@ -406,8 +418,9 @@ BLSURFPlugin_Hypothesis::TSizeMap BLSURFPlugin_Hypothesis::GetAttractorEntries(c
     return hyp ? hyp->_GetAttractorEntries():GetDefaultSizeMap();
 }
 
-
-
+//=======================================================================
+//function : ClearEntry
+//=======================================================================
 void BLSURFPlugin_Hypothesis::ClearEntry(const std::string& entry)
 {
  TSizeMap::iterator it  = _sizeMap.find( entry );
@@ -426,7 +439,9 @@ void BLSURFPlugin_Hypothesis::ClearEntry(const std::string& entry)
  }
 }
 
-
+//=======================================================================
+//function : ClearSizeMaps
+//=======================================================================
 void BLSURFPlugin_Hypothesis::ClearSizeMaps()
 {
   _sizeMap.clear();
@@ -438,41 +453,170 @@ void BLSURFPlugin_Hypothesis::ClearSizeMaps()
 //=======================================================================
 //function : SetEnforcedVertex
 //=======================================================================
-
-void BLSURFPlugin_Hypothesis::SetEnforcedVertex(const std::string& entry, double x, double y, double z)
+/* TODO GROUPS
+void BLSURFPlugin_Hypothesis::SetEnforcedVertex(const TEnfEntry& entry,
+                                                double x, double y, double z,
+                                                const TEnfGroupName& groupName)
+*/
+void BLSURFPlugin_Hypothesis::SetEnforcedVertex(const TEnfEntry& entry,
+                                                double x, double y, double z)
 {
-  BLSURFPlugin_Hypothesis::TEnforcedVertex coord;
-  coord.push_back(x);
-  coord.push_back(y);
-  coord.push_back(z);
+  /* TODO GROUPS
+  MESSAGE("BLSURFPlugin_Hypothesis::SetEnforcedVertex START - entry: " << entry << " vertex: " << x << " " << y << " " << z << " group name: " << groupName);
+  */
+  MESSAGE("BLSURFPlugin_Hypothesis::SetEnforcedVertex START - entry: " << entry << " vertex: " << x << " " << y << " " << z);
+  TEnfVertex enfVertex;
+  enfVertex.push_back(x);
+  enfVertex.push_back(y);
+  enfVertex.push_back(z);
+
   bool toNotify = false;
-  if (_enforcedVertices.count(entry)>0)
-    if (_enforcedVertices[entry].count(coord)==0)
+  if (_entryEnfVertexListMap.count(entry)>0)
+    if (_entryEnfVertexListMap[entry].count(enfVertex)==0)
       toNotify = true;
   else
     toNotify = true;
-  
-  _enforcedVertices[entry].insert(coord);
+
+  _enfVertexList.insert(enfVertex);
+//   _entryEnfVertexListMap[entry].insert(enfVertex);
+  TEnfVertexList& entryEnfVertexList = _entryEnfVertexListMap[entry];
+  entryEnfVertexList.insert(enfVertex);
+
+  /* TODO GROUPS
+  bool toNotify2 = _setEnfVertexWithGroup(x,y,z,groupName);
+
+  if (toNotify || toNotify2)
+    NotifySubMeshesHypothesisModification();
+  */
   if (toNotify)
     NotifySubMeshesHypothesisModification();
+  
+  MESSAGE("BLSURFPlugin_Hypothesis::SetEnforcedVertex END");
 }
+
+/* TODO GROUPS
+bool BLSURFPlugin_Hypothesis::_setEnfVertexWithGroup(double x, double y, double z, const std::string groupName) throw (std::invalid_argument)
+{
+  bool isModified = false;
+  std::vector<double> enfVertex;
+  enfVertex.push_back(x);
+  enfVertex.push_back(y);
+  enfVertex.push_back(z);
+  if (_enfVertexList.find(enfVertex) != _enfVertexList.end()) {
+    TEnfGroupName oldGroupName = _enfVertexGroupNameMap[enfVertex];
+    _enfVertexGroupNameMap[enfVertex] = groupName;
+    if ((groupName != "") && (groupName != oldGroupName)) {
+      MESSAGE("Group name is not empty");
+      TEnfVertexList& enfVertexList = _groupNameEnfVertexListMap[groupName];
+      enfVertexList.insert(enfVertex);
+      isModified = true;
+    }
+    else {
+      if (oldGroupName != "") {
+        // groupName = "" => remove group name
+        TGroupNameEnfVertexListMap::iterator it = _groupNameEnfVertexListMap.find(oldGroupName);
+        if (it != _groupNameEnfVertexListMap.end()) {
+          _groupNameEnfVertexListMap[oldGroupName].erase(enfVertex);
+          if (_groupNameEnfVertexListMap[oldGroupName].size() == 0)
+            _groupNameEnfVertexListMap.erase(oldGroupName);
+          isModified = true;
+        }
+      }
+    }
+    return isModified;
+  }
+
+  std::ostringstream msg ;
+  msg << "No enforced vertex at (" << x << "," << y << "," << z << ")" ;
+  throw std::invalid_argument(msg.str());
+}
+
+//=======================================================================
+//function : SetEnforcedVertexGroupName
+//=======================================================================
+void BLSURFPlugin_Hypothesis::SetEnforcedVertexGroupName(double x, double y, double z,
+                                                        const TEnfGroupName& groupName)
+  throw (std::invalid_argument)
+{
+  bool toNotify = _setEnfVertexWithGroup(x,y,z,groupName);
+  if (toNotify)
+      NotifySubMeshesHypothesisModification();
+//   bool toNotify = false;
+//   TEnfVertex enfVertex;
+//   enfVertex.push_back(x);
+//   enfVertex.push_back(y);
+//   enfVertex.push_back(z);
+//   
+//   if (_enfVertexList.find(enfVertex) != _enfVertexList.end()) {
+//     TEnfGroupName oldGroupName = _enfVertexGroupNameMap[enfVertex];
+//     _enfVertexGroupNameMap[enfVertex] = groupName;
+//     if ((groupName != "") && (groupName != oldGroupName)) {
+//       MESSAGE("Group name is not empty");
+//       TEnfVertexList& enfVertexList = _groupNameEnfVertexListMap[groupName];
+//       enfVertexList.insert(enfVertex);
+//       toNotify = true;
+//     }
+//     else {
+//       if (oldGroupName != "") {
+//         // groupName = "" => remove group name
+//         TGroupNameEnfVertexListMap::iterator it = _groupNameEnfVertexListMap.find(oldGroupName);
+//         if (it != _groupNameEnfVertexListMap.end()) {
+//           _groupNameEnfVertexListMap[oldGroupName].erase(enfVertex);
+//           if (_groupNameEnfVertexListMap[oldGroupName].size() == 0)
+//             _groupNameEnfVertexListMap.erase(oldGroupName);
+//           toNotify = true;
+//         }
+//       }
+//     }
+//     if (toNotify)
+//       NotifySubMeshesHypothesisModification();
+//     return;
+//   }
+
+// //   std::ostringstream msg ;
+// //   msg << "No enforced vertex at (" << x << "," << y << "," << z << ")" ;
+// //   throw std::invalid_argument(msg.str());
+}
+
+
+//=======================================================================
+//function : GetEnforcedVertexGroupName
+//=======================================================================
+BLSURFPlugin_Hypothesis::TEnfGroupName BLSURFPlugin_Hypothesis::GetEnforcedVertexGroupName(double x, double y, double z)
+  throw (std::invalid_argument)
+{
+  TEnfVertex enfVertex;
+  enfVertex.push_back(x);
+  enfVertex.push_back(y);
+  enfVertex.push_back(z);
+
+  if (_enfVertexGroupNameMap.find(enfVertex) != _enfVertexGroupNameMap.end())
+      return _enfVertexGroupNameMap[enfVertex];
+
+  std::ostringstream msg ;
+  msg << "No enforced vertex at (" << x << "," << y << "," << z << ")" ;
+  throw std::invalid_argument(msg.str());
+}
+*/
 
 /*
 //=======================================================================
 //function : SetEnforcedVertexList
 //=======================================================================
 
-void BLSURFPlugin_Hypothesis::SetEnforcedVertexList(const std::string& entry, const BLSURFPlugin_Hypothesis::TEnforcedVertexList vertexList)
+void BLSURFPlugin_Hypothesis::SetEnforcedVertexList(const TEnfEntry& entry,
+                                                    const TEnfVertexList vertexList)
 {
-  BLSURFPlugin_Hypothesis::TEnforcedVertexList::const_iterator it;
+  TEnfVertexList::const_iterator it;
   bool toNotify = false;
   for(it = vertexList.begin();it!=vertexList.end();++it) {
-    if (_enforcedVertices.count(entry)>0)
-      if (_enforcedVertices[entry].count(*it)==0)
+    if (_entryEnfVertexListMap.count(entry)>0)
+      if (_entryEnfVertexListMap[entry].count(*it)==0)
         toNotify = true;
     else
       toNotify = true;
-    _enforcedVertices[entry].insert(*it);
+    _entryEnfVertexListMap[entry].insert(*it);
+    _enfVertexList.insert(*it);
   }
   if (toNotify)
     NotifySubMeshesHypothesisModification();
@@ -483,11 +627,11 @@ void BLSURFPlugin_Hypothesis::SetEnforcedVertexList(const std::string& entry, co
 //function : GetEnforcedVertices
 //=======================================================================
 
-BLSURFPlugin_Hypothesis::TEnforcedVertexList BLSURFPlugin_Hypothesis::GetEnforcedVertices(const std::string& entry)
+BLSURFPlugin_Hypothesis::TEnfVertexList BLSURFPlugin_Hypothesis::GetEnforcedVertices(const TEnfEntry& entry)
   throw (std::invalid_argument)
 {
-  if (_enforcedVertices.count(entry)>0)
-    return _enforcedVertices[entry];
+  if (_entryEnfVertexListMap.count(entry)>0)
+    return _entryEnfVertexListMap[entry];
   std::ostringstream msg ;
   msg << "No enforced vertex for entry " << entry ;
   throw std::invalid_argument(msg.str());
@@ -497,31 +641,60 @@ BLSURFPlugin_Hypothesis::TEnforcedVertexList BLSURFPlugin_Hypothesis::GetEnforce
 //function : ClearEnforcedVertex
 //=======================================================================
 
-void BLSURFPlugin_Hypothesis::ClearEnforcedVertex(const std::string& entry, double x, double y, double z)
+void BLSURFPlugin_Hypothesis::ClearEnforcedVertex(const TEnfEntry& entry, double x, double y, double z)
   throw (std::invalid_argument)
 {
-  BLSURFPlugin_Hypothesis::TEnforcedVertex coord;
-  coord.push_back(x);
-  coord.push_back(y);
-  coord.push_back(z);
-  BLSURFPlugin_Hypothesis::TEnforcedVertexList::iterator it;
-  bool toNotify = false;
+  std::ostringstream msg ;
+  
+  TEnfVertex enfVertex;
+  enfVertex.push_back(x);
+  enfVertex.push_back(y);
+  enfVertex.push_back(z);
 
-  BLSURFPlugin_Hypothesis::TEnforcedVertexMap::iterator it_enf = _enforcedVertices.find(entry);
-  if (it_enf != _enforcedVertices.end()) {
-    it = _enforcedVertices[entry].find(coord);
-    if (it != _enforcedVertices[entry].end()) {
+  // check that enf vertex with given coords exists
+  if (_enfVertexList.count(enfVertex) == 0) {
+    msg << "No enforced vertex for " << entry;
+    throw std::invalid_argument(msg.str());
+  }
+
+
+  TEntryEnfVertexListMap::iterator it_enf = _entryEnfVertexListMap.find(entry);
+  if (it_enf != _entryEnfVertexListMap.end()) {
+    bool toNotify = false;
+    TEnfVertexList::iterator it = _entryEnfVertexListMap[entry].find(enfVertex);
+    if (it != _entryEnfVertexListMap[entry].end()) {
       toNotify = true;
-      _enforcedVertices[entry].erase(it);
-      if (_enforcedVertices[entry].size() == 0)
-        _enforcedVertices.erase(it_enf);
+
+      // Update entry2enfList map
+      _entryEnfVertexListMap[entry].erase(it);
+      if (_entryEnfVertexListMap[entry].size() == 0)
+        _entryEnfVertexListMap.erase(it_enf);
+
+      /* TODO GROUPS
+      // Update groupName2enfCoord map
+      TEnfGroupName groupName = _enfVertexGroupNameMap[enfVertex];
+      if (groupName != "") {
+        TGroupNameEnfVertexListMap::iterator it_grp =_groupNameEnfVertexListMap.find(groupName);
+        if (it_grp != _groupNameEnfVertexListMap.end()) {
+          _groupNameEnfVertexListMap[groupName].erase(enfVertex);
+          if (_groupNameEnfVertexListMap[groupName].size() == 0)
+            _groupNameEnfVertexListMap.erase(it_grp);
+        }
+      }
+      
+      // Update _enfVertexGroupNameMap
+      _enfVertexGroupNameMap.erase(enfVertex);
+      */
+      
+      // Update _enfVertexList
+      _enfVertexList.erase(enfVertex);
+
     }
     if (toNotify)
       NotifySubMeshesHypothesisModification();
     return;
   }
 
-  std::ostringstream msg ;
   msg << "No enforced vertex for " << entry;
   throw std::invalid_argument(msg.str());
 }
@@ -530,27 +703,28 @@ void BLSURFPlugin_Hypothesis::ClearEnforcedVertex(const std::string& entry, doub
 //function : ClearEnforcedVertexList
 //=======================================================================
 
-void BLSURFPlugin_Hypothesis::ClearEnforcedVertexList(const std::string& entry, BLSURFPlugin_Hypothesis::TEnforcedVertexList vertexList)
+void BLSURFPlugin_Hypothesis::ClearEnforcedVertexList(const std::string& entry, TEnfVertexList vertexList)
   throw (std::invalid_argument)
 {
-  BLSURFPlugin_Hypothesis::TEnforcedVertex coord;
-  BLSURFPlugin_Hypothesis::TEnforcedVertexList::const_iterator it_toRemove;
-  BLSURFPlugin_Hypothesis::TEnforcedVertexList::iterator it;
+  TEnfVertex coord;
+  TEnfVertexList::const_iterator it_toRemove;
+  TEnfVertexList::iterator it;
   bool toNotify = false;
 
-  BLSURFPlugin_Hypothesis::TEnforcedVertexMap::iterator it_enf = _enforcedVertices.find(entry);
-  if (it_enf != _enforcedVertices.end()) {
+  TEntryEnfVertexListMap::iterator it_enf = _entryEnfVertexListMap.find(entry);
+  if (it_enf != _entryEnfVertexListMap.end()) {
     for (it_toRemove = vertexList.begin() ; it_toRemove != vertexList.end() ; ++it_toRemove) {
       coord = *it_toRemove;
-      it = _enforcedVertices[entry].find(coord);
-      if (it != _enforcedVertices[entry].end()) {
+      it = _entryEnfVertexListMap[entry].find(coord);
+      if (it != _entryEnfVertexListMap[entry].end()) {
         toNotify = true;
-        _enforcedVertices[entry].erase(it);
+        _entryEnfVertexListMap[entry].erase(it);
+        _enfVertexList.erase(it);
       }
     }
-    if (_enforcedVertices[entry].size() == 0) {
+    if (_entryEnfVertexListMap[entry].size() == 0) {
       toNotify = true;
-      _enforcedVertices.erase(it_enf);
+      _entryEnfVertexListMap.erase(it_enf);
     }
     if (toNotify)
       NotifySubMeshesHypothesisModification();
@@ -566,12 +740,29 @@ void BLSURFPlugin_Hypothesis::ClearEnforcedVertexList(const std::string& entry, 
 //function : ClearEnforcedVertices
 //=======================================================================
 
-void BLSURFPlugin_Hypothesis::ClearEnforcedVertices(const std::string& entry)
+void BLSURFPlugin_Hypothesis::ClearEnforcedVertices(const TEnfEntry& entry)
   throw (std::invalid_argument)
 {
-  BLSURFPlugin_Hypothesis::TEnforcedVertexMap::iterator it_enf = _enforcedVertices.find(entry);
-  if (it_enf != _enforcedVertices.end()) {
-    _enforcedVertices.erase(it_enf);
+  TEntryEnfVertexListMap::iterator it_enf = _entryEnfVertexListMap.find(entry);
+  if (it_enf != _entryEnfVertexListMap.end()) {
+    TEnfVertexList enfList = it_enf->second;
+    TEnfVertexList::iterator it;
+    for(it = enfList.begin();it!=enfList.end();++it) {
+      /* TODO GROUPS
+      TEnfGroupName groupName = _enfVertexGroupNameMap[*it];
+      if (groupName != "") {
+        TGroupNameEnfVertexListMap::iterator it_grp =_groupNameEnfVertexListMap.find(groupName);
+        if (it_grp != _groupNameEnfVertexListMap.end()) {
+          _groupNameEnfVertexListMap[groupName].erase(it);
+          if (_groupNameEnfVertexListMap[groupName].size() == 0)
+            _groupNameEnfVertexListMap.erase(it_grp);
+        }
+      }
+      _enfVertexGroupNameMap.erase(*it);
+      */
+      _enfVertexList.erase(it);
+    }
+    _entryEnfVertexListMap.erase(it_enf);
     NotifySubMeshesHypothesisModification();
     return;
   }
@@ -586,7 +777,12 @@ void BLSURFPlugin_Hypothesis::ClearEnforcedVertices(const std::string& entry)
 //=======================================================================
 void BLSURFPlugin_Hypothesis::ClearAllEnforcedVertices()
 {
-    _enforcedVertices.clear();
+    _enfVertexList.clear();
+    _entryEnfVertexListMap.clear();
+    /* TODO GROUPS
+    _groupNameEnfVertexListMap.clear();
+    _enfVertexGroupNameMap.clear();
+    */
     NotifySubMeshesHypothesisModification();
 }
 
@@ -596,9 +792,9 @@ void BLSURFPlugin_Hypothesis::ClearAllEnforcedVertices()
 */
 //================================================================================
 
-BLSURFPlugin_Hypothesis::TEnforcedVertexMap BLSURFPlugin_Hypothesis::GetAllEnforcedVertices(const BLSURFPlugin_Hypothesis* hyp)
+BLSURFPlugin_Hypothesis::TEntryEnfVertexListMap BLSURFPlugin_Hypothesis::GetAllEnforcedVertices(const BLSURFPlugin_Hypothesis* hyp)
 {
-    return hyp ? hyp->_GetAllEnforcedVertices():GetDefaultEnforcedVertexMap();
+    return hyp ? hyp->_GetAllEnforcedVertices():GetDefaultEntryEnfVertexListMap();
 }
 
 
@@ -652,20 +848,26 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save)
     save << " " << "__ATTRACTORS_END__";
   }
 
-  TEnforcedVertexMap::const_iterator it_enf = _enforcedVertices.begin();
-  if (it_enf != _enforcedVertices.end()) {
+  TEntryEnfVertexListMap::const_iterator it_enf = _entryEnfVertexListMap.begin();
+  if (it_enf != _entryEnfVertexListMap.end()) {
     save << " " << "__ENFORCED_VERTICES_BEGIN__";
-    for ( ; it_enf != _enforcedVertices.end(); ++it_enf ) {
+    for ( ; it_enf != _entryEnfVertexListMap.end(); ++it_enf ) {
       save << " " << it_enf->first;
-      TEnforcedVertexList evl = it_enf->second;
-      TEnforcedVertexList::const_iterator it_evl = evl.begin();
-      if (it_evl != evl.end()) {
-        for ( ; it_evl != evl.end() ; ++it_evl) {
-          save << " " << (*it_evl)[0];
-          save << " " << (*it_evl)[1];
-          save << " " << (*it_evl)[2];
-          save << "$"; // "$" is a mark of enforced vertex end
+      TEnfVertexList evl = it_enf->second;
+      TEnfVertexList::const_iterator it_evl = evl.begin();
+      for ( ; it_evl != evl.end() ; ++it_evl) {
+        save << " " << (*it_evl)[0];
+        save << " " << (*it_evl)[1];
+        save << " " << (*it_evl)[2];
+        /* TODO GROUPS
+        TEnfVertexGroupNameMap::const_iterator it_enfGroup = _enfVertexGroupNameMap.find(*it_evl);
+        if (it_enfGroup != _enfVertexGroupNameMap.end()) {
+          save << " " << "__ENF_GROUP_BEGIN__";
+          save << " " << it_enfGroup->second ;
+          save << " " << "__ENF_GROUP_END__";
         }
+        */
+        save << " " << "$"; // "$" is a mark of enforced vertex end
       }
       save << "#"; // "#" is a mark of enforced shape end
     }
@@ -897,20 +1099,24 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
         hasEnforcedVertex = true;
   }
   
-  std::string enfEntry, enfValue, trace;
+  std::string enfEntry, enfValue, enfGroup, trace;
   std::ostringstream oss;
   while (isOK && hasEnforcedVertex) {
     isOK = (load >> enfEntry);
     if (isOK) {
+      MESSAGE("enfEntry: " <<enfEntry);
       if (enfEntry == "__ENFORCED_VERTICES_END__")
         break;
 
+      /* TODO GROUPS
+      bool hasGroup = false;
+      */
       enfValue = "begin";
       int len4 = enfValue.size();
 
-      TEnforcedVertexList & evl = _enforcedVertices[enfEntry];
+      TEnfVertexList & evl = _entryEnfVertexListMap[enfEntry];
       evl.clear();
-      TEnforcedVertex enfVertex;
+      TEnfVertex enfVertex;
 
       // continue reading until "#" encountered
       while ( enfValue[len4-1] != '#') {
@@ -919,10 +1125,34 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
         while ( enfValue[len4-1] != '$') {
           isOK = (load >> enfValue);
           if (isOK) {
+            MESSAGE("enfValue: " <<enfValue);
             len4 = enfValue.size();
             // End of vertex list
             if (enfValue[len4-1] == '#')
               break;
+            /* TODO GROUPS
+            if (enfValue == "__ENF_GROUP_BEGIN__") {
+              hasGroup = true;
+              isOK = (load >> enfGroup);
+              MESSAGE("enfGroup: " <<enfGroup);
+              TEnfGroupName& groupName = _enfVertexGroupNameMap[ enfVertex ];
+              groupName = enfGroup;
+              while ( isOK) {
+                isOK = (load >> enfGroup);
+                if (isOK) {
+                  MESSAGE("enfGroup: " <<enfGroup);
+                  if (enfGroup == "__ENF_GROUP_END__")
+                    break;
+                  groupName += " ";
+                  groupName += enfGroup;
+                }
+              }
+            }
+            else {
+              // Add to vertex
+              enfVertex.push_back(atof(enfValue.c_str()));
+            }
+            */
             if (enfValue[len4-1] != '$') {
               // Add to vertex
               enfVertex.push_back(atof(enfValue.c_str()));
@@ -932,14 +1162,31 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
             break;
         }
         if (enfValue[len4-1] == '$') {
-          // Remove '$' and add to vertex
+          MESSAGE("enfValue is $");
+          enfValue[len4-1] = '\0'; //cut off "$"
+          /* TODO GROUPS
+          if (!hasGroup) {
+            MESSAGE("no group: remove $");
+            // Remove '$' and add to vertex
+//             enfValue[len4-1] = '\0'; //cut off "$#"
+            enfVertex.push_back(atof(enfValue.c_str()));
+          }
+          */
           enfValue[len4-1] = '\0'; //cut off "$#"
           enfVertex.push_back(atof(enfValue.c_str()));
+          MESSAGE("Add vertex to list");
           // Add vertex to list of vertex
           evl.insert(enfVertex);
         }
       }
       if (enfValue[len4-1] == '#') {
+        /* TODO GROUPS
+        if (!hasGroup) {
+          // Remove '$#' and add to vertex
+          enfValue[len4-2] = '\0'; //cut off "$#"
+          enfVertex.push_back(atof(enfValue.c_str()));
+        }
+        */
         // Remove '$#' and add to vertex
         enfValue[len4-2] = '\0'; //cut off "$#"
         enfVertex.push_back(atof(enfValue.c_str()));

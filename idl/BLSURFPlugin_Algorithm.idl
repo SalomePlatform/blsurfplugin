@@ -36,13 +36,36 @@
 module BLSURFPlugin
 {
   typedef sequence<string> string_array;
-  typedef sequence<double,3> TEnforcedVertex;
-  typedef sequence<TEnforcedVertex> TEnforcedVertexList;
-  struct TEnforcedVertexMapElement {
-    string entry;
-    TEnforcedVertexList vertexList;
+
+  // Entry
+  typedef string TEnfEntry;
+  // Enforced vertex = 3 coordinates
+  typedef sequence<double,3> TEnfVertex;
+  // List of enforced vertices
+  typedef sequence<TEnfVertex> TEnfVertexList;
+  // Map Entry / List of enforced vertices
+  struct TEntryEnfVertexListMapElement {
+    TEnfEntry entry;
+    TEnfVertexList vertexList;
   };
-  typedef sequence<TEnforcedVertexMapElement> TEnforcedVertexMap;
+  typedef sequence<TEntryEnfVertexListMapElement> TEntryEnfVertexListMap;
+  /* TODO GROUPS
+  // Group name
+  typedef string TEnfGroupName;
+  // Map Group Name / List of enforced vertices
+  struct TGroupNameEnfVertexListMapElement {
+    TEnfGroupName groupName;
+    TEnfVertexList vertexList;
+  };
+  typedef sequence<TGroupNameEnfVertexListMapElement> TGroupNameEnfVertexListMap;
+  // Map Enforced vertex / Group Name
+  struct TEnfVertexGroupNameMapElement {
+    TEnfVertex vertex;
+    TEnfGroupName groupName;
+  };
+  typedef sequence<TEnfVertexGroupNameMapElement> TEnfVertexGroupNameMap;
+  */
+
   
   /*!
    * BLSURFPlugin_BLSURF: interface of BLSURF algorithm
@@ -216,33 +239,49 @@ module BLSURFPlugin
     // ENFORCED VERTEXES //
     ///////////////////////
     
-    TEnforcedVertexMap GetAllEnforcedVertices();
-    void               ClearAllEnforcedVertices();
+    TEntryEnfVertexListMap GetAllEnforcedVertices();
+    void                   ClearAllEnforcedVertices();
     
-    /*!
-     * Set/get/unset an enforced vertex on geom object
-     */
-    void         SetEnforcedVertex(in GEOM::GEOM_Object GeomObj, in double x, in double y, in double z) raises (SALOME::SALOME_Exception);
-//     void         SetEnforcedVertexList(in GEOM::GEOM_Object GeomObj, in TEnforcedVertexList vertexList) raises (SALOME::SALOME_Exception);
+   /*!
+    * Set/get/unset an enforced vertex on geom object
+    */
+    void SetEnforcedVertex(in GEOM::GEOM_Object GeomObj, in double x, in double y, in double z) raises (SALOME::SALOME_Exception);
+    /* TODO GROUPS
+    void SetEnforcedVertexWithGroup(in GEOM::GEOM_Object GeomObj, in double x, in double y, in double z, in TEnfGroupName groupName) raises (SALOME::SALOME_Exception);
+    */
+//     void SetEnforcedVertexList(in GEOM::GEOM_Object GeomObj, in TEnfVertexList vertexList) raises (SALOME::SALOME_Exception);
     
-    TEnforcedVertexList GetEnforcedVertices(in GEOM::GEOM_Object GeomObj) raises (SALOME::SALOME_Exception);
+    TEnfVertexList GetEnforcedVertices(in GEOM::GEOM_Object GeomObj) raises (SALOME::SALOME_Exception);
     
-    void         UnsetEnforcedVertex(in GEOM::GEOM_Object GeomObj, in double x, in double y, in double z) raises (SALOME::SALOME_Exception);
-//     void         UnsetEnforcedVertexList(in GEOM::GEOM_Object GeomObj, in TEnforcedVertexList vertexList) raises (SALOME::SALOME_Exception);
-    void         UnsetEnforcedVertices(in GEOM::GEOM_Object GeomObj) raises (SALOME::SALOME_Exception);
+    void UnsetEnforcedVertex(in GEOM::GEOM_Object GeomObj, in double x, in double y, in double z) raises (SALOME::SALOME_Exception);
+//     void UnsetEnforcedVertexList(in GEOM::GEOM_Object GeomObj, in TEnfVertexList vertexList) raises (SALOME::SALOME_Exception);
+    void UnsetEnforcedVertices(in GEOM::GEOM_Object GeomObj) raises (SALOME::SALOME_Exception);
     
    /*!
     * Set/get/unset an enforced vertex on geom object given by entry
     */
-    void         SetEnforcedVertexEntry(in string entry, in double x, in double y, in double z) raises (SALOME::SALOME_Exception);
-//     void         SetEnforcedVertexListEntry(in string entry, in TEnforcedVertexList vertexList) raises (SALOME::SALOME_Exception);
+    void SetEnforcedVertexEntry(in TEnfEntry entry, in double x, in double y, in double z) raises (SALOME::SALOME_Exception);
+    /* TODO GROUPS
+    void SetEnforcedVertexEntryWithGroup(in TEnfEntry entry, in double x, in double y, in double z, in TEnfGroupName groupName)
+        raises (SALOME::SALOME_Exception);
+    */
+//     void SetEnforcedVertexListEntry(in TEnfEntry entry, in TEnfVertexList vertexList) raises (SALOME::SALOME_Exception);
 //     
-    TEnforcedVertexList GetEnforcedVerticesEntry(in string entry) raises (SALOME::SALOME_Exception);
+    TEnfVertexList GetEnforcedVerticesEntry(in TEnfEntry entry) raises (SALOME::SALOME_Exception);
 //     
-    void         UnsetEnforcedVertexEntry(in string entry, in double x, in double y, in double z) raises (SALOME::SALOME_Exception);
-//     void         UnsetEnforcedVertexListEntry(in string entry, in TEnforcedVertexList vertexList) raises (SALOME::SALOME_Exception);
-    void         UnsetEnforcedVerticesEntry(in string entry) raises (SALOME::SALOME_Exception);
-    
+    void UnsetEnforcedVertexEntry(in TEnfEntry entry, in double x, in double y, in double z) raises (SALOME::SALOME_Exception);
+//     void UnsetEnforcedVertexListEntry(in TEnfEntry entry, in TEnfVertexList vertexList) raises (SALOME::SALOME_Exception);
+    void UnsetEnforcedVerticesEntry(in TEnfEntry entry) raises (SALOME::SALOME_Exception);
+
+   /*!
+     * Set/get an enforced vertex on geom object and add it to a group
+    */
+    /* TODO GROUPS
+    void SetEnforcedVertexGroupName(in double x, in double y, in double z, in TEnfGroupName groupName)
+        raises (SALOME::SALOME_Exception);
+    string GetEnforcedVertexGroupName(in double x, in double y, in double z)
+        raises (SALOME::SALOME_Exception);
+    */
     ///////////////////////
 
   };

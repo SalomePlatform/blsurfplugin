@@ -192,6 +192,18 @@
         <translation>Z</translation>
     </message>
     <message>
+        <source>BLSURF_ENF_VER_GROUP_COLUMN</source>
+        <translation>Group</translation>
+    </message>
+    <message>
+        <source>BLSURF_ENF_SELECT_FACE</source>
+        <translation>Select a face</translation>
+    </message>
+    <message>
+        <source>BLSURF_ENF_SELECT_VERTEX</source>
+        <translation>Select a vertex</translation>
+    </message>
+    <message>
         <source>BLSURF_ENF_VER_X_LABEL</source>
         <translation>X:</translation>
     </message>
@@ -204,12 +216,20 @@
         <translation>Z:</translation>
     </message>
     <message>
+        <source>BLSURF_ENF_VER_GROUP_LABEL</source>
+        <translation>Group:</translation>
+    </message>
+    <message>
         <source>BLSURF_ENF_VER_VERTEX</source>
         <translation>Add enforced vertex</translation>
     </message>
     <message>
         <source>BLSURF_ENF_VER_REMOVE</source>
         <translation>Remove vertex</translation>
+    </message>
+    <message>
+        <source>BLSURF_ENF_VER_GROUPS</source>
+        <translation>Unique group</translation>
     </message>
 </context>
 </TS>

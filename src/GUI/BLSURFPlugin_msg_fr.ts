@@ -9,7 +9,7 @@
     </message>
     <message>
         <source>BLSURF_ALLOW_QUADRANGLES</source>
-        <translation>Permettre les Quadrangles (Teste)</translation>
+        <translation>Permettre les Quadrangles (Test)</translation>
     </message>
     <message>
         <source>BLSURF_ANGLE_MESH_C</source>
@@ -89,7 +89,7 @@
     </message>
     <message>
         <source>BLSURF_TOPOLOGY_CAD</source>
-        <translation>A partir de CAD</translation>
+        <translation>A partir de la CAO</translation>
     </message>
     <message>
         <source>BLSURF_TOPOLOGY_PROCESS</source>
@@ -133,7 +133,7 @@
     </message>
     <message>
         <source>SMP_SIZEMAP_COLUMN</source>
-        <translation>Carte des tailles</translation>
+        <translation>Carte de taille</translation>
     </message>
     <message>
         <source>BLSURF_SM_SURFACE</source>
@@ -157,7 +157,7 @@
     </message>
     <message>
         <source>BLSURF_SM_SURF_VALUE</source>
-        <translation>Valeur sur la Surface(s)</translation>
+        <translation>Taille sur la Surface</translation>
     </message>
     <message>
         <source>BLSURF_SM_EDGE_VALUE</source>
@@ -165,11 +165,11 @@
     </message>
     <message>
         <source>BLSURF_SM_POINT_VALUE</source>
-        <translation>Taille sur le Point(s)</translation>
+        <translation>Taille sur le Point</translation>
     </message>
     <message>
         <source>BLSURF_ENF_VER</source>
-        <translation>Points Enforcés</translation>
+        <translation>Points de Passage</translation>
     </message>
     <message>
         <source>BLSURF_ENF_VER_ENTRY_COLUMN</source>
@@ -192,6 +192,18 @@
         <translation>Z</translation>
     </message>
     <message>
+        <source>BLSURF_ENF_VER_GROUP_COLUMN</source>
+        <translation>Groupe</translation>
+    </message>
+    <message>
+        <source>BLSURF_ENF_SELECT_FACE</source>
+        <translation>Sélectionner une face</translation>
+    </message>
+    <message>
+        <source>BLSURF_ENF_SELECT_VERTEX</source>
+        <translation>Sélectionner un point</translation>
+    </message>
+    <message>
         <source>BLSURF_ENF_VER_X_LABEL</source>
         <translation>X:</translation>
     </message>
@@ -204,12 +216,20 @@
         <translation>Z:</translation>
     </message>
     <message>
+        <source>BLSURF_ENF_VER_GROUP_LABEL</source>
+        <translation>Groupe:</translation>
+    </message>
+    <message>
         <source>BLSURF_ENF_VER_VERTEX</source>
-        <translation>Ajouter un point enforcé</translation>
+        <translation>Ajouter un point de passage</translation>
     </message>
     <message>
         <source>BLSURF_ENF_VER_REMOVE</source>
         <translation>Supprimer un point</translation>
+    </message>
+    <message>
+        <source>BLSURF_ENF_VER_GROUPS</source>
+        <translation>Groupe unique</translation>
     </message>
 </context>
 </TS>

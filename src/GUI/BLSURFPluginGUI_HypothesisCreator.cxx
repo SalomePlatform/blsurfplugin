@@ -25,16 +25,17 @@
 // ---
 //
 #include "BLSURFPluginGUI_HypothesisCreator.h"
+// #include <DlgBlSurfHyp_Enforced.h>
 
 #include <SMESHGUI_Utils.h>
 #include <SMESHGUI_HypothesesUtils.h>
 #include <SMESHGUI_Dialog.h>
+#include "SMESHGUI_SpinBox.h"
 
 #include <SUIT_Session.h>
 #include <SUIT_MessageBox.h>
 #include <SUIT_ResourceMgr.h>
 #include <SalomeApp_Tools.h>
-#include <SalomeApp_DoubleSpinBox.h>
 
 #include <QComboBox>
 #include <QLabel>
@@ -69,9 +70,9 @@
 #include <TopoDS_Shape.hxx>
 #include <SMESH_Gen_i.hxx>
 #include <boost/shared_ptr.hpp>
+#include <boost/algorithm/string.hpp>
 #include <structmember.h>
 
-// #include <GeomSelectionTools.h>
 #define WITH_SIZE_BOUNDARIES
 
 enum Topology {
@@ -105,7 +106,15 @@ enum {
   SMP_ENTRY_COLUMN = 0,
   SMP_NAME_COLUMN,
   SMP_SIZEMAP_COLUMN,
-  SMP_NB_COLUMNS
+  SMP_NB_COLUMNS,
+// Enforced vertices array columns
+  ENF_VER_NAME_COLUMN = 0,
+  ENF_VER_ENTRY_COLUMN,
+  ENF_VER_X_COLUMN,
+  ENF_VER_Y_COLUMN,
+  ENF_VER_Z_COLUMN,
+//   ENF_VER_GROUP_COLUMN,
+  ENF_VER_NB_COLUMNS
 };
 
 enum {
@@ -117,27 +126,22 @@ enum {
   SMP_SURFACE_BTN,
   SMP_SEPARATOR2,
   SMP_REMOVE_BTN,
+  SMP_NB_LINES
 };
 
 // Enforced vertices inputs
 enum {
-  ENF_VER_BTNS = 0,
+//   ENF_VER_FACE = 0,
+//   ENF_VER_VERTEX,
   ENF_VER_X_COORD = 0,
   ENF_VER_Y_COORD,
   ENF_VER_Z_COORD,
+//   ENF_VER_GROUP,
   ENF_VER_VERTEX_BTN,
-  ENF_VER_SEPARATOR,
   ENF_VER_REMOVE_BTN,
-};
-
-// Enforced vertices array columns
-enum {
-  ENF_VER_NAME_COLUMN = 0,
-  ENF_VER_ENTRY_COLUMN,
-  ENF_VER_X_COLUMN,
-  ENF_VER_Y_COLUMN,
-  ENF_VER_Z_COLUMN,
-  ENF_VER_NB_COLUMNS
+//   ENF_VER_SEPARATOR,
+//   ENF_VER_GROUP_CHECK,
+  ENF_VER_NB_LINES
 };
 
 
@@ -263,46 +267,71 @@ QWidget *EnforcedTreeWidgetDelegate::createEditor(QWidget *parent,
                                               const QStyleOptionViewItem & option ,
                                               const QModelIndex & index ) const
 {
-  QLineEdit *editor = new QLineEdit(parent);
+//   QLineEdit *editor = new QLineEdit(parent);
   if (index.column() == ENF_VER_X_COLUMN || \
     index.column() == ENF_VER_Y_COLUMN || \
     index.column() == ENF_VER_Z_COLUMN)
-    editor->setValidator(new QDoubleValidator(parent));
+  {
+    SMESHGUI_SpinBox *editor = new SMESHGUI_SpinBox(parent);
+    editor->RangeStepAndValidator(COORD_MIN, COORD_MAX, 10.0, "length_precision");
+    return editor;
+  }
+//     editor->setValidator(new QDoubleValidator(parent));
+  else
+  {
+    QLineEdit *editor = new QLineEdit(parent);
+    return editor;
+  }
 
-  return editor;
+//   return editor;
 }
 
 void EnforcedTreeWidgetDelegate::setEditorData(QWidget *editor,
                                            const QModelIndex &index) const
 {
   QString value = index.model()->data(index, Qt::EditRole).toString();
-
-  QLineEdit *lineEdit = static_cast<QLineEdit*>(editor);
-  lineEdit->setText(value);
+  if (index.column() == ENF_VER_X_COLUMN || \
+    index.column() == ENF_VER_Y_COLUMN || \
+    index.column() == ENF_VER_Z_COLUMN) {
+    SMESHGUI_SpinBox *lineEdit = static_cast<SMESHGUI_SpinBox*>(editor);
+    lineEdit->setText(value);
+//     lineEdit->editor()->setText(value);
+  }
+  else {
+    QLineEdit *lineEdit = static_cast<QLineEdit*>(editor);
+    lineEdit->setText(value);
+  }
 }
 
 void EnforcedTreeWidgetDelegate::setModelData(QWidget *editor, QAbstractItemModel *model,
                                           const QModelIndex &index) const
 {
-  QLineEdit *lineEdit = static_cast<QLineEdit*>(editor);
+//   QLineEdit *lineEdit = static_cast<QLineEdit*>(editor);
 
   if (index.column() == ENF_VER_X_COLUMN || \
     index.column() == ENF_VER_Y_COLUMN || \
     index.column() == ENF_VER_Z_COLUMN)
   {
-    if (! vertexExists(model, index, lineEdit->text())) {
-      bool ok;
-      double value = lineEdit->text().toDouble(&ok);
-      if (ok)
-        model->setData(index, value, Qt::EditRole);
+    SMESHGUI_SpinBox *lineEdit = static_cast<SMESHGUI_SpinBox*>(editor);
+    if (! vertexExists(model, index, lineEdit->GetString())) {
+      model->setData(index, lineEdit->GetValue(), Qt::EditRole);
     }
   }
   else if (index.column() == ENF_VER_NAME_COLUMN) {
+    QLineEdit *lineEdit = static_cast<QLineEdit*>(editor);
     QString value = lineEdit->text();
-    if (! vertexExists(model, index, value))
+    if (! vertexExists(model, index, value)) {
       model->setData(index, value, Qt::EditRole);
+    }
 //     MESSAGE("Value " << value.toString().toStdString() << " was set at index(" << index.row() << "," << index.column() << ")");
   }
+  /* TODO GROUPS
+  else if (index.column() == ENF_VER_GROUP_COLUMN) {
+    QLineEdit *lineEdit = static_cast<QLineEdit*>(editor);
+    model->setData(index, lineEdit->text(), Qt::EditRole);
+//     MESSAGE("Value " << value.toString().toStdString() << " was set at index(" << index.row() << "," << index.column() << ")");
+  }
+  */
 }
 
 void EnforcedTreeWidgetDelegate::updateEditorGeometry(QWidget *editor,
@@ -448,28 +477,28 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams() const
 {
   MESSAGE("BLSURFPluginGUI_HypothesisCreator::checkParams");
   bool ok = true;
-  if ( !isDouble( myPhySize->text(), false )) {
-    if ( myPhySize->text().isEmpty() )
-      myPhySize->setText(tr("OBLIGATORY_VALUE"));
-    myPhySize->selectAll();
-    ok = false;
-  }
-  if ( !isDouble( myPhyMin->text(), true )) {
-    myPhyMin->selectAll();
-    ok = false;
-  }
-  if ( !isDouble( myPhyMax->text(), true )) {
-    myPhyMax->selectAll();
-    ok = false;
-  }
-  if ( !isDouble( myGeoMin->text(), true )) {
-    myGeoMin->selectAll();
-    ok = false;
-  }
-  if ( !isDouble( myGeoMin->text(), true )) {
-    myGeoMin->selectAll();
-    ok = false;
-  }
+//   if ( !isDouble( myPhySize->text(), false )) {
+//     if ( myPhySize->text().isEmpty() )
+//       myPhySize->setText(tr("OBLIGATORY_VALUE"));
+//     myPhySize->selectAll();
+//     ok = false;
+//   }
+//   if ( !isDouble( myPhyMin->text(), true )) {
+//     myPhyMin->selectAll();
+//     ok = false;
+//   }
+//   if ( !isDouble( myPhyMax->text(), true )) {
+//     myPhyMax->selectAll();
+//     ok = false;
+//   }
+//   if ( !isDouble( myGeoMin->text(), true )) {
+//     myGeoMin->selectAll();
+//     ok = false;
+//   }
+//   if ( !isDouble( myGeoMin->text(), true )) {
+//     myGeoMin->selectAll();
+//     ok = false;
+//   }
   if ( ok )
   {
     myOptionTable->setFocus();
@@ -545,6 +574,7 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams() const
 QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 {
   MESSAGE("BLSURFPluginGUI_HypothesisCreator::buildFrame");
+  
   QFrame* fr = new QFrame( 0 );
   QVBoxLayout* lay = new QVBoxLayout( fr );
   lay->setMargin( 5 );
@@ -562,101 +592,104 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   aStdLayout->setSpacing( 6 );
   aStdLayout->setMargin( 11 );
 
-  int row = 0;
   myName = 0;
-  if( isCreation() ) {
-    aStdLayout->addWidget( new QLabel( tr( "SMESH_NAME" ), myStdGroup ), row, 0, 1, 1 );
+  if( isCreation() )
     myName = new QLineEdit( myStdGroup );
-    aStdLayout->addWidget( myName, row++, 1, 1, 1 );
-  }
 
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_GRADATION" ), myStdGroup ), row, 0, 1, 1 );
-  myGradation = new SalomeApp_DoubleSpinBox( myStdGroup );
-  aStdLayout->addWidget( myGradation, row++, 1, 1, 1 );
-  myGradation->setMinimum( 1.1 );
-  myGradation->setMaximum( 2.5 );
-  myGradation->setSingleStep( 0.1 );
+  myGradation = new SMESHGUI_SpinBox( myStdGroup );
+  myGradation->RangeStepAndValidator(1.1, 2.5, 0.1, "length_precision");
 
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_PHY_MESH" ), myStdGroup ), row, 0, 1, 1 );
   myPhysicalMesh = new QComboBox( myStdGroup );
-  aStdLayout->addWidget( myPhysicalMesh, row++, 1, 1, 1 );
   QStringList physicalTypes;
   physicalTypes << tr( "BLSURF_DEFAULT_USER" ) << tr( "BLSURF_CUSTOM_USER" ) << tr( "BLSURF_SIZE_MAP");
   myPhysicalMesh->addItems( physicalTypes );
 
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_HPHYDEF" ), myStdGroup), row, 0, 1, 1 );
-  myPhySize = new QLineEdit( myStdGroup );
-  aStdLayout->addWidget( myPhySize, row++, 1, 1, 1 );
+  myPhySize = new SMESHGUI_SpinBox( myStdGroup );
+  myPhySize->RangeStepAndValidator(0, COORD_MAX, 10.0, "length_precision");
 
 #ifdef WITH_SIZE_BOUNDARIES
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_HPHYMIN" ), myStdGroup ), row, 0, 1, 1 );
-  myPhyMin = new QLineEdit( myStdGroup );
-  aStdLayout->addWidget( myPhyMin, row++, 1, 1, 1 );
-
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_HPHYMAX" ), myStdGroup ), row, 0, 1, 1 );
-  myPhyMax = new QLineEdit( myStdGroup );
-  aStdLayout->addWidget( myPhyMax, row++, 1, 1, 1 );
+  myPhyMin = new SMESHGUI_SpinBox( myStdGroup );
+  myPhyMin->RangeStepAndValidator(0, COORD_MAX, 10.0, "length_precision");
+  myPhyMin->setText("");
+  myPhyMax = new SMESHGUI_SpinBox( myStdGroup );
+  myPhyMax->RangeStepAndValidator(0, COORD_MAX, 10.0, "length_precision");
+  myPhyMax->setText("");
 #endif
 
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_GEOM_MESH" ), myStdGroup ), row, 0, 1, 1 );
   myGeometricMesh = new QComboBox( myStdGroup );
-  aStdLayout->addWidget( myGeometricMesh, row++, 1, 1, 1 );
   QStringList types;
   types << tr( "BLSURF_DEFAULT_GEOM" ) << tr( "BLSURF_CUSTOM_GEOM" );
   myGeometricMesh->addItems( types );
 
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_ANGLE_MESH_S" ), myStdGroup ), row, 0, 1, 1 );
-  myAngleMeshS = new SalomeApp_DoubleSpinBox( myStdGroup );
-  aStdLayout->addWidget( myAngleMeshS, row++, 1, 1, 1 );
-  myAngleMeshS->setMinimum( 0 );
-  myAngleMeshS->setMaximum( 16 );
-  myAngleMeshS->setSingleStep( 0.5 );
+  myAngleMeshS = new SMESHGUI_SpinBox( myStdGroup );
+  myAngleMeshS->RangeStepAndValidator(0, 16, 0.5, "angular_precision");
 
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_ANGLE_MESH_C" ), myStdGroup ), row, 0, 1, 1 );
-  myAngleMeshC = new SalomeApp_DoubleSpinBox( myStdGroup );
-  aStdLayout->addWidget( myAngleMeshC, row++, 1, 1, 1 );
-  myAngleMeshC->setMinimum( 0 );
-  myAngleMeshC->setMaximum( 16 );
-  myAngleMeshC->setSingleStep( 0.5 );
+  myAngleMeshC = new SMESHGUI_SpinBox( myStdGroup );
+  myAngleMeshC->RangeStepAndValidator(0, 16, 0.5, "angular_precision");
 
 #ifdef WITH_SIZE_BOUNDARIES
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_HGEOMIN" ), myStdGroup ), row, 0, 1, 1 );
-  myGeoMin = new QLineEdit( myStdGroup );
-  aStdLayout->addWidget( myGeoMin, row++, 1, 1, 1 );
-
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_HGEOMAX" ), myStdGroup ), row, 0, 1, 1 );
-  myGeoMax = new QLineEdit( myStdGroup );
-  aStdLayout->addWidget( myGeoMax, row++, 1, 1, 1 );
+  myGeoMin = new SMESHGUI_SpinBox( myStdGroup );
+  myGeoMin->RangeStepAndValidator(0, COORD_MAX, 10.0, "length_precision");
+  myGeoMin->setText("");
+  myGeoMax = new SMESHGUI_SpinBox( myStdGroup );
+  myGeoMax->RangeStepAndValidator(0, COORD_MAX, 10.0, "length_precision");
+  myGeoMax->setText("");
 #endif
-
   myAllowQuadrangles = new QCheckBox( tr( "BLSURF_ALLOW_QUADRANGLES" ), myStdGroup );
-  aStdLayout->addWidget( myAllowQuadrangles, row++, 0, 1, 2 );
-
   myDecimesh = new QCheckBox( tr( "BLSURF_DECIMESH" ), myStdGroup );
-  aStdLayout->addWidget( myDecimesh, row++, 0, 1, 2 );
+  
+  // ADD WIDGETS (STANDARD TAB)
+  int row = 0;
+  if( isCreation() ) {
+    aStdLayout->addWidget( new QLabel( tr( "SMESH_NAME" ), myStdGroup ),        row, 0, 1, 1 );
+    aStdLayout->addWidget( myName,                                              row++, 1, 1, 1 );
+  }
+  aStdLayout->addWidget( new QLabel( tr( "BLSURF_GRADATION" ), myStdGroup ),    row, 0, 1, 1 );
+  aStdLayout->addWidget( myGradation,                                           row++, 1, 1, 1 );
+  aStdLayout->addWidget( new QLabel( tr( "BLSURF_PHY_MESH" ), myStdGroup ),     row, 0, 1, 1 );
+  aStdLayout->addWidget( myPhysicalMesh,                                        row++, 1, 1, 1 );
+  aStdLayout->addWidget( new QLabel( tr( "BLSURF_HPHYDEF" ), myStdGroup),       row, 0, 1, 1 );
+  aStdLayout->addWidget( myPhySize,                                             row++, 1, 1, 1 );
+#ifdef WITH_SIZE_BOUNDARIES
+  aStdLayout->addWidget( new QLabel( tr( "BLSURF_HPHYMIN" ), myStdGroup ),      row, 0, 1, 1 );
+  aStdLayout->addWidget( myPhyMin,                                              row++, 1, 1, 1 );
+  aStdLayout->addWidget( new QLabel( tr( "BLSURF_HPHYMAX" ), myStdGroup ),      row, 0, 1, 1 );
+  aStdLayout->addWidget( myPhyMax,                                              row++, 1, 1, 1 );
+#endif
+  aStdLayout->addWidget( new QLabel( tr( "BLSURF_GEOM_MESH" ), myStdGroup ),    row, 0, 1, 1 );
+  aStdLayout->addWidget( myGeometricMesh,                                       row++, 1, 1, 1 );
+  aStdLayout->addWidget( new QLabel( tr( "BLSURF_ANGLE_MESH_S" ), myStdGroup ), row, 0, 1, 1 );
+  aStdLayout->addWidget( myAngleMeshS,                                          row++, 1, 1, 1 );
+  aStdLayout->addWidget( new QLabel( tr( "BLSURF_ANGLE_MESH_C" ), myStdGroup ), row, 0, 1, 1 );
+  aStdLayout->addWidget( myAngleMeshC,                                          row++, 1, 1, 1 );
+#ifdef WITH_SIZE_BOUNDARIES
+  aStdLayout->addWidget( new QLabel( tr( "BLSURF_HGEOMIN" ), myStdGroup ),      row, 0, 1, 1 );
+  aStdLayout->addWidget( myGeoMin,                                              row++, 1, 1, 1 );
+  aStdLayout->addWidget( new QLabel( tr( "BLSURF_HGEOMAX" ), myStdGroup ),      row, 0, 1, 1 );
+  aStdLayout->addWidget( myGeoMax,                                              row++, 1, 1, 1 );
+#endif
+  aStdLayout->addWidget( myAllowQuadrangles,                                    row++, 0, 1, 2 );
+  aStdLayout->addWidget( myDecimesh,                                            row++, 0, 1, 2 );
 
   // advanced parameters
   myAdvGroup = new QWidget();
   QGridLayout* anAdvLayout = new QGridLayout( myAdvGroup );
   anAdvLayout->setSpacing( 6 );
   anAdvLayout->setMargin( 11 );
+  anAdvLayout->setRowStretch( 4, 5 );
+  anAdvLayout->setColumnStretch( 1, 5 );
 
-  anAdvLayout->addWidget( new QLabel( tr( "BLSURF_TOPOLOGY" ), myAdvGroup ), 0, 0, 1, 1 );
   myTopology = new QComboBox( myAdvGroup );
-  anAdvLayout->addWidget( myTopology, 0, 1, 1, 1 );
   QStringList topologyTypes;
   topologyTypes << tr( "BLSURF_TOPOLOGY_CAD" ) << tr( "BLSURF_TOPOLOGY_PROCESS" ) << tr( "BLSURF_TOPOLOGY_PROCESS2" );
   myTopology->addItems( topologyTypes );
 
-  anAdvLayout->addWidget( new QLabel( tr( "BLSURF_VERBOSITY" ), myAdvGroup ), 1, 0, 1, 1 );
   myVerbosity = new QSpinBox( myAdvGroup );
-  anAdvLayout->addWidget( myVerbosity, 1, 1, 1, 1 );
   myVerbosity->setMinimum( 0 );
   myVerbosity->setMaximum( 100 );
   myVerbosity->setSingleStep( 5 );
 
   myOptionTable = new QTableWidget( 0, NB_COLUMNS, myAdvGroup );
-  anAdvLayout->addWidget( myOptionTable, 2, 0, 3, 2 );
   QStringList headers;
   headers << tr( "OPTION_ID_COLUMN" ) << tr( "OPTION_NAME_COLUMN" ) << tr( "OPTION_VALUE_COLUMN" );
   myOptionTable->setHorizontalHeaderLabels( headers );
@@ -667,14 +700,19 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   //myOptionTable->setSelectionBehavior( QAbstractItemView::SelectRows );
 
   QPushButton* addBtn = new QPushButton( tr( "ADD_OPTION"),  myAdvGroup );
-  anAdvLayout->addWidget( addBtn, 2, 2, 1, 1 );
   addBtn->setMenu( new QMenu() );
-
   QPushButton* rmBtn = new QPushButton( tr( "REMOVE_OPTION"), myAdvGroup );
-  anAdvLayout->addWidget( rmBtn, 3, 2, 1, 1 );
+    
+  
+  // ADD WIDGETS (ADVANCED TAB)
+  anAdvLayout->addWidget( new QLabel( tr( "BLSURF_TOPOLOGY" ), myAdvGroup ),  0, 0, 1, 1 );
+  anAdvLayout->addWidget( myTopology,                                         0, 1, 1, 1 );
+  anAdvLayout->addWidget( new QLabel( tr( "BLSURF_VERBOSITY" ), myAdvGroup ), 1, 0, 1, 1 );
+  anAdvLayout->addWidget( myVerbosity,                                        1, 1, 1, 1 );
+  anAdvLayout->addWidget( myOptionTable,                                      2, 0, 3, 2 );
+  anAdvLayout->addWidget( addBtn,                                             2, 2, 1, 1 );
+  anAdvLayout->addWidget( rmBtn,                                              3, 2, 1, 1 );
 
-  anAdvLayout->setRowStretch( 4, 5 );
-  anAdvLayout->setColumnStretch( 1, 5 );
 
   // Size Maps parameters
 
@@ -682,54 +720,58 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   QGridLayout* anSmpLayout = new QGridLayout(mySmpGroup);
 
   mySizeMapTable = new QTableWidget( 0, SMP_NB_COLUMNS, mySmpGroup );
-  anSmpLayout->addWidget(mySizeMapTable, 1, 0, 8, 1);
   QStringList sizeMapHeaders;
   sizeMapHeaders << tr( "SMP_ENTRY_COLUMN" )<< tr( "SMP_NAME_COLUMN" ) << tr( "SMP_SIZEMAP_COLUMN" );
   mySizeMapTable->setHorizontalHeaderLabels(sizeMapHeaders);
   mySizeMapTable->horizontalHeader()->hideSection( SMP_ENTRY_COLUMN );
   mySizeMapTable->horizontalHeader()->setResizeMode(QHeaderView::Interactive);
-//   mySizeMapTable->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
   mySizeMapTable->resizeColumnToContents(SMP_NAME_COLUMN);
   mySizeMapTable->resizeColumnToContents(SMP_SIZEMAP_COLUMN);
   mySizeMapTable->setAlternatingRowColors(true);
   mySizeMapTable->verticalHeader()->hide();
-
 /*
   addAttractorButton = new QPushButton(tr("BLSURF_SM_ATTRACTOR"),mySmpGroup);
-  anSmpLayout->addWidget(addAttractorButton, SMP_ATTRACTOR_BTN, 1, 1, 1);
-
   QFrame *line = new QFrame(mySmpGroup);
   line->setFrameShape(QFrame::HLine);
   line->setFrameShadow(QFrame::Sunken);
-  anSmpLayout->addWidget(line, SMP_SEPARATOR1, 1, 1, 1);
 */
   addSurfaceButton = new QPushButton(tr("BLSURF_SM_SURFACE"),mySmpGroup);
-  anSmpLayout->addWidget(addSurfaceButton, SMP_SURFACE_BTN, 1, 1, 1);
-
   addEdgeButton = new QPushButton(tr("BLSURF_SM_EDGE"),mySmpGroup);
-  anSmpLayout->addWidget(addEdgeButton, SMP_EDGE_BTN, 1, 1, 1);
-
   addPointButton = new QPushButton(tr("BLSURF_SM_POINT"),mySmpGroup);
-  anSmpLayout->addWidget(addPointButton, SMP_POINT_BTN, 1, 1, 1);
-
   QFrame *line2 = new QFrame(mySmpGroup);
   line2->setFrameShape(QFrame::HLine);
   line2->setFrameShadow(QFrame::Sunken);
-  anSmpLayout->addWidget(line2, SMP_SEPARATOR2, 1, 1, 1);
-
   removeButton = new QPushButton(tr("BLSURF_SM_REMOVE"),mySmpGroup);
-  anSmpLayout->addWidget(removeButton, SMP_REMOVE_BTN, 1, 1, 1);
+    
+    
+  // ADD WIDGETS (SIZEMAP TAB)
+  anSmpLayout->addWidget(mySizeMapTable,     SMP_POINT_BTN, 0, SMP_NB_LINES+1, 1);
+//   anSmpLayout->addWidget(addAttractorButton, SMP_ATTRACTOR_BTN, 1, 1, 1);
+//   anSmpLayout->addWidget(line,               SMP_SEPARATOR1, 1, 1, 1);
+  anSmpLayout->addWidget(addPointButton,     SMP_POINT_BTN, 1, 1, 1);
+  anSmpLayout->addWidget(addEdgeButton,      SMP_EDGE_BTN, 1, 1, 1);
+  anSmpLayout->addWidget(addSurfaceButton,   SMP_SURFACE_BTN, 1, 1, 1);
+  anSmpLayout->addWidget(line2,              SMP_SEPARATOR2, 1, 1, 1);
+  anSmpLayout->addWidget(removeButton,       SMP_REMOVE_BTN, 1, 1, 1);
+
 
   // Enforced vertices parameters
-
   myEnfGroup = new QWidget();
   QGridLayout* anEnfLayout = new QGridLayout(myEnfGroup);
-
+// 
+//   myEnforcedVertexWidget = new DlgBlSurfHyp_Enforced(myEnfGroup);
+//   anEnfLayout->addWidget(myEnforcedVertexWidget);
+//   MESSAGE("Creating DlgBlSurfHyp_Enforced widget instance");
+//   myEnforcedVertexWidget = new DlgBlSurfHyp_Enforced();
+    
   myEnforcedTreeWidget = new QTreeWidget(myEnfGroup);
   myEnforcedTreeWidget->setColumnCount( ENF_VER_NB_COLUMNS );
   myEnforcedTreeWidget->setSortingEnabled(true);
   QStringList enforcedHeaders;
-  enforcedHeaders << tr("BLSURF_ENF_VER_NAME_COLUMN") << tr("BLSURF_ENF_VER_ENTRY_COLUMN") << tr( "BLSURF_ENF_VER_X_COLUMN" )<< tr( "BLSURF_ENF_VER_Y_COLUMN" ) << tr( "BLSURF_ENF_VER_Z_COLUMN" ) ;
+  enforcedHeaders << tr("BLSURF_ENF_VER_NAME_COLUMN") << tr("BLSURF_ENF_VER_ENTRY_COLUMN") << tr( "BLSURF_ENF_VER_X_COLUMN" )<< tr( "BLSURF_ENF_VER_Y_COLUMN" ) << tr( "BLSURF_ENF_VER_Z_COLUMN" );
+  /* TODO GROUPS
+  enforcedHeaders << tr("BLSURF_ENF_VER_NAME_COLUMN") << tr("BLSURF_ENF_VER_ENTRY_COLUMN") << tr( "BLSURF_ENF_VER_X_COLUMN" )<< tr( "BLSURF_ENF_VER_Y_COLUMN" ) << tr( "BLSURF_ENF_VER_Z_COLUMN" ) << tr( "BLSURF_ENF_VER_GROUP_COLUMN" );
+  */
   myEnforcedTreeWidget->setHeaderLabels(enforcedHeaders);
   myEnforcedTreeWidget->setAlternatingRowColors(true);
   myEnforcedTreeWidget->setUniformRowHeights(true);
@@ -742,42 +784,90 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   }
   myEnforcedTreeWidget->hideColumn(ENF_VER_ENTRY_COLUMN);
   myEnforcedTreeWidget->setItemDelegate(new EnforcedTreeWidgetDelegate());
-  anEnfLayout->addWidget(myEnforcedTreeWidget, 0, 0, 8, 1);
 
+  /* TODO FACE AND VERTEX SELECTION
+  selectFaceButton = new QPushButton(myEnfGroup);
+  QPixmap imageSel1(SUIT_Session::session()->resourceMgr()->loadPixmap( "BLSURFPlugin", tr( "BLSURF_ICON_SELECT")));
+  selectFaceButton->setIcon(imageSel1);
+  
+  mySelectedFace = new QLineEdit(myEnfGroup);
+  mySelectedFace->setReadOnly(true);
+  mySelectedFace->setText(tr( "BLSURF_ENF_SELECT_FACE"));
+  mySelectedFace->setStyleSheet("QLineEdit { color: grey }");
+    
+  selectVertexButton = new QPushButton(myEnfGroup);
+  QPixmap imageSel2(SUIT_Session::session()->resourceMgr()->loadPixmap( "BLSURFPlugin", tr( "BLSURF_ICON_SELECT")));
+  selectVertexButton->setIcon(imageSel2);
+    
+  mySelectedEnforcedVertex = new QLineEdit(myEnfGroup);
+  mySelectedEnforcedVertex->setReadOnly(true);
+  mySelectedEnforcedVertex->setText(tr( "BLSURF_ENF_SELECT_VERTEX"));
+  mySelectedEnforcedVertex->setStyleSheet("QLineEdit { color: grey }");
+  */
   QLabel* myXCoordLabel = new QLabel( tr( "BLSURF_ENF_VER_X_LABEL" ), myEnfGroup );
-  anEnfLayout->addWidget(myXCoordLabel, ENF_VER_X_COORD, 1, 1, 1);
-  myXCoord = new QLineEdit(myEnfGroup);
-  myXCoord->setValidator(new QDoubleValidator(myEnfGroup));
-  anEnfLayout->addWidget(myXCoord, ENF_VER_X_COORD, 2, 1, 1);
+  myXCoord = new SMESHGUI_SpinBox(myEnfGroup);
+  myXCoord->RangeStepAndValidator(COORD_MIN, COORD_MAX, 10.0, "length_precision");
   
   QLabel* myYCoordLabel = new QLabel( tr( "BLSURF_ENF_VER_Y_LABEL" ), myEnfGroup );
-  anEnfLayout->addWidget(myYCoordLabel, ENF_VER_Y_COORD, 1, 1, 1);
-  myYCoord = new QLineEdit(myEnfGroup);
-  myYCoord->setValidator(new QDoubleValidator(myEnfGroup));
-  anEnfLayout->addWidget(myYCoord, ENF_VER_Y_COORD, 2, 1, 1);
+  myYCoord = new SMESHGUI_SpinBox(myEnfGroup);
+  myYCoord->RangeStepAndValidator(COORD_MIN, COORD_MAX, 10.0, "length_precision");
   
   QLabel* myZCoordLabel = new QLabel( tr( "BLSURF_ENF_VER_Z_LABEL" ), myEnfGroup );
-  anEnfLayout->addWidget(myZCoordLabel, ENF_VER_Z_COORD, 1, 1, 1);
-  myZCoord = new QLineEdit(myEnfGroup);
-  myZCoord->setValidator(new QDoubleValidator(myEnfGroup));
-  anEnfLayout->addWidget(myZCoord, ENF_VER_Z_COORD, 2, 1, 1);
+  myZCoord = new SMESHGUI_SpinBox(myEnfGroup);
+  myZCoord->RangeStepAndValidator(COORD_MIN, COORD_MAX, 10.0, "length_precision");
 
+  /* TODO GROUPS
+  QLabel* myGroupNameLabel = new QLabel( tr( "BLSURF_ENF_VER_GROUP_LABEL" ), myEnfGroup );
+  myGroupName = new QLineEdit(myEnfGroup);
+  */
+  
   addVertexButton = new QPushButton(tr("BLSURF_ENF_VER_VERTEX"),myEnfGroup);
-  anEnfLayout->addWidget(addVertexButton, ENF_VER_VERTEX_BTN, 1, 1, 2);
-
-  QFrame *line = new QFrame(myEnfGroup);
-  line->setFrameShape(QFrame::HLine);
-  line->setFrameShadow(QFrame::Sunken);
-  anEnfLayout->addWidget(line, ENF_VER_SEPARATOR, 1, 1, 2);
-
+//   QFrame *line = new QFrame(myEnfGroup);
+//   line->setFrameShape(QFrame::HLine);
+//   line->setFrameShadow(QFrame::Sunken);
   removeVertexButton = new QPushButton(tr("BLSURF_ENF_VER_REMOVE"),myEnfGroup);
-  anEnfLayout->addWidget(removeVertexButton, ENF_VER_REMOVE_BTN, 1, 1, 2);
 
+  /* TODO GROUPS
+  // CheckBox for groups generation
+  makeGroupsCheck = new QGroupBox(tr("BLSURF_ENF_VER_GROUPS"), myEnfGroup);
+  makeGroupsCheck->setCheckable(true);
+  makeGroupsCheck->setChecked(false);
+  QGridLayout* aGroupLayout = new QGridLayout(makeGroupsCheck);
+  myGlobalGroupName = new QLineEdit(makeGroupsCheck);
+  aGroupLayout->addWidget(myGlobalGroupName);
+  */
+    
+    
+  anEnfLayout->addWidget(myEnforcedTreeWidget,     0, 0, ENF_VER_NB_LINES+1, 1);
+  /* TODO FACE AND VERTEX SELECTION
+  anEnfLayout->addWidget(selectFaceButton,         ENF_VER_FACE, 1, 1, 1);
+  anEnfLayout->addWidget(mySelectedFace,           ENF_VER_FACE, 2, 1, 1);
+  anEnfLayout->addWidget(selectVertexButton,       ENF_VER_VERTEX, 1, 1, 1);
+  anEnfLayout->addWidget(mySelectedEnforcedVertex, ENF_VER_VERTEX, 2, 1, 1);
+  */
+  anEnfLayout->addWidget(myXCoordLabel,            ENF_VER_X_COORD, 1, 1, 1);
+  anEnfLayout->addWidget(myXCoord,                 ENF_VER_X_COORD, 2, 1, 1);
+  anEnfLayout->addWidget(myYCoordLabel,            ENF_VER_Y_COORD, 1, 1, 1);
+  anEnfLayout->addWidget(myYCoord,                 ENF_VER_Y_COORD, 2, 1, 1);
+  anEnfLayout->addWidget(myZCoordLabel,            ENF_VER_Z_COORD, 1, 1, 1);
+  anEnfLayout->addWidget(myZCoord,                 ENF_VER_Z_COORD, 2, 1, 1);
+  /* TODO GROUPS
+  anEnfLayout->addWidget(myGroupNameLabel,         ENF_VER_GROUP, 1, 1, 1);
+  anEnfLayout->addWidget(myGroupName,              ENF_VER_GROUP, 2, 1, 1);
+  */
+  anEnfLayout->addWidget(addVertexButton,          ENF_VER_VERTEX_BTN, 1, 1, 2);
+  anEnfLayout->addWidget(removeVertexButton,       ENF_VER_REMOVE_BTN, 1, 1, 2);
+//   anEnfLayout->addWidget(line,                     ENF_VER_SEPARATOR, 1, 1, 2);
+  /* TODO GROUPS
+  anEnfLayout->addWidget(makeGroupsCheck,          ENF_VER_GROUP_CHECK, 1, 1, 2);
+  */
+    
   // ---
   tab->insertTab( STD_TAB, myStdGroup, tr( "SMESH_ARGUMENTS" ) );
   tab->insertTab( ADV_TAB, myAdvGroup, tr( "BLSURF_ADV_ARGS" ) );
   tab->insertTab( SMP_TAB, mySmpGroup, tr( "BLSURF_SIZE_MAP" ) );
   tab->insertTab( ENF_TAB, myEnfGroup, tr( "BLSURF_ENF_VER" ) );
+//   tab->insertTab( ENF_TAB, myEnforcedVertexWidget, tr( "BLSURF_ENF_VER" ) );
 
   tab->setCurrentIndex( STD_TAB );
 
@@ -814,6 +904,9 @@ void BLSURFPluginGUI_HypothesisCreator::update(QTreeWidgetItem* item, int column
     QVariant y = item->data(ENF_VER_Y_COLUMN, Qt::EditRole);
     QVariant z = item->data(ENF_VER_Z_COLUMN, Qt::EditRole);
     QVariant vertexName = item->data(ENF_VER_NAME_COLUMN, Qt::EditRole);
+    /* TODO GROUPS
+    QString groupName = item->data(ENF_VER_GROUP_COLUMN, Qt::EditRole).toString();
+    */
     
     QTreeWidgetItem* parent = item->parent();
     if (parent) {
@@ -825,15 +918,17 @@ void BLSURFPluginGUI_HypothesisCreator::update(QTreeWidgetItem* item, int column
       toolTip += QString(")");
       item->setToolTip(ENF_VER_NAME_COLUMN,toolTip);
     }
-    
-    myXCoord->setText(x.toString());
-    myYCoord->setText(y.toString());
-    myZCoord->setText(z.toString());
+    myXCoord->SetValue(x.toDouble());
+    myYCoord->SetValue(y.toDouble());
+    myZCoord->SetValue(z.toDouble());
+    /* TODO GROUPS
+    myGroupName->setText(groupName);
+    */
   }
 }
 
 /** BLSURFPluginGUI_HypothesisCreator::synchronizeCoords()
-This method synchronizes the QLineEdit widgets content with the coordinates
+This method synchronizes the QLineEdit/SMESHGUI_SpinBox widgets content with the coordinates
 of the enforced vertex clicked in the tree widget.
 */
 void BLSURFPluginGUI_HypothesisCreator::synchronizeCoords() {
@@ -847,9 +942,12 @@ void BLSURFPluginGUI_HypothesisCreator::synchronizeCoords() {
       if (! x.isNull()) {
         QVariant y = item->data(ENF_VER_Y_COLUMN, Qt::EditRole);
         QVariant z = item->data(ENF_VER_Z_COLUMN, Qt::EditRole);
-        myXCoord->setText(x.toString());
-        myYCoord->setText(y.toString());
-        myZCoord->setText(z.toString());
+        myXCoord->SetValue(x.toDouble());
+        myYCoord->SetValue(y.toDouble());
+        myZCoord->SetValue(z.toDouble());
+        /* TODO GROUPS
+        myGroupName->setText(item->data(ENF_VER_GROUP_COLUMN, Qt::EditRole).toString());
+        */
         break;
       }
     }
@@ -859,7 +957,12 @@ void BLSURFPluginGUI_HypothesisCreator::synchronizeCoords() {
 /** BLSURFPluginGUI_HypothesisCreator::addEnforcedVertex(entry, shapeName, x, y, z)
 This method adds an enforced vertex (x,y,z) to shapeName in the tree widget.
 */
-void BLSURFPluginGUI_HypothesisCreator::addEnforcedVertex(std::string entry, std::string shapeName, double x, double y, double z) {
+/* TODO GROUPS
+void BLSURFPluginGUI_HypothesisCreator::addEnforcedVertex(std::string entry, std::string shapeName,
+    double x, double y, double z, std::string groupName) {
+*/
+void BLSURFPluginGUI_HypothesisCreator::addEnforcedVertex(std::string entry, std::string shapeName,
+    double x, double y, double z) {
   // Find entry item
   QList<QTreeWidgetItem* > theItemList = myEnforcedTreeWidget->findItems(QString(entry.c_str()),Qt::MatchExactly,ENF_VER_ENTRY_COLUMN);
   QTreeWidgetItem* theItem;
@@ -881,6 +984,7 @@ void BLSURFPluginGUI_HypothesisCreator::addEnforcedVertex(std::string entry, std
 //   MESSAGE("Number of child rows: " << nbVert);
   if (nbVert >0) {
     double childValueX,childValueY,childValueZ;
+//     QString childGrouName;
     QTreeWidgetItem* child;
     for (int row = 0;row<nbVert;row++) {
       child = theItem->child(row);
@@ -888,6 +992,10 @@ void BLSURFPluginGUI_HypothesisCreator::addEnforcedVertex(std::string entry, std
       childValueY = child->data(ENF_VER_Y_COLUMN,Qt::EditRole).toDouble();
       childValueZ = child->data(ENF_VER_Z_COLUMN,Qt::EditRole).toDouble();
       if ((childValueX == x) && (childValueY == y) && (childValueZ == z)) {
+        /* TODO GROUPS
+        // update group name
+        child->setData(ENF_VER_GROUP_COLUMN, Qt::EditRole, QVariant(groupName.c_str()));
+        */
         okToCreate = false;
         break;
       }
@@ -916,6 +1024,9 @@ void BLSURFPluginGUI_HypothesisCreator::addEnforcedVertex(std::string entry, std
     vertexItem->setData( ENF_VER_X_COLUMN, Qt::EditRole, QVariant(x) );
     vertexItem->setData( ENF_VER_Y_COLUMN, Qt::EditRole, QVariant(y) );
     vertexItem->setData( ENF_VER_Z_COLUMN, Qt::EditRole, QVariant(z) );
+    /* TODO GROUPS
+    vertexItem->setData( ENF_VER_GROUP_COLUMN, Qt::EditRole, QVariant(groupName.c_str()));
+    */
     QString toolTip = QString(shapeName.c_str())+QString(": ")+vertexName;
     toolTip += QString(" (%1, ").arg(x);
     toolTip += QString("%1, ").arg(y);
@@ -925,7 +1036,11 @@ void BLSURFPluginGUI_HypothesisCreator::addEnforcedVertex(std::string entry, std
     myEnforcedTreeWidget->setCurrentItem(vertexItem,ENF_VER_NAME_COLUMN);
   }
   else
-    MESSAGE("In " << shapeName << " vertex with coords " << x << ", " << y << ", " << z<< " already exist: dont create again");
+    /* TODO GROUPS
+    MESSAGE("In " << shapeName << " vertex with coords " << x << ", " << y << ", " << z <<
+        " already exist: dont create again, only group name is updated with " << groupName);
+    */
+    MESSAGE("In " << shapeName << " vertex with coords " << x << ", " << y << ", " << z << " already exist: dont create again");
 }
 
 /** BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices()
@@ -939,11 +1054,22 @@ void BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices() {
   
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
   
-  if ((myXCoord->text().isEmpty()) || (myYCoord->text().isEmpty()) || (myZCoord->text().isEmpty())) return;
-  
-  double x = myXCoord->text().toDouble();
-  double y = myYCoord->text().toDouble();
-  double z = myZCoord->text().toDouble();
+  if ((myXCoord->text().isEmpty()) ||
+      (myYCoord->text().isEmpty()) ||
+      (myZCoord->text().isEmpty())) return;
+
+  double x = myXCoord->GetValue();
+  double y = myYCoord->GetValue();
+  double z = myZCoord->GetValue();
+
+  /* TODO GROUPS
+  std::string groupName = myGroupName->text().toStdString();
+  if (makeGroupsCheck->isChecked())
+    groupName = myGlobalGroupName->text().toStdString();
+
+  if (boost::trim_copy(groupName) == "")
+    groupName = "";
+  */
   
   TopAbs_ShapeEnum shapeType;
   string entry, shapeName;
@@ -960,6 +1086,9 @@ void BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices() {
       shapeType = myGeomToolSelected->entryToShapeType(entry);
 //       MESSAGE("Object Name = " << shapeName << "& Type is " << anObject->getComponentDataType() << " & ShapeType is " << shapeType);
       if (shapeType == TopAbs_FACE) {
+        /* TODO GROUPS
+        addEnforcedVertex(entry, shapeName, x, y, z, groupName);
+        */
         addEnforcedVertex(entry, shapeName, x, y, z);
       }
     }
@@ -1029,17 +1158,36 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
   }
   myTopology->setCurrentIndex( data.myTopology );
   myPhysicalMesh->setCurrentIndex( data.myPhysicalMesh );
-  myPhySize->setText( data.myPhySize );
+  myPhySize->SetValue( data.myPhySize );
 #ifdef WITH_SIZE_BOUNDARIES
-  myPhyMin->setText( data.myPhyMin );
-  myPhyMax->setText( data.myPhyMax );
-  myGeoMin->setText( data.myGeoMin );
-  myGeoMax->setText( data.myGeoMax );
+  MESSAGE("data.myPhyMin: "<<data.myPhyMin)
+  if (data.myPhyMin < 0)
+    myPhyMin->setText("");
+  else
+    myPhyMin->SetValue( data.myPhyMin );
+  MESSAGE("data.myPhyMax: "<<data.myPhyMax)
+  if (data.myPhyMax < 0)
+    myPhyMax->setText("");
+  else
+    myPhyMax->SetValue( data.myPhyMax );
+  MESSAGE("data.myGeoMin: "<<data.myGeoMin)
+  if (data.myGeoMin < 0)
+    myGeoMin->setText("");
+  else
+    myGeoMin->SetValue( data.myGeoMin );
+  MESSAGE("data.myGeoMax: "<<data.myGeoMax)
+  if (data.myGeoMax < 0)
+    myGeoMax->setText("");
+  else
+    myGeoMax->SetValue( data.myGeoMax );
 #endif
   myGeometricMesh->setCurrentIndex( data.myGeometricMesh );
-  myAngleMeshS->setValue( data.myAngleMeshS );
-  myAngleMeshC->setValue( data.myAngleMeshC );
-  myGradation->setValue( data.myGradation );
+//   myAngleMeshS->setValue( data.myAngleMeshS );
+//   myAngleMeshC->setValue( data.myAngleMeshC );
+//   myGradation->setValue( data.myGradation );
+  myAngleMeshS->SetValue( data.myAngleMeshS );
+  myAngleMeshC->SetValue( data.myAngleMeshC );
+  myGradation->SetValue( data.myGradation );
   myAllowQuadrangles->setChecked( data.myAllowQuadrangles );
   myDecimesh->setChecked( data.myDecimesh );
   myVerbosity->setValue( data.myVerbosity );
@@ -1091,9 +1239,9 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
   mySizeMapTable->resizeColumnToContents(SMP_SIZEMAP_COLUMN);
 
   // Enforced vertices
-//   MESSAGE("retrieveParams(): data.enfVertMap.size() = " << data.enfVertMap.size());
-  std::map<std::string, std::set<std::vector<double> > >::const_iterator evmIt = data.enfVertMap.begin();
-  for ( ; evmIt != data.enfVertMap.end() ; ++evmIt) {
+//   MESSAGE("retrieveParams(): data.entryEnfVertexListMap.size() = " << data.entryEnfVertexListMap.size());
+  std::map<std::string, std::set<std::vector<double> > >::const_iterator evmIt = data.entryEnfVertexListMap.begin();
+  for ( ; evmIt != data.entryEnfVertexListMap.end() ; ++evmIt) {
     std::string entry = (*evmIt).first;
     std::string shapeName = myGeomToolSelected->getNameFromEntry(entry);
 
@@ -1113,6 +1261,11 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
       x = (*evsIt)[0];
       y = (*evsIt)[1];
       z = (*evsIt)[2];
+      /* TODO GROUPS
+      std::string groupName = data.enfVertexGroupNameMap[(*evsIt)];
+      MESSAGE("Vertex "<<x<<" "<<y<<" "<<z<<" has group name "<<groupName);
+      that->addEnforcedVertex(entry, shapeName, x, y, z, groupName);
+      */
       that->addEnforcedVertex(entry, shapeName, x, y, z);
     }
   }
@@ -1152,7 +1305,7 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
 
   h_data.myTopology         = (int) h->GetTopology();
   h_data.myPhysicalMesh     = (int) h->GetPhysicalMesh();
-  h_data.myPhySize          = QString::number( h->GetPhySize() );
+  h_data.myPhySize          = h->GetPhySize();
   h_data.myGeometricMesh    = (int) h->GetGeometricMesh();
   h_data.myAngleMeshS       = h->GetAngleMeshS();
   h_data.myAngleMeshC       = h->GetAngleMeshC();
@@ -1166,11 +1319,15 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   double PhyMax = h->GetPhyMax();
   double GeoMin = h->GetGeoMin();
   double GeoMax = h->GetGeoMax();
-  if ( PhyMin > 0 )
-  h_data.myPhyMin = PhyMin > 0 ? QString::number( h->GetPhyMin() ) : QString("");
-  h_data.myPhyMax = PhyMax > 0 ? QString::number( h->GetPhyMax() ) : QString("");
-  h_data.myGeoMin = GeoMin > 0 ? QString::number( h->GetGeoMin() ) : QString("");
-  h_data.myGeoMax = GeoMax > 0 ? QString::number( h->GetGeoMax() ) : QString("");
+//   if ( PhyMin > 0 )
+//   h_data.myPhyMin = PhyMin > 0 ? QString::number( h->GetPhyMin() ) : QString("");
+//   h_data.myPhyMax = PhyMax > 0 ? QString::number( h->GetPhyMax() ) : QString("");
+//   h_data.myGeoMin = GeoMin > 0 ? QString::number( h->GetGeoMin() ) : QString("");
+//   h_data.myGeoMax = GeoMax > 0 ? QString::number( h->GetGeoMax() ) : QString("");
+  h_data.myPhyMin = PhyMin > 0 ? PhyMin : -1.0;
+  h_data.myPhyMax = PhyMax > 0 ? PhyMax : -1.0;
+  h_data.myGeoMin = GeoMin > 0 ? GeoMin : -1.0;
+  h_data.myGeoMax = GeoMax > 0 ? GeoMax : -1.0;
 #endif
 
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
@@ -1238,15 +1395,24 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   }
   
   // Enforced vertices
-  BLSURFPlugin::TEnforcedVertexMap_var enforcedVertexMap = h->GetAllEnforcedVertices();
-//   MESSAGE("enforcedVertexMap->length() = " << enforcedVertexMap->length());
+  h_data.enfVertexList.clear();
+  h_data.entryEnfVertexListMap.clear();
+  /* TODO GROUPS
+  h_data.groupNameEnfVertexListMap.clear();
+//   h_data.enfVertexGroupNameMap.clear();
+  */
   
-  for ( int i = 0;i<enforcedVertexMap->length(); ++i ) {
-    std::string entry =  enforcedVertexMap[i].entry.in();
-//     BLSURFPlugin::TEnforcedVertexList_var vertexList = enforcedVertexMap[i].vertexList;
-    BLSURFPlugin::TEnforcedVertexList vertexList = enforcedVertexMap[i].vertexList;
+  BLSURFPlugin::TEntryEnfVertexListMap_var entryEnfVertexListMap = h->GetAllEnforcedVertices();
+//   MESSAGE("entryEnfVertexListMap->length() = " << entryEnfVertexListMap->length());
+
+  for ( int i = 0;i<entryEnfVertexListMap->length(); ++i ) {
+    std::string entry =  entryEnfVertexListMap[i].entry.in();
+    BLSURFPlugin::TEnfVertexList_var vertexList = h->GetEnforcedVerticesEntry(entry.c_str());
     std::set<std::vector<double> > evs;
-    for (int j=0 ; j<vertexList.length(); ++j) {
+    /* TODO GROUPS
+    std::string groupName = "";
+    */
+    for (int j=0 ; j<vertexList->length(); ++j) {
       double x = vertexList[j][0];
       double y = vertexList[j][1];
       double z = vertexList[j][2];
@@ -1255,12 +1421,23 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
       ev.push_back(y);
       ev.push_back(z);
       evs.insert(ev);
+      h_data.enfVertexList.insert(ev);
+      /* TODO GROUPS
+      groupName.assign(h->GetEnforcedVertexGroupName(x, y, z));
+      MESSAGE("readParamsFromHypo, groupName = "<<groupName)
+      h_data.enfVertexGroupNameMap[ev] = groupName;
+      if (groupName != "") {
+        h_data.groupNameEnfVertexListMap[groupName].insert(ev);
+      }
+      */
 //       MESSAGE("New enf vertex for entry " << entry << ": " << x << ", " << y << ", " << z);
     }
-    h_data.enfVertMap[entry] = evs;
+//     h_data.enfVertMap[entry] = evs;
+    h_data.entryEnfVertexListMap[entry] = evs;
     if (evs.size() == 0) {
 //       MESSAGE("No enf vertex for entry " << entry << ": key is erased");
-      h_data.enfVertMap.erase(entry);
+//       h_data.enfVertMap.erase(entry);
+      h_data.entryEnfVertexListMap.erase(entry);
     }
   }
   
@@ -1298,8 +1475,8 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
       h->SetVerbosity( h_data.myVerbosity );
 
     if( ((int) h_data.myPhysicalMesh == PhysicalUserDefined)||((int) h_data.myPhysicalMesh == SizeMap) ) {
-      if ( h->GetPhySize() != h_data.myPhySize.toDouble() )
-        h->SetPhySize( h_data.myPhySize.toDouble() );
+      if ( h->GetPhySize() != h_data.myPhySize )
+        h->SetPhySize( h_data.myPhySize );
     }
     if( (int) h_data.myGeometricMesh == UserDefined ) {
       if ( h->GetAngleMeshS() != h_data.myAngleMeshS )
@@ -1308,22 +1485,30 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
         h->SetAngleMeshC( h_data.myAngleMeshC );
     }
 #ifdef WITH_SIZE_BOUNDARIES
-    if ( !isDouble( h_data.myPhyMin ))
-      h->SetPhyMin( -1 );
-    else if ( h->GetPhyMin() != h_data.myPhyMin.toDouble() )
-      h->SetPhyMin( h_data.myPhyMin.toDouble() );
-    if ( !isDouble( h_data.myPhyMax ))
-      h->SetPhyMax( -1 );
-    else if ( h->GetPhyMax() != h_data.myPhyMax.toDouble() )
-      h->SetPhyMax( h_data.myPhyMax.toDouble() );
-    if ( !isDouble( h_data.myGeoMin ))
-      h->SetGeoMin( -1 );
-    else if ( h->GetGeoMin() != h_data.myGeoMin.toDouble() )
-      h->SetGeoMin( h_data.myGeoMin.toDouble() );
-    if ( !isDouble( h_data.myGeoMax ))
-      h->SetGeoMax( -1 );
-    else if ( h->GetGeoMax() != h_data.myGeoMax.toDouble() )
-      h->SetGeoMax( h_data.myGeoMax.toDouble() );
+//     if ( !isDouble( h_data.myPhyMin ))
+//       h->SetPhyMin( -1 );
+//     else if ( h->GetPhyMin() != h_data.myPhyMin.toDouble() )
+//       h->SetPhyMin( h_data.myPhyMin.toDouble() );
+//     if ( !isDouble( h_data.myPhyMax ))
+//       h->SetPhyMax( -1 );
+//     else if ( h->GetPhyMax() != h_data.myPhyMax.toDouble() )
+//       h->SetPhyMax( h_data.myPhyMax.toDouble() );
+//     if ( !isDouble( h_data.myGeoMin ))
+//       h->SetGeoMin( -1 );
+//     else if ( h->GetGeoMin() != h_data.myGeoMin.toDouble() )
+//       h->SetGeoMin( h_data.myGeoMin.toDouble() );
+//     if ( !isDouble( h_data.myGeoMax ))
+//       h->SetGeoMax( -1 );
+//     else if ( h->GetGeoMax() != h_data.myGeoMax.toDouble() )
+//       h->SetGeoMax( h_data.myGeoMax.toDouble() );
+    if (h_data.myPhyMin > 0)
+      h->SetPhyMin( h_data.myPhyMin );
+    if (h_data.myPhyMax > 0)
+      h->SetPhyMax( h_data.myPhyMax );
+    if (h_data.myGeoMin > 0)
+      h->SetGeoMin( h_data.myGeoMin );
+    if (h_data.myGeoMax > 0)
+      h->SetGeoMax( h_data.myGeoMax );
 #endif
 
     //printf("storeParamsToHypo():myOptions->length()=%d\n",myOptions->length());
@@ -1365,13 +1550,16 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
     }
     
     // Enforced vertices
-    std::map<std::string, std::set<std::vector<double> > >::const_iterator evmIt = h_data.enfVertMap.begin();
-    for ( ; evmIt != h_data.enfVertMap.end() ; ++evmIt) {
+    std::map<std::string, std::set<std::vector<double> > >::const_iterator evmIt = h_data.entryEnfVertexListMap.begin();
+    for ( ; evmIt != h_data.entryEnfVertexListMap.end() ; ++evmIt) {
       std::string entry = evmIt->first;
       std::set<std::vector<double> > evs;
       std::set<std::vector<double> >::const_iterator evsIt;
       double x, y, z;
-      BLSURFPlugin::TEnforcedVertexList_var hypVertexList;
+      /* TODO GROUPS
+      std::string groupName = "";
+      */
+      BLSURFPlugin::TEnfVertexList_var hypVertexList;
       int hypNbVertex = 0;
       try {
         hypVertexList = h->GetEnforcedVerticesEntry(entry.c_str());
@@ -1385,7 +1573,14 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
         x = (*evsIt)[0];
         y = (*evsIt)[1];
         z = (*evsIt)[2];
+
+        /* TODO GROUPS
+        std::map<std::vector<double> , std::string >::const_iterator grpIt = h_data.enfVertexGroupNameMap.find(*evsIt);
+        if (grpIt != h_data.enfVertexGroupNameMap.end())
+          groupName = grpIt->second;
 //         MESSAGE("SetEnforcedVertexEntry("<<entry<<", "<<x<<", "<<y<<", "<<z<<")");
+        h->SetEnforcedVertexEntryWithGroup( entry.c_str(), x, y, z, groupName.c_str() );
+        */
         h->SetEnforcedVertexEntry( entry.c_str(), x, y, z );
       }
       // Remove old vertices
@@ -1423,17 +1618,17 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
   h_data.myName             = myName ? myName->text() : "";
   h_data.myTopology         = myTopology->currentIndex();
   h_data.myPhysicalMesh     = myPhysicalMesh->currentIndex();
-  h_data.myPhySize          = myPhySize->text();
+  h_data.myPhySize          = myPhySize->GetValue();
 #ifdef WITH_SIZE_BOUNDARIES
-  h_data.myPhyMin           = myPhyMin->text();
-  h_data.myPhyMax           = myPhyMax->text();
-  h_data.myGeoMin           = myGeoMin->text();
-  h_data.myGeoMax           = myGeoMax->text();
+  h_data.myPhyMin           = myPhyMin->GetValue();
+  h_data.myPhyMax           = myPhyMax->GetValue();
+  h_data.myGeoMin           = myGeoMin->GetValue();
+  h_data.myGeoMax           = myGeoMax->GetValue();
 #endif
   h_data.myGeometricMesh    = myGeometricMesh->currentIndex();
-  h_data.myAngleMeshS       = myAngleMeshS->value();
-  h_data.myAngleMeshC       = myAngleMeshC->value();
-  h_data.myGradation        = myGradation->value();
+  h_data.myAngleMeshS       = myAngleMeshS->GetValue();
+  h_data.myAngleMeshC       = myAngleMeshC->GetValue();
+  h_data.myGradation        = myGradation->GetValue();
   h_data.myAllowQuadrangles = myAllowQuadrangles->isChecked();
   h_data.myDecimesh         = myDecimesh->isChecked();
   h_data.myVerbosity        = myVerbosity->value();
@@ -1441,17 +1636,17 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
   QString guiHyp;
   guiHyp += tr("BLSURF_TOPOLOGY") + " = " + QString::number( h_data.myTopology ) + "; ";
   guiHyp += tr("BLSURF_PHY_MESH") + " = " + QString::number( h_data.myPhysicalMesh ) + "; ";
-  guiHyp += tr("BLSURF_HPHYDEF") + " = " + h_data.myPhySize + "; ";
+  guiHyp += tr("BLSURF_HPHYDEF") + " = " + QString::number( h_data.myPhySize ) + "; ";
   guiHyp += tr("BLSURF_GEOM_MESH") + " = " + QString::number( h_data.myGeometricMesh ) + "; ";
   guiHyp += tr("BLSURF_ANGLE_MESH_S") + " = " + QString::number( h_data.myAngleMeshS ) + "; ";
   guiHyp += tr("BLSURF_GRADATION") + " = " + QString::number( h_data.myGradation ) + "; ";
   guiHyp += tr("BLSURF_ALLOW_QUADRANGLES") + " = " + QString(h_data.myAllowQuadrangles ? "yes" : "no") + "; ";
   guiHyp += tr("BLSURF_DECIMESH") + " = " + QString(h_data.myDecimesh ? "yes" : "no") + "; ";
 #ifdef WITH_SIZE_BOUNDARIES
-  if ( isDouble( h_data.myPhyMin )) guiHyp += "hphymin = " + h_data.myPhyMin + "; ";
-  if ( isDouble( h_data.myPhyMax )) guiHyp += "hphymax = " + h_data.myPhyMax + "; ";
-  if ( isDouble( h_data.myGeoMin )) guiHyp += "hgeomin = " + h_data.myGeoMin + "; ";
-  if ( isDouble( h_data.myGeoMax )) guiHyp += "hgeomax = " + h_data.myGeoMax + "; ";
+  guiHyp += "hphymin = " + QString::number( h_data.myPhyMin ) + "; ";
+  guiHyp += "hphymax = " + QString::number( h_data.myPhyMax ) + "; ";
+  guiHyp += "hgeomin = " + QString::number( h_data.myGeoMin ) + "; ";
+  guiHyp += "hgeomax = " + QString::number( h_data.myGeoMax ) + "; ";
 #endif
 
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
@@ -1481,10 +1676,16 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
   }
 
   // Enforced vertices
-  // h_data.enfVertMap
-
+  h_data.enfVertexList.clear();
+  h_data.entryEnfVertexListMap.clear();
+  /* TODO GROUPS
+  h_data.groupNameEnfVertexListMap.clear();
+  h_data.enfVertexGroupNameMap.clear();
+  */
+  
   int nbEnforcedShapes = myEnforcedTreeWidget->topLevelItemCount();
   int nbEnforcedVertices = 0;
+  std::string groupName = "";
 //   MESSAGE("Nb of enforced shapes: " << nbEnforcedShapes);
   for (int i=0 ; i<nbEnforcedShapes ; i++) {
     QTreeWidgetItem* shapeItem = myEnforcedTreeWidget->topLevelItem(i);
@@ -1505,8 +1706,18 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
           vertex.push_back(childValueY);
           vertex.push_back(childValueZ);
           evs.insert(vertex);
+          h_data.enfVertexList.insert(vertex);
+          /* TODO GROUPS
+          groupName = child->data(ENF_VER_GROUP_COLUMN,Qt::EditRole).toString().toStdString();
+          // Group
+          if (makeGroupsCheck->isChecked())
+            groupName = myGlobalGroupName->text().toStdString();
+          h_data.enfVertexGroupNameMap[vertex] = groupName;
+          if (groupName != "")
+            h_data.groupNameEnfVertexListMap[groupName].insert(vertex);
+          */
         }
-        h_data.enfVertMap[entry] = evs;
+        h_data.entryEnfVertexListMap[entry] = evs;
       }
     }
   }
@@ -1528,21 +1739,22 @@ void BLSURFPluginGUI_HypothesisCreator::onPhysicalMeshChanged() {
   myPhyMin->setEnabled(isCustom);
 
   if ( !myGradation->isEnabled())
-    myGradation->setValue( 1.1 );
+//     myGradation->setValue( 1.1 );
+    myGradation->SetValue( 1.1 );
 
   if ( !isCustom ) {
-    QString aPhySize = "";
-    switch( myPhysicalMesh->currentIndex() ) {
-      case DefaultSize:
-      default:
-        aPhySize = "10";
-        break;
-      }
-    myPhySize->setText( aPhySize );
-    if ( !isDouble( myPhyMin->text(), true ))
-      myPhyMin->setText("");
-    if ( !isDouble( myPhyMax->text(), true ))
-      myPhyMax->setText("");
+//     QString aPhySize = "";
+//     switch( myPhysicalMesh->currentIndex() ) {
+//       case DefaultSize:
+//       default:
+//         aPhySize = "10";
+//         break;
+//       }
+//     myPhySize->setText( aPhySize );
+//     if ( !isDouble( myPhyMin->text(), true ))
+//       myPhyMin->setText("");
+//     if ( !isDouble( myPhyMax->text(), true ))
+//       myPhyMax->setText("");
     if ( myGeometricMesh->currentIndex() == DefaultGeom ) {
       myGeometricMesh->setCurrentIndex( UserDefined );
       onGeometricMeshChanged();
@@ -1562,22 +1774,22 @@ void BLSURFPluginGUI_HypothesisCreator::onGeometricMeshChanged() {
   myGeoMin->setEnabled(isCustom);
 
   if ( !myGradation->isEnabled())
-    myGradation->setValue( 1.1 );
+    myGradation->SetValue( 1.1 );
 
   if ( ! isCustom ) {
-    double aAngleMeshS;
-    switch( myGeometricMesh->currentIndex() ) {
-      case DefaultGeom:
-      default:
-        aAngleMeshS = 8;
-        break;
-      }
-    myAngleMeshS->setValue( aAngleMeshS );
-    myAngleMeshC->setValue( aAngleMeshS );
-    if ( !isDouble( myGeoMin->text(), true ))
-      myGeoMin->setText("");
-    if ( !isDouble( myGeoMax->text(), true ))
-      myGeoMax->setText("");
+//     double aAngleMeshS;
+//     switch( myGeometricMesh->currentIndex() ) {
+//       case DefaultGeom:
+//       default:
+//         aAngleMeshS = 8;
+//         break;
+//       }
+//     myAngleMeshS->SetValue( aAngleMeshS );
+//     myAngleMeshC->SetValue( aAngleMeshS );
+//     if ( !isDouble( myGeoMin->text(), true ))
+//       myGeoMin->setText("");
+//     if ( !isDouble( myGeoMax->text(), true ))
+//       myGeoMax->setText("");
     //  hphy_flag = 0 and hgeo_flag = 0 is not allowed (spec)
     if ( myPhysicalMesh->currentIndex() == DefaultSize ) {
       myPhysicalMesh->setCurrentIndex( PhysicalUserDefined );

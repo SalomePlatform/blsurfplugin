@@ -23,6 +23,10 @@
     <context>
         <name>@default</name>
         <message>
+            <source>BLSURF_ICON_SELECT</source>
+            <translation>mesh_select_BLSURF.png</translation>
+        </message>
+        <message>
             <source>ICON_DLG_BLSURF_PARAMETERS</source>
             <translation>mesh_hypo_BLSURF.png</translation>
         </message>

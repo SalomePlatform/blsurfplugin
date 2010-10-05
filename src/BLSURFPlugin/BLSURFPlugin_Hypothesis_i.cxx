@@ -32,6 +32,7 @@
 #include "utilities.h"
 
 #include <stdexcept>
+#include <cstring>
 #include "boost/regex.hpp"
 
 //=============================================================================
@@ -786,38 +787,38 @@ BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetCustomSizeMapEntries()
 // ENFORCED VERTEXES //
 ///////////////////////
 
-BLSURFPlugin::TEnforcedVertexMap* BLSURFPlugin_Hypothesis_i::GetAllEnforcedVertices()
+BLSURFPlugin::TEntryEnfVertexListMap* BLSURFPlugin_Hypothesis_i::GetAllEnforcedVertices()
 {
   MESSAGE("IDL: GetAllEnforcedVertices()");
   ASSERT(myBaseImpl);
-  BLSURFPlugin::TEnforcedVertexMap_var resultMap = new BLSURFPlugin::TEnforcedVertexMap();
-  const ::BLSURFPlugin_Hypothesis::TEnforcedVertexMap enforcedVertexMap = this->GetImpl()->_GetAllEnforcedVertices();
-  resultMap->length(enforcedVertexMap.size());
-  MESSAGE("Enforced Vertex map size is " << enforcedVertexMap.size());
+  BLSURFPlugin::TEntryEnfVertexListMap_var resultMap = new BLSURFPlugin::TEntryEnfVertexListMap();
+  const ::BLSURFPlugin_Hypothesis::TEntryEnfVertexListMap entryEnfVertexListMap = this->GetImpl()->_GetAllEnforcedVertices();
+  resultMap->length(entryEnfVertexListMap.size());
+  MESSAGE("Enforced Vertex map size is " << entryEnfVertexListMap.size());
 
-  ::BLSURFPlugin_Hypothesis::TEnforcedVertexList enforcedVertexList;
-  ::BLSURFPlugin_Hypothesis::TEnforcedVertexMap::const_iterator evmIt = enforcedVertexMap.begin();
-  for ( int i = 0 ; evmIt != enforcedVertexMap.end(); ++evmIt, ++i ) {
-    string entry = evmIt->first;
+  ::BLSURFPlugin_Hypothesis::TEnfVertexList enfVertexList;
+  ::BLSURFPlugin_Hypothesis::TEntryEnfVertexListMap::const_iterator evmIt = entryEnfVertexListMap.begin();
+  for ( int i = 0 ; evmIt != entryEnfVertexListMap.end(); ++evmIt, ++i ) {
+    std::string entry = evmIt->first;
     MESSAGE("Entry: " << entry);
-    enforcedVertexList = evmIt->second;
+    enfVertexList = evmIt->second;
 
-    BLSURFPlugin::TEnforcedVertexMapElement_var mapElement = new BLSURFPlugin::TEnforcedVertexMapElement();
+    BLSURFPlugin::TEntryEnfVertexListMapElement_var mapElement = new BLSURFPlugin::TEntryEnfVertexListMapElement();
 
-    BLSURFPlugin::TEnforcedVertexList_var vertexList = new BLSURFPlugin::TEnforcedVertexList();
-    vertexList->length(enforcedVertexList.size());
-    MESSAGE("Number of enforced vertices: " << enforcedVertexList.size());
+    BLSURFPlugin::TEnfVertexList_var vertexList = new BLSURFPlugin::TEnfVertexList();
+    vertexList->length(enfVertexList.size());
+    MESSAGE("Number of enforced vertices: " << enfVertexList.size());
 
-    ::BLSURFPlugin_Hypothesis::TEnforcedVertexList::const_iterator evlIt = enforcedVertexList.begin();
-    for ( int j = 0 ; evlIt != enforcedVertexList.end(); ++evlIt, ++j ) {
+    ::BLSURFPlugin_Hypothesis::TEnfVertexList::const_iterator evlIt = enfVertexList.begin();
+    for ( int j = 0 ; evlIt != enfVertexList.end(); ++evlIt, ++j ) {
       MESSAGE("Enforced Vertex #" << j);
-      BLSURFPlugin::TEnforcedVertex_var enforcedVertex = new BLSURFPlugin::TEnforcedVertex();
-      enforcedVertex->length(3);
-      enforcedVertex[0] = (*evlIt)[0];
-      enforcedVertex[1] = (*evlIt)[1];
-      enforcedVertex[2] = (*evlIt)[2];
-      vertexList[j] = enforcedVertex;
-      MESSAGE("Enforced vertex: " << enforcedVertex[0] << ", " << enforcedVertex[1] << ", " << enforcedVertex[2]);
+      BLSURFPlugin::TEnfVertex_var enfVertex = new BLSURFPlugin::TEnfVertex();
+      enfVertex->length(3);
+      enfVertex[0] = (*evlIt)[0];
+      enfVertex[1] = (*evlIt)[1];
+      enfVertex[2] = (*evlIt)[2];
+      vertexList[j] = enfVertex;
+      MESSAGE("Enforced vertex: " << enfVertex[0] << ", " << enfVertex[1] << ", " << enfVertex[2]);
     }
 
     mapElement->entry = CORBA::string_dup(entry.c_str());
@@ -844,6 +845,7 @@ void BLSURFPlugin_Hypothesis_i::SetEnforcedVertex(GEOM::GEOM_Object_ptr GeomObj,
 {
   ASSERT(myBaseImpl);
   // TODO check that GeomObj is a face => in engine ?
+  // TODO Affecter un nom de groupe vide
   string entry = GeomObj->GetStudyEntry();
   MESSAGE("IDL : GetName : " << GeomObj->GetName());
   MESSAGE("IDL : SetEnforcedVertex ( "<< entry << ", " << x << ", " << y << ", " << z << ")");
@@ -855,8 +857,28 @@ void BLSURFPlugin_Hypothesis_i::SetEnforcedVertex(GEOM::GEOM_Object_ptr GeomObj,
   }
 }
 
-
-BLSURFPlugin::TEnforcedVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVertices(GEOM::GEOM_Object_ptr GeomObj)
+/*!
+  * Set/get/unset an enforced vertex on geom object with group name
+  */
+/* TODO GROUPS
+void BLSURFPlugin_Hypothesis_i::SetEnforcedVertexWithGroup(GEOM::GEOM_Object_ptr GeomObj,
+                  CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* groupName)
+  throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+  // TODO check that GeomObj is a face => in engine ?
+  string entry = GeomObj->GetStudyEntry();
+  MESSAGE("IDL : GetName : " << GeomObj->GetName());
+  MESSAGE("IDL : SetEnforcedVertexWithGroup ( "<< entry << ", " << x << ", " << y << ", " << z << ", " << groupName <<")");
+  try {
+    SetEnforcedVertexEntryWithGroup(entry.c_str(), x, y, z, groupName);
+  }
+  catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+}
+*/
+BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVertices(GEOM::GEOM_Object_ptr GeomObj)
   throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
@@ -917,8 +939,8 @@ void BLSURFPlugin_Hypothesis_i::SetEnforcedVertexEntry(const char* entry, double
   bool newValue = false;
   
   try {
-    ::BLSURFPlugin_Hypothesis::TEnforcedVertexList vertexList = this->GetImpl()->GetEnforcedVertices(entry);
-    ::BLSURFPlugin_Hypothesis::TEnforcedVertex vertex;
+    ::BLSURFPlugin_Hypothesis::TEnfVertexList vertexList = this->GetImpl()->GetEnforcedVertices(entry);
+    ::BLSURFPlugin_Hypothesis::TEnfVertex vertex;
     vertex.push_back(x);
     vertex.push_back(y);
     vertex.push_back(z);
@@ -948,34 +970,96 @@ void BLSURFPlugin_Hypothesis_i::SetEnforcedVertexEntry(const char* entry, double
   }
   MESSAGE("IDL : SETENFORCEDVERTEX END - ENTRY: " << entry);
 }
+
+/*!
+  * Set/get/unset an enforced vertex on geom object given by entry
+  */
+/* TODO GROUPS
+void BLSURFPlugin_Hypothesis_i::SetEnforcedVertexEntryWithGroup(const char* entry,
+                                 double x, double y, double z, const char* groupName)
+  throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+  MESSAGE("IDL : SETENFORCEDVERTEXWITHGROUP START - ENTRY: " << entry << " VERTEX: "
+            << x << " " << y << " " << z << " group name: " << groupName);
+  bool newValue = false;
+  bool newGroupName = false;
+  try {
+    ::BLSURFPlugin_Hypothesis::TEnfVertexList vertexList = this->GetImpl()->GetEnforcedVertices(entry);
+    ::BLSURFPlugin_Hypothesis::TEnfVertex vertex;
+    vertex.push_back(x);
+    vertex.push_back(y);
+    vertex.push_back(z);
+    if (vertexList.find(vertex) == vertexList.end()) {
+      MESSAGE("Vertex not found: add it in vertexList");
+      newValue = true;
+    }
+    else {
+      MESSAGE("Vertex already found");
+      std::string oldGroupName = this->GetImpl()->GetEnforcedVertexGroupName(x,y,z);
+      if (strcmp(oldGroupName.c_str(),groupName)!=0)
+        newGroupName = true;
+    }
+  }
+  catch (const std::invalid_argument& ex) {
+    // no enforced vertex for entry
+    MESSAGE("Entry not found : add it to the list");
+    newValue = true;
+  }
+  catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+  
+  if ( newValue ) {
+    this->GetImpl()->SetEnforcedVertex(entry, x, y, z, groupName);
+    SMESH::TPythonDump() << _this() << ".SetEnforcedVertexWithGroup("
+                         << entry << ", "
+                         << x << ", "
+                         << y << ", "
+                         << z << ", '"
+                         << groupName << "')";
+  }
+  else {
+    if (newGroupName) {
+      this->GetImpl()->SetEnforcedVertexGroupName(x, y, z, groupName);
+      SMESH::TPythonDump() << _this() << ".SetEnforcedVertexGroupName("
+                          << x << ", "
+                          << y << ", "
+                          << z << ", '"
+                          << groupName << "')";
+    }
+  }
+  MESSAGE("IDL : SETENFORCEDVERTEXWITHGROUP END - ENTRY: " << entry);
+}
+*/
 /*
-void BLSURFPlugin_Hypothesis_i::SetEnforcedVertexListEntry(const char* entry, BLSURFPlugin::TEnforcedVertexList& vertexList)
+void BLSURFPlugin_Hypothesis_i::SetEnforcedVertexListEntry(const char* entry, BLSURFPlugin::TEnfVertexList& vertexList)
   throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
 }
 */
 
-BLSURFPlugin::TEnforcedVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVerticesEntry(const char* entry)
+BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVerticesEntry(const char* entry)
   throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
   MESSAGE("ENGINE : GETENFORCEDVERTICES START ENTRY : " << entry);
   
   try {
-    BLSURFPlugin::TEnforcedVertexList_var vertexList = new BLSURFPlugin::TEnforcedVertexList();
-    ::BLSURFPlugin_Hypothesis::TEnforcedVertexList _vList = this->GetImpl()->GetEnforcedVertices(entry);
+    BLSURFPlugin::TEnfVertexList_var vertexList = new BLSURFPlugin::TEnfVertexList();
+    ::BLSURFPlugin_Hypothesis::TEnfVertexList _vList = this->GetImpl()->GetEnforcedVertices(entry);
     vertexList->length(_vList.size());
     MESSAGE("Number of enforced vertices: " << _vList.size());
-    ::BLSURFPlugin_Hypothesis::TEnforcedVertexList::const_iterator evlIt = _vList.begin();
+    ::BLSURFPlugin_Hypothesis::TEnfVertexList::const_iterator evlIt = _vList.begin();
     for ( int i = 0; evlIt != _vList.end() ; ++evlIt, ++i ) {
-      BLSURFPlugin::TEnforcedVertex_var enforcedVertex = new BLSURFPlugin::TEnforcedVertex();
-      enforcedVertex->length(3);
+      BLSURFPlugin::TEnfVertex_var enfVertex = new BLSURFPlugin::TEnfVertex();
+      enfVertex->length(3);
       MESSAGE("Enforced vertex #" << i << ": "<< (*evlIt)[0] << ", " << (*evlIt)[1] << ", " << (*evlIt)[2]);
-      enforcedVertex[0] = (*evlIt)[0];
-      enforcedVertex[1] = (*evlIt)[1];
-      enforcedVertex[2] = (*evlIt)[2];
-      vertexList[i] = enforcedVertex;
+      enfVertex[0] = (*evlIt)[0];
+      enfVertex[1] = (*evlIt)[1];
+      enfVertex[2] = (*evlIt)[2];
+      vertexList[i] = enfVertex;
     }
     return vertexList._retn();
   }
@@ -984,7 +1068,7 @@ BLSURFPlugin::TEnforcedVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVertice
     ExDescription.text = ex.what();
     ExDescription.type = SALOME::BAD_PARAM;
     ExDescription.sourceFile = "BLSURFPlugin_Hypothesis_i::GetEnforcedVerticesEntry(entry)";
-    ExDescription.lineNumber = 945;
+    ExDescription.lineNumber = 1048;
     throw SALOME::SALOME_Exception(ExDescription);
   }
   catch(const std::exception& ex) {
@@ -1014,7 +1098,7 @@ void BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexEntry(const char* entry, CORB
     ExDescription.text = ex.what();
     ExDescription.type = SALOME::BAD_PARAM;
     ExDescription.sourceFile = "BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexEntry(entry,x,y,z)";
-    ExDescription.lineNumber = 1003;
+    ExDescription.lineNumber = 1086;
     throw SALOME::SALOME_Exception(ExDescription);
   }
   catch(const std::exception& ex) {
@@ -1024,7 +1108,7 @@ void BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexEntry(const char* entry, CORB
   MESSAGE("ENGINE : UNSETENFORCEDVERTEX END ENTRY : " << entry);
 }
 /*
-void BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexListEntry(const char* entry, BLSURFPlugin::TEnforcedVertexList& vertexList)
+void BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexListEntry(const char* entry, BLSURFPlugin::TEnfVertexList& vertexList)
   throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
@@ -1045,7 +1129,7 @@ void BLSURFPlugin_Hypothesis_i::UnsetEnforcedVerticesEntry(const char* entry)
     ExDescription.text = ex.what();
     ExDescription.type = SALOME::BAD_PARAM;
     ExDescription.sourceFile = "BLSURFPlugin_Hypothesis_i::UnsetEnforcedVerticesEntry(entry)";
-    ExDescription.lineNumber = 1051;
+    ExDescription.lineNumber = 1121;
     throw SALOME::SALOME_Exception(ExDescription);
   }
   catch(const std::exception& ex) {
@@ -1055,7 +1139,57 @@ void BLSURFPlugin_Hypothesis_i::UnsetEnforcedVerticesEntry(const char* entry)
   MESSAGE("ENGINE : UNSETENFORCEDVERTICES END ENTRY : " << entry);
 }
 
+/* TODO GROUPS
+char* BLSURFPlugin_Hypothesis_i::GetEnforcedVertexGroupName(CORBA::Double x, CORBA::Double y, CORBA::Double z)
+  throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+  MESSAGE("ENGINE : GetEnforcedVertexGroupName START ");
+  try {
+    return CORBA::string_dup( this->GetImpl()->GetEnforcedVertexGroupName(x, y, z).c_str());
+  }
+  catch (const std::invalid_argument& ex) {
+    SALOME::ExceptionStruct ExDescription;
+    ExDescription.text = ex.what();
+    ExDescription.type = SALOME::BAD_PARAM;
+    ExDescription.sourceFile = "BLSURFPlugin_Hypothesis_i::GetEnforcedVertexGroupName(entry)";
+    ExDescription.lineNumber = 1146;
+    throw SALOME::SALOME_Exception(ExDescription);
+  }
+  catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+  MESSAGE("ENGINE : GetEnforcedVertexGroupName END ");
+  return 0;
+}
 
+
+void BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGroupName(CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* groupName)
+  throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+  MESSAGE("ENGINE : SetEnforcedVertexGroupName START ");
+  try {
+    this->GetImpl()->SetEnforcedVertexGroupName(x, y, z, groupName);
+  }
+  catch (const std::invalid_argument& ex) {
+    SALOME::ExceptionStruct ExDescription;
+    ExDescription.text = ex.what();
+    ExDescription.type = SALOME::BAD_PARAM;
+    ExDescription.sourceFile = "BLSURFPlugin_Hypothesis::SetEnforcedVertexGroupName(x,y,z)";
+    ExDescription.lineNumber = 1170;
+    throw SALOME::SALOME_Exception(ExDescription);
+  }
+  catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+
+  SMESH::TPythonDump() << _this() << ".SetEnforcedVertexGroupName("
+                        << x << ", " << y << ", " << z << ", '" << groupName << "' )";
+
+  MESSAGE("ENGINE : SetEnforcedVertexGroupName END ");
+}
+*/
 ///////////////////////
 
 

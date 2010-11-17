@@ -29,7 +29,7 @@
     </message>
     <message>
         <source>BLSURF_DECIMESH</source>
-        <translation>Patch indépendant</translation>
+        <translation>S&apos;affranchir des frontières des surfaces</translation>
     </message>
     <message>
         <source>BLSURF_DEFAULT_GEOM</source>

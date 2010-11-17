@@ -9,15 +9,15 @@
     </message>
     <message>
         <source>BLSURF_ALLOW_QUADRANGLES</source>
-        <translation>Permettre les Quadrangles (Test)</translation>
+        <translation>Autoriser les quadrangles (Test)</translation>
     </message>
     <message>
         <source>BLSURF_ANGLE_MESH_C</source>
-        <translation>Angle de Maillage C</translation>
+        <translation>Angle de maillage C</translation>
     </message>
     <message>
         <source>BLSURF_ANGLE_MESH_S</source>
-        <translation>Angle de Maillage S</translation>
+        <translation>Angle de maillage S</translation>
     </message>
     <message>
         <source>BLSURF_CUSTOM_GEOM</source>
@@ -29,7 +29,7 @@
     </message>
     <message>
         <source>BLSURF_DECIMESH</source>
-        <translation>Chemin indépendent</translation>
+        <translation>Patch indépendant</translation>
     </message>
     <message>
         <source>BLSURF_DEFAULT_GEOM</source>
@@ -41,31 +41,31 @@
     </message>
     <message>
         <source>BLSURF_GEOM_MESH</source>
-        <translation>Maillage Géométrique</translation>
+        <translation>Maillage géométrique</translation>
     </message>
     <message>
         <source>BLSURF_GRADATION</source>
-        <translation>Gradation</translation>
+        <translation>Taux d&apos;accroissement</translation>
     </message>
     <message>
         <source>BLSURF_HGEOMAX</source>
-        <translation>Taille Géométrique Maximale</translation>
+        <translation>Taille géométrique maximale</translation>
     </message>
     <message>
         <source>BLSURF_HGEOMIN</source>
-        <translation>Taille Géométrique Minimale</translation>
+        <translation>Taille géométrique minimale</translation>
     </message>
     <message>
         <source>BLSURF_HPHYDEF</source>
-        <translation>Taille d&apos;Utilisateur</translation>
+        <translation>Taille d&apos;utilisateur</translation>
     </message>
     <message>
         <source>BLSURF_HPHYMAX</source>
-        <translation>Taille Physique Maximale</translation>
+        <translation>Taille physique maximale</translation>
     </message>
     <message>
         <source>BLSURF_HPHYMIN</source>
-        <translation>Taille Physique Minimale</translation>
+        <translation>Taille physique minimale</translation>
     </message>
     <message>
         <source>BLSURF_HYPOTHESIS</source>
@@ -73,7 +73,7 @@
     </message>
     <message>
         <source>BLSURF_PHY_MESH</source>
-        <translation>Maillage Physique</translation>
+        <translation>Maillage physique</translation>
     </message>
     <message>
         <source>BLSURF_ADV_ARGS</source>
@@ -81,7 +81,7 @@
     </message>
     <message>
         <source>BLSURF_TITLE</source>
-        <translation>Construction d&apos;une Hypothèse</translation>
+        <translation>Construction d&apos;une hypothèse</translation>
     </message>
     <message>
         <source>BLSURF_TOPOLOGY</source>
@@ -101,11 +101,11 @@
     </message>
     <message>
         <source>BLSURF_VERBOSITY</source>
-        <translation>Niveau de Verbosité</translation>
+        <translation>Niveau de verbosité</translation>
     </message>
     <message>
         <source>OBLIGATORY_VALUE</source>
-        <translation>(Valeur Obligatoire)</translation>
+        <translation>(Valeur obligatoire)</translation>
     </message>
     <message>
         <source>OPTION_NAME_COLUMN</source>
@@ -121,7 +121,7 @@
     </message>
     <message>
         <source>BLSURF_SIZE_MAP</source>
-        <translation>Carte des tailles</translation>
+        <translation>Tailles locales</translation>
     </message>
     <message>
         <source>SMP_ENTRY_COLUMN</source>
@@ -133,43 +133,43 @@
     </message>
     <message>
         <source>SMP_SIZEMAP_COLUMN</source>
-        <translation>Carte de taille</translation>
+        <translation>Taille locale</translation>
     </message>
     <message>
         <source>BLSURF_SM_SURFACE</source>
-        <translation>Ajouter une Carte sur la Surface</translation>
+        <translation>Sur une face (ou groupe)</translation>
     </message>
     <message>
         <source>BLSURF_SM_EDGE</source>
-        <translation>Ajouter une Carte sur l&apos;Arête</translation>
+        <translation>Sur une arête (ou groupe)</translation>
     </message>
     <message>
         <source>BLSURF_SM_POINT</source>
-        <translation>Ajouter une Carte sur le Point</translation>
+        <translation>Sur un point (ou groupe)</translation>
     </message>
     <message>
         <source>BLSURF_SM_ATTRACTOR</source>
-        <translation>Ajouter un Attracteur</translation>
+        <translation>Ajouter un attracteur</translation>
     </message>
     <message>
         <source>BLSURF_SM_REMOVE</source>
-        <translation>Supprimer une Carte</translation>
+        <translation>Supprimer</translation>
     </message>
     <message>
         <source>BLSURF_SM_SURF_VALUE</source>
-        <translation>Taille sur la Surface</translation>
+        <translation>Taille sur les/la face(s)</translation>
     </message>
     <message>
         <source>BLSURF_SM_EDGE_VALUE</source>
-        <translation>Taille sur l&apos;Arête</translation>
+        <translation>Taille sur les/l&apos;arête(s)</translation>
     </message>
     <message>
         <source>BLSURF_SM_POINT_VALUE</source>
-        <translation>Taille sur le Point</translation>
+        <translation>Taille sur les/le point(s)</translation>
     </message>
     <message>
         <source>BLSURF_ENF_VER</source>
-        <translation>Points de Passage</translation>
+        <translation>Points de passage</translation>
     </message>
     <message>
         <source>BLSURF_ENF_VER_ENTRY_COLUMN</source>

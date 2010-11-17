@@ -121,7 +121,7 @@
     </message>
     <message>
         <source>BLSURF_SIZE_MAP</source>
-        <translation>Size Map</translation>
+        <translation>Local Size</translation>
     </message>
     <message>
         <source>SMP_ENTRY_COLUMN</source>
@@ -133,19 +133,19 @@
     </message>
     <message>
         <source>SMP_SIZEMAP_COLUMN</source>
-        <translation>Size Map</translation>
+        <translation>Local size</translation>
     </message>
     <message>
         <source>BLSURF_SM_SURFACE</source>
-        <translation>Add Map on Surface</translation>
+        <translation>On face (or group)</translation>
     </message>
     <message>
         <source>BLSURF_SM_EDGE</source>
-        <translation>Add Map on Edge</translation>
+        <translation>On edge (or group)</translation>
     </message>
     <message>
         <source>BLSURF_SM_POINT</source>
-        <translation>Add Map on Point</translation>
+        <translation>On point (or group)</translation>
     </message>
     <message>
         <source>BLSURF_SM_ATTRACTOR</source>
@@ -153,19 +153,19 @@
     </message>
     <message>
         <source>BLSURF_SM_REMOVE</source>
-        <translation>Remove Map</translation>
+        <translation>Remove</translation>
     </message>
     <message>
         <source>BLSURF_SM_SURF_VALUE</source>
-        <translation>Size on Surface(s)</translation>
+        <translation>Size on face(s)</translation>
     </message>
     <message>
         <source>BLSURF_SM_EDGE_VALUE</source>
-        <translation>Size on Edge(s)</translation>
+        <translation>Size on edge(s)</translation>
     </message>
     <message>
         <source>BLSURF_SM_POINT_VALUE</source>
-        <translation>Size on Point(s)</translation>
+        <translation>Size on point(s)</translation>
     </message>
     <message>
         <source>BLSURF_ENF_VER</source>

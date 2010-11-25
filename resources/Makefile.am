@@ -31,6 +31,7 @@ dist_salomeres_DATA =			\
 if BLSURFPLUGIN_ENABLE_GUI
   dist_salomeres_DATA +=		\
 	BLSURF.png			\
+	mesh_select_BLSURF.png		\
 	mesh_algo_BLSURF.png		\
 	mesh_hypo_BLSURF.png		\
 	mesh_tree_algo_BLSURF.png	\

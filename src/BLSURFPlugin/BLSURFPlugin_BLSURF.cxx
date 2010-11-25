@@ -40,6 +40,9 @@ extern "C"{
 #include <SMESH_Gen.hxx>
 #include <SMESH_Mesh.hxx>
 #include <SMESH_ControlsDef.hxx>
+#include <SMDSAbs_ElementType.hxx>
+#include "SMESHDS_Group.hxx"
+#include "SMESH_Group.hxx"
 
 #include <utilities.h>
 
@@ -211,6 +214,7 @@ std::map<int,std::vector<double> > FaceId2AttractorCoords;
 
 TopTools_IndexedMapOfShape FacesWithEnforcedVertices;
 std::map< int, std::set< std::vector<double> > > FaceId2EnforcedVertexCoords;
+std::map< std::vector<double>, std::vector<double> > EnfVertex2ProjVertex;
 
 bool HasSizeMapOnFace=false;
 bool HasSizeMapOnEdge=false;
@@ -243,7 +247,8 @@ BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF(int hypId, int studyId,
 
   myStudy = NULL;
   myStudy = aStudyMgr->GetStudyByID(_studyId);
-  MESSAGE("myStudy->StudyId() = " << myStudy->StudyId());
+  if (myStudy)
+    MESSAGE("myStudy->StudyId() = " << myStudy->StudyId());
 
   /* Initialize the Python interpreter */
   assert(Py_IsInitialized());
@@ -271,7 +276,7 @@ BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF(int hypId, int studyId,
   FaceId2AttractorCoords.clear();
   FacesWithEnforcedVertices.Clear();
   FaceId2EnforcedVertexCoords.clear();
-
+  EnfVertex2ProjVertex.clear();
 }
 
 //=============================================================================
@@ -414,19 +419,22 @@ TopoDS_Shape BLSURFPlugin_BLSURF::entryToShape(std::string entry)
 }
 
 /////////////////////////////////////////////////////////
-void createEnforcedVertexOnFace(TopoDS_Shape GeomShape, BLSURFPlugin_Hypothesis::TEnforcedVertexList enforcedVertexList)
+void createEnforcedVertexOnFace(TopoDS_Shape GeomShape, BLSURFPlugin_Hypothesis::TEnfVertexList enfVertexList)
 {
   double xe, ye, ze;
   std::vector<double> coords;
-  BLSURFPlugin_Hypothesis::TEnforcedVertex enforcedVertex;
-  BLSURFPlugin_Hypothesis::TEnforcedVertexList::const_iterator evlIt = enforcedVertexList.begin();
+  std::vector<double> s_coords;
+  std::vector<double> enfVertex;
+//   BLSURFPlugin_Hypothesis::TEnfVertex enfVertex;
+  BLSURFPlugin_Hypothesis::TEnfVertexList::const_iterator evlIt = enfVertexList.begin();
 
-  for( ; evlIt != enforcedVertexList.end() ; ++evlIt ) {
+  for( ; evlIt != enfVertexList.end() ; ++evlIt ) {
     coords.clear();
-    enforcedVertex = *evlIt;
-    xe = enforcedVertex[0];
-    ye = enforcedVertex[1];
-    ze = enforcedVertex[2];
+    s_coords.clear();
+    enfVertex = *evlIt;
+    xe = enfVertex[0];
+    ye = enfVertex[1];
+    ze = enfVertex[2];
     MESSAGE("Enforced Vertex: " << xe << ", " << ye << ", " << ze);
     // Get the (u,v) values of the enforced vertex on the face
     projectionPoint myPoint = getProjectionPoint(TopoDS::Face(GeomShape),gp_XYZ(xe,ye,ze));
@@ -444,7 +452,16 @@ void createEnforcedVertexOnFace(TopoDS_Shape GeomShape, BLSURFPlugin_Hypothesis:
     coords.push_back(x0);
     coords.push_back(y0);
     coords.push_back(z0);
-  
+    
+    s_coords.push_back(x0);
+    s_coords.push_back(y0);
+    s_coords.push_back(z0);
+
+    // Save pair projected vertex / enf vertex
+    MESSAGE("Storing pair projected vertex / enf vertex:");
+    MESSAGE("("<< x0 << ", " << y0 << ", " << z0 <<") / (" << xe << ", " << ye << ", " << ze<<")");
+    EnfVertex2ProjVertex[s_coords] = enfVertex;
+    
     int key = 0;
     if (! FacesWithEnforcedVertices.Contains(TopoDS::Face(GeomShape))) {
       key = FacesWithEnforcedVertices.Add(TopoDS::Face(GeomShape));
@@ -575,7 +592,9 @@ void createAttractorOnFace(TopoDS_Shape GeomShape, std::string AttractorFunction
 
 /////////////////////////////////////////////////////////
 
-void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsurf_session_t *bls)
+void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
+                                        blsurf_session_t *             bls,
+                                        SMESH_Mesh&                   mesh)
 {
   int    _topology      = BLSURFPlugin_Hypothesis::GetDefaultTopology();
   int    _physicalMesh  = BLSURFPlugin_Hypothesis::GetDefaultPhysicalMesh();
@@ -619,6 +638,9 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
       }
 
   } else {
+    //0020968: EDF1545 SMESH: Problem in the creation of a mesh group on geometry
+    // GetDefaultPhySize() sometimes leads to computation failure
+    _phySize = mesh.GetShapeDiagonalSize() / _gen->GetBoundaryBoxSegmentation();
     MESSAGE("BLSURFPlugin_BLSURF::SetParameters using defaults");
   }
   _smp_phy_size = _phySize;
@@ -779,9 +801,9 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsu
     // Enforced Vertices
     //
     MESSAGE("Setting Enforced Vertices");
-    const BLSURFPlugin_Hypothesis::TEnforcedVertexMap enforcedVertexMap = BLSURFPlugin_Hypothesis::GetAllEnforcedVertices(hyp);
-    BLSURFPlugin_Hypothesis::TEnforcedVertexMap::const_iterator enfIt = enforcedVertexMap.begin();
-    for ( ; enfIt != enforcedVertexMap.end(); ++enfIt ) {
+    const BLSURFPlugin_Hypothesis::TEntryEnfVertexListMap entryEnfVertexListMap = BLSURFPlugin_Hypothesis::GetAllEnforcedVertices(hyp);
+    BLSURFPlugin_Hypothesis::TEntryEnfVertexListMap::const_iterator enfIt = entryEnfVertexListMap.begin();
+    for ( ; enfIt != entryEnfVertexListMap.end(); ++enfIt ) {
       if ( !enfIt->second.empty() ) {
         GeomShape = entryToShape(enfIt->first);
         GeomType  = GeomShape.ShapeType();
@@ -876,7 +898,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   VertexId2SizeMap.clear();
 
   MESSAGE("BEGIN SetParameters");
-  SetParameters(_hypothesis, bls);
+  SetParameters(_hypothesis, bls, aMesh);
   MESSAGE("END SetParameters");
 
   /* Now fill the CAD object with data from your CAD
@@ -914,8 +936,13 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   int iface = 0;
   string bad_end = "return";
   int faceKey = -1;
+  int ienf = 0;
   for (TopExp_Explorer face_iter(aShape,TopAbs_FACE);face_iter.More();face_iter.Next()) {
     TopoDS_Face f=TopoDS::Face(face_iter.Current());
+
+    // make INTERNAL face oriented FORWARD (issue 0020993)
+    if (f.Orientation() != TopAbs_FORWARD && f.Orientation() != TopAbs_REVERSED )
+      f.Orientation(TopAbs_FORWARD);
     
     if (fmap.FindIndex(f) > 0)
       continue;
@@ -943,7 +970,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     }
     
     if (HasSizeMapOnFace){
-      std::cout << "A size map is defined on a face" << std::endl;
+//       std::cout << "A size map is defined on a face" << std::endl;
       // Classic size map
       faceKey = FacesWithSizeMap.FindIndex(f);
       
@@ -1006,8 +1033,8 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       faceKey = FacesWithEnforcedVertices.FindIndex(f);
       std::map<int,std::set<std::vector<double> > >::const_iterator evmIt = FaceId2EnforcedVertexCoords.find(faceKey);
       if (evmIt != FaceId2EnforcedVertexCoords.end()) {
-        std::cout << "Some enforced vertices are defined" << std::endl;
-        int ienf = 0;
+        MESSAGE("Some enforced vertices are defined");
+//         int ienf = 0;
         std::set<std::vector<double> > evl;
 //         std::vector<double> ev;
         MESSAGE("Face indice: " << iface);
@@ -1016,12 +1043,11 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
         MESSAGE("Number of vertices to add: "<< evl.size());
         std::set< std::vector<double> >::const_iterator evlIt = evl.begin();
         for (; evlIt != evl.end(); ++evlIt) {
-//           ev = *evlIt;
-//         for (int i=0; i<evl.size() ; i++) {
-//           ev = evl[i];
-          
-//           double xyzCoords[3]  = {ev[2], ev[3], ev[4]};
-          double xyzCoords[3]  = {evlIt->at(2), evlIt->at(3), evlIt->at(4)};
+          std::vector<double> xyzCoords;
+          xyzCoords.push_back(evlIt->at(2));
+          xyzCoords.push_back(evlIt->at(3));
+          xyzCoords.push_back(evlIt->at(4));
+//           double xyzCoords[3]  = {evlIt->at(2), evlIt->at(3), evlIt->at(4)};
           MESSAGE("Check position of vertex =(" << xyzCoords[0] << "," << xyzCoords[1] << "," << xyzCoords[2] << ")");
           gp_Pnt P(xyzCoords[0],xyzCoords[1],xyzCoords[2]);
           BRepClass_FaceClassifier scl(f,P,1e-7);
@@ -1030,12 +1056,21 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
           BRepClass_FaceClassifierPerform(&scl,f,P,1e-7);
           TopAbs_State result = scl.State();
           MESSAGE("Position of point on face: "<<result);
-          if ( result == TopAbs_OUT )
+          if ( result == TopAbs_OUT ) {
               MESSAGE("Point is out of face: node is not created");
-          if ( result == TopAbs_UNKNOWN )
-              MESSAGE("Point position on face is unknown: node is not created");
-          if ( result == TopAbs_ON )
-              MESSAGE("Point is on border of face: node is not created");
+              if (EnfVertex2ProjVertex.find(xyzCoords) != EnfVertex2ProjVertex.end())
+                EnfVertex2ProjVertex.erase(xyzCoords);
+          }
+          if ( result == TopAbs_UNKNOWN ) {
+            MESSAGE("Point position on face is unknown: node is not created");
+            if (EnfVertex2ProjVertex.find(xyzCoords) != EnfVertex2ProjVertex.end())
+              EnfVertex2ProjVertex.erase(xyzCoords);
+          }
+          if ( result == TopAbs_ON ) {
+            MESSAGE("Point is on border of face: node is not created");
+            if (EnfVertex2ProjVertex.find(xyzCoords) != EnfVertex2ProjVertex.end())
+              EnfVertex2ProjVertex.erase(xyzCoords);
+          }
           if ( result == TopAbs_IN )
           {
             // Point is inside face and not on border
@@ -1050,8 +1085,8 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
         }
         FaceId2EnforcedVertexCoords.erase(faceKey);
       }
-      else
-        std::cout << "No enforced vertex defined" << std::endl;
+//       else
+//         std::cout << "No enforced vertex defined" << std::endl;
     }
     
     
@@ -1072,7 +1107,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       if (HasSizeMapOnEdge){
         edgeKey = EdgesWithSizeMap.FindIndex(e);
         if (EdgeId2SizeMap.find(edgeKey)!=EdgeId2SizeMap.end()) {
-	  MESSAGE("Sizemap defined on edge with index " << edgeKey);
+          MESSAGE("Sizemap defined on edge with index " << edgeKey);
           theSizeMapStr = EdgeId2SizeMap[edgeKey];
           if (theSizeMapStr.find(bad_end) == (theSizeMapStr.size()-bad_end.size()-1))
             continue;
@@ -1252,6 +1287,75 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
         tag = 0; // enforced or attracted vertex
     }
     nodes[iv] = meshDS->AddNode(xyz[0], xyz[1], xyz[2]);
+
+    /* TODO GROUPS
+    // Create group of enforced vertices if requested
+    if(_hypothesis) {
+      std::vector<double> projVertex;
+      projVertex.push_back((double)xyz[0]);
+      projVertex.push_back((double)xyz[1]);
+      projVertex.push_back((double)xyz[2]);
+      std::map< std::vector<double>, std::vector<double> >::const_iterator projIt = EnfVertex2ProjVertex.find(projVertex);
+      if (projIt != EnfVertex2ProjVertex.end()) {
+        double x = (projIt->second)[0];
+        double y = (projIt->second)[1];
+        double z = (projIt->second)[2];
+        BLSURFPlugin_Hypothesis::TEnfVertex enfVertex;
+        enfVertex.push_back(x);
+        enfVertex.push_back(y);
+        enfVertex.push_back(z);
+          
+        BLSURFPlugin_Hypothesis::TEnfVertexGroupNameMap groupNameMap =  _hypothesis->_GetEnforcedVertexGroupNameMap();
+        BLSURFPlugin_Hypothesis::TEnfVertexGroupNameMap::const_iterator groupNameMapIt = groupNameMap.find(enfVertex);
+        if (groupNameMapIt != groupNameMap.end()) {
+          MESSAGE("Found enforced vertex @ " << xyz[0] << ", " << xyz[1] << ", " << xyz[2])
+          BLSURFPlugin_Hypothesis::TEnfGroupName groupName = groupNameMapIt->second;
+          if (groupName != "") {
+            bool groupDone = false;
+            const set<SMESHDS_GroupBase*>& allGroups = meshDS->GetGroups();
+            set<SMESHDS_GroupBase*>::const_iterator grIt;
+            MESSAGE("Parsing the groups of the mesh");
+            for ( grIt = allGroups.begin(); grIt != allGroups.end(); ++grIt ) {
+              SMESHDS_Group* group = dynamic_cast<SMESHDS_Group*>( *grIt );
+              MESSAGE("Group: " << group->GetStoreName());
+              if ( group && group->SMDSGroup().GetType()==SMDSAbs_Node
+                          && groupName.compare(group->GetStoreName())==0) {
+                group->SMDSGroup().Add(nodes[iv]);
+//                 int id = // recuperer l'id SMESH du noeud
+//                 _hypothesis->AddEnfVertexIDs(groupName,id)
+                groupDone = true;
+                MESSAGE("Successfully added enforced vertex to existing group " << groupName);
+                break;
+              }
+            }
+            if (!groupDone)
+            {
+              int groupId;
+              SMESH_Group* aGroup = aMesh.AddGroup(SMDSAbs_Node, groupName.c_str(), groupId);
+              if ( aGroup ) {
+                SMESHDS_Group* aGroupDS = dynamic_cast<SMESHDS_Group*>( aGroup->GetGroupDS() );
+                if ( aGroupDS ) {
+                  aGroupDS->SetStoreName( groupName.c_str() );
+                  aGroupDS->SMDSGroup().Add(nodes[iv]);
+                  MESSAGE("Successfully created enforced vertex group " << groupName);
+                  groupDone = true;
+                }
+              }
+            }
+            if (!groupDone)
+              throw SALOME_Exception(LOCALIZED("A enforced vertex node was not added to a group"));
+          }
+          else
+            MESSAGE("Group name is empty: '"<<groupName<<"' => group is not created");
+        }
+        else
+          MESSAGE("No group name for projected vertex ("<<x<<","<<y<<","<<z<<")")
+      }
+//       else
+//         MESSAGE("No group name for vertex ("<<xyz[0]<<","<<xyz[1]<<","<<xyz[2]<<")")
+    }
+    */
+
     // internal point are tagged to zero
     if(tag > 0 && tag <= pmap.Extent() ){
       meshDS->SetNodeOnVertex(nodes[iv], TopoDS::Vertex(pmap(tag)));

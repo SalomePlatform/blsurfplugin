@@ -132,25 +132,53 @@ public:
   /*!
    * To set/get/unset an enforced vertex
    */
-  typedef std::vector<double> TEnforcedVertex;
-  typedef std::set< TEnforcedVertex > TEnforcedVertexList;
-  typedef std::map< std::string, TEnforcedVertexList > TEnforcedVertexMap;
+  // Entry
+  typedef std::string TEnfEntry;
+  // Enforced vertex = 3 coordinates
+  typedef std::vector<double> TEnfVertex;
+  // List of enforced vertices
+  typedef std::set< TEnfVertex > TEnfVertexList;
+  // Map Entry / List of enforced vertices
+  typedef std::map< TEnfEntry , TEnfVertexList > TEntryEnfVertexListMap;
+  /* TODO GROUPS
+  // Group name
+  typedef std::string TEnfGroupName;
+  // Map Group Name / List of enforced vertices
+  typedef std::map< TEnfGroupName , TEnfVertexList > TGroupNameEnfVertexListMap;
+  // Map Enforced vertex / Group Name
+  typedef std::map< TEnfVertex , TEnfGroupName > TEnfVertexGroupNameMap;
+  */
+
   
-  void SetEnforcedVertex(const std::string& entry, double x, double y, double z);
-//   void SetEnforcedVertexList(const std::string& entry, const TEnforcedVertexList vertexList);
-  TEnforcedVertexList GetEnforcedVertices(const std::string& entry) throw (std::invalid_argument);
-  void ClearEnforcedVertex(const std::string& entry, double x, double y, double z) throw (std::invalid_argument);
-//   void ClearEnforcedVertexList(const std::string& entry, TEnforcedVertexList vertexList) throw (std::invalid_argument);
-  void ClearEnforcedVertices(const std::string& entry) throw (std::invalid_argument);
+  /* TODO GROUPS
+  void SetEnforcedVertex(const TEnfEntry& entry, double x, double y, double z, const TEnfGroupName& groupName="");
+  */
+  void SetEnforcedVertex(const TEnfEntry& entry, double x, double y, double z);
+//   void SetEnforcedVertexList(const TEnfEntry& entry, const TEnfVertexList vertexList);
+  TEnfVertexList GetEnforcedVertices(const TEnfEntry& entry) throw (std::invalid_argument);
+  void ClearEnforcedVertex(const TEnfEntry& entry, double x, double y, double z) throw (std::invalid_argument);
+//   void ClearEnforcedVertexList(const TEnfEntry& entry, TEnfVertexList vertexList) throw (std::invalid_argument);
+  void ClearEnforcedVertices(const TEnfEntry& entry) throw (std::invalid_argument);
 
   void ClearAllEnforcedVertices();
-  const TEnforcedVertexMap _GetAllEnforcedVertices() const { return _enforcedVertices; }
+  const TEntryEnfVertexListMap _GetAllEnforcedVertices() const { return _entryEnfVertexListMap; }
+  /* TODO GROUPS
+  const TEnfVertexGroupNameMap _GetEnforcedVertexGroupNameMap() const { return _enfVertexGroupNameMap; }
+  */
 
   /*!
    * \brief Return the enforced vertices
    */
-  static TEnforcedVertexMap GetAllEnforcedVertices(const BLSURFPlugin_Hypothesis* hyp);
-
+  static TEntryEnfVertexListMap GetAllEnforcedVertices(const BLSURFPlugin_Hypothesis* hyp);
+  
+  /*!
+    * \brief Set/get node group to an enforced vertex
+    */
+  /* TODO GROUPS
+  void SetEnforcedVertexGroupName(double x, double y, double z, const TEnfGroupName& groupName) throw (std::invalid_argument);
+  TEnfGroupName GetEnforcedVertexGroupName(double x, double y, double z) throw (std::invalid_argument);
+  TEnfVertexList GetEnforcedVertexByGroupName(TEnfGroupName& groupName) throw (std::invalid_argument);
+  */
 
   static Topology        GetDefaultTopology();
   static PhysicalMesh    GetDefaultPhysicalMesh();
@@ -165,7 +193,12 @@ public:
   static bool            GetDefaultDecimesh();
   static int             GetDefaultVerbosity() { return 10; }
   static TSizeMap        GetDefaultSizeMap() { return TSizeMap();}
-  static TEnforcedVertexMap GetDefaultEnforcedVertexMap() { return TEnforcedVertexMap(); }
+  static TEnfVertexList             GetDefaultEnfVertexList() { return TEnfVertexList(); }
+  static TEntryEnfVertexListMap     GetDefaultEntryEnfVertexListMap() { return TEntryEnfVertexListMap(); }
+  /* TODO GROUPS
+  static TGroupNameEnfVertexListMap GetDefaultGroupNameEnfVertexListMap() { return TGroupNameEnfVertexListMap(); }
+  static TEnfVertexGroupNameMap     GetDefaultEnfVertexGroupNameMap() { return TEnfVertexGroupNameMap(); }
+  */
 
   static double undefinedDouble() { return -1.0; }
 
@@ -198,6 +231,11 @@ public:
    */
   virtual bool SetParametersByDefaults(const TDefaults& dflts, const SMESH_Mesh* theMesh=0);
 
+/* TODO GROUPS
+private:
+  bool _setEnfVertexWithGroup(double x, double y, double z, const std::string groupName) throw (std::invalid_argument);
+*/
+
 private:
   Topology        _topology;
   PhysicalMesh    _physicalMesh;
@@ -212,10 +250,13 @@ private:
   TOptionNames    _doubleOptions, _charOptions;
   TSizeMap        _sizeMap;
   TSizeMap        _attractors;
-  TEnforcedVertexMap _enforcedVertices;
-/*
-  TSizeMap      _customSizeMap;
-*/
+  TEnfVertexList             _enfVertexList;
+  TEntryEnfVertexListMap     _entryEnfVertexListMap;
+  /* TODO GROUPS
+  TGroupNameEnfVertexListMap _groupNameEnfVertexListMap;
+  TEnfVertexGroupNameMap     _enfVertexGroupNameMap;
+  */
+//   TSizeMap      _customSizeMap;
 };
 
 #endif

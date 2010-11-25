@@ -71,7 +71,7 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
                                  const TopoDS_Shape&                  aShape,
                                  SMESH_Hypothesis::Hypothesis_Status& aStatus);
 
-    void SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsurf_session_t *bls);
+    void SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsurf_session_t *bls,SMESH_Mesh& aMesh);
 
     virtual bool Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape);
 

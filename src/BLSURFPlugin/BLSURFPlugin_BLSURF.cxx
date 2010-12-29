@@ -874,7 +874,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 //   };
 
   // Fix problem with locales
-  Kernel_Utils::Localizer loc;
+  Kernel_Utils::Localizer aLocalizer;
 
   /* create a distene context (generic object) */
   status_t status = STATUS_ERROR;
@@ -1426,6 +1426,13 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       tags[vtx[3]] = false;
     };
   }
+
+  // SetIsAlwaysComputed( true ) to sub-meshes of degenerated EDGEs
+  TopLoc_Location loc; double f,l;
+  for (int i = 1; i <= emap.Extent(); i++)
+    if ( BRep_Tool::Curve(TopoDS::Edge( emap( i )), loc, f,l).IsNull() )
+      if ( SMESH_subMesh* sm = aMesh.GetSubMeshContaining( emap( i )))
+        sm->SetIsAlwaysComputed( true );
 
   delete nodes;
 

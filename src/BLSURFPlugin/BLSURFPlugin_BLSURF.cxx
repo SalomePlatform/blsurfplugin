@@ -506,15 +506,17 @@ void createAttractorOnFace(TopoDS_Shape GeomShape, std::string AttractorFunction
   MESSAGE("Attractor function: "<< AttractorFunction);
   double xa, ya, za; // Coordinates of attractor point
   double a, b;       // Attractor parameter
+  double d = 0.;
   bool createNode=false; // To create a node on attractor projection
   int pos1, pos2;
   const char *sep = ";";
   // atIt->second has the following pattern:
-  // ATTRACTOR(xa;ya;za;a;b)
+  // ATTRACTOR(xa;ya;za;a;b;True|False;d)
   // where:
   // xa;ya;za : coordinates of  attractor
   // a        : desired size on attractor
   // b        : distance of influence of attractor
+  // d        : distance until which the size remains constant
   //
   // We search the parameters in the string
   // xa
@@ -526,7 +528,7 @@ void createAttractorOnFace(TopoDS_Shape GeomShape, std::string AttractorFunction
   if (pos2!=string::npos) {
   ya = atof(AttractorFunction.substr(pos1+1, pos2-pos1-1).c_str());
   pos1 = pos2;
-    }
+  }
   // za
   pos2 = AttractorFunction.find(sep, pos1+1);
   if (pos2!=string::npos) {
@@ -543,14 +545,20 @@ void createAttractorOnFace(TopoDS_Shape GeomShape, std::string AttractorFunction
   pos2 = AttractorFunction.find(sep, pos1+1);
   if (pos2!=string::npos) {
   b = atof(AttractorFunction.substr(pos1+1, pos2-pos1-1).c_str());
-    pos1 = pos2;
+  pos1 = pos2;
   }
   // createNode
-  pos2 = AttractorFunction.find(")");
+  pos2 = AttractorFunction.find(sep, pos1+1);
   if (pos2!=string::npos) {
     string createNodeStr = AttractorFunction.substr(pos1+1, pos2-pos1-1);
     MESSAGE("createNode: " << createNodeStr);
     createNode = (AttractorFunction.substr(pos1+1, pos2-pos1-1) == "True");
+    pos1=pos2;
+  }
+  // d
+  pos2 = AttractorFunction.find(")");
+  if (pos2!=string::npos) {
+  d = atof(AttractorFunction.substr(pos1+1, pos2-pos1-1).c_str());
   }
 
   // Get the (u,v) values of the attractor on the face
@@ -572,7 +580,11 @@ void createAttractorOnFace(TopoDS_Shape GeomShape, std::string AttractorFunction
   ostringstream attractorFunctionStream;
   attractorFunctionStream << "def f(u,v): return ";
   attractorFunctionStream << _smp_phy_size << "-(" << _smp_phy_size <<"-" << a << ")";
-  attractorFunctionStream << "*exp(-((u-("<<u0<<"))*(u-("<<u0<<"))+(v-("<<v0<<"))*(v-("<<v0<<")))/(" << b << "*" << b <<"))";
+  //attractorFunctionStream << "*exp(-((u-("<<u0<<"))*(u-("<<u0<<"))+(v-("<<v0<<"))*(v-("<<v0<<")))/(" << b << "*" << b <<"))";
+  // rnc make possible to keep the size constant until 
+  // a defined distance distance is expressed as the positiv part 
+  // of r-d where r is the distance to (u0,v0)
+  attractorFunctionStream << "*exp(-(0.5*(sqrt((u-"<<u0<<")**2+(v-"<<v0<<")**2)-"<<d<<"+abs(sqrt((u-"<<u0<<")**2+(v-"<<v0<<")**2)-"<<d<<"))/(" << b << "))**2)"; 
 
   MESSAGE("Python function for attractor:" << std::endl << attractorFunctionStream.str());
 

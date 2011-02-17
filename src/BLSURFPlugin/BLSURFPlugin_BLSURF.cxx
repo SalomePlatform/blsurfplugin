@@ -131,8 +131,8 @@ static PyMethodDef PyStdOut_methods[] = {
 };
 
 static PyMemberDef PyStdOut_memberlist[] = {
-  {"softspace", T_INT,  offsetof(PyStdOut, softspace), 0,
-   "flag indicating that a space needs to be printed; used by print"},
+  {(char*)"softspace", T_INT,  offsetof(PyStdOut, softspace), 0,
+   (char*)"flag indicating that a space needs to be printed; used by print"},
   {NULL} /* Sentinel */
 };
 
@@ -1673,15 +1673,15 @@ status_t size_on_surface(integer face_id, real *uv, real *size, void *user_data)
     assert(Py_IsInitialized());
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
-    pyresult = PyObject_CallFunction(FaceId2PythonSmp[face_id],"(f,f)",uv[0],uv[1]);
+    pyresult = PyObject_CallFunction(FaceId2PythonSmp[face_id],(char*)"(f,f)",uv[0],uv[1]);
     double result;
     if ( pyresult == NULL){
       fflush(stderr);
       string err_description="";
       new_stderr = newPyStdOut(err_description);
-      PySys_SetObject("stderr", new_stderr);
+      PySys_SetObject((char*)"stderr", new_stderr);
       PyErr_Print();
-      PySys_SetObject("stderr", PySys_GetObject("__stderr__"));
+      PySys_SetObject((char*)"stderr", PySys_GetObject((char*)"__stderr__"));
       Py_DECREF(new_stderr);
       MESSAGE("Can't evaluate f(" << uv[0] << "," << uv[1] << ")" << " error is " << err_description);
       result = *((double*)user_data);
@@ -1708,15 +1708,15 @@ status_t size_on_edge(integer edge_id, real t, real *size, void *user_data)
     assert(Py_IsInitialized());
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
-    pyresult = PyObject_CallFunction(EdgeId2PythonSmp[edge_id],"(f)",t);
+    pyresult = PyObject_CallFunction(EdgeId2PythonSmp[edge_id],(char*)"(f)",t);
     double result;
     if ( pyresult == NULL){
       fflush(stderr);
       string err_description="";
       new_stderr = newPyStdOut(err_description);
-      PySys_SetObject("stderr", new_stderr);
+      PySys_SetObject((char*)"stderr", new_stderr);
       PyErr_Print();
-      PySys_SetObject("stderr", PySys_GetObject("__stderr__"));
+      PySys_SetObject((char*)"stderr", PySys_GetObject((char*)"__stderr__"));
       Py_DECREF(new_stderr);
       MESSAGE("Can't evaluate f(" << t << ")" << " error is " << err_description);
       result = *((double*)user_data);
@@ -1742,15 +1742,15 @@ status_t size_on_vertex(integer point_id, real *size, void *user_data)
     assert(Py_IsInitialized());
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
-    pyresult = PyObject_CallFunction(VertexId2PythonSmp[point_id],"");
+    pyresult = PyObject_CallFunction(VertexId2PythonSmp[point_id],(char*)"");
     double result;
     if ( pyresult == NULL){
       fflush(stderr);
       string err_description="";
       new_stderr = newPyStdOut(err_description);
-      PySys_SetObject("stderr", new_stderr);
+      PySys_SetObject((char*)"stderr", new_stderr);
       PyErr_Print();
-      PySys_SetObject("stderr", PySys_GetObject("__stderr__"));
+      PySys_SetObject((char*)"stderr", PySys_GetObject((char*)"__stderr__"));
       Py_DECREF(new_stderr);
       MESSAGE("Can't evaluate f()" << " error is " << err_description);
       result = *((double*)user_data);

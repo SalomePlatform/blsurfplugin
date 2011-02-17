@@ -183,8 +183,8 @@ static PyMethodDef PyStdOut_methods[] = {
 };
 
 static PyMemberDef PyStdOut_memberlist[] = {
-  {"softspace", T_INT,  offsetof(PyStdOut, softspace), 0,
-   "flag indicating that a space needs to be printed; used by print"},
+  {(char*)"softspace", T_INT,  offsetof(PyStdOut, softspace), 0,
+   (char*)"flag indicating that a space needs to be printed; used by print"},
   {NULL} /* Sentinel */
 };
 
@@ -2105,9 +2105,9 @@ bool BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromEntry(QString myEnt
     fflush(stderr);
     err_description="";
     new_stderr=newPyStdOut(err_description);
-    PySys_SetObject("stderr", new_stderr);
+    PySys_SetObject((char*)"stderr", new_stderr);
     PyErr_Print();
-    PySys_SetObject("stderr", PySys_GetObject("__stderr__"));
+    PySys_SetObject((char*)"stderr", PySys_GetObject((char*)"__stderr__"));
     Py_DECREF(new_stderr);
     if (displayError)
       SUIT_MessageBox::warning( dlg(),"Definition of Python Function : Error" ,err_description.c_str() );
@@ -2122,9 +2122,9 @@ bool BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromEntry(QString myEnt
     fflush(stderr);
     err_description="";
     new_stderr=newPyStdOut(err_description);
-    PySys_SetObject("stderr", new_stderr);
+    PySys_SetObject((char*)"stderr", new_stderr);
     PyErr_Print();
-    PySys_SetObject("stderr", PySys_GetObject("__stderr__"));
+    PySys_SetObject((char*)"stderr", PySys_GetObject((char*)"__stderr__"));
     Py_DECREF(new_stderr);
     if (displayError)
       SUIT_MessageBox::warning( dlg(),"Python Error" ,err_description.c_str() );

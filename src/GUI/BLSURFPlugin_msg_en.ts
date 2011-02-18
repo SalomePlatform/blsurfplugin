@@ -172,8 +172,8 @@
         <translation>Enforced vertices</translation>
     </message>
     <message>
-        <source>BLSURF_ENF_VER_ENTRY_COLUMN</source>
-        <translation>Entry</translation>
+        <source>BLSURF_ENF_VER_FACE_ENTRY_COLUMN</source>
+        <translation>Face Entry</translation>
     </message>
     <message>
         <source>BLSURF_ENF_VER_NAME_COLUMN</source>
@@ -190,6 +190,10 @@
     <message>
         <source>BLSURF_ENF_VER_Z_COLUMN</source>
         <translation>Z</translation>
+    </message>
+    <message>
+        <source>BLSURF_ENF_VER_ENTRY_COLUMN</source>
+        <translation>Vertex Entry</translation>
     </message>
     <message>
         <source>BLSURF_ENF_VER_GROUP_COLUMN</source>

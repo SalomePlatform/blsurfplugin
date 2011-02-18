@@ -37,15 +37,11 @@ class GEOM_Object;
 
 // BLSURFPlugin parameters hypothesis
 
-class BLSURFPlugin_Hypothesis_i:
-  public virtual POA_BLSURFPlugin::BLSURFPlugin_Hypothesis,
-  public virtual SMESH_Hypothesis_i
-{
- public:
+class BLSURFPlugin_Hypothesis_i: public virtual POA_BLSURFPlugin::BLSURFPlugin_Hypothesis,
+    public virtual SMESH_Hypothesis_i {
+public:
   // Constructor
-  BLSURFPlugin_Hypothesis_i (PortableServer::POA_ptr thePOA,
-                             int                     theStudyId,
-                             ::SMESH_Gen*            theGenImpl);
+  BLSURFPlugin_Hypothesis_i(PortableServer::POA_ptr thePOA, int theStudyId, ::SMESH_Gen* theGenImpl);
   // Destructor
   virtual ~BLSURFPlugin_Hypothesis_i();
 
@@ -91,8 +87,7 @@ class BLSURFPlugin_Hypothesis_i:
   void SetVerbosity(CORBA::Short theVal) throw (SALOME::SALOME_Exception);
   CORBA::Short GetVerbosity();
 
-  void SetOptionValue(const char* optionName,
-                      const char* optionValue) throw (SALOME::SALOME_Exception);
+  void SetOptionValue(const char* optionName, const char* optionValue) throw (SALOME::SALOME_Exception);
   char* GetOptionValue(const char* optionName) throw (SALOME::SALOME_Exception);
 
   void UnsetOption(const char* optionName);
@@ -101,9 +96,9 @@ class BLSURFPlugin_Hypothesis_i:
 
   void SetOptionValues(const BLSURFPlugin::string_array& options) throw (SALOME::SALOME_Exception);
 
-  void SetSizeMapEntry(const char* entry,const char* sizeMap )  throw (SALOME::SALOME_Exception);
-  
-  char* GetSizeMapEntry(const char* entry)  throw (SALOME::SALOME_Exception);
+  void SetSizeMapEntry(const char* entry, const char* sizeMap) throw (SALOME::SALOME_Exception);
+
+  char* GetSizeMapEntry(const char* entry) throw (SALOME::SALOME_Exception);
 
   void UnsetEntry(const char* entry);
 
@@ -117,103 +112,94 @@ class BLSURFPlugin_Hypothesis_i:
 
   void ClearSizeMaps();
 
-
   void SetAttractor(GEOM::GEOM_Object_ptr GeomObj, const char* attractor);
 
   void UnsetAttractor(GEOM::GEOM_Object_ptr GeomObj);
 
-  void SetAttractorEntry(const char* entry,const char* attractor )  throw (SALOME::SALOME_Exception);
+  void SetAttractorEntry(const char* entry, const char* attractor) throw (SALOME::SALOME_Exception);
 
-  char* GetAttractorEntry(const char* entry)  throw (SALOME::SALOME_Exception);
+  char* GetAttractorEntry(const char* entry) throw (SALOME::SALOME_Exception);
 
   BLSURFPlugin::string_array* GetAttractorEntries();
 
+  /*
+   void SetCustomSizeMap(GEOM::GEOM_Object_ptr GeomObj, const char* sizeMap);
 
-/*
-  void SetCustomSizeMap(GEOM::GEOM_Object_ptr GeomObj, const char* sizeMap);
+   void UnsetCustomSizeMap(GEOM::GEOM_Object_ptr GeomObj);
 
-  void UnsetCustomSizeMap(GEOM::GEOM_Object_ptr GeomObj);
+   void SetCustomSizeMapEntry(const char* entry,const char* sizeMap )  throw (SALOME::SALOME_Exception);
 
-  void SetCustomSizeMapEntry(const char* entry,const char* sizeMap )  throw (SALOME::SALOME_Exception);
+   char* GetCustomSizeMapEntry(const char* entry)  throw (SALOME::SALOME_Exception);
 
-  char* GetCustomSizeMapEntry(const char* entry)  throw (SALOME::SALOME_Exception);
-
-  BLSURFPlugin::string_array* GetCustomSizeMapEntries();
-*/
+   BLSURFPlugin::string_array* GetCustomSizeMapEntries();
+   */
 
   ///////////////////////
   // ENFORCED VERTEXES //
   ///////////////////////
-  
-  BLSURFPlugin::TEntryEnfVertexListMap* GetAllEnforcedVertices();
-  void                                  ClearAllEnforcedVertices();
+
+  BLSURFPlugin::TFaceEntryEnfVertexListMap* GetAllEnforcedVerticesByFace();
+  BLSURFPlugin::TEnfVertexList* GetAllEnforcedVertices();
+
+  BLSURFPlugin::TFaceEntryCoordsListMap* GetAllCoordsByFace();
+  BLSURFPlugin::TCoordsEnfVertexMap* GetAllEnforcedVerticesByCoords();
+
+  BLSURFPlugin::TFaceEntryEnfVertexEntryListMap* GetAllEnfVertexEntriesByFace();
+  BLSURFPlugin::TEnfVertexEntryEnfVertexMap* GetAllEnforcedVerticesByEnfVertexEntry();
+
+  void ClearAllEnforcedVertices();
 
   /*!
-    * Set/get/unset an enforced vertex on geom object
-    */
-  void SetEnforcedVertex(GEOM::GEOM_Object_ptr GeomObj, CORBA::Double x, CORBA::Double y, CORBA::Double z)
+   * Set/get/unset an enforced vertex on geom object
+   */
+  bool SetEnforcedVertex(GEOM::GEOM_Object_ptr theFace, CORBA::Double x, CORBA::Double y, CORBA::Double z)
       throw (SALOME::SALOME_Exception);
-  /* TODO GROUPS
-  void SetEnforcedVertexWithGroup(GEOM::GEOM_Object_ptr GeomObj,
-                                  CORBA::Double x, CORBA::Double y, CORBA::Double z,
-                                  const char* groupName)
+  bool SetEnforcedVertexNamed(GEOM::GEOM_Object_ptr theFace, CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* theVertexName)
       throw (SALOME::SALOME_Exception);
-  */
-//   void SetEnforcedVertexList(GEOM::GEOM_Object_ptr GeomObj, const BLSURFPlugin::TEnfVertexList& vertexList)
-//       throw (SALOME::SALOME_Exception);
-  
-  BLSURFPlugin::TEnfVertexList* GetEnforcedVertices(GEOM::GEOM_Object_ptr GeomObj)
+  bool SetEnforcedVertexGeom(GEOM::GEOM_Object_ptr theFace, GEOM::GEOM_Object_ptr theVertex)
       throw (SALOME::SALOME_Exception);
-  
-  void UnsetEnforcedVertex(GEOM::GEOM_Object_ptr GeomObj, CORBA::Double x, CORBA::Double y, CORBA::Double z)
+  bool SetEnforcedVertexWithGroup(GEOM::GEOM_Object_ptr theFace, CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* theGroupName)
       throw (SALOME::SALOME_Exception);
-  
-//   void UnsetEnforcedVertexList(GEOM::GEOM_Object_ptr GeomObj, BLSURFPlugin::TEnfVertexList& vertexList)
-//       throw (SALOME::SALOME_Exception);
-  
-  void UnsetEnforcedVertices(GEOM::GEOM_Object_ptr GeomObj)
+  bool SetEnforcedVertexNamedWithGroup(GEOM::GEOM_Object_ptr theFace, CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* theVertexName, const char* theGroupName)
+      throw (SALOME::SALOME_Exception);
+  bool SetEnforcedVertexGeomWithGroup(GEOM::GEOM_Object_ptr theFace, GEOM::GEOM_Object_ptr theVertex, const char* theGroupName)
       throw (SALOME::SALOME_Exception);
 
+  BLSURFPlugin::TEnfVertexList* GetEnforcedVertices(GEOM::GEOM_Object_ptr theFace) throw (SALOME::SALOME_Exception);
+
+  bool UnsetEnforcedVertex(GEOM::GEOM_Object_ptr theFace, CORBA::Double x, CORBA::Double y, CORBA::Double z)
+      throw (SALOME::SALOME_Exception);
+  bool UnsetEnforcedVertexGeom(GEOM::GEOM_Object_ptr theFace, GEOM::GEOM_Object_ptr theVertex)
+      throw (SALOME::SALOME_Exception);
+  bool UnsetEnforcedVertices(GEOM::GEOM_Object_ptr theFace) throw (SALOME::SALOME_Exception);
+
   /*!
-    * Set/get/unset an enforced vertex on geom object given by entry
-    */
-  void SetEnforcedVertexEntry(const char* entry, CORBA::Double x, CORBA::Double y, CORBA::Double z)
+   * Set/get/unset an enforced vertex on geom object given by entry
+   */
+  bool SetEnforcedVertexEntry(const char* theFaceEntry, CORBA::Double x = 0, CORBA::Double y = 0, CORBA::Double z = 0,
+      const char* theVertexName = "", const char* theVertexEntry = "", const char* theGroupName = "")
       throw (SALOME::SALOME_Exception);
-  /* TODO GROUPS
-  void SetEnforcedVertexEntryWithGroup(const char* entry, CORBA::Double x, CORBA::Double y, CORBA::Double z,
-                                       const char* groupName)
-      throw (SALOME::SALOME_Exception);
-  */
-//   void SetEnforcedVertexListEntry(const char* entry, BLSURFPlugin::TEnfVertexList& vertexList)
-//       throw (SALOME::SALOME_Exception);
-  
-  BLSURFPlugin::TEnfVertexList* GetEnforcedVerticesEntry(const char* entry)
-      throw (SALOME::SALOME_Exception);
-  
-  void UnsetEnforcedVertexEntry(const char* entry, CORBA::Double x, CORBA::Double y, CORBA::Double z)
-      throw (SALOME::SALOME_Exception);
-//   void UnsetEnforcedVertexListEntry(const char* entry, BLSURFPlugin::TEnfVertexList& vertexList)
-//       throw (SALOME::SALOME_Exception);
-  void UnsetEnforcedVerticesEntry(const char* entry)
-      throw (SALOME::SALOME_Exception);
-  
+
+  BLSURFPlugin::TEnfVertexList* GetEnforcedVerticesEntry(const char* theFaceEntry) throw (SALOME::SALOME_Exception);
+
+  bool UnsetEnforcedVertexEntry(const char* theFaceEntry, CORBA::Double x, CORBA::Double y, CORBA::Double z,
+      const char* theVertexEntry = "") throw (SALOME::SALOME_Exception);
+  bool UnsetEnforcedVerticesEntry(const char* theFaceEntry) throw (SALOME::SALOME_Exception);
+
   /*!
-    * Set/get node group to an enforced vertex
-    */
+   * Set/get node group to an enforced vertex
+   */
   /* TODO GROUPS
-  void  SetEnforcedVertexGroupName(CORBA::Double x, CORBA::Double y, CORBA::Double z,
-                                   const char* groupName)
-      throw (SALOME::SALOME_Exception);
-  char* GetEnforcedVertexGroupName(CORBA::Double x, CORBA::Double y, CORBA::Double z)
-      throw (SALOME::SALOME_Exception);
-  */
+   void  SetEnforcedVertexGroupName(CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* groupName) throw (SALOME::SALOME_Exception);
+   char* GetEnforcedVertexGroupName(CORBA::Double x, CORBA::Double y, CORBA::Double z) throw (SALOME::SALOME_Exception);
+   */
   ///////////////////////
 
   // Get implementation
   ::BLSURFPlugin_Hypothesis* GetImpl();
 
   // Verify whether hypothesis supports given entity type 
-  CORBA::Boolean IsDimSupported( SMESH::Dimension type );
+  CORBA::Boolean IsDimSupported(SMESH::Dimension type);
 };
 
 #endif

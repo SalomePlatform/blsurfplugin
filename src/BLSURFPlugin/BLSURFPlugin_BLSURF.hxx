@@ -56,14 +56,13 @@ extern "C"{
 #include <BRepTools.hxx>
 #include <BRepAdaptor_HSurface.hxx>
 
-class BLSURFPlugin_Hypothesis;
+#include "BLSURFPlugin_Hypothesis.hxx"
+
 class TopoDS_Shape;
 
 class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
   public:
     BLSURFPlugin_BLSURF(int hypId, int studyId, SMESH_Gen* gen);
-
-    TopoDS_Shape entryToShape(std::string entry);
 
     virtual ~BLSURFPlugin_BLSURF();
 
@@ -87,6 +86,8 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
     const BLSURFPlugin_Hypothesis* _hypothesis;
 
   private:
+    TopoDS_Shape entryToShape(std::string entry);
+    void createEnforcedVertexOnFace(TopoDS_Shape FaceShape, BLSURFPlugin_Hypothesis::TEnfVertexList enfVertexList);
     void Set_NodeOnEdge(SMESHDS_Mesh* meshDS, SMDS_MeshNode* node, const TopoDS_Shape& ed);
     void BRepClass_FaceClassifierPerform(BRepClass_FaceClassifier* fc, const TopoDS_Face& face, const gp_Pnt& P, const Standard_Real Tol);
 

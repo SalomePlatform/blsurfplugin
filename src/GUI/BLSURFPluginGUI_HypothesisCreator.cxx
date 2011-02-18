@@ -27,10 +27,13 @@
 #include "BLSURFPluginGUI_HypothesisCreator.h"
 // #include <DlgBlSurfHyp_Enforced.h>
 
+#include "GeometryGUI.h"
+
 #include <SMESHGUI_Utils.h>
 #include <SMESHGUI_HypothesesUtils.h>
 #include <SMESHGUI_Dialog.h>
 #include "SMESHGUI_SpinBox.h"
+#include "SMESH_NumberFilter.hxx"
 
 #include <SUIT_Session.h>
 #include <SUIT_MessageBox.h>
@@ -65,13 +68,14 @@
 #include <SalomeApp_Application.h>
 #include <SALOME_ListIO.hxx>
 #include <SALOME_ListIteratorOfListIO.hxx>
+#include "SALOME_LifeCycleCORBA.hxx"
 
-#include <GEOM_Client.hxx>
 #include <TopoDS_Shape.hxx>
 #include <SMESH_Gen_i.hxx>
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string.hpp>
 #include <structmember.h>
+#include <stdexcept>
 
 #define WITH_SIZE_BOUNDARIES
 
@@ -109,11 +113,12 @@ enum {
   SMP_NB_COLUMNS,
 // Enforced vertices array columns
   ENF_VER_NAME_COLUMN = 0,
-  ENF_VER_ENTRY_COLUMN,
+  ENF_VER_FACE_ENTRY_COLUMN,
   ENF_VER_X_COLUMN,
   ENF_VER_Y_COLUMN,
   ENF_VER_Z_COLUMN,
-//   ENF_VER_GROUP_COLUMN,
+  ENF_VER_ENTRY_COLUMN,
+  ENF_VER_GROUP_COLUMN,
   ENF_VER_NB_COLUMNS
 };
 
@@ -131,16 +136,16 @@ enum {
 
 // Enforced vertices inputs
 enum {
-//   ENF_VER_FACE = 0,
-//   ENF_VER_VERTEX,
-  ENF_VER_X_COORD = 0,
+  ENF_VER_FACE = 0,
+  ENF_VER_VERTEX,
+  ENF_VER_X_COORD,
   ENF_VER_Y_COORD,
   ENF_VER_Z_COORD,
-//   ENF_VER_GROUP,
+  ENF_VER_GROUP,
   ENF_VER_VERTEX_BTN,
   ENF_VER_REMOVE_BTN,
 //   ENF_VER_SEPARATOR,
-//   ENF_VER_GROUP_CHECK,
+  ENF_VER_GROUP_CHECK,
   ENF_VER_NB_LINES
 };
 
@@ -176,9 +181,9 @@ PyStdOut_write(PyStdOut *self, PyObject *args)
   return Py_None;
 }
 
-static PyMethodDef PyStdOut_methods[] = {
+static PyMethodDef PyStdOut_methods[] = { 
   {"write",  (PyCFunction)PyStdOut_write,  METH_VARARGS,
-    PyDoc_STR("write(string) -> None")},
+  PyDoc_STR("write(string) -> None")},
   {NULL,    NULL}   /* sentinel */
 };
 
@@ -252,8 +257,6 @@ End initialization Python structures and objects
 **************************************************/
 
 
-class QDoubleValidator;
-
 //
 // BEGIN EnforcedTreeWidgetDelegate
 //
@@ -267,35 +270,42 @@ QWidget *EnforcedTreeWidgetDelegate::createEditor(QWidget *parent,
                                               const QStyleOptionViewItem & option ,
                                               const QModelIndex & index ) const
 {
-//   QLineEdit *editor = new QLineEdit(parent);
+  QModelIndex father = index.parent();
+  QString entry = father.child(index.row(), ENF_VER_ENTRY_COLUMN).data(Qt::EditRole).toString();
+  
   if (index.column() == ENF_VER_X_COLUMN || \
-    index.column() == ENF_VER_Y_COLUMN || \
-    index.column() == ENF_VER_Z_COLUMN)
+      index.column() == ENF_VER_Y_COLUMN || \
+      index.column() == ENF_VER_Z_COLUMN)
   {
     SMESHGUI_SpinBox *editor = new SMESHGUI_SpinBox(parent);
     editor->RangeStepAndValidator(COORD_MIN, COORD_MAX, 10.0, "length_precision");
+    editor->setReadOnly(!entry.isEmpty());
+    editor->setDisabled(!entry.isEmpty());
     return editor;
   }
-//     editor->setValidator(new QDoubleValidator(parent));
   else
   {
     QLineEdit *editor = new QLineEdit(parent);
+    if (index.column() != ENF_VER_GROUP_COLUMN) {
+      editor->setReadOnly(!entry.isEmpty());
+      editor->setDisabled(!entry.isEmpty());
+    }
     return editor;
   }
 
-//   return editor;
 }
 
 void EnforcedTreeWidgetDelegate::setEditorData(QWidget *editor,
                                            const QModelIndex &index) const
 {
   QString value = index.model()->data(index, Qt::EditRole).toString();
-  if (index.column() == ENF_VER_X_COLUMN || \
-    index.column() == ENF_VER_Y_COLUMN || \
-    index.column() == ENF_VER_Z_COLUMN) {
+
+  if (index.column() == ENF_VER_X_COLUMN ||
+      index.column() == ENF_VER_Y_COLUMN ||
+      index.column() == ENF_VER_Z_COLUMN)
+  {
     SMESHGUI_SpinBox *lineEdit = static_cast<SMESHGUI_SpinBox*>(editor);
     lineEdit->setText(value);
-//     lineEdit->editor()->setText(value);
   }
   else {
     QLineEdit *lineEdit = static_cast<QLineEdit*>(editor);
@@ -306,32 +316,26 @@ void EnforcedTreeWidgetDelegate::setEditorData(QWidget *editor,
 void EnforcedTreeWidgetDelegate::setModelData(QWidget *editor, QAbstractItemModel *model,
                                           const QModelIndex &index) const
 {
-//   QLineEdit *lineEdit = static_cast<QLineEdit*>(editor);
-
-  if (index.column() == ENF_VER_X_COLUMN || \
-    index.column() == ENF_VER_Y_COLUMN || \
-    index.column() == ENF_VER_Z_COLUMN)
-  {
+  QModelIndex parent = index.parent();
+  QString entry = parent.child(index.row(), ENF_VER_ENTRY_COLUMN).data(Qt::EditRole).toString();
+  if (index.column() == ENF_VER_X_COLUMN || index.column() == ENF_VER_Y_COLUMN || index.column() == ENF_VER_Z_COLUMN) {
     SMESHGUI_SpinBox *lineEdit = static_cast<SMESHGUI_SpinBox*>(editor);
-    if (! vertexExists(model, index, lineEdit->GetString())) {
+    if (entry.isEmpty() && !vertexExists(model, index, lineEdit->GetString()))
       model->setData(index, lineEdit->GetValue(), Qt::EditRole);
-    }
-  }
-  else if (index.column() == ENF_VER_NAME_COLUMN) {
+  } else if (index.column() == ENF_VER_NAME_COLUMN) {
     QLineEdit *lineEdit = static_cast<QLineEdit*>(editor);
     QString value = lineEdit->text();
-    if (! vertexExists(model, index, value)) {
+    if (entry.isEmpty() && !vertexExists(model, index, value))
       model->setData(index, value, Qt::EditRole);
-    }
-//     MESSAGE("Value " << value.toString().toStdString() << " was set at index(" << index.row() << "," << index.column() << ")");
-  }
-  /* TODO GROUPS
-  else if (index.column() == ENF_VER_GROUP_COLUMN) {
+  } else if (index.column() == ENF_VER_ENTRY_COLUMN) {
+    QLineEdit *lineEdit = static_cast<QLineEdit*>(editor);
+    QString value = lineEdit->text();
+    if (! vertexExists(model, index, value))
+      model->setData(index, value, Qt::EditRole);
+  } else if (index.column() == ENF_VER_GROUP_COLUMN) {
     QLineEdit *lineEdit = static_cast<QLineEdit*>(editor);
     model->setData(index, lineEdit->text(), Qt::EditRole);
-//     MESSAGE("Value " << value.toString().toStdString() << " was set at index(" << index.row() << "," << index.column() << ")");
   }
-  */
 }
 
 void EnforcedTreeWidgetDelegate::updateEditorGeometry(QWidget *editor,
@@ -347,8 +351,8 @@ bool EnforcedTreeWidgetDelegate::vertexExists(QAbstractItemModel *model,
   QModelIndex parent = index.parent();
   int row = index.row();
   int col = index.column();
-  
-  if (parent.isValid()) {
+
+  if (parent.isValid() && !value.isEmpty()) {
     if (col == ENF_VER_X_COLUMN || col == ENF_VER_Y_COLUMN || col == ENF_VER_Z_COLUMN) {
       double x, y, z;
       if (col == ENF_VER_X_COLUMN) {
@@ -366,23 +370,36 @@ bool EnforcedTreeWidgetDelegate::vertexExists(QAbstractItemModel *model,
         x = parent.child(row, ENF_VER_X_COLUMN).data(Qt::EditRole).toDouble();
         y = parent.child(row, ENF_VER_Y_COLUMN).data(Qt::EditRole).toDouble();
       }
-      // MESSAGE("Checking for existing vertex " << x << ", " << y << "," << z);
       int nbChildren = model->rowCount(parent);
       for (int i = 0 ; i < nbChildren ; i++) {
         if (i != row) {
           double childX = parent.child(i, ENF_VER_X_COLUMN).data(Qt::EditRole).toDouble();
           double childY = parent.child(i, ENF_VER_Y_COLUMN).data(Qt::EditRole).toDouble();
           double childZ = parent.child(i, ENF_VER_Z_COLUMN).data(Qt::EditRole).toDouble();
-//           MESSAGE("Vertex: " << childX << ", " << childY << "," << childZ);
           if ((childX == x) && (childY == y) && (childZ == z)) {
-//             MESSAGE("Found !");
             exists = true;
             break;
           }
         }
       }
     }
-    else if (index.column() == ENF_VER_NAME_COLUMN) {
+//     else if (col == ENF_VER_ENTRY_COLUMN) {
+//       // Compare entries if no coords (= selected geom)
+//       xString = parent.child(row, ENF_VER_X_COLUMN).data(Qt::EditRole).toString();
+//       if (xString.isEmpty) {
+//         int nbChildren = model->rowCount(parent);
+//         for (int i = 0 ; i < nbChildren ; i++) {
+//           if (i != row) {
+//             QString childName = parent.child(i, ENF_VER_ENTRY_COLUMN).data(Qt::EditRole).toString();
+//             if (childName == value) {
+//               exists = true;
+//               break;
+//             }
+//           }
+//         }
+//       }
+//     }
+    else if (col == ENF_VER_NAME_COLUMN) {
       int nbChildren = model->rowCount(parent);
       for (int i = 0 ; i < nbChildren ; i++) {
         if (i != row) {
@@ -403,6 +420,75 @@ bool EnforcedTreeWidgetDelegate::vertexExists(QAbstractItemModel *model,
 // END EnforcedTreeWidgetDelegate
 //
 
+//
+// BEGIN BLSURFPluginGUI_ObjectReferenceParamWdg
+//
+//================================================================================
+
+// BLSURFPluginGUI_ObjectReferenceParamWdg::BLSURFPluginGUI_ObjectReferenceParamWdg
+// ( SUIT_SelectionFilter* f, QWidget* parent, bool multiSelection)
+//   : StdMeshersGUI_ObjectReferenceParamWdg(f, parent, multiSelection)
+// {
+//   init();
+// }
+// 
+// 
+// BLSURFPluginGUI_ObjectReferenceParamWdg::BLSURFPluginGUI_ObjectReferenceParamWdg
+// ( MeshObjectType objType, QWidget* parent, bool multiSelection )
+//   : StdMeshersGUI_ObjectReferenceParamWdg( objType, parent, multiSelection )
+// {
+//   init();
+// }
+// 
+// BLSURFPluginGUI_ObjectReferenceParamWdg::~BLSURFPluginGUI_ObjectReferenceParamWdg()
+// {
+//   if ( myFilter )
+//   {
+//     mySelectionMgr->removeFilter( myFilter );
+//     delete myFilter;
+//   }
+// }
+// 
+// void BLSURFPluginGUI_ObjectReferenceParamWdg::init()
+// {
+//   StdMeshersGUI_ObjectReferenceParamWdg::init();
+//   disconnect( mySelButton, SIGNAL(clicked()), SLOT(activateSelection()));
+//   connect( mySelButton, SIGNAL(toggled(bool)), SLOT(setActivationStatus(bool)));
+// }
+// 
+// void BLSURFPluginGUI_ObjectReferenceParamWdg::setActivationStatus(bool status)
+// {
+//   if (status)
+//     activateSelection();
+//   else
+//     deactivateSelection();
+// }
+// 
+// void BLSURFPluginGUI_ObjectReferenceParamWdg::activateSelectionOnly()
+// {
+//   if ( !mySelectionActivated && mySelectionMgr )
+//   {
+//     mySelectionActivated = true;
+//     mySelectionMgr->clearFilters();
+//     if ( SVTK_ViewWindow* aViewWindow = SMESH::GetViewWindow( mySMESHGUI ))
+//       aViewWindow->SetSelectionMode(ActorSelection);
+//     if ( myFilter )
+//       mySelectionMgr->installFilter( myFilter );
+//     connect(mySelectionMgr, SIGNAL(currentSelectionChanged()), SLOT(onSelectionDone()));
+//   }
+//   emit selectionActivated();
+// }
+// 
+// void BLSURFPluginGUI_ObjectReferenceParamWdg::deactivateSelectionOnly()
+// {
+//   mySelectionActivated = false;
+//   disconnect(mySelectionMgr, 0, this, 0 );
+//   mySelectionMgr->removeFilter( myFilter );
+// }
+// 
+//
+// END BLSURFPluginGUI_ObjectReferenceParamWdg
+//
 
 /**
  * \brief {BLSURFPluginGUI_HypothesisCreator constructor}
@@ -434,7 +520,7 @@ BLSURFPluginGUI_HypothesisCreator::BLSURFPluginGUI_HypothesisCreator( const QStr
 
   PyRun_SimpleString("from math import *");
   PyGILState_Release(gstate);
-  
+
 }
 
 BLSURFPluginGUI_HypothesisCreator::~BLSURFPluginGUI_HypothesisCreator()
@@ -446,30 +532,17 @@ BLSURFPluginGUI_HypothesisCreator::~BLSURFPluginGUI_HypothesisCreator()
  * */
 GeomSelectionTools* BLSURFPluginGUI_HypothesisCreator::getGeomSelectionTool()
 {
-//   MESSAGE("BLSURFPluginGUI_HypothesisCreator::getGeomSelectionTool");
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
   _PTR(Study) aStudy = SMESH::GetActiveStudyDocument();
-//   MESSAGE("aStudy->StudyId(): " << aStudy->StudyId());
   if (that->GeomToolSelected == NULL || that->GeomToolSelected->getMyStudy() != aStudy) {
-//     MESSAGE("GeomToolSelected is created");
     that->GeomToolSelected = new GeomSelectionTools(aStudy);
   }
-//   else
-//     MESSAGE("GeomToolSelected already exists");
-//   MESSAGE("that->GeomToolSelected->getMyStudy()->StudyId(): " << that->GeomToolSelected->getMyStudy()->StudyId());
   return that->GeomToolSelected;
 }
 
-namespace {
-  inline bool isDouble( const QString& theText, const bool emptyOK=false ) {
-    QString str = theText.trimmed();
-    bool isOk = true;
-    if ( !str.isEmpty() )
-      str.toDouble(&isOk);
-    else
-      isOk = emptyOK;
-    return isOk;
-  }
+GEOM::GEOM_Gen_var BLSURFPluginGUI_HypothesisCreator::getGeomEngine()
+{
+  return GeometryGUI::GetGeomGen();
 }
 
 
@@ -477,28 +550,7 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams() const
 {
   MESSAGE("BLSURFPluginGUI_HypothesisCreator::checkParams");
   bool ok = true;
-//   if ( !isDouble( myPhySize->text(), false )) {
-//     if ( myPhySize->text().isEmpty() )
-//       myPhySize->setText(tr("OBLIGATORY_VALUE"));
-//     myPhySize->selectAll();
-//     ok = false;
-//   }
-//   if ( !isDouble( myPhyMin->text(), true )) {
-//     myPhyMin->selectAll();
-//     ok = false;
-//   }
-//   if ( !isDouble( myPhyMax->text(), true )) {
-//     myPhyMax->selectAll();
-//     ok = false;
-//   }
-//   if ( !isDouble( myGeoMin->text(), true )) {
-//     myGeoMin->selectAll();
-//     ok = false;
-//   }
-//   if ( !isDouble( myGeoMin->text(), true )) {
-//     myGeoMin->selectAll();
-//     ok = false;
-//   }
+
   if ( ok )
   {
     myOptionTable->setFocus();
@@ -567,14 +619,14 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams() const
 
   // Enforced vertices
   // TODO
-  
+
   return ok;
 }
 
 QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 {
   MESSAGE("BLSURFPluginGUI_HypothesisCreator::buildFrame");
-  
+
   QFrame* fr = new QFrame( 0 );
   QVBoxLayout* lay = new QVBoxLayout( fr );
   lay->setMargin( 5 );
@@ -637,7 +689,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 #endif
   myAllowQuadrangles = new QCheckBox( tr( "BLSURF_ALLOW_QUADRANGLES" ), myStdGroup );
   myDecimesh = new QCheckBox( tr( "BLSURF_DECIMESH" ), myStdGroup );
-  
+
   // ADD WIDGETS (STANDARD TAB)
   int row = 0;
   if( isCreation() ) {
@@ -702,8 +754,8 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   QPushButton* addBtn = new QPushButton( tr( "ADD_OPTION"),  myAdvGroup );
   addBtn->setMenu( new QMenu() );
   QPushButton* rmBtn = new QPushButton( tr( "REMOVE_OPTION"), myAdvGroup );
-    
-  
+
+
   // ADD WIDGETS (ADVANCED TAB)
   anAdvLayout->addWidget( new QLabel( tr( "BLSURF_TOPOLOGY" ), myAdvGroup ),  0, 0, 1, 1 );
   anAdvLayout->addWidget( myTopology,                                         0, 1, 1, 1 );
@@ -742,8 +794,8 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   line2->setFrameShape(QFrame::HLine);
   line2->setFrameShadow(QFrame::Sunken);
   removeButton = new QPushButton(tr("BLSURF_SM_REMOVE"),mySmpGroup);
-    
-    
+
+
   // ADD WIDGETS (SIZEMAP TAB)
   anSmpLayout->addWidget(mySizeMapTable,     SMP_POINT_BTN, 0, SMP_NB_LINES+1, 1);
 //   anSmpLayout->addWidget(addAttractorButton, SMP_ATTRACTOR_BTN, 1, 1, 1);
@@ -758,20 +810,20 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   // Enforced vertices parameters
   myEnfGroup = new QWidget();
   QGridLayout* anEnfLayout = new QGridLayout(myEnfGroup);
-// 
+//
 //   myEnforcedVertexWidget = new DlgBlSurfHyp_Enforced(myEnfGroup);
 //   anEnfLayout->addWidget(myEnforcedVertexWidget);
 //   MESSAGE("Creating DlgBlSurfHyp_Enforced widget instance");
 //   myEnforcedVertexWidget = new DlgBlSurfHyp_Enforced();
-    
+
   myEnforcedTreeWidget = new QTreeWidget(myEnfGroup);
   myEnforcedTreeWidget->setColumnCount( ENF_VER_NB_COLUMNS );
   myEnforcedTreeWidget->setSortingEnabled(true);
   QStringList enforcedHeaders;
-  enforcedHeaders << tr("BLSURF_ENF_VER_NAME_COLUMN") << tr("BLSURF_ENF_VER_ENTRY_COLUMN") << tr( "BLSURF_ENF_VER_X_COLUMN" )<< tr( "BLSURF_ENF_VER_Y_COLUMN" ) << tr( "BLSURF_ENF_VER_Z_COLUMN" );
-  /* TODO GROUPS
-  enforcedHeaders << tr("BLSURF_ENF_VER_NAME_COLUMN") << tr("BLSURF_ENF_VER_ENTRY_COLUMN") << tr( "BLSURF_ENF_VER_X_COLUMN" )<< tr( "BLSURF_ENF_VER_Y_COLUMN" ) << tr( "BLSURF_ENF_VER_Z_COLUMN" ) << tr( "BLSURF_ENF_VER_GROUP_COLUMN" );
-  */
+  enforcedHeaders << tr("BLSURF_ENF_VER_NAME_COLUMN") << tr("BLSURF_ENF_VER_FACE_ENTRY_COLUMN")
+                  << tr("BLSURF_ENF_VER_X_COLUMN")<< tr("BLSURF_ENF_VER_Y_COLUMN") << tr("BLSURF_ENF_VER_Z_COLUMN")
+                  << tr("BLSURF_ENF_VER_ENTRY_COLUMN") << tr( "BLSURF_ENF_VER_GROUP_COLUMN" );
+
   myEnforcedTreeWidget->setHeaderLabels(enforcedHeaders);
   myEnforcedTreeWidget->setAlternatingRowColors(true);
   myEnforcedTreeWidget->setUniformRowHeights(true);
@@ -782,52 +834,48 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
     myEnforcedTreeWidget->header()->setResizeMode(column,QHeaderView::Interactive);
     myEnforcedTreeWidget->resizeColumnToContents(column);
   }
+  myEnforcedTreeWidget->hideColumn(ENF_VER_FACE_ENTRY_COLUMN);
   myEnforcedTreeWidget->hideColumn(ENF_VER_ENTRY_COLUMN);
   myEnforcedTreeWidget->setItemDelegate(new EnforcedTreeWidgetDelegate());
-
-  /* TODO FACE AND VERTEX SELECTION
-  selectFaceButton = new QPushButton(myEnfGroup);
-  QPixmap imageSel1(SUIT_Session::session()->resourceMgr()->loadPixmap( "BLSURFPlugin", tr( "BLSURF_ICON_SELECT")));
-  selectFaceButton->setIcon(imageSel1);
   
-  mySelectedFace = new QLineEdit(myEnfGroup);
-  mySelectedFace->setReadOnly(true);
-  mySelectedFace->setText(tr( "BLSURF_ENF_SELECT_FACE"));
-  mySelectedFace->setStyleSheet("QLineEdit { color: grey }");
-    
-  selectVertexButton = new QPushButton(myEnfGroup);
-  QPixmap imageSel2(SUIT_Session::session()->resourceMgr()->loadPixmap( "BLSURFPlugin", tr( "BLSURF_ICON_SELECT")));
-  selectVertexButton->setIcon(imageSel2);
-    
-  mySelectedEnforcedVertex = new QLineEdit(myEnfGroup);
-  mySelectedEnforcedVertex->setReadOnly(true);
-  mySelectedEnforcedVertex->setText(tr( "BLSURF_ENF_SELECT_VERTEX"));
-  mySelectedEnforcedVertex->setStyleSheet("QLineEdit { color: grey }");
-  */
+// FACE AND VERTEX SELECTION
+  TColStd_MapOfInteger shapeTypes1, shapeTypes2;
+  shapeTypes1.Add( TopAbs_FACE );
+  shapeTypes1.Add( TopAbs_COMPOUND );
+  shapeTypes2.Add( TopAbs_VERTEX );
+  shapeTypes2.Add( TopAbs_COMPOUND );
+
+  SMESH_NumberFilter* faceFilter = new SMESH_NumberFilter("GEOM", TopAbs_FACE, 0, shapeTypes1);
+  myEnfFaceWdg = new StdMeshersGUI_ObjectReferenceParamWdg( faceFilter, 0, /*multiSel=*/true);
+  myEnfFaceWdg->SetDefaultText("Select Faces", "QLineEdit { color: grey }");
+
+  SMESH_NumberFilter* vertexFilter = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 1, shapeTypes2);
+  myEnfVertexWdg = new StdMeshersGUI_ObjectReferenceParamWdg( vertexFilter, 0, /*multiSel=*/true);
+  myEnfVertexWdg->SetDefaultText("Select Vertices", "QLineEdit { color: grey }");
+
+  myEnfVertexWdg->AvoidSimultaneousSelection(myEnfFaceWdg);
+
   QLabel* myXCoordLabel = new QLabel( tr( "BLSURF_ENF_VER_X_LABEL" ), myEnfGroup );
   myXCoord = new SMESHGUI_SpinBox(myEnfGroup);
   myXCoord->RangeStepAndValidator(COORD_MIN, COORD_MAX, 10.0, "length_precision");
-  
+
   QLabel* myYCoordLabel = new QLabel( tr( "BLSURF_ENF_VER_Y_LABEL" ), myEnfGroup );
   myYCoord = new SMESHGUI_SpinBox(myEnfGroup);
   myYCoord->RangeStepAndValidator(COORD_MIN, COORD_MAX, 10.0, "length_precision");
-  
+
   QLabel* myZCoordLabel = new QLabel( tr( "BLSURF_ENF_VER_Z_LABEL" ), myEnfGroup );
   myZCoord = new SMESHGUI_SpinBox(myEnfGroup);
   myZCoord->RangeStepAndValidator(COORD_MIN, COORD_MAX, 10.0, "length_precision");
 
-  /* TODO GROUPS
   QLabel* myGroupNameLabel = new QLabel( tr( "BLSURF_ENF_VER_GROUP_LABEL" ), myEnfGroup );
   myGroupName = new QLineEdit(myEnfGroup);
-  */
-  
+
   addVertexButton = new QPushButton(tr("BLSURF_ENF_VER_VERTEX"),myEnfGroup);
 //   QFrame *line = new QFrame(myEnfGroup);
 //   line->setFrameShape(QFrame::HLine);
 //   line->setFrameShadow(QFrame::Sunken);
   removeVertexButton = new QPushButton(tr("BLSURF_ENF_VER_REMOVE"),myEnfGroup);
 
-  /* TODO GROUPS
   // CheckBox for groups generation
   makeGroupsCheck = new QGroupBox(tr("BLSURF_ENF_VER_GROUPS"), myEnfGroup);
   makeGroupsCheck->setCheckable(true);
@@ -835,39 +883,32 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   QGridLayout* aGroupLayout = new QGridLayout(makeGroupsCheck);
   myGlobalGroupName = new QLineEdit(makeGroupsCheck);
   aGroupLayout->addWidget(myGlobalGroupName);
-  */
-    
-    
+
   anEnfLayout->addWidget(myEnforcedTreeWidget,     0, 0, ENF_VER_NB_LINES+1, 1);
-  /* TODO FACE AND VERTEX SELECTION
-  anEnfLayout->addWidget(selectFaceButton,         ENF_VER_FACE, 1, 1, 1);
-  anEnfLayout->addWidget(mySelectedFace,           ENF_VER_FACE, 2, 1, 1);
-  anEnfLayout->addWidget(selectVertexButton,       ENF_VER_VERTEX, 1, 1, 1);
-  anEnfLayout->addWidget(mySelectedEnforcedVertex, ENF_VER_VERTEX, 2, 1, 1);
-  */
-  anEnfLayout->addWidget(myXCoordLabel,            ENF_VER_X_COORD, 1, 1, 1);
-  anEnfLayout->addWidget(myXCoord,                 ENF_VER_X_COORD, 2, 1, 1);
-  anEnfLayout->addWidget(myYCoordLabel,            ENF_VER_Y_COORD, 1, 1, 1);
-  anEnfLayout->addWidget(myYCoord,                 ENF_VER_Y_COORD, 2, 1, 1);
-  anEnfLayout->addWidget(myZCoordLabel,            ENF_VER_Z_COORD, 1, 1, 1);
-  anEnfLayout->addWidget(myZCoord,                 ENF_VER_Z_COORD, 2, 1, 1);
-  /* TODO GROUPS
-  anEnfLayout->addWidget(myGroupNameLabel,         ENF_VER_GROUP, 1, 1, 1);
-  anEnfLayout->addWidget(myGroupName,              ENF_VER_GROUP, 2, 1, 1);
-  */
-  anEnfLayout->addWidget(addVertexButton,          ENF_VER_VERTEX_BTN, 1, 1, 2);
-  anEnfLayout->addWidget(removeVertexButton,       ENF_VER_REMOVE_BTN, 1, 1, 2);
-//   anEnfLayout->addWidget(line,                     ENF_VER_SEPARATOR, 1, 1, 2);
-  /* TODO GROUPS
-  anEnfLayout->addWidget(makeGroupsCheck,          ENF_VER_GROUP_CHECK, 1, 1, 2);
-  */
-    
+  QGridLayout* anEnfLayout2 = new QGridLayout(myEnfGroup);
+//  FACE AND VERTEX SELECTION
+  anEnfLayout2->addWidget(myEnfFaceWdg,             ENF_VER_FACE, 0, 1, 2);
+  anEnfLayout2->addWidget(myEnfVertexWdg,           ENF_VER_VERTEX, 0, 1, 2);
+
+  anEnfLayout2->addWidget(myXCoordLabel,            ENF_VER_X_COORD, 0, 1, 1);
+  anEnfLayout2->addWidget(myXCoord,                 ENF_VER_X_COORD, 1, 1, 1);
+  anEnfLayout2->addWidget(myYCoordLabel,            ENF_VER_Y_COORD, 0, 1, 1);
+  anEnfLayout2->addWidget(myYCoord,                 ENF_VER_Y_COORD, 1, 1, 1);
+  anEnfLayout2->addWidget(myZCoordLabel,            ENF_VER_Z_COORD, 0, 1, 1);
+  anEnfLayout2->addWidget(myZCoord,                 ENF_VER_Z_COORD, 1, 1, 1);
+  anEnfLayout2->addWidget(myGroupNameLabel,         ENF_VER_GROUP, 0, 1, 1);
+  anEnfLayout2->addWidget(myGroupName,              ENF_VER_GROUP, 1, 1, 1);
+  anEnfLayout2->addWidget(addVertexButton,          ENF_VER_VERTEX_BTN, 0, 1, 2);
+  anEnfLayout2->addWidget(removeVertexButton,       ENF_VER_REMOVE_BTN, 0, 1, 2);
+//   anEnfLayout->addWidget(line,                     ENF_VER_SEPARATOR, 0, 1, 2);
+  anEnfLayout2->addWidget(makeGroupsCheck,          ENF_VER_GROUP_CHECK, 0, 1, 2);
+  anEnfLayout->addLayout(anEnfLayout2, 0,1,ENF_VER_NB_LINES+1,2);
+
   // ---
   tab->insertTab( STD_TAB, myStdGroup, tr( "SMESH_ARGUMENTS" ) );
   tab->insertTab( ADV_TAB, myAdvGroup, tr( "BLSURF_ADV_ARGS" ) );
   tab->insertTab( SMP_TAB, mySmpGroup, tr( "BLSURF_SIZE_MAP" ) );
   tab->insertTab( ENF_TAB, myEnfGroup, tr( "BLSURF_ENF_VER" ) );
-//   tab->insertTab( ENF_TAB, myEnforcedVertexWidget, tr( "BLSURF_ENF_VER" ) );
 
   tab->setCurrentIndex( STD_TAB );
 
@@ -885,45 +926,112 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   connect( mySizeMapTable,     SIGNAL( cellChanged ( int, int  )),    this,         SLOT( onSetSizeMap(int,int ) ) );
 
   connect( myEnforcedTreeWidget,SIGNAL( itemClicked(QTreeWidgetItem *, int)), this, SLOT( synchronizeCoords() ) );
-  connect( myEnforcedTreeWidget,SIGNAL( itemChanged(QTreeWidgetItem *, int)), this, SLOT( update(QTreeWidgetItem *, int) ) );
+  connect( myEnforcedTreeWidget,SIGNAL( itemChanged(QTreeWidgetItem *, int)), this, SLOT( updateEnforcedVertexValues(QTreeWidgetItem *, int) ) );
   connect( myEnforcedTreeWidget,SIGNAL( itemSelectionChanged() ),     this,         SLOT( synchronizeCoords() ) );
   connect( addVertexButton,    SIGNAL( clicked()),                    this,         SLOT( onAddEnforcedVertices() ) );
   connect( removeVertexButton, SIGNAL( clicked()),                    this,         SLOT( onRemoveEnforcedVertex() ) );
+  connect( myEnfVertexWdg,     SIGNAL( contentModified()),            this,         SLOT( onSelectEnforcedVertex() ) );
+//   connect( myEnfVertexWdg,     SIGNAL( selectionActivated()),         this,         SLOT( onVertexSelectionActivated() ) );
+//   connect( myEnfFaceWdg,       SIGNAL( selectionActivated()),         this,         SLOT( onFaceSelectionActivated() ) );
+//   connect(QApplication::instance(), SIGNAL(focusChanged(QWidget*, QWidget*)), this, SLOT(deactivateSelection(QWidget*, QWidget*)));
 
   return fr;
 }
 
-/** BLSURFPluginGUI_HypothesisCreator::update(item, column)
+/** BLSURFPluginGUI_HypothesisCreator::deactivateSelection(QWidget*, QWidget*)
+This method stop the selection of the widgets StdMeshersGUI_ObjectReferenceParamWdg
+*/
+void BLSURFPluginGUI_HypothesisCreator::deactivateSelection(QWidget* old, QWidget* now)
+{
+  if ((now == myXCoord) || (now == myYCoord) || (now == myZCoord)
+      || (now = myGroupName) || (now = makeGroupsCheck) || (now = myEnforcedTreeWidget)) {
+    BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
+    that->getGeomSelectionTool()->selectionMgr()->clearFilters();
+    myEnfFaceWdg->deactivateSelection();
+    myEnfVertexWdg->deactivateSelection();
+  }
+}
+
+/** 
+ * This method resets the content of the X, Y, Z and GroupNAme widgets;
+**/
+void BLSURFPluginGUI_HypothesisCreator::clearEnforcedVertexWidgets()
+{
+  myXCoord->setCleared(true);
+  myYCoord->setCleared(true);
+  myZCoord->setCleared(true);
+  myXCoord->setText("");
+  myYCoord->setText("");
+  myZCoord->setText("");
+  myGroupName->setText("");
+}
+
+/** BLSURFPluginGUI_HypothesisCreator::updateEnforcedVertexValues(item, column)
 This method updates the tooltip of a modified item. The QLineEdit widgets content
 is synchronized with the coordinates of the enforced vertex clicked in the tree widget.
 */
-void BLSURFPluginGUI_HypothesisCreator::update(QTreeWidgetItem* item, int column) {
-//   MESSAGE("BLSURFPluginGUI_HypothesisCreator::updateVertexList");
+void BLSURFPluginGUI_HypothesisCreator::updateEnforcedVertexValues(QTreeWidgetItem* item, int column) {
+//   MESSAGE("BLSURFPluginGUI_HypothesisCreator::updateEnforcedVertexValues");
+  QVariant vertexName = item->data(ENF_VER_NAME_COLUMN, Qt::EditRole);
   QVariant x = item->data(ENF_VER_X_COLUMN, Qt::EditRole);
-  if (! x.isNull()) {
-    QVariant y = item->data(ENF_VER_Y_COLUMN, Qt::EditRole);
-    QVariant z = item->data(ENF_VER_Z_COLUMN, Qt::EditRole);
-    QVariant vertexName = item->data(ENF_VER_NAME_COLUMN, Qt::EditRole);
-    /* TODO GROUPS
-    QString groupName = item->data(ENF_VER_GROUP_COLUMN, Qt::EditRole).toString();
-    */
-    
-    QTreeWidgetItem* parent = item->parent();
-    if (parent) {
+  QVariant y = item->data(ENF_VER_X_COLUMN, Qt::EditRole);
+  QVariant z = item->data(ENF_VER_X_COLUMN, Qt::EditRole);
+  QVariant entry = item->data(ENF_VER_ENTRY_COLUMN, Qt::EditRole);
+  QString groupName = item->data(ENF_VER_GROUP_COLUMN, Qt::EditRole).toString();
+  QTreeWidgetItem* parent = item->parent();
+  
+  clearEnforcedVertexWidgets();
+  
+  if (parent && (!x.isNull() || !entry.isNull())) {
       QString shapeName = parent->data(ENF_VER_NAME_COLUMN, Qt::EditRole).toString();
       QString toolTip = shapeName + QString(": ") + vertexName.toString();
-      toolTip += QString("(") + x.toString();
-      toolTip += QString(", ") + y.toString();
-      toolTip += QString(", ") + z.toString();
-      toolTip += QString(")");
+      if (entry.isNull()) {
+        toolTip += QString("(") + x.toString();
+        toolTip += QString(", ") + y.toString();
+        toolTip += QString(", ") + z.toString();
+        toolTip += QString(")");
+      }
+      
+      if (!groupName.isEmpty())
+        toolTip += QString(" [") + groupName + QString("]");
+
       item->setToolTip(ENF_VER_NAME_COLUMN,toolTip);
+
+    if (!x.isNull()) {
+      myXCoord->SetValue(x.toDouble());
+      myYCoord->SetValue(y.toDouble());
+      myZCoord->SetValue(z.toDouble());
     }
-    myXCoord->SetValue(x.toDouble());
-    myYCoord->SetValue(y.toDouble());
-    myZCoord->SetValue(z.toDouble());
-    /* TODO GROUPS
-    myGroupName->setText(groupName);
-    */
+    
+    if (!groupName.isEmpty())
+      myGroupName->setText(groupName);
+  }
+}
+
+void BLSURFPluginGUI_HypothesisCreator::onSelectEnforcedVertex() {
+  int nbSelEnfVertex = myEnfVertexWdg->NbObjects();
+  clearEnforcedVertexWidgets();
+  if (nbSelEnfVertex == 1)
+  {
+    if ( CORBA::is_nil( getGeomEngine() ) && !GeometryGUI::InitGeomGen() )
+    return ;
+
+    myEnfVertex = myEnfVertexWdg->GetObject< GEOM::GEOM_Object >(nbSelEnfVertex-1);
+    if (myEnfVertex->GetShapeType() == GEOM::VERTEX) {
+      BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
+      GEOM::GEOM_IMeasureOperations_var measureOp = getGeomEngine()->GetIMeasureOperations( that->getGeomSelectionTool()->getMyStudy()->StudyId() );
+      if (CORBA::is_nil(measureOp))
+        return;
+      
+      CORBA::Double x,y,z;
+      measureOp->PointCoordinates (myEnfVertex, x, y, z);
+      if ( measureOp->IsDone() )
+      {
+        myXCoord->SetValue(x);
+        myYCoord->SetValue(y);
+        myZCoord->SetValue(z);
+      }
+    }
   }
 }
 
@@ -932,45 +1040,42 @@ This method synchronizes the QLineEdit/SMESHGUI_SpinBox widgets content with the
 of the enforced vertex clicked in the tree widget.
 */
 void BLSURFPluginGUI_HypothesisCreator::synchronizeCoords() {
-//   MESSAGE("BLSURFPluginGUI_HypothesisCreator::synchronizeCoords");
+  clearEnforcedVertexWidgets();
   QList<QTreeWidgetItem *> items = myEnforcedTreeWidget->selectedItems();
-  if (! items.isEmpty()) {
-    QTreeWidgetItem *item;
-    for (int i=0 ; i < items.size() ; i++) {
-      item = items[i];
+  if (! items.isEmpty() && items.size() == 1) {
+    QTreeWidgetItem *item = items[0];
+//     for (int i=0 ; i < items.size() ; i++) {
+//       item = items[i];
       QVariant x = item->data(ENF_VER_X_COLUMN, Qt::EditRole);
-      if (! x.isNull()) {
-        QVariant y = item->data(ENF_VER_Y_COLUMN, Qt::EditRole);
-        QVariant z = item->data(ENF_VER_Z_COLUMN, Qt::EditRole);
+      QVariant y = item->data(ENF_VER_Y_COLUMN, Qt::EditRole);
+      QVariant z = item->data(ENF_VER_Z_COLUMN, Qt::EditRole);
+      QVariant entry = item->data(ENF_VER_ENTRY_COLUMN, Qt::EditRole);
+      QVariant group = item->data(ENF_VER_GROUP_COLUMN, Qt::EditRole);
+      if (!x.isNull()/* && entry.isNull()*/) {
         myXCoord->SetValue(x.toDouble());
         myYCoord->SetValue(y.toDouble());
         myZCoord->SetValue(z.toDouble());
-        /* TODO GROUPS
-        myGroupName->setText(item->data(ENF_VER_GROUP_COLUMN, Qt::EditRole).toString());
-        */
-        break;
+//         break;
       }
-    }
+      if (!group.isNull() && (!x.isNull() || !entry.isNull()))
+        myGroupName->setText(group.toString());
+//     }
   }
 }
 
 /** BLSURFPluginGUI_HypothesisCreator::addEnforcedVertex(entry, shapeName, x, y, z)
 This method adds an enforced vertex (x,y,z) to shapeName in the tree widget.
 */
-/* TODO GROUPS
-void BLSURFPluginGUI_HypothesisCreator::addEnforcedVertex(std::string entry, std::string shapeName,
-    double x, double y, double z, std::string groupName) {
-*/
-void BLSURFPluginGUI_HypothesisCreator::addEnforcedVertex(std::string entry, std::string shapeName,
-    double x, double y, double z) {
-  // Find entry item
-  QList<QTreeWidgetItem* > theItemList = myEnforcedTreeWidget->findItems(QString(entry.c_str()),Qt::MatchExactly,ENF_VER_ENTRY_COLUMN);
+void BLSURFPluginGUI_HypothesisCreator::addEnforcedVertex(std::string theFaceEntry, std::string theFaceName,
+    double x, double y, double z, std::string vertexName, std::string geomEntry, std::string groupName) {
+  // Find theFaceEntry item
+  QList<QTreeWidgetItem* > theItemList = myEnforcedTreeWidget->findItems(QString(theFaceEntry.c_str()),Qt::MatchExactly,ENF_VER_FACE_ENTRY_COLUMN);
   QTreeWidgetItem* theItem;
   if (theItemList.empty()) {
     theItem = new QTreeWidgetItem();
-    theItem->setData(ENF_VER_ENTRY_COLUMN, Qt::EditRole, QVariant(entry.c_str()));
-    theItem->setData(ENF_VER_NAME_COLUMN, Qt::EditRole, QVariant(shapeName.c_str()));
-    theItem->setToolTip(ENF_VER_NAME_COLUMN,QString(entry.c_str()));
+    theItem->setData(ENF_VER_FACE_ENTRY_COLUMN, Qt::EditRole, QVariant(theFaceEntry.c_str()));
+    theItem->setData(ENF_VER_NAME_COLUMN, Qt::EditRole, QVariant(theFaceName.c_str()));
+    theItem->setToolTip(ENF_VER_NAME_COLUMN,QString(theFaceEntry.c_str()));
     myEnforcedTreeWidget->addTopLevelItem(theItem);
   }
   else {
@@ -984,63 +1089,91 @@ void BLSURFPluginGUI_HypothesisCreator::addEnforcedVertex(std::string entry, std
 //   MESSAGE("Number of child rows: " << nbVert);
   if (nbVert >0) {
     double childValueX,childValueY,childValueZ;
-//     QString childGrouName;
+    QString childEntry, childGroupName;
     QTreeWidgetItem* child;
     for (int row = 0;row<nbVert;row++) {
       child = theItem->child(row);
+      childGroupName = child->data(ENF_VER_GROUP_COLUMN,Qt::EditRole).toString();
+      childEntry = child->data(ENF_VER_ENTRY_COLUMN,Qt::EditRole).toString();
       childValueX = child->data(ENF_VER_X_COLUMN,Qt::EditRole).toDouble();
       childValueY = child->data(ENF_VER_Y_COLUMN,Qt::EditRole).toDouble();
       childValueZ = child->data(ENF_VER_Z_COLUMN,Qt::EditRole).toDouble();
-      if ((childValueX == x) && (childValueY == y) && (childValueZ == z)) {
-        /* TODO GROUPS
+      if (((childValueX == x) && (childValueY == y) && (childValueZ == z)) || ( (childEntry.toStdString() != "") && (childEntry.toStdString() == geomEntry))) {
         // update group name
-        child->setData(ENF_VER_GROUP_COLUMN, Qt::EditRole, QVariant(groupName.c_str()));
-        */
+        if (childGroupName.toStdString() != groupName) {
+          MESSAGE("Group is updated from \"" << childGroupName.toStdString() << "\" to \"" << groupName << "\"");
+          child->setData(ENF_VER_GROUP_COLUMN, Qt::EditRole, QVariant(groupName.c_str()));
+        }
         okToCreate = false;
+        break;
+      } // if
+    } // for
+  } // if
+  if (!okToCreate) {
+    if (geomEntry.empty()) {
+      MESSAGE("In " << theFaceName << " vertex with coords " << x << ", " << y << ", " << z << " already exist: dont create again");
+    }
+    else {
+      MESSAGE("In " << theFaceName << " vertex with entry " << geomEntry << " already exist: dont create again");
+    }
+    return;
+  }
+    
+  if (geomEntry.empty()) {
+    MESSAGE("In " << theFaceName << " vertex with coords " << x << ", " << y << ", " << z<< " is created");
+  }
+  else {
+    MESSAGE("In " << theFaceName << " vertex with geom entry " << geomEntry << " is created");
+  }
+
+  QTreeWidgetItem *vertexItem = new QTreeWidgetItem( theItem);
+  vertexItem->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled);
+  QPixmap iconSelect (SUIT_Session::session()->resourceMgr()->loadPixmap("SMESH", tr("ICON_SELECT")));
+  QSize iconSize = iconSelect.size()*0.7;
+  
+  int vertexIndex=myEnforcedTreeWidget->indexOfTopLevelItem(theItem);
+  QString myVertexName;
+  int indexRef = -1;
+  while(indexRef != vertexIndex) {
+    indexRef = vertexIndex;
+    if (vertexName.empty())
+      myVertexName = QString("Vertex #%1").arg(vertexIndex);
+    else
+      myVertexName = QString(vertexName.c_str());
+
+    for (int row = 0;row<nbVert;row++) {
+      QString name = theItem->child(row)->data(ENF_VER_NAME_COLUMN,Qt::EditRole).toString();
+      if (myVertexName == name) {
+        vertexIndex++;
         break;
       }
     }
   }
-  if (okToCreate) {
-    MESSAGE("In " << shapeName << " vertex with coords " << x << ", " << y << ", " << z<< " is created");
-    
-    QTreeWidgetItem *vertexItem = new QTreeWidgetItem( theItem);
-    vertexItem->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled);
-    int vertexIndex=1;
-    QString vertexName;
-    int indexRef = 0;
-    while(indexRef != vertexIndex) {
-      indexRef = vertexIndex;
-      vertexName = QString("Vertex #%1").arg(vertexIndex);
-      for (int row = 0;row<nbVert;row++) {
-        QString name = theItem->child(row)->data(ENF_VER_NAME_COLUMN,Qt::EditRole).toString();
-        if (vertexName == name) {
-          vertexIndex++;
-          break;
-        }
-      }
-    }
-    vertexItem->setData( ENF_VER_NAME_COLUMN, Qt::EditRole, vertexName );
+  vertexItem->setData( ENF_VER_NAME_COLUMN, Qt::EditRole, myVertexName );
+  if (geomEntry.empty()) {
     vertexItem->setData( ENF_VER_X_COLUMN, Qt::EditRole, QVariant(x) );
     vertexItem->setData( ENF_VER_Y_COLUMN, Qt::EditRole, QVariant(y) );
     vertexItem->setData( ENF_VER_Z_COLUMN, Qt::EditRole, QVariant(z) );
-    /* TODO GROUPS
+  }
+  else {
+    vertexItem->setIcon(ENF_VER_NAME_COLUMN, QIcon(iconSelect.scaled(iconSize,Qt::KeepAspectRatio,Qt::SmoothTransformation)));
+    vertexItem->setData( ENF_VER_ENTRY_COLUMN, Qt::EditRole, QString(geomEntry.c_str()) );
+  }
+  if (groupName != "")
     vertexItem->setData( ENF_VER_GROUP_COLUMN, Qt::EditRole, QVariant(groupName.c_str()));
-    */
-    QString toolTip = QString(shapeName.c_str())+QString(": ")+vertexName;
+
+  QString toolTip = QString(theFaceName.c_str())+QString(": ")+myVertexName;
+  if (geomEntry.empty()) {
     toolTip += QString(" (%1, ").arg(x);
     toolTip += QString("%1, ").arg(y);
     toolTip += QString("%1)").arg(z);
-    vertexItem->setToolTip(ENF_VER_NAME_COLUMN,toolTip);
-    theItem->setExpanded(true);
-    myEnforcedTreeWidget->setCurrentItem(vertexItem,ENF_VER_NAME_COLUMN);
   }
-  else
-    /* TODO GROUPS
-    MESSAGE("In " << shapeName << " vertex with coords " << x << ", " << y << ", " << z <<
-        " already exist: dont create again, only group name is updated with " << groupName);
-    */
-    MESSAGE("In " << shapeName << " vertex with coords " << x << ", " << y << ", " << z << " already exist: dont create again");
+  if (groupName != "")
+    toolTip += QString(" [%1]").arg(groupName.c_str());
+  
+  vertexItem->setToolTip(ENF_VER_NAME_COLUMN,toolTip);
+  theItem->setExpanded(true);
+  myEnforcedTreeWidget->setCurrentItem(vertexItem,ENF_VER_NAME_COLUMN);
 }
 
 /** BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices()
@@ -1049,53 +1182,84 @@ This method is called when a item is added into the enforced vertices tree widge
 void BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices() {
 //   MESSAGE("BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices");
 
+  BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
+
+  that->getGeomSelectionTool()->selectionMgr()->clearFilters();
+  myEnfFaceWdg->deactivateSelection();
+  myEnfVertexWdg->deactivateSelection();
+
   for (int column = 0; column < myEnforcedTreeWidget->columnCount(); ++column)
     myEnforcedTreeWidget->resizeColumnToContents(column);
-  
-  BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
-  
-  if ((myXCoord->text().isEmpty()) ||
-      (myYCoord->text().isEmpty()) ||
-      (myZCoord->text().isEmpty())) return;
 
-  double x = myXCoord->GetValue();
-  double y = myYCoord->GetValue();
-  double z = myZCoord->GetValue();
+  // Vertex selection
+  int selEnfFace   = myEnfFaceWdg->NbObjects();
+  int selEnfVertex = myEnfVertexWdg->NbObjects();
+  bool coordsEmpty = (myXCoord->text().isEmpty()) || (myYCoord->text().isEmpty()) || (myZCoord->text().isEmpty());
 
-  /* TODO GROUPS
-  std::string groupName = myGroupName->text().toStdString();
-  if (makeGroupsCheck->isChecked())
-    groupName = myGlobalGroupName->text().toStdString();
+  if (selEnfFace == 0)
+    return;
 
-  if (boost::trim_copy(groupName) == "")
-    groupName = "";
-  */
-  
-  TopAbs_ShapeEnum shapeType;
+  if ((selEnfVertex == 0) && coordsEmpty)
+    return;
+
   string entry, shapeName;
-  GeomSelectionTools* myGeomToolSelected = that->getGeomSelectionTool();
-  LightApp_SelectionMgr* mySel = myGeomToolSelected->selectionMgr();
-  SALOME_ListIO ListSelectedObjects;
-  mySel->selectedObjects(ListSelectedObjects, NULL, false );
-  if (!ListSelectedObjects.IsEmpty()) {
-    SALOME_ListIteratorOfListIO Object_It(ListSelectedObjects);
-    for (; Object_It.More(); Object_It.Next()) {
-      Handle(SALOME_InteractiveObject) anObject = Object_It.Value();
-      entry     = myGeomToolSelected->getEntryOfObject(anObject);
-      shapeName = anObject->getName();
-      shapeType = myGeomToolSelected->entryToShapeType(entry);
-//       MESSAGE("Object Name = " << shapeName << "& Type is " << anObject->getComponentDataType() << " & ShapeType is " << shapeType);
-      if (shapeType == TopAbs_FACE) {
-        /* TODO GROUPS
-        addEnforcedVertex(entry, shapeName, x, y, z, groupName);
-        */
-        addEnforcedVertex(entry, shapeName, x, y, z);
+
+  for (int i = 0 ; i < selEnfFace ; i++) {
+    myEnfFace = myEnfFaceWdg->GetObject< GEOM::GEOM_Object >(i);
+    entry = myEnfFace->GetStudyEntry();
+    shapeName = myEnfFace->GetName();
+
+    std::string groupName = myGroupName->text().toStdString();
+    if (makeGroupsCheck->isChecked())
+      groupName = myGlobalGroupName->text().toStdString();
+
+    if (boost::trim_copy(groupName).empty())
+      groupName = "";
+
+    if (selEnfVertex <= 1)
+    {
+      double x,y,z;
+      x = myXCoord->GetValue();
+      y = myYCoord->GetValue();
+      z = myZCoord->GetValue();
+      if (selEnfVertex == 1) {
+        myEnfVertex = myEnfVertexWdg->GetObject< GEOM::GEOM_Object >();
+        addEnforcedVertex(entry, shapeName, x, y, z, myEnfVertex->GetName(),myEnfVertex->GetStudyEntry(), groupName);
+      }
+      else
+        addEnforcedVertex(entry, shapeName, x, y, z, "", "", groupName);
+    }
+    else
+    {
+      if ( CORBA::is_nil(getGeomEngine()))
+        return;
+
+      GEOM::GEOM_IMeasureOperations_var measureOp = getGeomEngine()->GetIMeasureOperations( that->getGeomSelectionTool()->getMyStudy()->StudyId() );
+      if (CORBA::is_nil(measureOp))
+        return;
+
+      CORBA::Double x,y,z;
+      x = y = z = 0.;
+      for (int j = 0 ; j < selEnfVertex ; j++)
+      {
+        myEnfVertex = myEnfVertexWdg->GetObject< GEOM::GEOM_Object >(j);
+        if (myEnfVertex->GetShapeType() == GEOM::VERTEX) {
+          measureOp->PointCoordinates (myEnfVertex, x, y, z);
+          if ( measureOp->IsDone() )
+            addEnforcedVertex(entry, shapeName, x, y, z, myEnfVertex->GetName(),myEnfVertex->GetStudyEntry(), groupName);
+        } else if (myEnfVertex->GetShapeType() == GEOM::COMPOUND) {
+            addEnforcedVertex(entry, shapeName, 0, 0, 0, myEnfVertex->GetName(),myEnfVertex->GetStudyEntry(), groupName);
+        }
       }
     }
   }
+
+  myEnfFaceWdg->SetObject(GEOM::GEOM_Object::_nil());
+  myEnfVertexWdg->SetObject(GEOM::GEOM_Object::_nil());
+  
   for (int column = 0; column < myEnforcedTreeWidget->columnCount(); ++column)
     myEnforcedTreeWidget->resizeColumnToContents(column);
-  
+
   if ( myPhysicalMesh->currentIndex() != SizeMap ) {
     myPhysicalMesh->setCurrentIndex( SizeMap );
     onPhysicalMeshChanged();
@@ -1116,8 +1280,13 @@ void BLSURFPluginGUI_HypothesisCreator::onRemoveEnforcedVertex() {
     QVariant value = item->data(ENF_VER_X_COLUMN, Qt::EditRole);
     if (! value.isNull())
       selectedVertices.append(item);
-    else
-      selectedEntries.insert(item);
+    else {
+      value = item->data(ENF_VER_ENTRY_COLUMN, Qt::EditRole);
+      if (! value.isNull())
+        selectedVertices.append(item);
+      else
+        selectedEntries.insert(item);
+    }
   }
 
   foreach(item,selectedVertices) {
@@ -1239,39 +1408,41 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
   mySizeMapTable->resizeColumnToContents(SMP_SIZEMAP_COLUMN);
 
   // Enforced vertices
-//   MESSAGE("retrieveParams(): data.entryEnfVertexListMap.size() = " << data.entryEnfVertexListMap.size());
-  std::map<std::string, std::set<std::vector<double> > >::const_iterator evmIt = data.entryEnfVertexListMap.begin();
-  for ( ; evmIt != data.entryEnfVertexListMap.end() ; ++evmIt) {
-    std::string entry = (*evmIt).first;
+  MESSAGE("retrieveParams(): data.entryCoordsListMap.size() = " << data.faceEntryEnfVertexListMap.size());
+  TFaceEntryEnfVertexListMap::const_iterator evmIt = data.faceEntryEnfVertexListMap.begin();
+  for ( ; evmIt != data.faceEntryEnfVertexListMap.end() ; ++evmIt) {
+    TEntry entry = (*evmIt).first;
     std::string shapeName = myGeomToolSelected->getNameFromEntry(entry);
+    MESSAGE("Face entry: " << entry);
+    MESSAGE("Face name: " << shapeName);
 
-    std::set<std::vector<double> > evs;
-    std::set<std::vector<double> >::const_iterator evsIt;
-    try  {
-      evs = (*evmIt).second;
-    }
-    catch(...) {
-//       MESSAGE("evs = (*evmIt)[entry]: FAIL");
-      break;
-    }
+    TEnfVertexList evs = (*evmIt).second;
+//     try  {
+//       evs = (*evmIt).second;
+//     }
+//     catch(...) {
+//       MESSAGE("evs = (*evmIt).second: FAIL");
+//       break;
+//     }
 
-    evsIt = evs.begin();
+    TEnfVertexList::const_iterator evsIt = evs.begin();
+    TEnfVertex *enfVertex;
     for ( ; evsIt != evs.end() ; ++evsIt) {
-      double x, y, z;
-      x = (*evsIt)[0];
-      y = (*evsIt)[1];
-      z = (*evsIt)[2];
-      /* TODO GROUPS
-      std::string groupName = data.enfVertexGroupNameMap[(*evsIt)];
-      MESSAGE("Vertex "<<x<<" "<<y<<" "<<z<<" has group name "<<groupName);
-      that->addEnforcedVertex(entry, shapeName, x, y, z, groupName);
-      */
-      that->addEnforcedVertex(entry, shapeName, x, y, z);
+      enfVertex = (*evsIt);
+      MESSAGE("Name: " << enfVertex->name);
+      double x, y, z = 0;
+      if (enfVertex->coords.size()) {
+        x = enfVertex->coords[0];
+        y = enfVertex->coords[1];
+        z = enfVertex->coords[2];
+      }
+      that->addEnforcedVertex(entry, shapeName, x, y, z, enfVertex->name, enfVertex->geomEntry, enfVertex->grpName);
     }
   }
+  
   for (int column = 0; column < myEnforcedTreeWidget->columnCount(); ++column)
     myEnforcedTreeWidget->resizeColumnToContents(column);
-  
+
   // update widgets
   that->onPhysicalMeshChanged();
   that->onGeometricMeshChanged();
@@ -1393,54 +1564,50 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
 //       MESSAGE("mySMPShapeTypeMap[" << myAttractorList[0].toStdString() << "] = " << that->mySMPShapeTypeMap[myAttractorList[0]]);
     }
   }
-  
+
   // Enforced vertices
   h_data.enfVertexList.clear();
-  h_data.entryEnfVertexListMap.clear();
+  h_data.faceEntryEnfVertexListMap.clear();
   /* TODO GROUPS
   h_data.groupNameEnfVertexListMap.clear();
-//   h_data.enfVertexGroupNameMap.clear();
   */
-  
-  BLSURFPlugin::TEntryEnfVertexListMap_var entryEnfVertexListMap = h->GetAllEnforcedVertices();
-//   MESSAGE("entryEnfVertexListMap->length() = " << entryEnfVertexListMap->length());
 
-  for ( int i = 0;i<entryEnfVertexListMap->length(); ++i ) {
-    std::string entry =  entryEnfVertexListMap[i].entry.in();
-    BLSURFPlugin::TEnfVertexList_var vertexList = h->GetEnforcedVerticesEntry(entry.c_str());
-    std::set<std::vector<double> > evs;
-    /* TODO GROUPS
-    std::string groupName = "";
-    */
-    for (int j=0 ; j<vertexList->length(); ++j) {
-      double x = vertexList[j][0];
-      double y = vertexList[j][1];
-      double z = vertexList[j][2];
-      std::vector<double> ev;
-      ev.push_back(x);
-      ev.push_back(y);
-      ev.push_back(z);
-      evs.insert(ev);
-      h_data.enfVertexList.insert(ev);
+  BLSURFPlugin::TFaceEntryEnfVertexListMap_var faceEntryEnfVertexListMap = h->GetAllEnforcedVerticesByFace();
+  MESSAGE("faceEntryEnfVertexListMap->length() = " << faceEntryEnfVertexListMap->length());
+
+  for ( int i = 0;i<faceEntryEnfVertexListMap->length(); ++i ) {
+    std::string entry =  faceEntryEnfVertexListMap[i].faceEntry.in();
+//     BLSURFPlugin::TEnfVertexList vertexList = faceEntryEnfVertexListMap[i].enfVertexList.in();
+    BLSURFPlugin::TEnfVertexList vertexList = faceEntryEnfVertexListMap[i].enfVertexList;
+//     BLSURFPlugin::TEnfVertexList_var vertexList = h->GetEnforcedVerticesEntry(entry.c_str());
+
+//     TEnfVertexList& enfVertexList = h_data.faceEntryEnfVertexListMap[entry];
+
+    for (int j=0 ; j<vertexList.length(); ++j) {
+      TEnfVertex *enfVertex = new TEnfVertex();
+      
+      enfVertex->name = CORBA::string_dup(vertexList[j].name.in());
+      enfVertex->geomEntry = CORBA::string_dup(vertexList[j].geomEntry.in());
+      enfVertex->grpName = CORBA::string_dup(vertexList[j].grpName.in());
+      for (int k=0 ; k< vertexList[j].coords.length();k++)
+        enfVertex->coords.push_back(vertexList[j].coords[k]);
+
+      h_data.faceEntryEnfVertexListMap[entry].insert(enfVertex);
+
       /* TODO GROUPS
-      groupName.assign(h->GetEnforcedVertexGroupName(x, y, z));
-      MESSAGE("readParamsFromHypo, groupName = "<<groupName)
-      h_data.enfVertexGroupNameMap[ev] = groupName;
       if (groupName != "") {
         h_data.groupNameEnfVertexListMap[groupName].insert(ev);
       }
       */
-//       MESSAGE("New enf vertex for entry " << entry << ": " << x << ", " << y << ", " << z);
     }
 //     h_data.enfVertMap[entry] = evs;
-    h_data.entryEnfVertexListMap[entry] = evs;
-    if (evs.size() == 0) {
-//       MESSAGE("No enf vertex for entry " << entry << ": key is erased");
-//       h_data.enfVertMap.erase(entry);
-      h_data.entryEnfVertexListMap.erase(entry);
+//     h_data.entryCoordsListMap[entry] = coordsList;
+
+    if (h_data.faceEntryEnfVertexListMap[entry].size() == 0) {
+      h_data.faceEntryEnfVertexListMap.erase(entry);
     }
   }
-  
+
   return true;
 }
 
@@ -1485,22 +1652,6 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
         h->SetAngleMeshC( h_data.myAngleMeshC );
     }
 #ifdef WITH_SIZE_BOUNDARIES
-//     if ( !isDouble( h_data.myPhyMin ))
-//       h->SetPhyMin( -1 );
-//     else if ( h->GetPhyMin() != h_data.myPhyMin.toDouble() )
-//       h->SetPhyMin( h_data.myPhyMin.toDouble() );
-//     if ( !isDouble( h_data.myPhyMax ))
-//       h->SetPhyMax( -1 );
-//     else if ( h->GetPhyMax() != h_data.myPhyMax.toDouble() )
-//       h->SetPhyMax( h_data.myPhyMax.toDouble() );
-//     if ( !isDouble( h_data.myGeoMin ))
-//       h->SetGeoMin( -1 );
-//     else if ( h->GetGeoMin() != h_data.myGeoMin.toDouble() )
-//       h->SetGeoMin( h_data.myGeoMin.toDouble() );
-//     if ( !isDouble( h_data.myGeoMax ))
-//       h->SetGeoMax( -1 );
-//     else if ( h->GetGeoMax() != h_data.myGeoMax.toDouble() )
-//       h->SetGeoMax( h_data.myGeoMax.toDouble() );
     if (h_data.myPhyMin > 0)
       h->SetPhyMin( h_data.myPhyMin );
     if (h_data.myPhyMax > 0)
@@ -1511,7 +1662,6 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
       h->SetGeoMax( h_data.myGeoMax );
 #endif
 
-    //printf("storeParamsToHypo():myOptions->length()=%d\n",myOptions->length());
     h->SetOptionValues( myOptions ); // is set in checkParams()
 
     BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
@@ -1548,64 +1698,123 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
         h->SetSizeMapEntry( entry.toLatin1().constData(), fullSizeMap.toLatin1().constData() );
       }
     }
-    
-    // Enforced vertices
-    std::map<std::string, std::set<std::vector<double> > >::const_iterator evmIt = h_data.entryEnfVertexListMap.begin();
-    for ( ; evmIt != h_data.entryEnfVertexListMap.end() ; ++evmIt) {
-      std::string entry = evmIt->first;
-      std::set<std::vector<double> > evs;
-      std::set<std::vector<double> >::const_iterator evsIt;
-      double x, y, z;
-      /* TODO GROUPS
-      std::string groupName = "";
-      */
-      BLSURFPlugin::TEnfVertexList_var hypVertexList;
-      int hypNbVertex = 0;
-      try {
-        hypVertexList = h->GetEnforcedVerticesEntry(entry.c_str());
-        hypNbVertex = hypVertexList->length();
-      }
-      catch(...) {
-      }
-      evs = evmIt->second;
-      evsIt = evs.begin();
-      for ( ; evsIt != evs.end() ; ++evsIt) {
-        x = (*evsIt)[0];
-        y = (*evsIt)[1];
-        z = (*evsIt)[2];
 
-        /* TODO GROUPS
-        std::map<std::vector<double> , std::string >::const_iterator grpIt = h_data.enfVertexGroupNameMap.find(*evsIt);
-        if (grpIt != h_data.enfVertexGroupNameMap.end())
-          groupName = grpIt->second;
-//         MESSAGE("SetEnforcedVertexEntry("<<entry<<", "<<x<<", "<<y<<", "<<z<<")");
-        h->SetEnforcedVertexEntryWithGroup( entry.c_str(), x, y, z, groupName.c_str() );
-        */
-        h->SetEnforcedVertexEntry( entry.c_str(), x, y, z );
-      }
-      // Remove old vertices
-      if (hypNbVertex >0) {
-        for (int i =0 ; i<hypNbVertex ; i++) {
-          x = hypVertexList[i][0];
-          y = hypVertexList[i][1];
-          z = hypVertexList[i][2];
-          std::vector<double> vertex;
-          vertex.push_back(x);
-          vertex.push_back(y);
-          vertex.push_back(z);
-          if (evs.find(vertex) == evs.end()) {
-//             MESSAGE("UnsetEnforcedVertexEntry("<<entry<<", "<<x<<", "<<y<<", "<<z<<")");
-            h->UnsetEnforcedVertexEntry( entry.c_str(), x, y, z );
-          }
+    // Enforced vertices
+    bool ret;
+    int hypNbVertex;
+    double x, y, z = 0;
+    std::string enfName;
+    /* TODO GROUPS
+    std::string groupName = "";
+    */
+
+    TFaceEntryEnfVertexListMap::const_iterator evmIt = h_data.faceEntryEnfVertexListMap.begin();
+
+    BLSURFPlugin::TFaceEntryEnfVertexListMap_var allEnforcedVerticesByFace = h->GetAllEnforcedVerticesByFace();
+    hypNbVertex =  allEnforcedVerticesByFace->length();
+    
+
+    // All enforced vertices were deleted
+    if (evmIt == h_data.faceEntryEnfVertexListMap.end() && hypNbVertex!=0) {
+      h->ClearAllEnforcedVertices();
+      ok = true;
+    }
+    else {
+      // All enforced vertices for a specific entry were deleted
+      for (int i=0 ; i<hypNbVertex; i++) {
+        BLSURFPlugin::TFaceEntryEnfVertexListMapElement el = allEnforcedVerticesByFace[i];
+        TEnfName entry = el.faceEntry.in();
+        if (h_data.faceEntryEnfVertexListMap.find(entry) == h_data.faceEntryEnfVertexListMap.end()) {
+          MESSAGE("Remove all enforced vertices for entry " << entry);
+          h->UnsetEnforcedVerticesEntry(entry.c_str());
         }
       }
-    }
+
+      // One or several enforced vertices are added or removed for a specific entry
+      TEnfVertexList enfVertexFromHyp;
+      BLSURFPlugin::TEnfVertexList_var hypEnfVertexList;
+      TEnfName faceEntry;
+      TEnfVertexList evs;
+      TEnfVertexList::const_iterator evsIt, enfVertexToRemove;
+      for ( ; evmIt != h_data.faceEntryEnfVertexListMap.end() ; ++evmIt) {
+        faceEntry = evmIt->first;
+        evs = evmIt->second;
+        MESSAGE("Number of enforced vertices for face entry " << faceEntry << ": " << evs.size());
+        evsIt = evs.begin();
+
+        hypEnfVertexList = h->GetEnforcedVerticesEntry(faceEntry.c_str());
+        hypNbVertex = hypEnfVertexList->length();
+        MESSAGE("Number of enforced vertices from hypothesis: " << hypNbVertex);
+        enfVertexFromHyp.clear();
+        for (int i =0 ; i<hypNbVertex ; i++) {
+          TEnfVertex *_enfVertex = new TEnfVertex();
+          _enfVertex->name = string("");
+          _enfVertex->name = CORBA::string_dup(hypEnfVertexList[i].name.in());
+          _enfVertex->geomEntry = string("");
+          _enfVertex->geomEntry = CORBA::string_dup(hypEnfVertexList[i].geomEntry.in());
+          _enfVertex->grpName = string("");
+          _enfVertex->grpName = CORBA::string_dup(hypEnfVertexList[i].grpName.in());
+          for (int j=0 ; j< hypEnfVertexList[i].coords.length() ; j++)
+            _enfVertex->coords.push_back(hypEnfVertexList[i].coords[j]);
+          enfVertexFromHyp.insert(_enfVertex);
+          MESSAGE("From hyp: enf vertex " << _enfVertex->name);
+//           MESSAGE("From hyp: enf. vertex at " << _coords[0]<<", "<<_coords[1]<<", "<<_coords[2]);
+        }
+
+//         TEnfVertex *enfVertex;
+        for ( ; evsIt != evs.end() ; ++evsIt) {
+          x =y =z = 0;
+//           enfVertex = (*evsIt);
+          if ((*evsIt)->coords.size()) {
+            x = (*evsIt)->coords[0];
+            y = (*evsIt)->coords[1];
+            z = (*evsIt)->coords[2];
+          }
+          ret = h->SetEnforcedVertexEntry( faceEntry.c_str(), x, y, z, (*evsIt)->name.c_str(), (*evsIt)->geomEntry.c_str(), (*evsIt)->grpName.c_str());
+          enfVertexFromHyp.erase((*evsIt));
+          
+//           for (enfVertexToRemove = enfVertexFromHyp.begin() ; enfVertexToRemove != enfVertexFromHyp.end() ; ++enfVertexToRemove) {
+//             if (!TEnfVertexGUICmp(&enfVertex, &(*enfVertexToRemove))) {
+//               MESSAGE("Enf vertex  " << enfVertex.name << " must not be deleted")
+//               enfVertexFromHyp.erase(enfVertexToRemove);
+//             }
+//           }
+        }
+
+        // Remove old vertices
+        enfVertexToRemove = enfVertexFromHyp.begin();
+        for ( ; enfVertexToRemove!=enfVertexFromHyp.end() ; ++enfVertexToRemove) {
+//           enfVertex = (*enfVertexToRemove);
+          if (h_data.enfVertexList.find((*enfVertexToRemove)) != h_data.enfVertexList.end()) {
+          
+//           for ( evsIt=h_data.enfVertexList.begin();evsIt!=h_data.enfVertexList.end();evsIt++) {
+//             if (TEnfVertexGUICmp(&(*evsIt),&enfVertex)) {
+              MESSAGE("Remove enf vertex " << (*enfVertexToRemove)->name);
+              if ((*enfVertexToRemove)->coords.size()) {
+                x = (*enfVertexToRemove)->coords[0];
+                y = (*enfVertexToRemove)->coords[1];
+                z = (*enfVertexToRemove)->coords[2];
+              }
+              ret = h->UnsetEnforcedVertexEntry(faceEntry.c_str(), x, y, z, (*enfVertexToRemove)->geomEntry.c_str());
+              if (ret)
+                MESSAGE("SUCCESS");
+//             } // if
+//           } // for
+          } // if
+        } // for
+      } // for
+    } // else
+  } // try
+  catch(const std::exception& ex) {
+    std::cout << "Exception: " << ex.what() << std::endl;
+    throw ex;
   }
-  catch(const SALOME::SALOME_Exception& ex)
-  {
-    SalomeApp_Tools::QtCatchCorbaException(ex);
-    ok = false;
-  }
+//   catch(const SALOME::SALOME_Exception& ex)
+//   {
+//     throw ex;
+// //     SalomeApp_Tools::QtCatchCorbaException(ex);
+// //     ok = false;
+//   }
   return ok;
 }
 
@@ -1677,12 +1886,8 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
 
   // Enforced vertices
   h_data.enfVertexList.clear();
-  h_data.entryEnfVertexListMap.clear();
-  /* TODO GROUPS
-  h_data.groupNameEnfVertexListMap.clear();
-  h_data.enfVertexGroupNameMap.clear();
-  */
-  
+  h_data.faceEntryEnfVertexListMap.clear();
+
   int nbEnforcedShapes = myEnforcedTreeWidget->topLevelItemCount();
   int nbEnforcedVertices = 0;
   std::string groupName = "";
@@ -1690,34 +1895,46 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
   for (int i=0 ; i<nbEnforcedShapes ; i++) {
     QTreeWidgetItem* shapeItem = myEnforcedTreeWidget->topLevelItem(i);
     if (shapeItem) {
-      std::string entry = shapeItem->data(ENF_VER_ENTRY_COLUMN,Qt::EditRole).toString().toStdString();
+      std::string faceEntry = shapeItem->data(ENF_VER_FACE_ENTRY_COLUMN,Qt::EditRole).toString().toStdString();
       nbEnforcedVertices = shapeItem->childCount();
       if (nbEnforcedVertices >0) {
         double childValueX,childValueY,childValueZ;
+        std::string childName, vertexEntry;
         QTreeWidgetItem* child;
-        std::set<std::vector<double> > evs;
+        TEnfVertexList evs;
+        evs.clear();
         for (row = 0;row<nbEnforcedVertices;row++) {
           child = shapeItem->child(row);
+          childName   = child->data(ENF_VER_NAME_COLUMN,Qt::EditRole).toString().toStdString();
           childValueX = child->data(ENF_VER_X_COLUMN,Qt::EditRole).toDouble();
           childValueY = child->data(ENF_VER_Y_COLUMN,Qt::EditRole).toDouble();
           childValueZ = child->data(ENF_VER_Z_COLUMN,Qt::EditRole).toDouble();
-          std::vector<double> vertex;
-          vertex.push_back(childValueX);
-          vertex.push_back(childValueY);
-          vertex.push_back(childValueZ);
-          evs.insert(vertex);
-          h_data.enfVertexList.insert(vertex);
-          /* TODO GROUPS
-          groupName = child->data(ENF_VER_GROUP_COLUMN,Qt::EditRole).toString().toStdString();
-          // Group
+          vertexEntry = child->data(ENF_VER_ENTRY_COLUMN,Qt::EditRole).toString().toStdString();
           if (makeGroupsCheck->isChecked())
             groupName = myGlobalGroupName->text().toStdString();
-          h_data.enfVertexGroupNameMap[vertex] = groupName;
+          else
+            groupName = child->data(ENF_VER_GROUP_COLUMN,Qt::EditRole).toString().toStdString();
+
+          TEnfVertex *enfVertex = new TEnfVertex();
+          enfVertex->name = childName;
+          if (vertexEntry.empty()) {
+            enfVertex->coords.push_back(childValueX);
+            enfVertex->coords.push_back(childValueY);
+            enfVertex->coords.push_back(childValueZ);
+          }
+          else
+            enfVertex->geomEntry = vertexEntry;
+          enfVertex->grpName = groupName;
+//           TEnfVertexList::iterator it = h_data.enfVertexList.find(enfVertex);
+//           if (it == h_data.enfVertexList.end())
+          h_data.enfVertexList.insert(enfVertex);
+          evs.insert(enfVertex);
+          /* TODO GROUPS
           if (groupName != "")
             h_data.groupNameEnfVertexListMap[groupName].insert(vertex);
           */
         }
-        h_data.entryEnfVertexListMap[entry] = evs;
+        h_data.faceEntryEnfVertexListMap[faceEntry] = evs;
       }
     }
   }
@@ -1732,29 +1949,16 @@ void BLSURFPluginGUI_HypothesisCreator::onPhysicalMeshChanged() {
   bool isSizeMap = (myPhysicalMesh->currentIndex() == SizeMap);
   bool isCustom = (isPhysicalUserDefined || isSizeMap) ;
   bool geomIsCustom = (myGeometricMesh->currentIndex() == UserDefined);
-  
+
   myGradation->setEnabled(!isPhysicalUserDefined || geomIsCustom);
   myPhySize->setEnabled(isCustom);
   myPhyMax->setEnabled(isCustom);
   myPhyMin->setEnabled(isCustom);
 
   if ( !myGradation->isEnabled())
-//     myGradation->setValue( 1.1 );
     myGradation->SetValue( 1.1 );
 
   if ( !isCustom ) {
-//     QString aPhySize = "";
-//     switch( myPhysicalMesh->currentIndex() ) {
-//       case DefaultSize:
-//       default:
-//         aPhySize = "10";
-//         break;
-//       }
-//     myPhySize->setText( aPhySize );
-//     if ( !isDouble( myPhyMin->text(), true ))
-//       myPhyMin->setText("");
-//     if ( !isDouble( myPhyMax->text(), true ))
-//       myPhyMax->setText("");
     if ( myGeometricMesh->currentIndex() == DefaultGeom ) {
       myGeometricMesh->setCurrentIndex( UserDefined );
       onGeometricMeshChanged();
@@ -1766,7 +1970,7 @@ void BLSURFPluginGUI_HypothesisCreator::onGeometricMeshChanged() {
   MESSAGE("BLSURFPluginGUI_HypothesisCreator::onGeometricMeshChanged");
   bool isCustom = (myGeometricMesh->currentIndex() == UserDefined);
   bool phyIsSizemap = (myPhysicalMesh->currentIndex() == SizeMap);
-  
+
   myAngleMeshS->setEnabled(isCustom);
   myAngleMeshC->setEnabled(isCustom);
   myGradation->setEnabled(isCustom || phyIsSizemap);
@@ -1777,19 +1981,6 @@ void BLSURFPluginGUI_HypothesisCreator::onGeometricMeshChanged() {
     myGradation->SetValue( 1.1 );
 
   if ( ! isCustom ) {
-//     double aAngleMeshS;
-//     switch( myGeometricMesh->currentIndex() ) {
-//       case DefaultGeom:
-//       default:
-//         aAngleMeshS = 8;
-//         break;
-//       }
-//     myAngleMeshS->SetValue( aAngleMeshS );
-//     myAngleMeshC->SetValue( aAngleMeshS );
-//     if ( !isDouble( myGeoMin->text(), true ))
-//       myGeoMin->setText("");
-//     if ( !isDouble( myGeoMax->text(), true ))
-//       myGeoMax->setText("");
     //  hphy_flag = 0 and hgeo_flag = 0 is not allowed (spec)
     if ( myPhysicalMesh->currentIndex() == DefaultSize ) {
       myPhysicalMesh->setCurrentIndex( PhysicalUserDefined );
@@ -1962,13 +2153,12 @@ void BLSURFPluginGUI_HypothesisCreator::insertElementType(TopAbs_ShapeEnum typeS
     BLSURFPlugin::BLSURFPlugin_Hypothesis::_narrow( initParamsHypothesis());
 
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
-
-  TopAbs_ShapeEnum shapeType;
-  string entry, shapeName;
   GeomSelectionTools* myGeomToolSelected = that->getGeomSelectionTool();
 
   LightApp_SelectionMgr* mySel = myGeomToolSelected->selectionMgr();
 
+  TopAbs_ShapeEnum shapeType;
+  string entry, shapeName;
   SALOME_ListIO ListSelectedObjects;
   mySel->selectedObjects(ListSelectedObjects, NULL, false );
   if (!ListSelectedObjects.IsEmpty())
@@ -2063,12 +2253,7 @@ bool BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromEntry(QString myEnt
   }
   else if (that->mySMPMap[myEntry].startsWith("ATTRACTOR")) {
 //     MESSAGE("Attractor" );
-//  if ((that->mySMPMap[myEntry].count(QRegExp("^ATTRACTOR\\((?:(-?0(\\.\\d*)*|-?[1-9]+\\d*(\\.\\d*)*|-?\\.(\\d)+);){5}(True|False)\\)$")) != 1)) {
-    if ((that->mySMPMap[myEntry].count(QRegExp("^ATTRACTOR\\((?:(-?0(\\.\\d*)*|-?[1-9]+\\d*(\\.\\d*)*|-?\\.(\\d)+);){5}(True|False)(?:;(-?0(\\.\\d*)*|-?[1-9]+\\d*(\\.\\d*)*|-?\\.(\\d)+))?\\)$")) != 1)) {
-//     if ((that->mySMPMap[myEntry].count('(') != 1) or
-//         (that->mySMPMap[myEntry].count(')') != 1) or
-//         (that->mySMPMap[myEntry].count(';') != 4) or
-//         (that->mySMPMap[myEntry].size() == 15)){
+    if ((that->mySMPMap[myEntry].count(QRegExp("^ATTRACTOR\\((?:(-?0(\\.\\d*)*|-?[1-9]+\\d*(\\.\\d*)*|-?\\.(\\d)+);){5}(True|False)\\)$")) != 1)) {
       if (displayError)
         SUIT_MessageBox::warning( dlg(),"Definition of attractor : Error" ,"An attractor is defined with the following pattern: ATTRACTOR(xa;ya;za;a;b;True|False[;d])" );
       return false;

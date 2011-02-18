@@ -64,7 +64,7 @@ libBLSURFPluginGUI_la_LDFLAGS =			\
 	$(QT_LIBS) \
 	../BLSURFPlugin/libBLSURFEngine.la	\
 	$(GUI_LDFLAGS) -lqtx -lSalomeApp -lsuit -lSalomeObject -lLightApp	\
-	${SMESH_LDFLAGS} -lSMESH -lGeomSelectionTools \
+	${SMESH_LDFLAGS} -lSMESH -lGeomSelectionTools -lStdMeshersGUI \
 	$(CAS_KERNEL) $(BLSURF_LIBS)
 
 # resources files

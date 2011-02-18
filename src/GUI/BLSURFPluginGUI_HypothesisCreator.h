@@ -50,6 +50,7 @@
 #include <QItemDelegate>
 
 #include <SMESHGUI_Hypotheses.h>
+#include "StdMeshersGUI_ObjectReferenceParamWdg.h"
 #include <SALOMEconfig.h>
 #include <cstring>
 #include <map>
@@ -57,6 +58,7 @@
 #include <vector>
 #include <TopAbs_ShapeEnum.hxx>
 #include <GeomSelectionTools.h>
+#include <GEOM_Client.hxx>
 #include CORBA_SERVER_HEADER(BLSURFPlugin_Algorithm)
 
 class QGroupBox;
@@ -75,6 +77,45 @@ class SMESHGUI_SpinBox;
 class LightApp_SelectionMgr;
 // class DlgBlSurfHyp_Enforced;
 
+// Name
+typedef std::string TEnfName;
+// Entry
+typedef std::string TEntry;
+// List of entries
+typedef std::set<TEntry> TEntryList;
+// Enforced vertex = 3 coordinates
+typedef std::vector<double> TEnfVertexCoords;
+// List of enforced vertices
+typedef std::set< TEnfVertexCoords > TEnfVertexCoordsList;
+// Enforced vertex
+struct TEnfVertex{
+  TEnfName name;
+  TEntry geomEntry;
+  TEnfVertexCoords coords;
+  TEnfName grpName;
+};
+
+// TODO remove all TEnfVertexGUICmp
+
+struct CompareEnfVertices
+{
+  bool operator () (const TEnfVertex* e1, const TEnfVertex* e2) const {
+    if (e1 && e2) {
+      if (e1->coords.size() && e2->coords.size())
+        return (e1->coords < e2->coords);
+      else
+        return (e1->geomEntry < e2->geomEntry);
+    }
+    return false;
+  }
+};
+
+// List of enforced vertices
+typedef std::set< TEnfVertex*, CompareEnfVertices > TEnfVertexList;
+
+// Map Face Entry / List of enforced vertices
+typedef std::map< TEntry, TEnfVertexList > TFaceEntryEnfVertexListMap;
+
 typedef struct
 {
   int     myTopology, myVerbosity;
@@ -82,15 +123,36 @@ typedef struct
   double  myAngleMeshS, myAngleMeshC, myGradation;
   double  myPhySize, myGeoMin, myGeoMax, myPhyMin,myPhyMax;
   bool    myAllowQuadrangles, myDecimesh,mySmpsurface,mySmpedge,mySmppoint,myEnforcedVertex;
-  std::set<std::vector<double> > enfVertexList;
-  std::map<std::string, std::set<std::vector<double> > > entryEnfVertexListMap;
+  TEnfVertexList enfVertexList;
+  TFaceEntryEnfVertexListMap faceEntryEnfVertexListMap;
   /* TODO GROUPS
-  std::map<std::string, std::set<std::vector<double> > > groupNameEnfVertexListMap;
-  std::map<std::vector<double> , std::string > enfVertexGroupNameMap;
+  TGroupNameEnfVertexListMap groupNameEnfVertexListMap;
   */
   QString myName;
 } BlsurfHypothesisData;
 
+
+
+// class BLSURFPluginGUI_ObjectReferenceParamWdg: public StdMeshersGUI_ObjectReferenceParamWdg
+// {
+//   Q_OBJECT
+// public:
+//   BLSURFPluginGUI_ObjectReferenceParamWdg( SUIT_SelectionFilter* filter, 
+//                                          QWidget*              parent,
+//                                          bool                  multiSelection=false);
+//   BLSURFPluginGUI_ObjectReferenceParamWdg( MeshObjectType objType,
+//                                          QWidget*       parent,
+//                                          bool           multiSelection=false);
+//   ~BLSURFPluginGUI_ObjectReferenceParamWdg();
+// 
+// private:
+//   void init();
+//   
+// public slots:
+//   void activateSelectionOnly();
+//   void deactivateSelectionOnly();
+//   void setActivationStatus(bool status);
+// };
 
 /*!
  * \brief Class for creation of BLSURF hypotheses
@@ -112,7 +174,7 @@ protected:
   virtual QFrame*     buildFrame    ();
   virtual void        retrieveParams() const;
   virtual QString     storeParams   () const;
-  
+
   virtual QString     caption() const;
   virtual QPixmap     icon() const;
   virtual QString     type() const;
@@ -130,14 +192,15 @@ protected slots:
   void                onRemoveMap();
   void                onSetSizeMap(int,int);
 
-  /* TODO GROUPS
-  void                addEnforcedVertex(std::string, std::string, double, double, double, std::string);
-  */
-  void                addEnforcedVertex(std::string, std::string, double, double, double);
+  void                addEnforcedVertex(std::string theFaceEntry, std::string theFaceName, double x=0, double y=0, double z=0, 
+                                        std::string vertexName = "", std::string geomEntry = "", std::string groupName = "");
   void                onAddEnforcedVertices();
   void                onRemoveEnforcedVertex();
   void                synchronizeCoords();
-  void                update(QTreeWidgetItem* , int );
+  void                updateEnforcedVertexValues(QTreeWidgetItem* , int );
+  void                onSelectEnforcedVertex();
+  void                deactivateSelection(QWidget*, QWidget*);
+  void                clearEnforcedVertexWidgets();
 
 private:
   bool                readParamsFromHypo( BlsurfHypothesisData& ) const;
@@ -147,6 +210,7 @@ private:
   bool                sizeMapValidationFromRow(int,bool displayError = true);
   bool                sizeMapValidationFromEntry(QString,bool displayError = true);
   GeomSelectionTools* getGeomSelectionTool();
+  GEOM::GEOM_Gen_var  getGeomEngine();
 
 private:
   QWidget*            myStdGroup;
@@ -178,24 +242,22 @@ private:
   QPushButton         *removeButton;
 
   QWidget*            myEnfGroup;
-  /* TODO FACE AND VERTEX SELECTION
-  QPushButton*        selectFaceButton;
-  QLineEdit*          mySelectedFace;
-//   GEOM::GEOM_Object_var myEnfFace;
-  QPushButton*        selectVertexButton;
-  QLineEdit*          mySelectedEnforcedVertex;
-//   GEOM::GEOM_Object_var myEnfVertex;
-  */
+//    TODO FACE AND VERTEX SELECTION
+  StdMeshersGUI_ObjectReferenceParamWdg *myEnfFaceWdg;
+  GEOM::GEOM_Object_var myEnfFace;
+  StdMeshersGUI_ObjectReferenceParamWdg *myEnfVertexWdg;
+  GEOM::GEOM_Object_var myEnfVertex;
+
 //   DlgBlSurfHyp_Enforced* myEnforcedVertexWidget;
   QTreeWidget*        myEnforcedTreeWidget;
   SMESHGUI_SpinBox*   myXCoord;
   SMESHGUI_SpinBox*   myYCoord;
   SMESHGUI_SpinBox*   myZCoord;
-  /* TODO GROUPS
+
   QLineEdit*          myGroupName;
   QGroupBox*          makeGroupsCheck;
   QLineEdit*          myGlobalGroupName;
-  */
+
   QPushButton*        addVertexButton;
   QPushButton*        removeVertexButton;
 
@@ -228,7 +290,7 @@ public:
 
   void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option,
                     const QModelIndex &index) const;
-  
+
   bool vertexExists(QAbstractItemModel *model, const QModelIndex &index, QString value) const;
 };
 

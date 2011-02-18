@@ -824,29 +824,44 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save) {
     save << " " << "__ATTRACTORS_END__";
   }
 
-  TFaceEntryEnfVertexListMap::const_iterator it_enf = _faceEntryEnfVertexListMap.begin();
-  if (it_enf != _faceEntryEnfVertexListMap.end()) {
+  TEnfVertexList::const_iterator it_enf = _enfVertexList.begin();
+  if (it_enf != _enfVertexList.end()) {
     save << " " << "__ENFORCED_VERTICES_BEGIN__";
-    for (; it_enf != _faceEntryEnfVertexListMap.end(); ++it_enf) {
-      save << " " << it_enf->first;
-      TEnfVertexList enfVertexList = it_enf->second;
-      TEnfVertexList::const_iterator it_enfVertexList = enfVertexList.begin();
-      for (; it_enfVertexList != enfVertexList.end(); ++it_enfVertexList) {
-        TEnfVertex *enfVertex = (*it_enfVertexList);
-        save << " " << enfVertex->name << ";";
-        save << " " << enfVertex->geomEntry << ";";
-        if (enfVertex->coords.size()) {
-          save << " " << enfVertex->coords[0] << ";";
-          save << " " << enfVertex->coords[1] << ";";
-          save << " " << enfVertex->coords[2] << ";";
-        }
-        else {
-          save <<" ; ; ;";
-        }
-        save << " " << enfVertex->grpName;
-        save << " " << "$"; // "$" is a mark of enforced vertex end
+    for (; it_enf != _enfVertexList.end(); ++it_enf) {
+      TEnfVertex *enfVertex = (*it_enf);
+      save << " " << "__BEGIN_VERTEX__";
+      if (!enfVertex->name.empty()) {
+        save << " " << "__BEGIN_NAME__";
+        save << " " << enfVertex->name;
+        save << " " << "__END_NAME__";
       }
-      save << "#"; // "#" is a mark of enforced shape end
+      if (!enfVertex->geomEntry.empty()) {
+        save << " " << "__BEGIN_ENTRY__";
+        save << " " << enfVertex->geomEntry;
+        save << " " << "__END_ENTRY__";
+      }
+      if (!enfVertex->grpName.empty()) {
+        save << " " << "__BEGIN_GROUP__";
+        save << " " << enfVertex->grpName;
+        save << " " << "__END_GROUP__";
+      }
+      if (enfVertex->coords.size()) {
+        save << " " << "__BEGIN_COORDS__";
+        for (int i=0;i<enfVertex->coords.size();i++)
+          save << " " << enfVertex->coords[i];
+        save << " " << "__END_COORDS__";
+      }
+      TEntryList::const_iterator faceEntriesIt = enfVertex->faceEntries.begin();
+      bool hasFaces = false;
+      if (faceEntriesIt != enfVertex->faceEntries.end()) {
+        hasFaces = true;
+        save << " " << "__BEGIN_FACELIST__";
+      }
+      for (; faceEntriesIt != enfVertex->faceEntries.end(); ++faceEntriesIt)
+        save << " " << (*faceEntriesIt);
+      if (hasFaces)
+        save << " " << "__END_FACELIST__";
+      save << " " << "__END_VERTEX__";
     }
     save << " " << "__ENFORCED_VERTICES_END__";
   }
@@ -1069,139 +1084,138 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         hasEnforcedVertex = true;
   }
 
-//  MAPS TO FILL
-//   TFaceEntryEnfVertexListMap  _faceEntryEnfVertexListMap;
-//   TEnfVertexList              _enfVertexList;
-//   // maps to get "manual" enf vertex (through their coordinates)
-//   TFaceEntryCoordsListMap     _faceEntryCoordsListMap;
-//   TCoordsEnfVertexMap         _coordsEnfVertexMap;
-//   // maps to get "geom" enf vertex (through their geom entries)
-//   TFaceEntryEnfVertexEntryListMap _faceEntryEnfVertexEntryListMap;
-//   TEnfVertexEntryEnfVertexMap     _enfVertexEntryEnfVertexMap;
 
-  std::string enfVertexEntry, enfValue, enfGroup, trace;
-  std::ostringstream oss;
+// 
+// Here is a example of the saved stream:
+// __ENFORCED_VERTICES_BEGIN__ 
+// __BEGIN_VERTEX__  => no name, no entry
+// __BEGIN_GROUP__ mon groupe __END_GROUP__
+// __BEGIN_COORDS__ 10 10 10 __END_COORDS__ 
+// __BEGIN_FACELIST__ 0:1:1:1:1 __END_FACELIST__ 
+// __END_VERTEX__ 
+// __BEGIN_VERTEX__ => no coords
+// __BEGIN_NAME__ mes points __END_NAME__ 
+// __BEGIN_ENTRY__ 0:1:1:4 __END_ENTRY__
+// __BEGIN_GROUP__ mon groupe __END_GROUP__
+// __BEGIN_FACELIST__ 0:1:1:1:3 __END_FACELIST__
+// __END_VERTEX__ 
+// __ENFORCED_VERTICES_END__
+// 
+
+  std::string enfSeparator;
+  std::string enfName;
+  std::string enfGeomEntry;
+  std::string enfGroup;
+  TEntryList enfFaceEntryList;
+  double enfCoords[3];
+  bool hasCoords = false;
+  
+  _faceEntryEnfVertexListMap.clear();
+  _enfVertexList.clear();
+  _faceEntryCoordsListMap.clear();
+  _coordsEnfVertexMap.clear();
+  _faceEntryEnfVertexEntryListMap.clear();
+  _enfVertexEntryEnfVertexMap.clear();
+  
+  
   while (isOK && hasEnforcedVertex) {
-    isOK = (load >> enfVertexEntry);
-    if (isOK) {
-      MESSAGE("enfVertexEntry: " <<enfVertexEntry);
-      if (enfVertexEntry == "__ENFORCED_VERTICES_END__")
-        break;
-
-      /* TODO GROUPS
-       bool hasGroup = false;
-       */
-      enfValue = "begin";
-      int len4 = enfValue.size();
-
-      TEnfVertexCoordsList & coordsList = _faceEntryCoordsListMap[enfVertexEntry];
-      coordsList.clear();
-      TEnfVertexCoords coords;
-      TEnfVertex *enfVertex;
-
-      // continue reading until "#" encountered
-      while (enfValue[len4 - 1] != '#') {
-        // New vector begin
-        coords.clear();
+    isOK = (load >> enfSeparator); // __BEGIN_VERTEX__
+    TEnfVertex *enfVertex = new TEnfVertex();
+//     MESSAGE("enfSeparator: " <<enfSeparator);
+    if (enfSeparator == "__ENFORCED_VERTICES_END__")
+      break; // __ENFORCED_VERTICES_END__
+    if (enfSeparator != "__BEGIN_VERTEX__")
+      throw std::exception::exception();
+    
+    while (isOK) {
+      isOK = (load >> enfSeparator);
+      MESSAGE("enfSeparator: " <<enfSeparator);
+      if (enfSeparator == "__END_VERTEX__") {
+        
+        enfVertex->name = enfName;
+        enfVertex->geomEntry = enfGeomEntry;
+        enfVertex->grpName = enfGroup;
         enfVertex->coords.clear();
-
-        while (enfValue[len4 - 1] != '$') {
-          isOK = (load >> enfValue);
-          if (isOK) {
-            MESSAGE("enfValue: " <<enfValue);
-            len4 = enfValue.size();
-            // End of vertex list
-            if (enfValue[len4 - 1] == '#')
-              break;
-            /* TODO GROUPS
-             if (enfValue == "__ENF_GROUP_BEGIN__") {
-             hasGroup = true;
-             isOK = (load >> enfGroup);
-             MESSAGE("enfGroup: " <<enfGroup);
-             TEnfGroupName& groupName = _enfVertexGroupNameMap[ enfVertex ];
-             groupName = enfGroup;
-             while ( isOK) {
-             isOK = (load >> enfGroup);
-             if (isOK) {
-             MESSAGE("enfGroup: " <<enfGroup);
-             if (enfGroup == "__ENF_GROUP_END__")
-             break;
-             groupName += " ";
-             groupName += enfGroup;
-             }
-             }
-             }
-             else {
-             // Add to vertex
-             enfVertex.push_back(atof(enfValue.c_str()));
-             }
-             */
-            if (enfValue[len4 - 1] != '$') {
-              // Add to vertex
-              // name
-              enfVertex->name = enfValue;
-              isOK = (load >> enfValue);
-              len4 = enfValue.size();
-            }
-            if (enfValue[len4 - 1] != '$') {
-              // X coord
-              enfVertex->coords.push_back(atof(enfValue.c_str()));
-              isOK = (load >> enfValue);
-              len4 = enfValue.size();
-            }
-            if (enfValue[len4 - 1] != '$') {
-              // Y coord
-              enfVertex->coords.push_back(atof(enfValue.c_str()));
-              isOK = (load >> enfValue);
-              len4 = enfValue.size();
-            }
-            if (enfValue[len4 - 1] != '$') {
-              // Z coord
-              enfVertex->coords.push_back(atof(enfValue.c_str()));
-              isOK = (load >> enfValue);
-              len4 = enfValue.size();
-            }
-          } else
-            break;
-        }
-        if (enfValue[len4 - 1] == '$') {
-          MESSAGE("enfValue is $");
-          enfValue[len4 - 1] = '\0'; //cut off "$"
-          /* TODO GROUPS
-           if (!hasGroup) {
-           MESSAGE("no group: remove $");
-           // Remove '$' and add to vertex
-           //             enfValue[len4-1] = '\0'; //cut off "$#"
-           enfVertex.push_back(atof(enfValue.c_str()));
-           }
-           */
-          enfValue[len4 - 1] = '\0'; //cut off "$#"
-          enfVertex->coords.push_back(atof(enfValue.c_str()));
-          MESSAGE("Add vertex to list");
-          // Add vertex to list of vertex
-          coordsList.insert(enfVertex->coords);
+        if (hasCoords)
+          enfVertex->coords.assign(enfCoords,enfCoords+3);
+        enfVertex->faceEntries = enfFaceEntryList;
+        
+        _enfVertexList.insert(enfVertex);
+        
+        if (enfVertex->coords.size()) {
           _coordsEnfVertexMap[enfVertex->coords] = enfVertex;
-          //           _enfVertexList.insert(enfVertex);
+          for (TEntryList::const_iterator it = enfVertex->faceEntries.begin() ; it != enfVertex->faceEntries.end(); ++it) {
+            _faceEntryCoordsListMap[(*it)].insert(enfVertex->coords);
+            _faceEntryEnfVertexListMap[(*it)].insert(enfVertex);
+          }
         }
+        if (!enfVertex->geomEntry.empty()) {
+          _enfVertexEntryEnfVertexMap[enfVertex->geomEntry] = enfVertex;
+          for (TEntryList::const_iterator it = enfVertex->faceEntries.begin() ; it != enfVertex->faceEntries.end(); ++it) {
+            _faceEntryEnfVertexEntryListMap[(*it)].insert(enfVertex->geomEntry);
+            _faceEntryEnfVertexListMap[(*it)].insert(enfVertex);
+          }
+        }
+        
+        enfName.clear();
+        enfGeomEntry.clear();
+        enfGroup.clear();
+        enfFaceEntryList.clear();
+        hasCoords = false;
+        break; // __END_VERTEX__
       }
-      if (enfValue[len4 - 1] == '#') {
-        /* TODO GROUPS
-         if (!hasGroup) {
-         // Remove '$#' and add to vertex
-         enfValue[len4-2] = '\0'; //cut off "$#"
-         enfVertex.push_back(atof(enfValue.c_str()));
-         }
-         */
-        // Remove '$#' and add to vertex
-        enfValue[len4 - 2] = '\0'; //cut off "$#"
-        enfVertex->coords.push_back(atof(enfValue.c_str()));
-        // Add vertex to list of vertex
-        coordsList.insert(enfVertex->coords);
-        _coordsEnfVertexMap[enfVertex->coords] = enfVertex;
-        //         _enfVertexList.insert(enfVertex);
+        
+      if (enfSeparator == "__BEGIN_NAME__") {  // __BEGIN_NAME__
+        while (isOK && (enfSeparator != "__END_NAME__")) {
+          isOK = (load >> enfSeparator);
+          if (enfSeparator != "__END_NAME__") {
+            if (!enfName.empty())
+              enfName += " ";
+            enfName += enfSeparator;
+          }
+        }
+        MESSAGE("enfName: " <<enfName);
       }
-    } else
-      break;
+        
+      if (enfSeparator == "__BEGIN_ENTRY__") {  // __BEGIN_ENTRY__
+        isOK = (load >> enfGeomEntry);
+        isOK = (load >> enfSeparator); // __END_ENTRY__
+        if (enfSeparator != "__END_ENTRY__")
+          throw std::exception::exception();
+        MESSAGE("enfGeomEntry: " <<enfGeomEntry);
+      }
+        
+      if (enfSeparator == "__BEGIN_GROUP__") {  // __BEGIN_GROUP__
+        while (isOK && (enfSeparator != "__END_GROUP__")) {
+          isOK = (load >> enfSeparator);
+          if (enfSeparator != "__END_GROUP__") {
+            if (!enfGroup.empty())
+              enfGroup += " ";
+            enfGroup += enfSeparator;
+          }
+        }
+        MESSAGE("enfGroup: " <<enfGroup);
+      }
+        
+      if (enfSeparator == "__BEGIN_COORDS__") {  // __BEGIN_COORDS__
+        hasCoords = true;
+        isOK = (load >> enfCoords[0] >> enfCoords[1] >> enfCoords[2]);
+        isOK = (load >> enfSeparator); // __END_COORDS__
+        if (enfSeparator != "__END_COORDS__")
+          throw std::exception::exception();
+        MESSAGE("enfCoords: " << enfCoords[0] <<","<< enfCoords[1] <<","<< enfCoords[2]);
+      } 
+        
+      if (enfSeparator == "__BEGIN_FACELIST__") {  // __BEGIN_FACELIST__
+        while (isOK && (enfSeparator != "__END_FACELIST__")) {
+          isOK = (load >> enfSeparator);
+          if (enfSeparator != "__END_FACELIST__") {
+            enfFaceEntryList.insert(enfSeparator);
+            MESSAGE(enfSeparator << " was inserted into enfFaceEntryList");
+          }
+        }
+      } 
+    }
   }
 
   return load;

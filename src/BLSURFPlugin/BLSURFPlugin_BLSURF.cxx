@@ -1466,7 +1466,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       if ( SMESH_subMesh* sm = aMesh.GetSubMeshContaining( emap( i )))
         sm->SetIsAlwaysComputed( true );
 
-  delete nodes;
+  delete [] nodes;
 
   /* release the mesh object */
   blsurf_data_regain_mesh(bls, msh);

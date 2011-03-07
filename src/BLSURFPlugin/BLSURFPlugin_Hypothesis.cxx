@@ -1125,7 +1125,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
     if (enfSeparator == "__ENFORCED_VERTICES_END__")
       break; // __ENFORCED_VERTICES_END__
     if (enfSeparator != "__BEGIN_VERTEX__")
-      throw std::exception::exception();
+      throw std::exception();
     
     while (isOK) {
       isOK = (load >> enfSeparator);
@@ -1181,7 +1181,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         isOK = (load >> enfGeomEntry);
         isOK = (load >> enfSeparator); // __END_ENTRY__
         if (enfSeparator != "__END_ENTRY__")
-          throw std::exception::exception();
+          throw std::exception();
         MESSAGE("enfGeomEntry: " <<enfGeomEntry);
       }
         
@@ -1202,7 +1202,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         isOK = (load >> enfCoords[0] >> enfCoords[1] >> enfCoords[2]);
         isOK = (load >> enfSeparator); // __END_COORDS__
         if (enfSeparator != "__END_COORDS__")
-          throw std::exception::exception();
+          throw std::exception();
         MESSAGE("enfCoords: " << enfCoords[0] <<","<< enfCoords[1] <<","<< enfCoords[2]);
       } 
         

@@ -278,6 +278,10 @@ BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF(int hypId, int studyId,
   FaceId2EnforcedVertexCoords.clear();
   EnfVertexCoords2ProjVertex.clear();
   EnfVertexCoords2EnfVertexList.clear();
+
+#ifdef WITH_SMESH_CANCEL_COMPUTE
+  _compute_canceled = false;
+#endif
 }
 
 //=============================================================================
@@ -923,7 +927,12 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   
   /* Set the message callback in the working context */
   context_set_message_callback(ctx, message_cb, &_comment);
+#ifdef WITH_SMESH_CANCEL_COMPUTE
+  _compute_canceled = false;
+  context_set_interrupt_callback(ctx, interrupt_cb, this);
+#else
   context_set_interrupt_callback(ctx, interrupt_cb, NULL);
+#endif
 
   /* create the CAD object we will work on. It is associated to the context ctx. */
   cad_t *c = cad_new(ctx);
@@ -1498,6 +1507,13 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   return true;
 }
 
+#ifdef WITH_SMESH_CANCEL_COMPUTE
+void BLSURFPlugin_BLSURF::CancelCompute()
+{
+  _compute_canceled = true;
+}
+#endif
+
 //=============================================================================
 /*!
  *  SetNodeOnEdge
@@ -1821,13 +1837,21 @@ status_t message_cb(message_t *msg, void *user_data)
 status_t interrupt_cb(integer *interrupt_status, void *user_data)
 {
   integer you_want_to_continue = 1;
+#ifdef WITH_SMESH_CANCEL_COMPUTE
+  BLSURFPlugin_BLSURF* tmp = (BLSURFPlugin_BLSURF*)user_data;
+  you_want_to_continue = !tmp->computeCanceled();
+#endif
 
   if(you_want_to_continue)
+  {
     *interrupt_status = INTERRUPT_CONTINUE;
+    return STATUS_OK;
+  }
   else /* you want to stop BLSurf */
+  {
     *interrupt_status = INTERRUPT_STOP;
-  
-  return STATUS_OK;
+    return STATUS_ERROR;
+  }
 }
 
 //=============================================================================

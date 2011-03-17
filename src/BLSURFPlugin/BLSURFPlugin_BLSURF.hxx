@@ -74,6 +74,11 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
 
     virtual bool Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape);
 
+#ifdef WITH_SMESH_CANCEL_COMPUTE
+    virtual void CancelCompute();
+    bool computeCanceled() { return _compute_canceled;};
+#endif
+
     virtual bool Evaluate(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape,
                           MapShapeNbElems& aResMap);
 
@@ -96,6 +101,10 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
       PyObject *          main_dict;
       SALOMEDS::Study_var myStudy;
       SMESH_Gen_i*        smeshGen_i;
+
+#ifdef WITH_SMESH_CANCEL_COMPUTE
+      volatile bool _compute_canceled;
+#endif
 };
 
 #endif

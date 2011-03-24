@@ -61,7 +61,7 @@ if test "$with_blsurf" != "no" ; then
 
     LOCAL_INCLUDES="-I$BLSURF_HOME/include"
     LOCAL_LIBS="-L$BLSURF_HOME/lib -lBLSurf"
-    if test $(/bin/arch) = x86_64 ; then
+    if test $(`which arch`) = x86_64 ; then
       if test -f $BLSURF_HOME/lib/Linux_64/libBLSurf.so ; then
         LOCAL_LIBS="-L$BLSURF_HOME/lib/Linux_64 -lBLSurf -ldistene"
       fi

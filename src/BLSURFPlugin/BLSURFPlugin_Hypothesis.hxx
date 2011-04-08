@@ -36,6 +36,7 @@
 #include <cstring>
 #include <sstream>
 #include <utilities.h>
+#include "BLSURFPlugin_Attractor.hxx"
 
 //  Parameters for work of BLSURF
 
@@ -59,6 +60,8 @@ public:
     DefaultGeom,
     UserDefined
   };
+  
+  TopoDS_Shape entryToShape(std::string entry);
 
   void SetTopology(Topology theTopology);
   Topology GetTopology() const { return _topology; }
@@ -131,16 +134,27 @@ public:
   void UnsetCustomSizeMap(const std::string& entry);
   const TSizeMap& GetCustomSizeMapEntries() const { return _customSizeMap; }
  */
+  
+  typedef std::map< std::string, BLSURFPlugin_Attractor* > TAttractorMap;
+  typedef std::map< std::string, std::vector<double> > TParamsMap; //TODO à finir 
+  
+  void SetClassAttractorEntry(const std::string& entry, const std::string& att_entry, double StartSize, double EndSize, double ActionRadius, double ConstantRadius);
+  std::string  GetClassAttractorEntry(const std::string& entry);
+  const TAttractorMap& _GetClassAttractorEntries() const { return _classAttractors; }
+  /*!
+   * \brief Return the attractors entries
+   */
+  static TAttractorMap GetClassAttractorEntries(const BLSURFPlugin_Hypothesis* hyp);
 
   /*!
    * To set/get/unset an enforced vertex
    */
+  // Name
+  typedef std::string TEnfName;
   // Entry
   typedef std::string TEntry;
   // List of entries
   typedef std::set<TEntry> TEntryList;
-  // Name
-  typedef std::string TEnfName;
   // Group name
   typedef std::string TEnfGroupName;
   // Coordinates
@@ -260,6 +274,7 @@ public:
   static bool            GetDefaultDecimesh();
   static int             GetDefaultVerbosity() { return 10; }
   static TSizeMap        GetDefaultSizeMap() { return TSizeMap();}
+  static TAttractorMap   GetDefaultAttractorMap() { return TAttractorMap(); }
 
   static TFaceEntryEnfVertexListMap       GetDefaultFaceEntryEnfVertexListMap() { return TFaceEntryEnfVertexListMap(); }
   static TEnfVertexList                   GetDefaultEnfVertexList() { return TEnfVertexList(); }
@@ -320,6 +335,9 @@ private:
   TOptionNames    _doubleOptions, _charOptions;
   TSizeMap        _sizeMap;
   TSizeMap        _attractors;
+  TAttractorMap   _classAttractors;
+  TSizeMap        _attEntry;
+  TParamsMap      _attParams;
 
   TFaceEntryEnfVertexListMap  _faceEntryEnfVertexListMap;
   TEnfVertexList              _enfVertexList;

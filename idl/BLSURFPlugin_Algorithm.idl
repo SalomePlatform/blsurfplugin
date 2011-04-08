@@ -37,11 +37,11 @@ module BLSURFPlugin
 {
   typedef sequence<string> string_array;
 
+  // Enforced vertex name
+  typedef string TEnfName;
   // Entry
   typedef string TEntry;
   typedef sequence<TEntry> TEntryList;
-  // Enforced vertex name
-  typedef string TEnfName;
   // Group name
   typedef string TEnfGroupName;
   
@@ -95,7 +95,18 @@ module BLSURFPlugin
     TEnfVertex enfVertex;
   };
   typedef sequence<TEnfVertexEntryEnfVertexElement> TEnfVertexEntryEnfVertexMap;
-  
+
+  // Attractors
+  struct TAttractorParams {
+    string faceEntry;
+    string attEntry;
+    double startSize;
+    double endSize;
+    double infDist;
+    double constDist;
+  };
+  typedef sequence<TAttractorParams> TAttParamsMap;
+
   /* TODO GROUPS
   // Map Group Name / List of enforced vertices
   struct TGroupNameEnfVertexListMapElement {
@@ -266,6 +277,20 @@ module BLSURFPlugin
     void         SetAttractorEntry(in string entry, in string attractor);
     string       GetAttractorEntry(in string entry);
     string_array GetAttractorEntries();
+
+    /*!
+     * Set/unset an attractor given as geom object on another geom object
+     */
+    void         SetAttractorGeom(in GEOM::GEOM_Object GeomObj, in GEOM::GEOM_Object AttractorShape, in double StartSize, in double EndSize, in double ActionRadius, in double ConstantRadius);
+    void         UnsetAttractorGeom(in GEOM::GEOM_Object GeomObj);
+
+    /*!
+     * Set an attractor given by entry on a geom object given by entry
+     */
+    void         SetClassAttractorEntry(in string entry, in string att_entry, in double StartSize, in double EndSize, in double ActionRadius, in double ConstantRadius );
+    BLSURFPlugin::TAttParamsMap GetAttractorParams();
+
+
 
 /*
     void         SetCustomSizeMapEntry(in string entry, in string sizeMap);

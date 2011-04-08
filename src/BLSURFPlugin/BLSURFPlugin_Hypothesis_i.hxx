@@ -121,6 +121,20 @@ public:
   char* GetAttractorEntry(const char* entry) throw (SALOME::SALOME_Exception);
 
   BLSURFPlugin::string_array* GetAttractorEntries();
+  
+  
+  /*!
+    * Set/get/unset an attractor on a face 
+    */
+  
+  void SetAttractorGeom(GEOM::GEOM_Object_ptr GeomObj, GEOM::GEOM_Object_ptr Attractor, double StartSize, double EndSize, double ActionRadius, double ConstantRadius );
+
+  void UnsetAttractorGeom(GEOM::GEOM_Object_ptr GeomObj);
+
+  void SetClassAttractorEntry(const char* entry, const char* att_entry, double StartSize, double EndSize, double ActionRadius, double ConstantRadius)  throw (SALOME::SALOME_Exception);
+
+  BLSURFPlugin::TAttParamsMap* GetAttractorParams();
+  
 
   /*
    void SetCustomSizeMap(GEOM::GEOM_Object_ptr GeomObj, const char* sizeMap);

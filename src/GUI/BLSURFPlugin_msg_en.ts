@@ -152,6 +152,62 @@
         <translation>Add Attractor</translation>
     </message>
     <message>
+        <source>BLSURF_SM_STD_TAB</source>
+        <translation>Simple map</translation>
+    </message>
+    <message>
+        <source>BLSURF_SM_ATT_TAB</source>
+        <translation>Advanced</translation>
+    </message>
+    <message>
+        <source>BLSURF_SM_PARAMS</source>
+        <translation>Parameters</translation>
+    </message>
+    <message>
+        <source>BLSURF_ATTRACTOR</source>
+        <translation>Attractor</translation>
+    </message>
+    <message>
+        <source>BLSURF_CONST_SIZE</source>
+        <translation>Constant size near shape</translation>
+    </message>
+    <message>
+        <source>BLSURF_ATT_DIST</source>
+        <translation>Influence dist.</translation>
+    </message>
+    <message>
+        <source>BLSURF_ATT_RADIUS</source>
+        <translation>Constant over</translation>
+    </message>
+    <message>
+        <source>BLSURF_SM_SIZE</source>
+        <translation>Local Size</translation>
+    </message>
+    <message>
+        <source>BLSURF_SM_DIST</source>
+        <translation>Distance</translation>
+    </message>
+    <message>
+        <source>BLS_SEL_SHAPE</source>
+        <translation>Select a shape</translation>
+    </message>
+    <message>
+        <source>BLS_SEL_FACE</source>
+        <translation>Select a face</translation>
+    </message>
+    <message>
+        <source>BLS_SEL_ATTRACTOR</source>
+        <translation>Select the attractor</translation>
+    </message>
+    <message>
+        <source>BLSURF_SM_ADD</source>
+        <translation>Add</translation>
+    </message>
+    <message>
+        <source>BLSURF_SM_MODIFY</source>
+        <translation>Modify</translation>
+    </message>
+    <message>
         <source>BLSURF_SM_REMOVE</source>
         <translation>Remove</translation>
     </message>

@@ -29,7 +29,8 @@ salomeinclude_HEADERS =	\
 	BLSURFPlugin_BLSURF.hxx	\
 	BLSURFPlugin_BLSURF_i.hxx	\
 	BLSURFPlugin_Hypothesis.hxx	\
-	BLSURFPlugin_Hypothesis_i.hxx
+	BLSURFPlugin_Hypothesis_i.hxx   \
+	BLSURFPlugin_Attractor.hxx
 
 # Libraries targets
 lib_LTLIBRARIES = libBLSURFEngine.la
@@ -39,7 +40,8 @@ dist_libBLSURFEngine_la_SOURCES =	\
 	BLSURFPlugin_BLSURF_i.cxx	\
 	BLSURFPlugin_Hypothesis.cxx	\
 	BLSURFPlugin_Hypothesis_i.cxx	\
-	BLSURFPlugin_i.cxx
+	BLSURFPlugin_i.cxx              \
+	BLSURFPlugin_Attractor.cxx
 
 libBLSURFEngine_la_CPPFLAGS =	\
 	$(QT_INCLUDES)          \

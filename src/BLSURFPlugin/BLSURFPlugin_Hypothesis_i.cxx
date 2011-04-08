@@ -498,7 +498,6 @@ void BLSURFPlugin_Hypothesis_i::SetAttractorEntry(const char* entry, const char*
   try {
     valueChanged = ( this->GetImpl()->GetAttractorEntry(entry) != attractor );
     if ( valueChanged ) {
-      //boost::regex re("^ATTRACTOR\\((?:(-?0(\\.\\d*)*|-?[1-9]+\\d*(\\.\\d*)*|-?\\.(\\d)+);){5}(True|False)\\)$");
       boost::regex re("^ATTRACTOR\\((?:(-?0(\\.\\d*)*|-?[1-9]+\\d*(\\.\\d*)*|-?\\.(\\d)+);){5}(True|False)(?:;(-?0(\\.\\d*)*|-?[1-9]+\\d*(\\.\\d*)*|-?\\.(\\d)+))?\\)$");
       if (!boost::regex_match(string(attractor), re))
         throw std::invalid_argument("Error: an attractor is defined with the following pattern: ATTRACTOR(xa;ya;za;a;b;True|False;d(opt.))");
@@ -517,6 +516,33 @@ void BLSURFPlugin_Hypothesis_i::SetAttractorEntry(const char* entry, const char*
   MESSAGE("ENGINE : SETATTRACTOR END ENTRY : " << entry);
   if (valueChanged)
     SMESH::TPythonDump() << _this() << ".SetAttractor(" << entry << ", '" << attractor << "' )";
+}
+
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::SetClassAttractorEntry(const char* entry, const char* att_entry, double StartSize, double EndSize, double ActionRadius, double ConstantRadius) //TODO à finir
+  throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+  MESSAGE("ENGINE : SETATTRACTOR START ENTRY : " << entry);
+  bool valueChanged = false;
+  try {
+    this->GetImpl()->SetClassAttractorEntry(entry, att_entry, StartSize, EndSize, ActionRadius, ConstantRadius);
+  }
+  catch (const std::invalid_argument& ex) {
+    SALOME::ExceptionStruct ExDescription;
+    ExDescription.text = ex.what();
+    ExDescription.type = SALOME::BAD_PARAM;
+    ExDescription.sourceFile = "BLSURFPlugin_Hypothesis::SetClassAttractorEntry(entry, att_entry, StartSize, EndSize, ActionRadius, ConstantRadius)";
+    ExDescription.lineNumber = 0;
+    throw SALOME::SALOME_Exception(ExDescription);
+  } catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+  MESSAGE("ENGINE : SETATTRACTOR END ENTRY : " << entry);
+  //if ( valueChanged )
+  SMESH::TPythonDump() << _this() << ".SetAttractorGeom("
+                       << entry << ", " << att_entry << ", "<<StartSize<<", "<<EndSize<<", "<<ActionRadius<<", "<<ConstantRadius<<" )";
 }
 
 //=============================================================================
@@ -556,6 +582,31 @@ char* BLSURFPlugin_Hypothesis_i::GetAttractorEntry(const char* entry) throw (SAL
   }
   return 0;
 }
+
+// //=============================================================================
+// 
+// // TODO coder cette fonction (utilisée pour savoir si la valeur a changé
+// // A finir pour le dump
+// char* BLSURFPlugin_Hypothesis_i::GetClassAttractorEntry(const char* entry)
+//   throw (SALOME::SALOME_Exception)
+// {
+//   ASSERT(myBaseImpl);
+//   try {
+//     return CORBA::string_dup( this->GetImpl()->GetClassAttractorEntry(entry).c_str());
+//   }
+//   catch (const std::invalid_argument& ex) {
+//     SALOME::ExceptionStruct ExDescription;
+//     ExDescription.text = ex.what();
+//     ExDescription.type = SALOME::BAD_PARAM;
+//     ExDescription.sourceFile = "BLSURFPlugin_Hypothesis::GetClassAttractorEntry(name)";
+//     ExDescription.lineNumber = 0;
+//     throw SALOME::SALOME_Exception(ExDescription);
+//   }
+//   catch (SALOME_Exception& ex) {
+//     THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+//   }
+//   return 0;
+// }
 
 //=============================================================================
 
@@ -603,6 +654,42 @@ BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetAttractorEntries() {
       entry_attractor += atIt->second;
     }
     result[i] = CORBA::string_dup(entry_attractor.c_str());
+  }
+  return result._retn();
+}
+
+//=============================================================================
+
+BLSURFPlugin::TAttParamsMap* BLSURFPlugin_Hypothesis_i::GetAttractorParams()
+{
+  ASSERT(myBaseImpl);
+  BLSURFPlugin::TAttParamsMap_var result = new BLSURFPlugin::TAttParamsMap();
+
+  const ::BLSURFPlugin_Hypothesis::TAttractorMap attractors= this->GetImpl()->_GetClassAttractorEntries();
+  result->length( attractors.size() );
+
+  ::BLSURFPlugin_Hypothesis::TAttractorMap::const_iterator atIt = attractors.begin();
+  for ( int i = 0 ; atIt != attractors.end(); ++atIt, ++i ) {
+    string faceEntry = atIt->first;
+    string attEntry;
+    double startSize, endSize, infDist, constDist;
+    if ( !atIt->second->Empty() ) {
+      attEntry = atIt->second->GetAttractorEntry();
+      MESSAGE("GetAttractorParams : attEntry ="<<attEntry)
+      std::vector<double> params = atIt->second->GetParameters();
+      startSize = params[0];
+      endSize = params[1];
+      infDist = params[2];
+      constDist = params[3];
+    }
+    result[i].faceEntry = CORBA::string_dup(faceEntry.c_str());
+    result[i].attEntry = CORBA::string_dup(attEntry.c_str());
+    result[i].startSize = startSize;
+    result[i].endSize = endSize;
+    result[i].infDist = infDist;
+    result[i].constDist = constDist;
+    MESSAGE("GetAttractorParams : result[i].attEntry ="<<result[i].attEntry)
+    MESSAGE("GetAttractorParams : result[i].faceEntry ="<<result[i].faceEntry)
   }
   return result._retn();
 }
@@ -673,6 +760,31 @@ void BLSURFPlugin_Hypothesis_i::UnsetAttractor(GEOM::GEOM_Object_ptr GeomObj) {
   MESSAGE("IDL : UNSETATTRACTOR ( "<< entry << ")");
   UnsetEntry(entry.c_str());
   SMESH::TPythonDump() << _this() << ".UnsetAttractor( " << entry.c_str() << " )";
+}
+
+void BLSURFPlugin_Hypothesis_i::SetAttractorGeom(GEOM::GEOM_Object_ptr GeomObj, GEOM::GEOM_Object_ptr Attractor, double StartSize, double EndSize, double ActionRadius, double ConstantRadius)
+{
+  ASSERT(myBaseImpl);
+  string entry;
+  string att_entry;
+  entry=GeomObj->GetStudyEntry();
+  att_entry=Attractor->GetStudyEntry();
+  TopoDS_Face FaceShape = TopoDS::Face(SMESH_Gen_i::GetSMESHGen()->GeomObjectToShape( GeomObj ));
+  TopoDS_Shape AttractorShape = SMESH_Gen_i::GetSMESHGen()->GeomObjectToShape( Attractor );
+  MESSAGE("IDL : GetName : " << GeomObj->GetName());
+  MESSAGE("IDL : SETATTRACTOR () ");//<< entry << " , " << att_entry << ")");
+  SetClassAttractorEntry( entry.c_str(), att_entry.c_str(), StartSize, EndSize, ActionRadius, ConstantRadius);
+}
+
+void BLSURFPlugin_Hypothesis_i::UnsetAttractorGeom(GEOM::GEOM_Object_ptr GeomObj)
+{
+  ASSERT(myBaseImpl);
+  string entry;
+  entry = GeomObj->GetStudyEntry();
+  MESSAGE("IDL : GetName : " << GeomObj->GetName());
+  MESSAGE("IDL : UNSETATTRACTOR ( "<< entry << ")");
+  UnsetEntry( entry.c_str());
+  SMESH::TPythonDump() << _this() << ".UnsetAttractorGeom( " << entry.c_str() << " )";
 }
 
 /*

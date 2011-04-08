@@ -152,8 +152,60 @@
         <translation>Ajouter un attracteur</translation>
     </message>
     <message>
+        <source>BLSURF_SM_STD_TAB</source>
+        <translation>Simple</translation>
+    </message>
+    <message>
+        <source>BLSURF_SM_ATT_TAB</source>
+        <translation>Avancé</translation>
+    </message>
+    <message>
         <source>BLSURF_SM_REMOVE</source>
         <translation>Supprimer</translation>
+    </message>
+    <message>
+        <source>BLSURF_SM_ADD</source>
+        <translation>Ajouter</translation>
+    </message>
+    <message>
+        <source>BLSURF_SM_MODIFY</source>
+        <translation>Modifier</translation>
+    </message>
+    <message>
+        <source>BLSURF_SM_PARAMS</source>
+        <translation>Paramètres</translation>
+    </message>
+    <message>
+        <source>BLSURF_ATTRACTOR</source>
+        <translation>Attracteur</translation>
+    </message>
+    <message>
+        <source>BLSURF_CONST_SIZE</source>
+        <translation>Taille constante autour d'un objet</translation>
+    </message>
+    <message>
+        <source>BLSURF_ATT_DIST</source>
+        <translation>Dist. d'influence :</translation>
+    </message>
+    <message>
+        <source>BLSURF_ATT_RADIUS</source>
+        <translation>Constant sur :</translation>
+    </message>
+    <message>
+        <source>BLSURF_SM_SIZE</source>
+        <translation>Taille Locale :</translation>
+    </message>
+    <message>
+        <source>BLS_SEL_SHAPE</source>
+        <translation>Sélectionnez un objet</translation>
+    </message>
+    <message>
+        <source>BLS_SEL_FACE</source>
+        <translation>Sélectionnez une face</translation>
+    </message>
+    <message>
+        <source>BLS_SEL_ATTRACTOR</source>
+        <translation>Sélectionnez l'attracteur</translation>
     </message>
     <message>
         <source>BLSURF_SM_SURF_VALUE</source>

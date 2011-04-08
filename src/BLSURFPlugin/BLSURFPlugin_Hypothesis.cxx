@@ -25,10 +25,19 @@
 // ---
 //
 #include "BLSURFPlugin_Hypothesis.hxx"
+#include "BLSURFPlugin_Attractor.hxx"
+#include "SMESH_Gen_i.hxx"
 #include <utilities.h>
 #include <cstring>
 #include <iostream>
 #include <sstream>
+
+// cascade include
+#include "ShapeAnalysis.hxx"
+
+// CORBA includes
+#include CORBA_CLIENT_HEADER(SALOMEDS)
+#include CORBA_CLIENT_HEADER(GEOM_Gen)
 
 //=============================================================================
 BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_Gen * gen) :
@@ -48,6 +57,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   _verb(GetDefaultVerbosity()),
   _sizeMap(GetDefaultSizeMap()),
   _attractors(GetDefaultSizeMap()),
+  _classAttractors(GetDefaultAttractorMap()),
   _faceEntryEnfVertexListMap(GetDefaultFaceEntryEnfVertexListMap()),
   _enfVertexList(GetDefaultEnfVertexList()),
   _faceEntryCoordsListMap(GetDefaultFaceEntryCoordsListMap()),
@@ -55,7 +65,6 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   _faceEntryEnfVertexEntryListMap(GetDefaultFaceEntryEnfVertexEntryListMap()),
   _enfVertexEntryEnfVertexMap(GetDefaultEnfVertexEntryEnfVertexMap()),
   _groupNameNodeIDMap(GetDefaultGroupNameNodeIDMap())
-
 /* TODO GROUPS
  _groupNameEnfVertexListMap(GetDefaultGroupNameEnfVertexListMap()),
  _enfVertexGroupNameMap(GetDefaultEnfVertexGroupNameMap())
@@ -109,6 +118,28 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
    _groupNameEnfVertexListMap.clear();
    _enfVertexGroupNameMap.clear();
    */
+}
+
+TopoDS_Shape BLSURFPlugin_Hypothesis::entryToShape(std::string entry)
+{
+  MESSAGE("BLSURFPlugin_Hypothesis::entryToShape "<<entry );
+  GEOM::GEOM_Object_var aGeomObj;
+  SMESH_Gen_i* smeshGen_i = SMESH_Gen_i::GetSMESHGen();
+  SALOMEDS::Study_ptr myStudy = smeshGen_i->GetCurrentStudy();
+  
+  TopoDS_Shape S = TopoDS_Shape();
+  SALOMEDS::SObject_var aSObj = myStudy->FindObjectID( entry.c_str() );
+  SALOMEDS::GenericAttribute_var anAttr;
+
+  if (!aSObj->_is_nil() && aSObj->FindAttribute(anAttr, "AttributeIOR")) {
+    SALOMEDS::AttributeIOR_var anIOR = SALOMEDS::AttributeIOR::_narrow(anAttr);
+    CORBA::String_var aVal = anIOR->Value();
+    CORBA::Object_var obj = myStudy->ConvertIORToObject(aVal);
+    aGeomObj = GEOM::GEOM_Object::_narrow(obj);
+  }
+  if ( !aGeomObj->_is_nil() )
+    S = smeshGen_i->GeomObjectToShape( aGeomObj.in() );
+  return S;
 }
 
 //=============================================================================
@@ -356,21 +387,113 @@ BLSURFPlugin_Hypothesis::TSizeMap BLSURFPlugin_Hypothesis::GetAttractorEntries(c
 }
 
 //=======================================================================
-//function : ClearEntry
+//function : SetClassAttractorEntry
 //=======================================================================
-void BLSURFPlugin_Hypothesis::ClearEntry(const std::string& entry) {
-  TSizeMap::iterator it = _sizeMap.find(entry);
-  if (it != _sizeMap.end()) {
+void BLSURFPlugin_Hypothesis::SetClassAttractorEntry(const std::string& entry, const std::string& attEntry, double StartSize, double EndSize, double ActionRadius, double ConstantRadius)
+{
+  // The new attractor can't be defined on the same face as another sizemap
+  TSizeMap::iterator it  = _sizeMap.find( entry );
+  if ( it != _sizeMap.end() ) {
     _sizeMap.erase(it);
     NotifySubMeshesHypothesisModification();
-  } else {
-    TSizeMap::iterator itAt = _attractors.find(entry);
-    if (itAt != _attractors.end()) {
+  }
+  else {
+    TSizeMap::iterator itAt  = _attractors.find( entry );
+    if ( itAt != _attractors.end() ) {
       _attractors.erase(itAt);
       NotifySubMeshesHypothesisModification();
-    } else
-      std::cout << "No_Such_Entry" << std::endl;
+    }
   }
+  
+  const TopoDS_Shape AttractorShape = BLSURFPlugin_Hypothesis::entryToShape(attEntry);
+  const TopoDS_Face FaceShape = TopoDS::Face(BLSURFPlugin_Hypothesis::entryToShape(entry));
+  bool attExists = (_classAttractors.find(entry) != _classAttractors.end());
+  double u1,u2,v1,v2, diag;
+  
+  if ( !attExists || (attExists && _classAttractors[entry]->GetAttractorEntry().compare(attEntry) != 0)){ 
+    ShapeAnalysis::GetFaceUVBounds(FaceShape,u1,u2,v1,v2);
+    diag = sqrt((u2 - u1) * (u2 - u1) + (v2 - v1) * (v2 - v1));  
+    BLSURFPlugin_Attractor* myAttractor = new BLSURFPlugin_Attractor(FaceShape, AttractorShape, attEntry, 0.1 ); // test 0.002 * diag); 
+    myAttractor->BuildMap();
+    myAttractor->SetParameters(StartSize, EndSize, ActionRadius, ConstantRadius);
+    _classAttractors[entry] = myAttractor;
+    NotifySubMeshesHypothesisModification();
+  }
+  else {
+    _classAttractors[entry]->SetParameters(StartSize, EndSize, ActionRadius, ConstantRadius);
+    if (!_classAttractors[entry]->IsMapBuilt()){
+      _classAttractors[entry]->BuildMap();
+    }
+    NotifySubMeshesHypothesisModification();
+  }
+    
+}
+
+//=======================================================================
+//function : SetConstantSizeOnAdjacentFaces
+//=======================================================================
+// TODO uncomment and test (include the needed .hxx)
+// SetConstantSizeOnAdjacentFaces(myShape, att_entry, startSize, endSize = user_size, const_dist  ) {
+//   TopTools_IndexedMapOfShapListOdShape anEdge2FaceMap;
+//   TopExp::MapShapesAnAncestors(myShape,TopAbs_EDGE, TopAbs_FACE, anEdge2FaceMap);
+//   TopTools_IndexedMapOfShapListOdShape::iterator it;
+//   for (it = anEdge2FaceMap.begin();it != anEdge2FaceMap.end();it++){
+//       SetClassAttractorEntry((*it).first, att_entry, startSize, endSize, 0, const_dist)
+//   }
+
+
+
+
+
+
+//=======================================================================
+//function : GetClassAttractorEntry
+//=======================================================================
+// BLSURFPlugin_Attractor&  BLSURFPlugin_Hypothesis::GetClassAttractorEntry(const std::string& entry)
+// {
+//  TAttractorMap::iterator it  = _classAttractors.find( entry );
+//  if ( it != _classAttractors.end() )
+//    return it->second;
+//  else
+//    return "No_Such_Entry";
+// }
+// 
+  /*!
+   * \brief Return the map of attractor instances
+   */
+BLSURFPlugin_Hypothesis::TAttractorMap BLSURFPlugin_Hypothesis::GetClassAttractorEntries(const BLSURFPlugin_Hypothesis* hyp)
+{
+    return hyp ? hyp->_GetClassAttractorEntries():GetDefaultAttractorMap();
+}
+
+//=======================================================================
+//function : ClearEntry
+//=======================================================================
+void BLSURFPlugin_Hypothesis::ClearEntry(const std::string& entry)
+{
+ TSizeMap::iterator it  = _sizeMap.find( entry );
+ 
+ if ( it != _sizeMap.end() ) {
+   _sizeMap.erase(it);
+   NotifySubMeshesHypothesisModification();
+ }
+ else {
+   TSizeMap::iterator itAt  = _attractors.find( entry );
+   if ( itAt != _attractors.end() ) {
+     _attractors.erase(itAt);
+     NotifySubMeshesHypothesisModification();
+   }
+   else {
+     TAttractorMap::iterator it_clAt = _classAttractors.find( entry );
+     if ( it_clAt != _classAttractors.end() ) {
+       _classAttractors.erase(it_clAt);
+       MESSAGE("_classAttractors.size() = "<<_classAttractors.size())
+       NotifySubMeshesHypothesisModification();
+     }
+     else
+       std::cout<<"No_Such_Entry"<<std::endl;
+   }
+ }
 }
 
 //=======================================================================
@@ -379,6 +502,7 @@ void BLSURFPlugin_Hypothesis::ClearEntry(const std::string& entry) {
 void BLSURFPlugin_Hypothesis::ClearSizeMaps() {
   _sizeMap.clear();
   _attractors.clear();
+  _classAttractors.clear();
 }
 
 //=======================================================================
@@ -823,6 +947,29 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save) {
     }
     save << " " << "__ATTRACTORS_END__";
   }
+  
+  TAttractorMap::iterator it_At = _classAttractors.begin();
+  if (it_At != _classAttractors.end()) {
+    std::ostringstream test;
+    save << " " << "__NEW_ATTRACTORS_BEGIN__";
+    test << " " << "__NEW_ATTRACTORS_BEGIN__";
+    for (; it_At != _classAttractors.end(); ++it_At) {
+      std::vector<double> attParams;
+      attParams   = it_At->second->GetParameters();
+      double step = it_At->second->GetStep();
+      save << " " << it_At->first;
+      save << " " << it_At->second->GetAttractorEntry();
+      save << " " << attParams[0]  << " " <<  attParams[1] << " " <<  attParams[2] << " " <<  attParams[3];
+      save << " " << step;
+      test << " " << it_At->first;
+      test << " " << it_At->second->GetAttractorEntry();
+      test << " " << attParams[0]  << " " <<  attParams[1] << " " <<  attParams[2] << " " <<  attParams[3];
+      test << " " << step;
+    }
+    save << " " << "__NEW_ATTRACTORS_END__";
+    test << " " << "__NEW_ATTRACTORS_END__";
+    MESSAGE(" Attractor hypothesis saved as "<<test.str())
+  }
 
   TEnfVertexList::const_iterator it_enf = _enfVertexList.begin();
   if (it_enf != _enfVertexList.end()) {
@@ -963,6 +1110,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   bool hasOptions = false;
   bool hasSizeMap = false;
   bool hasAttractor = false;
+  bool hasNewAttractor = false;
   bool hasEnforcedVertex = false;
 
   isOK = (load >> option_or_sm);
@@ -973,6 +1121,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
       hasSizeMap = true;
     else if (option_or_sm == "__ATTRACTORS_BEGIN__")
       hasAttractor = true;
+    else if (option_or_sm == "__NEW_ATTRACTORS_BEGIN__")
+      hasNewAttractor = true;
     else if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
       hasEnforcedVertex = true;
 
@@ -1010,6 +1160,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         hasSizeMap = true;
       else if (option_or_sm == "__ATTRACTORS_BEGIN__")
         hasAttractor = true;
+      else if (option_or_sm == "__NEW_ATTRACTORS_BEGIN__")
+        hasNewAttractor = true;
       else if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
         hasEnforcedVertex = true;
   }
@@ -1046,6 +1198,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
     if (isOK)
       if (option_or_sm == "__ATTRACTORS_BEGIN__")
         hasAttractor = true;
+      if (option_or_sm == "__NEW_ATTRACTORS_BEGIN__")
+        hasNewAttractor = true;
       else if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
         hasEnforcedVertex = true;
   }
@@ -1080,7 +1234,9 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   if (hasAttractor) {
     isOK = (load >> option_or_sm);
     if (isOK)
-      if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
+      if (option_or_sm == "__NEW_ATTRACTORS_BEGIN__")
+        hasNewAttractor = true;
+      else if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
         hasEnforcedVertex = true;
   }
 

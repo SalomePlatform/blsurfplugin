@@ -69,9 +69,12 @@ class QTableWidget;
 class QTreeWidget;
 class QModelIndex;
 class QSpinBox;
+class QDoubleSpinBox;
 class QMenu;
 class QAction;
 class QTreeWidgetItem;
+class QTableWidgetItem;
+class QObject;
 
 class SMESHGUI_SpinBox;
 class LightApp_SelectionMgr;
@@ -167,7 +170,11 @@ public:
 
   virtual bool        checkParams() const;
   virtual QString     helpPage() const;
-  void                insertElementType( TopAbs_ShapeEnum );
+  //void                insertElementType( TopAbs_ShapeEnum );
+  void                insertElement( GEOM::GEOM_Object_var, bool modify = false );
+  void                insertAttractor(GEOM::GEOM_Object_var, GEOM::GEOM_Object_var, bool modify = false);
+  int                 findRowFromEntry(QString entry);
+  CORBA::Object_var   entryToObject(QString entry);
   static LightApp_SelectionMgr* selectionMgr();
 
 protected:
@@ -185,12 +192,15 @@ protected slots:
   void                onAddOption();
   void                onDeleteOption();
   void                onOptionChosenInPopup( QAction* );
-//  void                onAddAttractor();
-  void                onAddMapOnSurface();
-  void                onAddMapOnEdge();
-  void                onAddMapOnPoint();
+  void                onMapGeomContentModified();
+  void                onSmpItemClicked( QTreeWidgetItem *, int );
+  void                onSmpTabChanged(int);
+  void                onAttractorClicked(int);
+  void                onConstSizeClicked(int);
+  void                onAddMap();
   void                onRemoveMap();
-  void                onSetSizeMap(int,int);
+  void                onModifyMap();
+  void                onSetSizeMap(QTreeWidgetItem *, int);
 
   void                addEnforcedVertex(std::string theFaceEntry, std::string theFaceName, double x=0, double y=0, double z=0, 
                                         std::string vertexName = "", std::string geomEntry = "", std::string groupName = "");
@@ -233,14 +243,38 @@ private:
   QSpinBox*           myVerbosity;
   QTableWidget*       myOptionTable;
 
+  // Sizemap widgets
   QWidget             *mySmpGroup;
-  QTableWidget        *mySizeMapTable;
-  QPushButton         *addAttractorButton;
-  QPushButton         *addSurfaceButton;
-  QPushButton         *addEdgeButton;
-  QPushButton         *addPointButton;
-  QPushButton         *removeButton;
-
+  QTreeWidget         *mySizeMapTable;
+  QPushButton         *addMapButton;
+  QPushButton         *removeMapButton;
+  QPushButton         *modifyMapButton;
+  QTabWidget          *smpTab; 
+  QWidget             *myAttractorGroup;
+  QWidget             *mySmpStdGroup;
+  QCheckBox           *myAttractorCheck;
+  QCheckBox           *myConstSizeCheck;
+  QGroupBox           *myDistanceGroup;
+  QGroupBox           *myParamsGroup;
+  SMESHGUI_SpinBox    *myAttSizeSpin;
+  SMESHGUI_SpinBox    *myAttDistSpin;
+  SMESHGUI_SpinBox    *myAttDistSpin2;
+  SMESHGUI_SpinBox    *mySmpSizeSpin;
+  QLabel              *myAttDistLabel;
+  QLabel              *myAttDistLabel2;
+  QLabel              *myAttSizeLabel;
+  // Selection widgets for size maps
+  StdMeshersGUI_ObjectReferenceParamWdg *myGeomSelWdg1;
+  StdMeshersGUI_ObjectReferenceParamWdg *myGeomSelWdg2;
+  StdMeshersGUI_ObjectReferenceParamWdg *myAttSelWdg;
+  StdMeshersGUI_ObjectReferenceParamWdg *myDistSelWdg;
+  GEOM::GEOM_Object_var                  mySMapObject;
+  GEOM::GEOM_Object_var                  myAttObject;
+  GEOM::GEOM_Object_var                  myDistObject;
+  
+  
+  
+  
   QWidget*            myEnfGroup;
 //    TODO FACE AND VERTEX SELECTION
   StdMeshersGUI_ObjectReferenceParamWdg *myEnfFaceWdg;
@@ -262,7 +296,10 @@ private:
   QPushButton*        removeVertexButton;
 
   // map =  entry , size map
-  QMap<QString, QString>          mySMPMap;
+  QMap<QString, QString>          mySMPMap;           // Map <face entry, size>
+  QMap<QString, QString>          myATTMap;           // Map <face entry, att. entry>
+  QMap<QString, double>           myDistMap;          // Map <entry,distance with constant size> 
+  QMap<QString, double>           myAttDistMap;       // Map <entry, influence distance> 
   QMap<QString, TopAbs_ShapeEnum> mySMPShapeTypeMap;
   GeomSelectionTools*             GeomToolSelected;
   LightApp_SelectionMgr*          aSel;

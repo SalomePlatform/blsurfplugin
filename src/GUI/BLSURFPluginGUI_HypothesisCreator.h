@@ -255,7 +255,8 @@ private:
   QCheckBox           *myAttractorCheck;
   QCheckBox           *myConstSizeCheck;
   QGroupBox           *myDistanceGroup;
-  QGroupBox           *myParamsGroup;
+//   QGroupBox           *myParamsGroup;
+//   QWidget             *myParamsGroup;
   SMESHGUI_SpinBox    *myAttSizeSpin;
   SMESHGUI_SpinBox    *myAttDistSpin;
   SMESHGUI_SpinBox    *myAttDistSpin2;

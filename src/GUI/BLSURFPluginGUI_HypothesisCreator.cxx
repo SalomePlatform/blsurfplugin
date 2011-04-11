@@ -810,12 +810,6 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   smpTab->setTabPosition( QTabWidget::South );
   lay->addWidget( smpTab );
   
-  // Push buttons
-  removeMapButton = new QPushButton(tr("BLSURF_SM_REMOVE"),mySmpGroup);
-  addMapButton = new QPushButton(tr("BLSURF_SM_ADD"),mySmpGroup);
-  modifyMapButton = new QPushButton(tr("BLSURF_SM_MODIFY"),mySmpGroup);
-  modifyMapButton->setEnabled(false);
-  
   // Filters of selection
   TColStd_MapOfInteger SM_ShapeTypes, ATT_ShapeTypes;
   
@@ -831,50 +825,50 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   SMESH_NumberFilter* myFilter2 = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 0, ATT_ShapeTypes);
   SMESH_NumberFilter* myFilter3 = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 0, TopAbs_FACE);
   
-  // Geometry Selection Widgets 
+  // Standard size map tab
+  mySmpStdGroup = new QWidget();
+  QGridLayout* anSmpStdLayout = new QGridLayout(mySmpStdGroup);
   myGeomSelWdg1 = new StdMeshersGUI_ObjectReferenceParamWdg( myFilter1, 0, /*multiSel=*/false,/*stretch=*/false);
   myGeomSelWdg1->SetDefaultText(tr("BLS_SEL_SHAPE"), "QLineEdit { color: grey }");
-  myGeomSelWdg2 = new StdMeshersGUI_ObjectReferenceParamWdg( myFilter3, 0, /*multiSel=*/false,/*stretch=*/false);
-  myGeomSelWdg2->SetDefaultText(tr("BLS_SEL_FACE"), "QLineEdit { color: grey }");// TODO ajouter aux fichiers de traduction
-  
-  myGeomSelWdg1->AvoidSimultaneousSelection(myGeomSelWdg2);
+  mySmpSizeSpin = new SMESHGUI_SpinBox(mySmpStdGroup);
+  mySmpSizeSpin->RangeStepAndValidator(0., COORD_MAX, 1.0, "length_precision");
+  QLabel* mySmpSizeLabel = new QLabel(tr("BLSURF_SM_SIZE"),mySmpStdGroup);
   
   // Attractor tab
   myAttractorGroup = new QWidget();
   QGridLayout* anAttLayout = new QGridLayout(myAttractorGroup);
+  myGeomSelWdg2 = new StdMeshersGUI_ObjectReferenceParamWdg( myFilter3, 0, /*multiSel=*/false,/*stretch=*/false);
+  myGeomSelWdg2->SetDefaultText(tr("BLS_SEL_FACE"), "QLineEdit { color: grey }");
+  myGeomSelWdg2->AvoidSimultaneousSelection(myGeomSelWdg1);
   myAttractorCheck = new QCheckBox(tr("BLSURF_ATTRACTOR"),myAttractorGroup);
   myConstSizeCheck = new QCheckBox(tr("BLSURF_CONST_SIZE"),myAttractorGroup);
   QFrame* attLine  = new QFrame(myAttractorGroup);
   attLine->setFrameShape(QFrame::HLine);
   attLine->setFrameShadow(QFrame::Sunken);
-  
-//   myParamsGroup = new QGroupBox(tr("BLSURF_SM_PARAMS"), myAttractorGroup);
-//   myParamsGroup->setEnabled(false);
-//   myParamsGroup = new QWidget(myAttractorGroup);
-//   QGridLayout* aParamsLayout = new QGridLayout(myParamsGroup);
-  myAttDistSpin = new SMESHGUI_SpinBox(myAttractorGroup);
-  myAttDistSpin->RangeStepAndValidator(0., COORD_MAX, 10.0, "length_precision");
-  myAttDistSpin2 = new SMESHGUI_SpinBox(myAttractorGroup);
-  myAttDistSpin2->RangeStepAndValidator(0., COORD_MAX, 1.0, "length_precision");
+  myAttSelWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myFilter2, myAttractorGroup, /*multiSel=*/false,/*stretch=*/false);
+  myAttSelWdg->SetDefaultText(tr("BLS_SEL_ATTRACTOR"), "QLineEdit { color: grey }"); 
   myAttSizeSpin = new SMESHGUI_SpinBox(myAttractorGroup);
   myAttSizeSpin->RangeStepAndValidator(0., COORD_MAX, 1.0, "length_precision");
-  myAttDistLabel = new QLabel(tr("BLSURF_ATT_DIST"),myAttractorGroup);
-  myAttDistLabel2 = new QLabel(tr("BLSURF_ATT_RADIUS"),myAttractorGroup);
   myAttSizeLabel = new QLabel(tr("BLSURF_SM_SIZE"),myAttractorGroup);
-  myAttSelWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myFilter2, myAttractorGroup, /*multiSel=*/false,/*stretch=*/false);
-  myAttSelWdg->SetDefaultText(tr("BLS_SEL_ATTRACTOR"), "QLineEdit { color: grey }"); // TODO ajouter aux fichiers de traduction
+  myAttDistSpin = new SMESHGUI_SpinBox(myAttractorGroup);
+  myAttDistSpin->RangeStepAndValidator(0., COORD_MAX, 10.0, "length_precision");
+  myAttDistLabel = new QLabel(tr("BLSURF_ATT_DIST"),myAttractorGroup);
+  myAttDistSpin2 = new SMESHGUI_SpinBox(myAttractorGroup);
+  myAttDistSpin2->RangeStepAndValidator(0., COORD_MAX, 1.0, "length_precision");
+  myAttDistLabel2 = new QLabel(tr("BLSURF_ATT_RADIUS"),myAttractorGroup);
   
   myAttSelWdg->AvoidSimultaneousSelection(myGeomSelWdg1);
   myAttSelWdg->AvoidSimultaneousSelection(myGeomSelWdg2);
   
-  // Standard size map tab
-  mySmpStdGroup = new QWidget();
-  QGridLayout* anSmpStdLayout = new QGridLayout(mySmpStdGroup);
-  mySmpSizeSpin = new SMESHGUI_SpinBox(mySmpStdGroup);
-  mySmpSizeSpin->RangeStepAndValidator(0., COORD_MAX, 10.0, "length_precision");
-  QLabel* mySmpSizeLabel = new QLabel(tr("BLSURF_SM_SIZE"),mySmpStdGroup);
+  // Push buttons
+  
+  addMapButton = new QPushButton(tr("BLSURF_SM_ADD"),mySmpGroup);
+  removeMapButton = new QPushButton(tr("BLSURF_SM_REMOVE"),mySmpGroup);
+  modifyMapButton = new QPushButton(tr("BLSURF_SM_MODIFY"),mySmpGroup);
+  modifyMapButton->setEnabled(false);
   
   // Init SpinBoxes
+  myAttSelWdg->setEnabled(false);
   myAttSizeSpin->setEnabled(false);
   myAttSizeLabel->setEnabled(false);
   myAttDistSpin->setEnabled(false);
@@ -2353,6 +2347,7 @@ void BLSURFPluginGUI_HypothesisCreator::onAttractorClicked(int state)
 {
   if (state == Qt::Checked){
 //     myParamsGroup->setEnabled(true);
+    myAttSelWdg->setEnabled(true);
     myAttSizeSpin->setEnabled(true);
     myAttSizeLabel->setEnabled(true);
     myAttDistSpin->setEnabled(true);
@@ -2373,6 +2368,7 @@ void BLSURFPluginGUI_HypothesisCreator::onAttractorClicked(int state)
     myAttDistLabel->setEnabled(false);
     myAttDistSpin->setValue(0.);
     if(myConstSizeCheck->checkState() == Qt::Unchecked){  // No predefined map selected
+        myAttSelWdg->setEnabled(false);
         myAttSizeSpin->setEnabled(false);
         myAttSizeLabel->setEnabled(false);
         myAttDistSpin2->setEnabled(false);
@@ -2391,6 +2387,7 @@ void BLSURFPluginGUI_HypothesisCreator::onAttractorClicked(int state)
 void BLSURFPluginGUI_HypothesisCreator::onConstSizeClicked(int state)
 { 
   if (state == Qt::Checked){
+    myAttSelWdg->setEnabled(true);
     myAttSizeSpin->setEnabled(true);
     myAttSizeLabel->setEnabled(true);
     myAttDistSpin2->setEnabled(true);
@@ -2412,6 +2409,7 @@ void BLSURFPluginGUI_HypothesisCreator::onConstSizeClicked(int state)
     myAttDistLabel2->setEnabled(false);
     myAttDistSpin2->setValue(0.);
     if(myAttractorCheck->checkState() == Qt::Unchecked){  // No predefined map selected
+        myAttSelWdg->setEnabled(false);
         myAttSizeSpin->setEnabled(false);
         myAttSizeLabel->setEnabled(false);
         myAttDistSpin->setEnabled(false);

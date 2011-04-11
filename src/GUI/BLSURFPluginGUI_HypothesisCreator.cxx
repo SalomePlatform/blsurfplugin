@@ -825,6 +825,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   
   ATT_ShapeTypes.Add( TopAbs_VERTEX );
   ATT_ShapeTypes.Add( TopAbs_EDGE );
+  ATT_ShapeTypes.Add( TopAbs_WIRE );
   
   SMESH_NumberFilter* myFilter1 = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 0, SM_ShapeTypes);
   SMESH_NumberFilter* myFilter2 = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 0, ATT_ShapeTypes);

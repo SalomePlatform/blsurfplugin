@@ -899,7 +899,10 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
 //           }
 //         }
                 
-        if (GeomType == TopAbs_FACE && (AttShape.ShapeType() == TopAbs_VERTEX || AttShape.ShapeType() == TopAbs_EDGE)){
+        if (GeomType == TopAbs_FACE 
+          && (AttShape.ShapeType() == TopAbs_VERTEX 
+           || AttShape.ShapeType() == TopAbs_EDGE 
+           || AttShape.ShapeType() == TopAbs_WIRE)){
 	  HasSizeMapOnFace = true;
 	  if (! FacesWithSizeMap.Contains(TopoDS::Face(GeomShape)) ) {
                 key = FacesWithSizeMap.Add(TopoDS::Face(GeomShape) );

@@ -99,7 +99,6 @@ bool BLSURFPlugin_Attractor::init(){
   _known.clear();
   _trial.clear();
   Handle(Geom_Surface) aSurf = BRep_Tool::Surface(_face);
-  Trial_Pnt TPnt(3,0); 
   
   // Calculation of the bounds of the face
   ShapeAnalysis::GetFaceUVBounds(_face,_u1,_u2,_v1,_v2);
@@ -130,7 +129,8 @@ bool BLSURFPlugin_Attractor::init(){
   }
 
   // Determination of the starting points
-  if (_attractorShape.ShapeType() == TopAbs_VERTEX){                           
+  if (_attractorShape.ShapeType() == TopAbs_VERTEX){ 
+    Trial_Pnt TPnt(3,0); 
     gp_Pnt P = BRep_Tool::Pnt(TopoDS::Vertex(_attractorShape));
     GeomAPI_ProjectPointOnSurf projector( P, aSurf );
     projector.LowerDistanceParameters(u0,v0);
@@ -144,31 +144,47 @@ bool BLSURFPlugin_Attractor::init(){
     _trial.insert(TPnt);         // Move starting point to _trial
   }
   else if (_attractorShape.ShapeType() == TopAbs_EDGE){
-    gp_Pnt2d P2;
-    double first;
-    double last;
-    Handle(Geom2d_Curve) aCurve2d; 
-    Handle(Geom_Curve) aCurve3d = BRep_Tool::Curve (TopoDS::Edge(_attractorShape), first, last);
-    ShapeConstruct_ProjectCurveOnSurface curveProjector;
-    curveProjector.Init(aSurf, Precision::Confusion());
-    curveProjector.PerformAdvanced (aCurve3d, first, last, aCurve2d);
-    // TEST
-    //int N = 20 * (last - first) / _step;  // If the edge is a circle : 4>Pi so the number of points on the edge should be good -> 5 for ellipses
-    int N = 1200;
-    MESSAGE("Initialisation des points de départ")
-    for (i=0; i<=N; i++){
-      P2 = aCurve2d->Value(first + i * (last-first) / N);
-      i0 = floor( (P2.X() - _u1) * _gridU / (_u2 - _u1) + 0.5 );
-      j0 = floor( (P2.Y() - _v1) * _gridV / (_v2 - _v1) + 0.5 );
-      //MESSAGE("i0 = "<<i0<<" , j0 = "<<j0)
-      TPnt[0] = 0.;
-      TPnt[1] = i0;
-      TPnt[2] = j0;
-      _DMap[i0][j0] = 0.;
-      _trial.insert(TPnt);
+    const TopoDS_Edge& anEdge = TopoDS::Edge(_attractorShape);
+    edgeInit(aSurf, anEdge);
+  }
+  else if (_attractorShape.ShapeType() == TopAbs_WIRE){
+    TopExp_Explorer anExp(_attractorShape, TopAbs_EDGE);
+    for(; anExp.More(); anExp.Next()){
+      const TopoDS_Edge& anEdge = TopoDS::Edge(anExp.Current());
+      edgeInit(aSurf, anEdge);
     }
   }
+    
 }
+
+void BLSURFPlugin_Attractor::edgeInit(Handle(Geom_Surface) theSurf, const TopoDS_Edge& anEdge){
+  gp_Pnt2d P2;
+  double first;
+  double last;
+  int i,j,i0,j0;
+  Trial_Pnt TPnt(3,0);
+  Handle(Geom2d_Curve) aCurve2d; 
+  Handle(Geom_Curve) aCurve3d = BRep_Tool::Curve (anEdge, first, last);
+  ShapeConstruct_ProjectCurveOnSurface curveProjector;
+  curveProjector.Init(theSurf, Precision::Confusion());
+  curveProjector.PerformAdvanced (aCurve3d, first, last, aCurve2d);
+  //int N = 20 * (last - first) / _step;  // If the edge is a circle : 4>Pi so the number of points on the edge should be good -> 5 for ellipses
+  int N = 1200;
+  MESSAGE("Initialisation des points de départ")
+  for (i=0; i<=N; i++){
+    P2 = aCurve2d->Value(first + i * (last-first) / N);
+    i0 = floor( (P2.X() - _u1) * _gridU / (_u2 - _u1) + 0.5 );
+    j0 = floor( (P2.Y() - _v1) * _gridV / (_v2 - _v1) + 0.5 );
+//     MESSAGE("i0 = "<<i0<<" , j0 = "<<j0)
+    TPnt[0] = 0.;
+    TPnt[1] = i0;
+    TPnt[2] = j0;
+    _DMap[i0][j0] = 0.;
+    _trial.insert(TPnt);
+  }
+  MESSAGE("_trial.size() = "<<_trial.size())
+}  
+
 
 void BLSURFPlugin_Attractor::SetParameters(double Start_Size, double End_Size, double Action_Radius, double Constant_Radius){
   MESSAGE("BLSURFPlugin_Attractor::SetParameters")
@@ -242,8 +258,8 @@ double BLSURFPlugin_Attractor::_distance(double u, double v){
   int j = floor ( (v - _v1) * _gridV / (_v2 - _v1) + 0.5 );
   
   return _DMap[i][j];
-
 }
+
 
 double BLSURFPlugin_Attractor::GetSize(double u, double v){   
   double myDist = 0.5 * (_distance(u,v) - _constantRadius + fabs(_distance(u,v) - _constantRadius));
@@ -269,7 +285,6 @@ double BLSURFPlugin_Attractor::GetSize(double u, double v){
       return _startSize + ( 0.5 * (_distance(u,v) - _constantRadius + abs(_distance(u,v) - _constantRadius)) ) ;
       break;
   }
- 
 }
 
 
@@ -299,81 +314,82 @@ void BLSURFPlugin_Attractor::BuildMap(){
     i0 = (*min)[1];
     j0 = (*min)[2];
     _known[i0][j0] = true;                       // Move it to "Known"
+//     MESSAGE("_DMap["<<i0<<"]["<<j0<<"] = "<<_DMap[i0][j0])
     _trial.erase(min);                           // Remove it from "Trial"
     // Loop on neighbours of the trial min --------------------------------------------------------------------------------------------------------------
     for (i=i0 - 1 ; i <= i0 + 1 ; i++){ 
       if (!aSurf->IsUPeriodic()){                          // Periodic conditions in U	
-	if (i > _gridU ){
-	  break; }
-	else if (i < 0){
-	  i++; }
-	}
+        if (i > _gridU ){
+          break; }
+        else if (i < 0){
+          i++; }
+      }
       ip = (i + _gridU + 1) % (_gridU+1);                  // We get a periodic index :
       for (j=j0 - 1 ; j <= j0 + 1 ; j++){                  //    ip=modulo(i,N+2) so that  i=-1->ip=N; i=0 -> ip=0 ; ... ; i=N+1 -> ip=0;  
-	if (!aSurf->IsVPeriodic()){                        // Periodic conditions in V . 
-	  if (j > _gridV ){
-	    break; }
-	  else if (j < 0){
-	    j++;
-	  }
-	}
-	jp = (j + _gridV + 1) % (_gridV+1);
-	
-	if (!_known[ip][jp]){                              // If the distance is not known yet
-	  aSurf->D1(_vectU[ip],_vectV[jp],P,D1U,D1V);      // Calculate the metric at (i,j)
-	  // G(i,j)  =  | ||dS/du||**2          *     | 
-	  //            | <dS/du,dS/dv>  ||dS/dv||**2 |
-	  Guu = D1U.X()*D1U.X() +  D1U.Y()*D1U.Y() + D1U.Z()*D1U.Z();    // Guu = ||dS/du||**2    
-	  Gvv = D1V.X()*D1V.X() +  D1V.Y()*D1V.Y() + D1V.Z()*D1V.Z();    // Gvv = ||dS/dv||**2           
-	  Guv = D1U.X()*D1V.X() +  D1U.Y()*D1V.Y() + D1U.Z()*D1V.Z();    // Guv = Gvu = < dS/du,dS/dv > 
-	  D_Ref = _DMap[ip][jp];                           // Set a ref. distance of the point to its value in _DMap 
-	  TPnt[0] = D_Ref;                                 // (may be infinite or uncertain)
-	  TPnt[1] = ip;
-	  TPnt[2] = jp;
-	  Dist_changed = false;
-	  // Loop on neighbours to calculate the min distance from them ---------------------------------------------------------------------------------
-	  for (k=i - 1 ; k <= i + 1 ; k++){
-	    if (!aSurf->IsUPeriodic()){                              // Periodic conditions in U  
-	      if(k > _gridU ){
-		break;
-	      }
-	      else if (k < 0){
-		k++; }
-	      }
-	    kp = (k + _gridU + 1) % (_gridU+1);                      // periodic index
-	    for (n=j - 1 ; n <= j + 1 ; n++){ 
-	      if (!aSurf->IsVPeriodic()){                            // Periodic conditions in V 
-		if(n > _gridV){	  
-		  break;
-		}
-		else if (n < 0){
-		  n++; }
-	      }
-	      np = (n + _gridV + 1) % (_gridV+1);                    
-	      if (_known[kp][np]){                                   // If the distance of the neighbour is known
-		                                                     // Calculate the distance from (k,n)
-		du = (k-i) * (_u2 - _u1) / _gridU;
-		dv = (n-j) * (_v2 - _v1) / _gridV;
-		Dist = _DMap[kp][np] + sqrt( Guu * du*du + 2*Guv * du*dv + Gvv * dv*dv );   // ds**2 = du'Gdu + 2*du'Gdv + dv'Gdv  (G is always symetrical)
-		if (Dist < D_Ref) {                                  // If smaller than ref. distance  ->  update ref. distance
-		  D_Ref = Dist;
-		  Dist_changed = true;
-		}
-	      }
-	    }
-	  } // End of the loop on neighbours --------------------------------------------------------------------------------------------------------------
-	  if (Dist_changed) {                              // If distance has been updated, update _trial 
-	    found=_trial.find(TPnt);
-	    if (found != _trial.end()){
-	      _trial.erase(found);                         // Erase the point if it was already in _trial
-	    }
-	    TPnt[0] = D_Ref;
-	    TPnt[1] = ip;
-	    TPnt[2] = jp;
-	    _DMap[ip][jp] = D_Ref;                         // Set it distance to the minimum distance found during the loop above
-	    _trial.insert(TPnt);                           // Insert it (or reinsert it) in _trial
-	  }
-	} // if
+        if (!aSurf->IsVPeriodic()){                        // Periodic conditions in V . 
+          if (j > _gridV ){
+            break; }
+          else if (j < 0){
+            j++;
+          }
+        }
+        jp = (j + _gridV + 1) % (_gridV+1);
+      
+        if (!_known[ip][jp]){                              // If the distance is not known yet
+          aSurf->D1(_vectU[ip],_vectV[jp],P,D1U,D1V);      // Calculate the metric at (i,j)
+          // G(i,j)  =  | ||dS/du||**2          *     | 
+          //            | <dS/du,dS/dv>  ||dS/dv||**2 |
+          Guu = D1U.X()*D1U.X() +  D1U.Y()*D1U.Y() + D1U.Z()*D1U.Z();    // Guu = ||dS/du||**2    
+          Gvv = D1V.X()*D1V.X() +  D1V.Y()*D1V.Y() + D1V.Z()*D1V.Z();    // Gvv = ||dS/dv||**2           
+          Guv = D1U.X()*D1V.X() +  D1U.Y()*D1V.Y() + D1U.Z()*D1V.Z();    // Guv = Gvu = < dS/du,dS/dv > 
+          D_Ref = _DMap[ip][jp];                           // Set a ref. distance of the point to its value in _DMap 
+          TPnt[0] = D_Ref;                                 // (may be infinite or uncertain)
+          TPnt[1] = ip;
+          TPnt[2] = jp;
+          Dist_changed = false;
+          // Loop on neighbours to calculate the min distance from them ---------------------------------------------------------------------------------
+          for (k=i - 1 ; k <= i + 1 ; k++){
+            if (!aSurf->IsUPeriodic()){                              // Periodic conditions in U  
+              if(k > _gridU ){
+                break;
+              }
+              else if (k < 0){
+                k++; }
+            }
+            kp = (k + _gridU + 1) % (_gridU+1);                      // periodic index
+            for (n=j - 1 ; n <= j + 1 ; n++){ 
+              if (!aSurf->IsVPeriodic()){                            // Periodic conditions in V 
+                if(n > _gridV){	  
+                  break;
+                }
+                else if (n < 0){
+                  n++; }
+              }
+              np = (n + _gridV + 1) % (_gridV+1);                    
+              if (_known[kp][np]){                                   // If the distance of the neighbour is known
+                                                                     // Calculate the distance from (k,n)
+                du = (k-i) * (_u2 - _u1) / _gridU;
+                dv = (n-j) * (_v2 - _v1) / _gridV;
+                Dist = _DMap[kp][np] + sqrt( Guu * du*du + 2*Guv * du*dv + Gvv * dv*dv );   // ds**2 = du'Gdu + 2*du'Gdv + dv'Gdv  (G is always symetrical)
+                if (Dist < D_Ref) {                                  // If smaller than ref. distance  ->  update ref. distance
+                  D_Ref = Dist;
+                  Dist_changed = true;
+                }
+              }
+            }
+          } // End of the loop on neighbours --------------------------------------------------------------------------------------------------------------
+          if (Dist_changed) {                              // If distance has been updated, update _trial 
+            found=_trial.find(TPnt);
+            if (found != _trial.end()){
+              _trial.erase(found);                         // Erase the point if it was already in _trial
+            }
+            TPnt[0] = D_Ref;
+            TPnt[1] = ip;
+            TPnt[2] = jp;
+            _DMap[ip][jp] = D_Ref;                         // Set it distance to the minimum distance found during the loop above
+            _trial.insert(TPnt);                           // Insert it (or reinsert it) in _trial
+          }
+        } // end if (!_known[ip][jp])
       } // for
     } // for
   } // while (_trial)

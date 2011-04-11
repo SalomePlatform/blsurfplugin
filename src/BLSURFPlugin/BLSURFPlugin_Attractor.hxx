@@ -91,6 +91,8 @@ class BLSURFPlugin_Attractor {
     BLSURFPlugin_Attractor (const TopoDS_Face& Face, const TopoDS_Shape& Attractor, const std::string& attEntry, double Step = 0.015);
     bool init();                                                // Calculates the discrete points correponding to attractor 
                                                                 // and intialises the map of distances
+    void edgeInit(Handle(Geom_Surface) aSurf, const TopoDS_Edge& anEdge);
+    
     double              GetSize (double u, double v);
     TopoDS_Face         GetFace()           const { return _face; }
     TopoDS_Shape        GetAttractorShape() const { return _attractorShape; }
@@ -108,7 +110,7 @@ class BLSURFPlugin_Attractor {
     
     void BuildMap();                                            // Builds the map of distances between source point and any point P(u,v)
     bool IsMapBuilt() const { return _isMapBuilt; }             // Controls if the map has been built
-    bool Empty() const { return _isEmpty; }
+    bool Empty()      const { return _isEmpty; }
   
     typedef std::vector<double> TDiscreteParam;
     typedef std::vector< std::vector<double> > TDistMap;
@@ -128,7 +130,7 @@ class BLSURFPlugin_Attractor {
     TPointSet         _known;
     TTrialSet         _trial;
     int               _type;                                    // Type of function used to calculate the size from the distance (unused for now)
-    double            _step;                                    // Step between to value of the discretized parametric space in U or V direction
+    double            _step;                                    // Step between two values of the discretized parametric space in U or V direction
     int               _gridU;                                   // Number of grid points in U direction
     int               _gridV;                                   // Number of grid points in V direction
     double            _u1, _u2, _v1, _v2;                       // Bounds of the parametric space of the face 

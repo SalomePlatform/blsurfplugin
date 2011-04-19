@@ -820,6 +820,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   ATT_ShapeTypes.Add( TopAbs_VERTEX );
   ATT_ShapeTypes.Add( TopAbs_EDGE );
   ATT_ShapeTypes.Add( TopAbs_WIRE );
+  ATT_ShapeTypes.Add( TopAbs_COMPOUND );
   
   SMESH_NumberFilter* myFilter1 = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 0, SM_ShapeTypes);
   SMESH_NumberFilter* myFilter2 = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 0, ATT_ShapeTypes);
@@ -1499,15 +1500,15 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
       if ( name_value.count() > 1 ) {
         QString idStr = QString("%1").arg( i );
         int row = myOptionTable->rowCount();
-	myOptionTable->setRowCount( row+1 );
-	myOptionTable->setItem( row, OPTION_ID_COLUMN, new QTableWidgetItem( idStr ) );
-	myOptionTable->item( row, OPTION_ID_COLUMN )->setFlags( 0 );
-	myOptionTable->setItem( row, OPTION_NAME_COLUMN, new QTableWidgetItem( name_value[0] ) );
-	myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( 0 );
-	myOptionTable->setItem( row, OPTION_VALUE_COLUMN, new QTableWidgetItem( name_value[1] ) );
-	myOptionTable->item( row, OPTION_VALUE_COLUMN )->setFlags( Qt::ItemIsSelectable |
-								   Qt::ItemIsEditable   |
-								   Qt::ItemIsEnabled );
+        myOptionTable->setRowCount( row+1 );
+        myOptionTable->setItem( row, OPTION_ID_COLUMN, new QTableWidgetItem( idStr ) );
+        myOptionTable->item( row, OPTION_ID_COLUMN )->setFlags( 0 );
+        myOptionTable->setItem( row, OPTION_NAME_COLUMN, new QTableWidgetItem( name_value[0] ) );
+        myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( 0 );
+        myOptionTable->setItem( row, OPTION_VALUE_COLUMN, new QTableWidgetItem( name_value[1] ) );
+        myOptionTable->item( row, OPTION_VALUE_COLUMN )->setFlags( Qt::ItemIsSelectable |
+                                      Qt::ItemIsEditable   |
+                                      Qt::ItemIsEnabled );
       }
     }
   }
@@ -1520,10 +1521,9 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
   while (i.hasNext()) {
     i.next();
     const QString entry = i.key();
-    string shapeName = myGeomToolSelected->getNameFromEntry(entry.toStdString()); 
     const QString sizeMap = i.value();
+    string shapeName = myGeomToolSelected->getNameFromEntry(entry.toStdString()); 
     int row = mySizeMapTable->topLevelItemCount();
-//     mySizeMapTable->setRowCount( row+1 );
     QTreeWidgetItem* item = new QTreeWidgetItem();
     mySizeMapTable->addTopLevelItem( item ); 
     item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled );
@@ -1539,35 +1539,17 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
       child->setData(SMP_ENTRY_COLUMN, Qt::DisplayRole, QVariant( attEntry  ) );
       child->setData(SMP_NAME_COLUMN, Qt::DisplayRole, QVariant( QString::fromStdString( attName ) ) );
    
-      if (that->myAttDistMap[entry] > 1e-12){
-	item->setData(SMP_SIZEMAP_COLUMN, Qt::DisplayRole, QVariant( QString::fromStdString("Attractor" )  ) );
-	/*mySizeMapTable->setItem( row, SMP_DIST_COLUMN, new QTableWidgetItem( QString::number( that->myDistMap[entry], 'g',  6) ) );
-	mySizeMapTable->item( row, SMP_DIST_COLUMN )->setFlags( Qt::ItemIsSelectable |
-                                                               Qt::ItemIsEnabled );*/							       
+      if (that->myAttDistMap[entry] >  std::numeric_limits<double>::epsilon()){
+        item->setData(SMP_SIZEMAP_COLUMN, Qt::DisplayRole, QVariant( QString::fromStdString("Attractor" )  ) ); 
       }
       else{
-	item->setData(SMP_SIZEMAP_COLUMN, Qt::DisplayRole, QVariant( QString::fromStdString("Constant Size" )  ) );
-// 	mySizeMapTable->setItem( row, SMP_SIZEMAP_COLUMN, new QTableWidgetItem( QString::fromStdString("Constant size") );
-// 	mySizeMapTable->item( row, SMP_SIZEMAP_COLUMN )->setFlags( Qt::ItemIsSelectable |
-//                                                                Qt::ItemIsEnabled );
-// 	mySizeMapTable->item( row, SMP_NAME_COLUMN)->setText(QString::fromStdString(shapeName));
-// 	mySizeMapTable->setItem( row, SMP_DIST_COLUMN, new QTableWidgetItem( QString::number( that->myDistMap[entry], 'g',  6) ));
-// 	mySizeMapTable->item( row, SMP_DIST_COLUMN )->setFlags( Qt::ItemIsSelectable |
-//                                                                Qt::ItemIsEnabled );	
+        item->setData(SMP_SIZEMAP_COLUMN, Qt::DisplayRole, QVariant( QString::fromStdString("Constant Size" )  ) );
       }
     }
     else
     {
       item->setData(SMP_SIZEMAP_COLUMN, Qt::EditRole, QVariant( sizeMap ) );
-//       mySizeMapTable->setItem( row, SMP_SIZEMAP_COLUMN, new QTableWidgetItem( sizeMap ) ); 
-//       mySizeMapTable->item( row, SMP_SIZEMAP_COLUMN )->setFlags( Qt::ItemIsSelectable |
-//                                                                Qt::ItemIsEditable   |
-//                                                                Qt::ItemIsEnabled );
-     /* mySizeMapTable->setItem( row, SMP_DIST_COLUMN, new QTableWidgetItem( QString::number( that->myDistMap[entry], 'g',  6) ) );
-      mySizeMapTable->item( row, SMP_DIST_COLUMN )->setFlags( Qt::ItemIsSelectable |
-                                                               Qt::ItemIsEnabled );	*/					       
-    }
-    
+    } 
   }
   mySizeMapTable->resizeColumnToContents( SMP_ENTRY_COLUMN );
   mySizeMapTable->resizeColumnToContents( SMP_NAME_COLUMN );
@@ -2301,27 +2283,27 @@ void BLSURFPluginGUI_HypothesisCreator::onSmpItemClicked(QTreeWidgetItem * item,
       CORBA::Object_var attObj = entryToObject(attEntry);
       myAttSizeSpin->setValue(phySize);
       if (sizeMap.startsWith("Attractor")){	
-	myAttDistSpin->setValue(infDist);
+        myAttDistSpin->setValue(infDist);
         myAttractorCheck->setChecked(true);
       }
       else {
-	myAttractorCheck->setChecked(false);
+        myAttractorCheck->setChecked(false);
       }
-      if (sizeMap.startsWith("Constant") || constDist > 1e-12 ){
-	myAttDistSpin2->setValue(constDist);
-	myConstSizeCheck->setChecked(true);
+      if (sizeMap.startsWith("Constant") || constDist > std::numeric_limits<double>::epsilon()){
+        myAttDistSpin2->setValue(constDist);
+        myConstSizeCheck->setChecked(true);
       }
       else{
-	myConstSizeCheck->setChecked(false);
+        myConstSizeCheck->setChecked(false);
       }
       myGeomSelWdg2->SetObject(obj); 
       myAttSelWdg->SetObject(attObj);
     }
     else {                                                                   // CLASSIC MAPS
       smpTab->setCurrentIndex(SMP_STD_TAB);  // Change Tab
-      myGeomSelWdg1->SetObject(obj);        // Retrieve values of the selected item in the current tab widgets
+      myGeomSelWdg1->SetObject(obj);         // Retrieve values of the selected item in the current tab widgets
       if (!sizeMap.startsWith("def")){
-	mySmpSizeSpin->setValue(that->mySMPMap[entry].toDouble()); 
+        mySmpSizeSpin->setValue(that->mySMPMap[entry].toDouble()); 
       }
     }  
   } 
@@ -2346,40 +2328,28 @@ void BLSURFPluginGUI_HypothesisCreator::onSmpTabChanged(int tab)
 void BLSURFPluginGUI_HypothesisCreator::onAttractorClicked(int state)
 {
   if (state == Qt::Checked){
-//     myParamsGroup->setEnabled(true);
     myAttSelWdg->setEnabled(true);
     myAttSizeSpin->setEnabled(true);
     myAttSizeLabel->setEnabled(true);
     myAttDistSpin->setEnabled(true);
     myAttDistLabel->setEnabled(true);
-//     myAttDistSpin2->setEnabled(true);
-//     myAttDistLabel2->setEnabled(true);
     if (!myAttSelWdg->IsObjectSelected()){
       myAttSelWdg->SetDefaultText(tr("BLS_SEL_ATTRACTOR"), "QLineEdit { color: grey }");
     }
-//     if(myConstSizeCheck->checkState() == Qt::Checked){   // Only attractor
-//       myAttDistSpin2->setEnabled(true);
-//       myAttDistLabel2->setEnabled(true);
-// //       myAttDistSpin2->setValue(0.);
-//     }
   }
   if (state == Qt::Unchecked){
     myAttDistSpin->setEnabled(false);
     myAttDistLabel->setEnabled(false);
     myAttDistSpin->setValue(0.);
     if(myConstSizeCheck->checkState() == Qt::Unchecked){  // No predefined map selected
-        myAttSelWdg->setEnabled(false);
-        myAttSizeSpin->setEnabled(false);
-        myAttSizeLabel->setEnabled(false);
-        myAttDistSpin2->setEnabled(false);
-        myAttDistLabel2->setEnabled(false);
-//       myParamsGroup->setEnabled(false);
+      myAttSelWdg->setEnabled(false);
+      myAttSizeSpin->setEnabled(false);
+      myAttSizeLabel->setEnabled(false);
+      myAttDistSpin2->setEnabled(false);
+      myAttDistLabel2->setEnabled(false);
     }
     else if (!myAttSelWdg->IsObjectSelected()){           // Only constant size selected
-//       myAttDistSpin->setEnabled(false);
-//       myAttDistLabel->setEnabled(false);
-//       myAttDistSpin->setValue(0.);
-	myAttSelWdg->SetDefaultText(tr("BLS_SEL_SHAPE"), "QLineEdit { color: grey }");
+      myAttSelWdg->SetDefaultText(tr("BLS_SEL_SHAPE"), "QLineEdit { color: grey }");
     }
   }   
 }
@@ -2392,13 +2362,6 @@ void BLSURFPluginGUI_HypothesisCreator::onConstSizeClicked(int state)
     myAttSizeLabel->setEnabled(true);
     myAttDistSpin2->setEnabled(true);
     myAttDistLabel2->setEnabled(true);
-//     myAttDistSpin2->setEnabled(true);
-//     myAttDistLabel2->setEnabled(true);
-//     if(myConstSizeCheck->checkState() == Qt::Checked){   // Only attractor
-//       myAttDistSpin2->setEnabled(true);
-//       myAttDistLabel2->setEnabled(true);
-// //       myAttDistSpin2->setValue(0.);
-//     }
     if (myAttractorCheck->checkState() == Qt::Unchecked &&
         !myAttSelWdg->IsObjectSelected()){
       myAttSelWdg->SetDefaultText(tr("BLS_SEL_SHAPE"), "QLineEdit { color: grey }");
@@ -2414,41 +2377,11 @@ void BLSURFPluginGUI_HypothesisCreator::onConstSizeClicked(int state)
         myAttSizeLabel->setEnabled(false);
         myAttDistSpin->setEnabled(false);
         myAttDistLabel->setEnabled(false);
-//       myParamsGroup->setEnabled(false);
     }
     else if (!myAttSelWdg->IsObjectSelected()){           // Only constant size selected
-//       myAttDistSpin->setEnabled(false);
-//       myAttDistLabel->setEnabled(false);
-//       myAttDistSpin->setValue(0.);
     myAttSelWdg->SetDefaultText(tr("BLS_SEL_ATTRACTOR"), "QLineEdit { color: grey }");
     }
-  }  
-    
-//   if (state == Qt::Checked){
-//     myParamsGroup->setEnabled(true);
-//     myAttDistSpin->setEnabled(true);
-//     myAttDistLabel->setEnabled(true);
-//     myAttDistSpin2->setEnabled(true);
-//     myAttDistLabel2->setEnabled(true);
-//     if(myAttractorCheck->checkState() == Qt::Unchecked){  // Only constant size
-//       myAttDistSpin->setEnabled(false);
-//       myAttDistLabel->setEnabled(false);
-//       myAttDistSpin->setValue(0.);
-//       if (!myAttSelWdg->IsObjectSelected()){
-// 	myAttSelWdg->SetDefaultText(tr("BLS_SEL_SHAPE"), "QLineEdit { color: grey }");
-//       }
-//     }
-//   }
-//   if (state == Qt::Unchecked){
-//     if(myAttractorCheck->checkState() == Qt::Unchecked){  // No predefined map selected
-//       myParamsGroup->setEnabled(false);
-//     }
-//     else{
-//       myAttDistSpin2->setEnabled(false);                  // Only attractor selected  
-//       myAttDistLabel2->setEnabled(false);
-//       myAttDistSpin2->setValue(0.);
-//     }
-//   }   
+  }   
 }
 
 void BLSURFPluginGUI_HypothesisCreator::onRemoveMap()
@@ -2457,11 +2390,6 @@ void BLSURFPluginGUI_HypothesisCreator::onRemoveMap()
   QList<int> selectedRows;
   QList<QTreeWidgetItem*> selected = mySizeMapTable->selectedItems();
   QTreeWidgetItem* item;
-//   foreach( item, selected ) {
-//     if ( !selected.contains( item ) )
-//       selected.append( row );
-//   }
-
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
 
   qSort( selectedRows );
@@ -2499,29 +2427,18 @@ void BLSURFPluginGUI_HypothesisCreator::onSetSizeMap(QTreeWidgetItem* item, int 
       return;
     if (that->mySMPMap.contains(entry))
       if (that->mySMPMap[entry] == sizeMap 
-	|| sizeMap.startsWith("Attractor") 
-	|| sizeMap.startsWith("Constant") ){
+        || sizeMap.startsWith("Attractor") 
+        || sizeMap.startsWith("Constant") ){
         return;
-      }
-//     QColor* bgColor = new QColor("white");
-//     QColor* fgColor = new QColor("black");
-    
+      } 
     if (! sizeMap.isEmpty()) {
       that->mySMPMap[entry] = sizeMap;
       sizeMapValidationFromEntry(entry); 
-//       if (! sizeMapValidationFromRow(row)) {
-//         bgColor->setRgb(255,0,0);
-//         fgColor->setRgb(255,255,255);
-//       }
     }
     else {
       MESSAGE("Size map empty: reverse to precedent value" );
       item->setData(SMP_SIZEMAP_COLUMN, Qt::EditRole, QVariant(that->mySMPMap[entry]) );
     }
-//     that->mySizeMapTable->item(row, SMP_NAME_COLUMN)->setBackground(QBrush(*bgColor));
-//     that->mySizeMapTable->item(row, SMP_SIZEMAP_COLUMN)->setBackground(QBrush(*bgColor));
-//     that->mySizeMapTable->item(row, SMP_NAME_COLUMN)->setForeground(QBrush(*fgColor));
-//     that->mySizeMapTable->item(row, SMP_SIZEMAP_COLUMN)->setForeground(QBrush(*fgColor));
     mySizeMapTable->resizeColumnToContents(SMP_SIZEMAP_COLUMN);
   }
 }
@@ -2553,8 +2470,6 @@ void BLSURFPluginGUI_HypothesisCreator::onAddMap()
   myGeomSelWdg1->SetObject(CORBA::Object::_nil());
   myGeomSelWdg2->SetObject(CORBA::Object::_nil());
   myAttSelWdg->SetObject(CORBA::Object::_nil());
-//   mySmpDistSpin->setValue(0.);
-//   mySmpSizeSpin->setValue(0.);
 }
 
 void BLSURFPluginGUI_HypothesisCreator::onModifyMap()
@@ -2609,8 +2524,6 @@ void BLSURFPluginGUI_HypothesisCreator::insertElement(GEOM::GEOM_Object_var anOb
   oss << phySize;
   QString sizeMap;
   sizeMap  = QString::fromStdString(oss.str());
- // int row = mySizeMapTable->rowCount();
- // mySizeMapTable->setRowCount( row + 1 );
   QTreeWidgetItem* item = new QTreeWidgetItem();
   if (modify){
     int rowToChange = findRowFromEntry(shapeEntry);
@@ -2636,7 +2549,6 @@ void BLSURFPluginGUI_HypothesisCreator::insertElement(GEOM::GEOM_Object_var anOb
   mySizeMapTable->resizeColumnToContents( SMP_NAME_COLUMN );
   mySizeMapTable->resizeColumnToContents( SMP_ENTRY_COLUMN );
   mySizeMapTable->clearSelection();
-//   mySizeMapTable->scrollToItem( mySizeMapTable->item( row  , SMP_SIZEMAP_COLUMN ) ); //TODO voir si cette option est utile
 
   if ( myPhysicalMesh->currentIndex() != SizeMap ) {
     myPhysicalMesh->setCurrentIndex( SizeMap );
@@ -2683,8 +2595,6 @@ void BLSURFPluginGUI_HypothesisCreator::insertAttractor(GEOM::GEOM_Object_var aF
   QString infDistString = QString::fromStdString(oss2.str());
   QString constDistString = QString::fromStdString(oss3.str());
   
-//   int row = mySizeMapTable->topLevelItemCount();
-//   int rowToChange;
   QTreeWidgetItem* item; 
   QTreeWidgetItem* child; 
   if (modify){
@@ -2696,7 +2606,7 @@ void BLSURFPluginGUI_HypothesisCreator::insertAttractor(GEOM::GEOM_Object_var aF
     if (that->mySMPMap.contains(shapeEntry)) {  
       if (that->mySMPMap[shapeEntry] != "__TO_DELETE__") {
     //             MESSAGE("Size map for shape with name(entry): "<< shapeName << "(" << entry << ")");
-	return;
+        return;
       }
     }
     item = new QTreeWidgetItem();
@@ -2712,10 +2622,10 @@ void BLSURFPluginGUI_HypothesisCreator::insertAttractor(GEOM::GEOM_Object_var aF
   item->setExpanded(true); 
   item->setData(SMP_ENTRY_COLUMN, Qt::EditRole, QVariant(shapeEntry) );
   item->setData(SMP_NAME_COLUMN, Qt::EditRole, QVariant(QString::fromStdString(faceName)) );
-  if (infDist > 1e-12){
+  if (infDist > std::numeric_limits<double>::epsilon()){
     item->setData(SMP_SIZEMAP_COLUMN, Qt::EditRole, QVariant(QString::fromStdString("Attractor")) );
   }
-  else if (constDist > 1e-12){
+  else if (constDist > std::numeric_limits<double>::epsilon()){
     item->setData(SMP_SIZEMAP_COLUMN, Qt::EditRole, QVariant(QString::fromStdString("Constant Size")) );
   }
   item->setFlags( Qt::ItemIsSelectable |Qt::ItemIsEditable   |Qt::ItemIsEnabled );    
@@ -2727,8 +2637,6 @@ void BLSURFPluginGUI_HypothesisCreator::insertAttractor(GEOM::GEOM_Object_var aF
   mySizeMapTable->resizeColumnToContents( SMP_ENTRY_COLUMN );
   mySizeMapTable->resizeColumnToContents( SMP_NAME_COLUMN );
   mySizeMapTable->resizeColumnToContents( SMP_SIZEMAP_COLUMN );
-//  mySizeMapTable->clearSelection();
-//  mySizeMapTable->scrollToItem( mySizeMapTable->item( row  , SMP_SIZEMAP_COLUMN ) );//TODO voir si l'option est utile
 
   if ( myPhysicalMesh->currentIndex() != SizeMap ) {
     myPhysicalMesh->setCurrentIndex( SizeMap );
@@ -2850,43 +2758,6 @@ bool BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromEntry(QString myEnt
 
   return true;
 }
-
-/*
-void BLSURFPluginGUI_HypothesisCreator::OnEditMapFunction(QModelIndex* index) {
-  int myRow = index->row();
-  int myColumn = index->column();
-
-  if (myColumn == 2){
-     if (!myEditor) {
-         myEditor = new BLSURFPluginGUI_MapFunctionEditor(sizeMapModel->item(myRow,0)->text());
-	 connect(myEditor, SIGNAL(FunctionEntered(QString)), this, SLOT(FunctionLightValidation(QString)));
-     }
-     myEditor->exec();
-//      myEditor->show();
-//      myEditor->raise();
-//      myEditor->activateWindow();
-
-
-//     BLSURFPluginGUI_MapFunctionEditor* myEditor = new BLSURFPluginGUI_MapFunctionEditor(sizeMapModel->item(myRow,0)->text());
-//     myEditor->exec();
-     QString myFunction = myEditor->GetFunctionText();
-     // FIN RECUPERATION FONCTION
-
-     if (! myFunction.isEmpty()) {
-
-     // MAJ DE LA MAP
-
-     BLSURFPlugin::BLSURFPlugin_Hypothesis_var h =
-       BLSURFPlugin::BLSURFPlugin_Hypothesis::_narrow( initParamsHypothesis());
-
-//     h->SetSizeMapEntry(sizeMapModel->item(myRow,1)->text().toLatin1().constData(),
-//                        item->text().toLatin1().constData());
-     h->SetSizeMapEntry(sizeMapModel->item(myRow,1)->text().toLatin1().constData(),
-                        myFunction.toLatin1().constData());
-     // FIN MAJ DE LA MAP
-     }
-  }
-}*/
 
 QString BLSURFPluginGUI_HypothesisCreator::caption() const
 {

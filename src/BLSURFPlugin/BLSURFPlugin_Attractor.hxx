@@ -88,7 +88,7 @@ class BLSURFPlugin_Attractor {
   public:
     
     BLSURFPlugin_Attractor ();
-    BLSURFPlugin_Attractor (const TopoDS_Face& Face, const TopoDS_Shape& Attractor, const std::string& attEntry, double Step = 0.015);
+    BLSURFPlugin_Attractor (const TopoDS_Face& Face, const TopoDS_Shape& Attractor, const std::string& attEntry); //, double Step = 0.015);
     bool init();                                                // Calculates the discrete points correponding to attractor 
                                                                 // and intialises the map of distances
     void edgeInit(Handle(Geom_Surface) aSurf, const TopoDS_Edge& anEdge);
@@ -97,7 +97,7 @@ class BLSURFPlugin_Attractor {
     TopoDS_Face         GetFace()           const { return _face; }
     TopoDS_Shape        GetAttractorShape() const { return _attractorShape; }
     std::string         GetAttractorEntry() const { return _attEntry; }
-    double              GetStep()           const { return _step; }
+//     double              GetStep()           const { return _step; }
     std::vector<double> GetParameters()     const 
     { 
       double tab_params[] = {_startSize, _endSize, _actionRadius, _constantRadius}; 
@@ -130,7 +130,7 @@ class BLSURFPlugin_Attractor {
     TPointSet         _known;
     TTrialSet         _trial;
     int               _type;                                    // Type of function used to calculate the size from the distance (unused for now)
-    double            _step;                                    // Step between two values of the discretized parametric space in U or V direction
+//     double            _step;                                    // Step between two values of the discretized parametric space in U or V direction
     int               _gridU;                                   // Number of grid points in U direction
     int               _gridV;                                   // Number of grid points in V direction
     double            _u1, _u2, _v1, _v2;                       // Bounds of the parametric space of the face 

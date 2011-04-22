@@ -1641,7 +1641,7 @@ void BLSURFPlugin_BLSURF::Set_NodeOnEdge(SMESHDS_Mesh* meshDS, SMDS_MeshNode* no
     gp_Pnt curve_pnt = curve->Value( pa );
     double dist2 = pnt.SquareDistance( curve_pnt );
     double tol = BRep_Tool::Tolerance( edge );
-    if ( 1e-12 < dist2 && dist2 <= 2*tol*tol ) // large enough and within tolerance
+    if ( 1e-14 < dist2 && dist2 <= 1000*tol ) // large enough and within tolerance
     {
       curve_pnt.Transform( loc );
       meshDS->MoveNode( node, curve_pnt.X(), curve_pnt.Y(), curve_pnt.Z() );

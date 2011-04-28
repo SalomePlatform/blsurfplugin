@@ -1854,25 +1854,27 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
 //        h->SetCustomSizeMapEntry( entry.toLatin1().constData(), sizeMap.toLatin1().constData() );
       }
       else {
-	if (!myATTMap[entry].isEmpty()){
-	  QString att_entry = myATTMap[entry];
-	  double infDist = myAttDistMap[entry];
-	  double constDist = myDistMap[entry];
-	  double phySize = h->GetPhySize();
-	  h->SetClassAttractorEntry( entry.toLatin1().constData(), att_entry.toLatin1().constData(), sizeMap.toDouble() , phySize, infDist, constDist );        
-	}
+        if (!myATTMap[entry].isEmpty()){
+          QString att_entry = myATTMap[entry];
+          double infDist = myAttDistMap[entry];
+          double constDist = myDistMap[entry];
+          double phySize = h->GetPhySize();
+          QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+          h->SetClassAttractorEntry( entry.toLatin1().constData(), att_entry.toLatin1().constData(), sizeMap.toDouble() , phySize, infDist, constDist ); 
+          QApplication::restoreOverrideCursor();
+        }
         else {
-	  QString fullSizeMap;
-	  fullSizeMap = QString("");
-	  if (that->mySMPShapeTypeMap[entry]  == TopAbs_FACE)
-	    fullSizeMap = QString("def f(u,v): return ") + sizeMap;
-	  else if (that->mySMPShapeTypeMap[entry]  == TopAbs_EDGE)
-	    fullSizeMap = QString("def f(t): return ") + sizeMap;
-	  else if (that->mySMPShapeTypeMap[entry] == TopAbs_VERTEX)
-	    fullSizeMap = QString("def f(): return ") + sizeMap;
-  //         MESSAGE("SetSizeMapEntry("<<entry.toStdString()<<") = " <<fullSizeMap.toStdString());
-	  h->SetSizeMapEntry( entry.toLatin1().constData(), fullSizeMap.toLatin1().constData() );
-	}
+          QString fullSizeMap;
+          fullSizeMap = QString("");
+          if (that->mySMPShapeTypeMap[entry]  == TopAbs_FACE)
+            fullSizeMap = QString("def f(u,v): return ") + sizeMap;
+          else if (that->mySMPShapeTypeMap[entry]  == TopAbs_EDGE)
+            fullSizeMap = QString("def f(t): return ") + sizeMap;
+          else if (that->mySMPShapeTypeMap[entry] == TopAbs_VERTEX)
+            fullSizeMap = QString("def f(): return ") + sizeMap;
+      //         MESSAGE("SetSizeMapEntry("<<entry.toStdString()<<") = " <<fullSizeMap.toStdString());
+          h->SetSizeMapEntry( entry.toLatin1().constData(), fullSizeMap.toLatin1().constData() );
+        }
       }
     }
 
@@ -2464,6 +2466,8 @@ void BLSURFPluginGUI_HypothesisCreator::onAddMap()
   myAttSizeSpin->setValue(0.);
   myAttDistSpin2->setValue(0.);
   mySmpSizeSpin->setValue(0.);
+  myConstSizeCheck->setChecked(false);
+  myAttractorCheck->setChecked(false);
   myGeomSelWdg1->deactivateSelection();
   myGeomSelWdg2->deactivateSelection();
   myAttSelWdg->deactivateSelection();
@@ -2494,6 +2498,8 @@ void BLSURFPluginGUI_HypothesisCreator::onModifyMap()
   myAttSizeSpin->setValue(0.);
   myAttDistSpin2->setValue(0.);
   mySmpSizeSpin->setValue(0.);
+  myConstSizeCheck->setChecked(false);
+  myAttractorCheck->setChecked(false);
   myGeomSelWdg1->deactivateSelection();
   myGeomSelWdg2->deactivateSelection();
   myAttSelWdg->deactivateSelection();

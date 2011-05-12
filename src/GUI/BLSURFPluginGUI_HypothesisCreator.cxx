@@ -306,7 +306,6 @@ QWidget *EnforcedTreeWidgetDelegate::createEditor(QWidget *parent,
     }
     return editor;
   }
-
 }
 
 void EnforcedTreeWidgetDelegate::setEditorData(QWidget *editor,
@@ -397,22 +396,6 @@ bool EnforcedTreeWidgetDelegate::vertexExists(QAbstractItemModel *model,
         }
       }
     }
-//     else if (col == ENF_VER_ENTRY_COLUMN) {
-//       // Compare entries if no coords (= selected geom)
-//       xString = parent.child(row, ENF_VER_X_COLUMN).data(Qt::EditRole).toString();
-//       if (xString.isEmpty) {
-//         int nbChildren = model->rowCount(parent);
-//         for (int i = 0 ; i < nbChildren ; i++) {
-//           if (i != row) {
-//             QString childName = parent.child(i, ENF_VER_ENTRY_COLUMN).data(Qt::EditRole).toString();
-//             if (childName == value) {
-//               exists = true;
-//               break;
-//             }
-//           }
-//         }
-//       }
-//     }
     else if (col == ENF_VER_NAME_COLUMN) {
       int nbChildren = model->rowCount(parent);
       for (int i = 0 ; i < nbChildren ; i++) {

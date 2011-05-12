@@ -98,7 +98,6 @@ struct TEnfVertex{
   TEnfName grpName;
 };
 
-// TODO remove all TEnfVertexGUICmp
 
 struct CompareEnfVertices
 {

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
 <TS version="2.0" language="fr_FR" sourcelanguage="en_US">
 <context>
@@ -21,27 +21,27 @@
     </message>
     <message>
         <source>BLSURF_CUSTOM_GEOM</source>
-        <translation>Personnalisé</translation>
+        <translation>PersonnalisÃ©</translation>
     </message>
     <message>
         <source>BLSURF_CUSTOM_USER</source>
-        <translation>Personnalisé</translation>
+        <translation>PersonnalisÃ©</translation>
     </message>
     <message>
         <source>BLSURF_DECIMESH</source>
-        <translation>S&apos;affranchir des frontières des surfaces</translation>
+        <translation>S&apos;affranchir des frontiÃ¨res des surfaces</translation>
     </message>
     <message>
         <source>BLSURF_DEFAULT_GEOM</source>
-        <translation>Défaut</translation>
+        <translation>DÃ©faut</translation>
     </message>
     <message>
         <source>BLSURF_DEFAULT_USER</source>
-        <translation>Défaut</translation>
+        <translation>DÃ©faut</translation>
     </message>
     <message>
         <source>BLSURF_GEOM_MESH</source>
-        <translation>Maillage géométrique</translation>
+        <translation>Maillage gÃ©omÃ©trique</translation>
     </message>
     <message>
         <source>BLSURF_GRADATION</source>
@@ -49,11 +49,11 @@
     </message>
     <message>
         <source>BLSURF_HGEOMAX</source>
-        <translation>Taille géométrique maximale</translation>
+        <translation>Taille gÃ©omÃ©trique maximale</translation>
     </message>
     <message>
         <source>BLSURF_HGEOMIN</source>
-        <translation>Taille géométrique minimale</translation>
+        <translation>Taille gÃ©omÃ©trique minimale</translation>
     </message>
     <message>
         <source>BLSURF_HPHYDEF</source>
@@ -77,11 +77,11 @@
     </message>
     <message>
         <source>BLSURF_ADV_ARGS</source>
-        <translation>Avancé</translation>
+        <translation>AvancÃ©</translation>
     </message>
     <message>
         <source>BLSURF_TITLE</source>
-        <translation>Construction d&apos;une hypothèse</translation>
+        <translation>Construction d&apos;une hypothÃ¨se</translation>
     </message>
     <message>
         <source>BLSURF_TOPOLOGY</source>
@@ -93,15 +93,15 @@
     </message>
     <message>
         <source>BLSURF_TOPOLOGY_PROCESS</source>
-        <translation>Prétraitement</translation>
+        <translation>PrÃ©traitement</translation>
     </message>
     <message>
         <source>BLSURF_TOPOLOGY_PROCESS2</source>
-        <translation>Prétraitement++</translation>
+        <translation>PrÃ©traitement++</translation>
     </message>
     <message>
         <source>BLSURF_VERBOSITY</source>
-        <translation>Niveau de verbosité</translation>
+        <translation>Niveau de verbositÃ©</translation>
     </message>
     <message>
         <source>OBLIGATORY_VALUE</source>
@@ -125,7 +125,7 @@
     </message>
     <message>
         <source>SMP_ENTRY_COLUMN</source>
-        <translation>Entrée</translation>
+        <translation>EntrÃ©e</translation>
     </message>
     <message>
         <source>SMP_NAME_COLUMN</source>
@@ -141,7 +141,7 @@
     </message>
     <message>
         <source>BLSURF_SM_EDGE</source>
-        <translation>Sur une arête (ou groupe)</translation>
+        <translation>Sur une arÃªte (ou groupe)</translation>
     </message>
     <message>
         <source>BLSURF_SM_POINT</source>
@@ -157,7 +157,7 @@
     </message>
     <message>
         <source>BLSURF_SM_ATT_TAB</source>
-        <translation>Avancé</translation>
+        <translation>AvancÃ©</translation>
     </message>
     <message>
         <source>BLSURF_SM_REMOVE</source>
@@ -173,7 +173,7 @@
     </message>
     <message>
         <source>BLSURF_SM_PARAMS</source>
-        <translation>Paramètres</translation>
+        <translation>ParamÃ¨tres</translation>
     </message>
     <message>
         <source>BLSURF_ATTRACTOR</source>
@@ -201,15 +201,15 @@
     </message>
     <message>
         <source>BLS_SEL_SHAPE</source>
-        <translation>Sélectionnez un objet</translation>
+        <translation>SÃ©lectionnez un objet</translation>
     </message>
     <message>
         <source>BLS_SEL_FACE</source>
-        <translation>Sélectionnez une face</translation>
+        <translation>SÃ©lectionnez une face</translation>
     </message>
     <message>
         <source>BLS_SEL_ATTRACTOR</source>
-        <translation>Sélectionnez l&apos;attracteur</translation>
+        <translation>SÃ©lectionnez l&apos;attracteur</translation>
     </message>
     <message>
         <source>BLSURF_SM_SURF_VALUE</source>
@@ -217,7 +217,7 @@
     </message>
     <message>
         <source>BLSURF_SM_EDGE_VALUE</source>
-        <translation>Taille sur les/l&apos;arête(s)</translation>
+        <translation>Taille sur les/l&apos;arÃªte(s)</translation>
     </message>
     <message>
         <source>BLSURF_SM_POINT_VALUE</source>
@@ -257,11 +257,11 @@
     </message>
     <message>
         <source>BLSURF_ENF_SELECT_FACE</source>
-        <translation>Sélectionner une face</translation>
+        <translation>SÃ©lectionner une face</translation>
     </message>
     <message>
         <source>BLSURF_ENF_SELECT_VERTEX</source>
-        <translation>Sélectionner un point</translation>
+        <translation>SÃ©lectionner un point</translation>
     </message>
     <message>
         <source>BLSURF_ENF_VER_X_LABEL</source>

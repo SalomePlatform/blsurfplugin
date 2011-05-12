@@ -208,8 +208,6 @@ public:
   */
 
   
-//   TODO GROUPS
-//   void SetEnforcedVertex(const TEntry& entry, double x, double y, double z, const TEnfGroupName& groupName="");
   bool                  SetEnforcedVertex(TEntry theFaceEntry, TEnfName theVertexName, TEntry theVertexEntry, TEnfGroupName theGroupName,
                                           double x = 0.0, double y = 0.0, double z = 0.0);
   TEnfVertexList        GetEnfVertexList(const TEntry& theFaceEntry) throw (std::invalid_argument);

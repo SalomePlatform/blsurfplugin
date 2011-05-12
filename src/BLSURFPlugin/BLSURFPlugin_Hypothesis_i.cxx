@@ -1781,14 +1781,15 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexEntry(const char* theFaceEntr
   ASSERT(myBaseImpl);
   MESSAGE("IDL : UnsetEnforcedVertexEntry(" << theFaceEntry << "," << x << "," << y << "," << z << ", " << theVertexEntry << ")");
 
+  bool res = false;
   try {
-    this->GetImpl()->ClearEnforcedVertex(theFaceEntry, x, y, z, theVertexEntry);
+    res = this->GetImpl()->ClearEnforcedVertex(theFaceEntry, x, y, z, theVertexEntry);
 
     if (string(theVertexEntry).empty())
-      SMESH::TPythonDump() << _this() << ".UnsetEnforcedVertex(" << theFaceEntry << ", " << x << ", " << y << ", " << z
+      SMESH::TPythonDump() << "isDone = " << _this() << ".UnsetEnforcedVertex(" << theFaceEntry << ", " << x << ", " << y << ", " << z
           << ")";
     else
-      SMESH::TPythonDump() << _this() << ".UnsetEnforcedVertexGeom(" << theFaceEntry << ", " << theVertexEntry << ")";
+      SMESH::TPythonDump() << "isDone = " << _this() << ".UnsetEnforcedVertexGeom(" << theFaceEntry << ", " << theVertexEntry << ")";
 
   } catch (const std::invalid_argument& ex) {
     return false;
@@ -1798,7 +1799,7 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexEntry(const char* theFaceEntr
   }
 
   MESSAGE("ENGINE : UnsetEnforcedVertexEntry END ENTRY : " << theFaceEntry);
-  return true;
+  return res;
 }
 
 //bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexEntryWithPoint(const char* theFaceEntry, const char* theVertexEntry,

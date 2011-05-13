@@ -762,29 +762,76 @@ void BLSURFPlugin_Hypothesis_i::UnsetAttractor(GEOM::GEOM_Object_ptr GeomObj) {
   SMESH::TPythonDump() << _this() << ".UnsetAttractor( " << entry.c_str() << " )";
 }
 
-void BLSURFPlugin_Hypothesis_i::SetAttractorGeom(GEOM::GEOM_Object_ptr GeomObj, GEOM::GEOM_Object_ptr Attractor, double StartSize, double EndSize, double ActionRadius, double ConstantRadius)
+void BLSURFPlugin_Hypothesis_i::SetAttractorGeom(GEOM::GEOM_Object_ptr theFace, GEOM::GEOM_Object_ptr theAttractor, double StartSize, double EndSize, double ActionRadius, double ConstantRadius)
 {
   ASSERT(myBaseImpl);
-  string entry;
-  string att_entry;
-  entry=GeomObj->GetStudyEntry();
-  att_entry=Attractor->GetStudyEntry();
-  TopoDS_Face FaceShape = TopoDS::Face(SMESH_Gen_i::GetSMESHGen()->GeomObjectToShape( GeomObj ));
-  TopoDS_Shape AttractorShape = SMESH_Gen_i::GetSMESHGen()->GeomObjectToShape( Attractor );
-  MESSAGE("IDL : GetName : " << GeomObj->GetName());
+  string theFaceEntry;
+  string theAttEntry;
+  theFaceEntry = theFace->GetStudyEntry();
+  theAttEntry  = theAttractor->GetStudyEntry();
+  
+  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+  SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
+  string aName;
+  
+  if (theFaceEntry.empty()) {
+    aName = "Face_";
+    aName += theFace->GetEntry();
+    SALOMEDS::SObject_ptr theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    if (!theSFace->_is_nil())
+      theFaceEntry = theSFace->GetID();
+  }
+  if (theFaceEntry.empty())
+    THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
+  
+  if (theAttEntry.empty()) {
+    if (theAttractor->GetShapeType() == GEOM::VERTEX)
+      aName = "Vertex_";
+    if (theAttractor->GetShapeType() == GEOM::EDGE)
+      aName = "Edge_";
+    if (theAttractor->GetShapeType() == GEOM::WIRE)
+      aName = "Wire_";
+    if (theAttractor->GetShapeType() == GEOM::COMPOUND)
+      aName = "Compound_";
+    aName += theAttractor->GetEntry();
+    SALOMEDS::SObject_ptr theSAtt = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theAttractor, aName.c_str());
+    if (!theSAtt->_is_nil())
+      theAttEntry = theSAtt->GetID();
+  }
+  if (theAttEntry.empty())
+    THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
+  
+  TopoDS_Face FaceShape = TopoDS::Face(SMESH_Gen_i::GetSMESHGen()->GeomObjectToShape( theFace ));
+  TopoDS_Shape AttractorShape = SMESH_Gen_i::GetSMESHGen()->GeomObjectToShape( theAttractor );
+  MESSAGE("IDL : GetName : " << theFace->GetName());
   MESSAGE("IDL : SETATTRACTOR () ");//<< entry << " , " << att_entry << ")");
-  SetClassAttractorEntry( entry.c_str(), att_entry.c_str(), StartSize, EndSize, ActionRadius, ConstantRadius);
+  SetClassAttractorEntry( theFaceEntry.c_str(), theAttEntry.c_str(), StartSize, EndSize, ActionRadius, ConstantRadius);
 }
 
-void BLSURFPlugin_Hypothesis_i::UnsetAttractorGeom(GEOM::GEOM_Object_ptr GeomObj)
+void BLSURFPlugin_Hypothesis_i::UnsetAttractorGeom(GEOM::GEOM_Object_ptr theFace)
 {
   ASSERT(myBaseImpl);
-  string entry;
-  entry = GeomObj->GetStudyEntry();
-  MESSAGE("IDL : GetName : " << GeomObj->GetName());
-  MESSAGE("IDL : UNSETATTRACTOR ( "<< entry << ")");
-  UnsetEntry( entry.c_str());
-  SMESH::TPythonDump() << _this() << ".UnsetAttractorGeom( " << entry.c_str() << " )";
+  string theFaceEntry;
+  theFaceEntry = theFace->GetStudyEntry();
+  
+  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+  SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
+  string aName;
+  
+  if (theFaceEntry.empty()) {
+    aName = "Face_";
+    aName += theFace->GetEntry();
+    SALOMEDS::SObject_ptr theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    if (!theSFace->_is_nil())
+      theFaceEntry = theSFace->GetID();
+  }
+  if (theFaceEntry.empty())
+    THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
+  
+  MESSAGE("IDL : GetName : " << theFace->GetName());
+  MESSAGE("IDL : UNSETATTRACTOR ( "<< theFaceEntry << ")");
+  UnsetEntry( theFaceEntry.c_str());
+  SMESH::TPythonDump() << _this() << ".UnsetAttractorGeom( " << theFaceEntry.c_str() << " )";
 }
 
 /*

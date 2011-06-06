@@ -181,11 +181,11 @@
     </message>
     <message>
         <source>BLSURF_CONST_SIZE</source>
-        <translation>Taille constante autour d'un objet</translation>
+        <translation>Taille constante autour d&apos;un objet</translation>
     </message>
     <message>
         <source>BLSURF_ATT_DIST</source>
-        <translation>Dist. d'influence :</translation>
+        <translation>Dist. d&apos;influence :</translation>
     </message>
     <message>
         <source>BLSURF_ATT_RADIUS</source>
@@ -194,6 +194,10 @@
     <message>
         <source>BLSURF_SM_SIZE</source>
         <translation>Taille Locale :</translation>
+    </message>
+    <message>
+        <source>BLSURF_SM_DIST</source>
+        <translation>Distance</translation>
     </message>
     <message>
         <source>BLS_SEL_SHAPE</source>
@@ -205,7 +209,7 @@
     </message>
     <message>
         <source>BLS_SEL_ATTRACTOR</source>
-        <translation>Sélectionnez l'attracteur</translation>
+        <translation>Sélectionnez l&apos;attracteur</translation>
     </message>
     <message>
         <source>BLSURF_SM_SURF_VALUE</source>

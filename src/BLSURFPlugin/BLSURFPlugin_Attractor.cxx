@@ -1,20 +1,20 @@
-//  Copyright (C) 2007-2010  CEA/DEN, EDF R&D
+// Copyright (C) 2007-2011  CEA/DEN, EDF R&D
 //
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License.
 //
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-//  Lesser General Public License for more details.
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
 //
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 //
-//  See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
+// See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 //
 
 // ---
@@ -43,7 +43,6 @@ BLSURFPlugin_Attractor::BLSURFPlugin_Attractor ()
   : _face(),
   _attractorShape(),
   _attEntry(),
-  _step(0),
   _gridU(0),
   _gridV(0),
   _vectU(),
@@ -63,11 +62,10 @@ BLSURFPlugin_Attractor::BLSURFPlugin_Attractor ()
   _isMapBuilt(false),
   _isEmpty(true){ MESSAGE("construction of a void attractor"); }
 
-BLSURFPlugin_Attractor::BLSURFPlugin_Attractor (const TopoDS_Face& Face, const TopoDS_Shape& Attractor, const std::string& attEntry, double Step) // TODO Step is now unused -> remove it if testing is OK
+BLSURFPlugin_Attractor::BLSURFPlugin_Attractor (const TopoDS_Face& Face, const TopoDS_Shape& Attractor, const std::string& attEntry) 
   : _face(),
   _attractorShape(),
   _attEntry(attEntry),
-  _step(),
   _gridU(),
   _gridV(),
   _vectU(),
@@ -106,10 +104,9 @@ bool BLSURFPlugin_Attractor::init(){
   MESSAGE("v1 = "<<_v1<<" ,v2  = "<<_v2);
 //   _gridU = floor (_u2 - _u1) / _step;
 //   _gridV = floor (_v2 - _v1) / _step;
-  // TEST
+
   _gridU = 300;
   _gridV = 300;
-  _step = std::min((_u2-_u1)/_gridU,(_v2-_v1)/_gridV);
 
   for (i=0; i<=_gridU; i++){
     _vectU.push_back(_u1+i*(_u2-_u1)/_gridU) ;
@@ -127,11 +124,21 @@ bool BLSURFPlugin_Attractor::init(){
   for (i=0; i<=_gridU; i++){
     _known.push_back(temp2);
   }
-
+  
+  
   // Determination of the starting points
-  if (_attractorShape.ShapeType() == TopAbs_VERTEX){ 
+  TopExp_Explorer anEdgeExp(_attractorShape, TopAbs_EDGE, TopAbs_FACE);
+  TopExp_Explorer aVertExp(_attractorShape, TopAbs_VERTEX, TopAbs_EDGE);
+  
+  for(; anEdgeExp.More(); anEdgeExp.Next()){
+    const TopoDS_Edge& anEdge = TopoDS::Edge(anEdgeExp.Current());
+    edgeInit(aSurf, anEdge);
+  }
+  
+  for(; aVertExp.More(); aVertExp.Next()){
+    const TopoDS_Vertex& aVertex = TopoDS::Vertex(aVertExp.Current());
     Trial_Pnt TPnt(3,0); 
-    gp_Pnt P = BRep_Tool::Pnt(TopoDS::Vertex(_attractorShape));
+    gp_Pnt P = BRep_Tool::Pnt(aVertex);
     GeomAPI_ProjectPointOnSurf projector( P, aSurf );
     projector.LowerDistanceParameters(u0,v0);
     MESSAGE("u0 = "<<u0<<" ,v0  = "<<v0);
@@ -142,17 +149,6 @@ bool BLSURFPlugin_Attractor::init(){
     TPnt[2]=j0;
     _DMap[i0][j0] = 0.;
     _trial.insert(TPnt);         // Move starting point to _trial
-  }
-  else if (_attractorShape.ShapeType() == TopAbs_EDGE){
-    const TopoDS_Edge& anEdge = TopoDS::Edge(_attractorShape);
-    edgeInit(aSurf, anEdge);
-  }
-  else if (_attractorShape.ShapeType() == TopAbs_WIRE){
-    TopExp_Explorer anExp(_attractorShape, TopAbs_EDGE);
-    for(; anExp.More(); anExp.Next()){
-      const TopoDS_Edge& anEdge = TopoDS::Edge(anExp.Current());
-      edgeInit(aSurf, anEdge);
-    }
   }
     
 }
@@ -170,7 +166,7 @@ void BLSURFPlugin_Attractor::edgeInit(Handle(Geom_Surface) theSurf, const TopoDS
   curveProjector.PerformAdvanced (aCurve3d, first, last, aCurve2d);
   //int N = 20 * (last - first) / _step;  // If the edge is a circle : 4>Pi so the number of points on the edge should be good -> 5 for ellipses
   int N = 1200;
-  MESSAGE("Initialisation des points de départ")
+  MESSAGE("Initialization of the starting points")
   for (i=0; i<=N; i++){
     P2 = aCurve2d->Value(first + i * (last-first) / N);
     i0 = floor( (P2.X() - _u1) * _gridU / (_u2 - _u1) + 0.5 );
@@ -263,26 +259,26 @@ double BLSURFPlugin_Attractor::_distance(double u, double v){
 
 double BLSURFPlugin_Attractor::GetSize(double u, double v){   
   double myDist = 0.5 * (_distance(u,v) - _constantRadius + fabs(_distance(u,v) - _constantRadius));
-  if (myDist<0){
-    MESSAGE("Warning myDist<0 : myDist= "<<myDist)
-  }
+//   if (myDist<0){
+//     MESSAGE("Warning myDist<0 : myDist= "<<myDist)
+//   }
   switch(_type)
   {
     case TYPE_EXP:
-      if (fabs(_actionRadius) < 1e-12){ // TODO definir eps et decommenter
-	if (myDist < 1e-12){
-	  return _startSize;
-	}
-	else {
-	  return _endSize;
-	}
+      if (fabs(_actionRadius) <= std::numeric_limits<double>::epsilon()){ 
+        if (myDist <= std::numeric_limits<double>::epsilon()){
+          return _startSize;
+        }
+        else {
+          return _endSize;
+        }
       }
       else{
-	return _endSize - (_endSize - _startSize) * exp(- myDist * myDist / (_actionRadius * _actionRadius) );
+        return _endSize - (_endSize - _startSize) * exp(- myDist * myDist / (_actionRadius * _actionRadius) );
       }
       break;
     case TYPE_LIN:
-      return _startSize + ( 0.5 * (_distance(u,v) - _constantRadius + abs(_distance(u,v) - _constantRadius)) ) ;
+        return _startSize + ( 0.5 * (_distance(u,v) - _constantRadius + abs(_distance(u,v) - _constantRadius)) ) ;
       break;
   }
 }

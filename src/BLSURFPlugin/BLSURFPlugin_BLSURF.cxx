@@ -1,20 +1,20 @@
-//  Copyright (C) 2007-2010  CEA/DEN, EDF R&D
+// Copyright (C) 2007-2011  CEA/DEN, EDF R&D
 //
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License.
 //
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-//  Lesser General Public License for more details.
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
 //
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 //
-//  See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
+// See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 //
 
 // ---
@@ -887,7 +887,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
       if ( !AtIt->second->Empty() ) {
        // MESSAGE("blsurf_set_attractor(): " << AtIt->first << " = " << AtIt->second);
         GeomShape = entryToShape(AtIt->first);
-	AttShape = AtIt->second->GetAttractorShape();
+        AttShape = AtIt->second->GetAttractorShape();
         GeomType  = GeomShape.ShapeType();
         // Group Management
 //         if (GeomType == TopAbs_COMPOUND){
@@ -902,20 +902,23 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
         if (GeomType == TopAbs_FACE 
           && (AttShape.ShapeType() == TopAbs_VERTEX 
            || AttShape.ShapeType() == TopAbs_EDGE 
-           || AttShape.ShapeType() == TopAbs_WIRE)){
-	  HasSizeMapOnFace = true;
-	  if (! FacesWithSizeMap.Contains(TopoDS::Face(GeomShape)) ) {
+           || AttShape.ShapeType() == TopAbs_WIRE  
+           || AttShape.ShapeType() == TopAbs_COMPOUND) ){
+            HasSizeMapOnFace = true;
+            
+            if (! FacesWithSizeMap.Contains(TopoDS::Face(GeomShape)) ) {
                 key = FacesWithSizeMap.Add(TopoDS::Face(GeomShape) );
-              }
-              else {
-                key = FacesWithSizeMap.FindIndex(TopoDS::Face(GeomShape));
+            }
+            else {
+              key = FacesWithSizeMap.FindIndex(TopoDS::Face(GeomShape));
 //                 MESSAGE("Face with key " << key << " already in map");
-              }
-              FaceId2ClassAttractor[key] = AtIt->second;
+            }
+            
+            FaceId2ClassAttractor[key] = AtIt->second;
         }
         else{
-	  MESSAGE("Wrong shape type !!")
-	}
+          MESSAGE("Wrong shape type !!")
+        }
 
       }
     }
@@ -1638,7 +1641,7 @@ void BLSURFPlugin_BLSURF::Set_NodeOnEdge(SMESHDS_Mesh* meshDS, SMDS_MeshNode* no
     gp_Pnt curve_pnt = curve->Value( pa );
     double dist2 = pnt.SquareDistance( curve_pnt );
     double tol = BRep_Tool::Tolerance( edge );
-    if ( 1e-12 < dist2 && dist2 <= 2*tol*tol ) // large enough and within tolerance
+    if ( 1e-14 < dist2 && dist2 <= 1000*tol ) // large enough and within tolerance
     {
       curve_pnt.Transform( loc );
       meshDS->MoveNode( node, curve_pnt.X(), curve_pnt.Y(), curve_pnt.Z() );

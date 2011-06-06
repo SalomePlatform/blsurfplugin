@@ -1,20 +1,20 @@
-//  Copyright (C) 2007-2010  CEA/DEN, EDF R&D
+// Copyright (C) 2007-2011  CEA/DEN, EDF R&D
 //
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License.
 //
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-//  Lesser General Public License for more details.
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
 //
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 //
-//  See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
+// See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 //
 
 // ---
@@ -412,8 +412,8 @@ void BLSURFPlugin_Hypothesis::SetClassAttractorEntry(const std::string& entry, c
   
   if ( !attExists || (attExists && _classAttractors[entry]->GetAttractorEntry().compare(attEntry) != 0)){ 
     ShapeAnalysis::GetFaceUVBounds(FaceShape,u1,u2,v1,v2);
-    diag = sqrt((u2 - u1) * (u2 - u1) + (v2 - v1) * (v2 - v1));  
-    BLSURFPlugin_Attractor* myAttractor = new BLSURFPlugin_Attractor(FaceShape, AttractorShape, attEntry, 0.1 ); // test 0.002 * diag); 
+//     diag = sqrt((u2 - u1) * (u2 - u1) + (v2 - v1) * (v2 - v1));  
+    BLSURFPlugin_Attractor* myAttractor = new BLSURFPlugin_Attractor(FaceShape, AttractorShape, attEntry);//, 0.1 ); // test 0.002 * diag); 
     myAttractor->BuildMap();
     myAttractor->SetParameters(StartSize, EndSize, ActionRadius, ConstantRadius);
     _classAttractors[entry] = myAttractor;
@@ -956,15 +956,15 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save) {
     for (; it_At != _classAttractors.end(); ++it_At) {
       std::vector<double> attParams;
       attParams   = it_At->second->GetParameters();
-      double step = it_At->second->GetStep();
+//       double step = it_At->second->GetStep();
       save << " " << it_At->first;
       save << " " << it_At->second->GetAttractorEntry();
       save << " " << attParams[0]  << " " <<  attParams[1] << " " <<  attParams[2] << " " <<  attParams[3];
-      save << " " << step;
+//       save << " " << step;
       test << " " << it_At->first;
       test << " " << it_At->second->GetAttractorEntry();
       test << " " << attParams[0]  << " " <<  attParams[1] << " " <<  attParams[2] << " " <<  attParams[3];
-      test << " " << step;
+//       test << " " << step;
     }
     save << " " << "__NEW_ATTRACTORS_END__";
     test << " " << "__NEW_ATTRACTORS_END__";
@@ -1237,6 +1237,40 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
       if (option_or_sm == "__NEW_ATTRACTORS_BEGIN__")
         hasNewAttractor = true;
       else if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
+        hasEnforcedVertex = true;
+  }
+
+  std::string newAtFaceEntry, atTestString;
+  std::string newAtShapeEntry;
+  double attParams[4];
+  double step;
+  while (isOK && hasNewAttractor) {
+    std::cout<<"Load new attractor"<<std::endl;
+    isOK = (load >> newAtFaceEntry);
+    if (isOK) {
+      if (newAtFaceEntry == "__NEW_ATTRACTORS_END__")
+        break;
+      isOK = (load >> newAtShapeEntry);
+      if (!isOK)
+    break;
+      isOK = (load >> attParams[0]>>attParams[1]>>attParams[2]>>attParams[3]); //>>step);
+    }
+    if (isOK) {
+      MESSAGE(" LOADING ATTRACTOR HYPOTHESIS ")
+      const TopoDS_Shape attractorShape = BLSURFPlugin_Hypothesis::entryToShape(newAtShapeEntry);
+      const TopoDS_Face faceShape = TopoDS::Face(BLSURFPlugin_Hypothesis::entryToShape(newAtFaceEntry));
+      BLSURFPlugin_Attractor* attractor = new BLSURFPlugin_Attractor(faceShape, attractorShape, newAtShapeEntry);//, step);
+      attractor->SetParameters(attParams[0], attParams[1], attParams[2], attParams[3]);
+      attractor->BuildMap();                     
+      _classAttractors[newAtFaceEntry]=attractor;
+    }
+  }
+  
+  
+  if (hasNewAttractor) {
+    isOK = (load >> option_or_sm);
+    if (isOK)
+      if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
         hasEnforcedVertex = true;
   }
 

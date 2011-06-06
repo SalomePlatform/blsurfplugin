@@ -1,20 +1,20 @@
-//  Copyright (C) 2007-2010  CEA/DEN, EDF R&D
+// Copyright (C) 2007-2011  CEA/DEN, EDF R&D
 //
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License.
 //
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-//  Lesser General Public License for more details.
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
 //
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 //
-//  See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
+// See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 //
 
 // ---
@@ -88,7 +88,7 @@ class BLSURFPlugin_Attractor {
   public:
     
     BLSURFPlugin_Attractor ();
-    BLSURFPlugin_Attractor (const TopoDS_Face& Face, const TopoDS_Shape& Attractor, const std::string& attEntry, double Step = 0.015);
+    BLSURFPlugin_Attractor (const TopoDS_Face& Face, const TopoDS_Shape& Attractor, const std::string& attEntry); //, double Step = 0.015);
     bool init();                                                // Calculates the discrete points correponding to attractor 
                                                                 // and intialises the map of distances
     void edgeInit(Handle(Geom_Surface) aSurf, const TopoDS_Edge& anEdge);
@@ -97,7 +97,7 @@ class BLSURFPlugin_Attractor {
     TopoDS_Face         GetFace()           const { return _face; }
     TopoDS_Shape        GetAttractorShape() const { return _attractorShape; }
     std::string         GetAttractorEntry() const { return _attEntry; }
-    double              GetStep()           const { return _step; }
+//     double              GetStep()           const { return _step; }
     std::vector<double> GetParameters()     const 
     { 
       double tab_params[] = {_startSize, _endSize, _actionRadius, _constantRadius}; 
@@ -130,7 +130,7 @@ class BLSURFPlugin_Attractor {
     TPointSet         _known;
     TTrialSet         _trial;
     int               _type;                                    // Type of function used to calculate the size from the distance (unused for now)
-    double            _step;                                    // Step between two values of the discretized parametric space in U or V direction
+//     double            _step;                                    // Step between two values of the discretized parametric space in U or V direction
     int               _gridU;                                   // Number of grid points in U direction
     int               _gridV;                                   // Number of grid points in V direction
     double            _u1, _u2, _v1, _v2;                       // Bounds of the parametric space of the face 

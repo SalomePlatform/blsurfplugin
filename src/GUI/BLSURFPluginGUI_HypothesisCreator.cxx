@@ -72,6 +72,7 @@
 #include "SALOME_LifeCycleCORBA.hxx"
 
 #include <TopoDS_Shape.hxx>
+#include <TopoDS_Iterator.hxx>
 #include <SMESH_Gen_i.hxx>
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string.hpp>
@@ -799,6 +800,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   SM_ShapeTypes.Add( TopAbs_VERTEX );
   SM_ShapeTypes.Add( TopAbs_EDGE );
   SM_ShapeTypes.Add( TopAbs_FACE );
+  SM_ShapeTypes.Add( TopAbs_COMPOUND );
   
   ATT_ShapeTypes.Add( TopAbs_VERTEX );
   ATT_ShapeTypes.Add( TopAbs_EDGE );
@@ -2505,6 +2507,21 @@ void BLSURFPluginGUI_HypothesisCreator::insertElement(GEOM::GEOM_Object_var anOb
   MESSAGE("entry = "<<entry);
   shapeName = anObject->GetName();
   shapeType = SMESH_Gen_i::GetSMESHGen()->GeomObjectToShape( anObject ).ShapeType();
+  // Group management : the type of entities in the group is stored in the SMPShapeTypeMap
+  // in order to write the size map with the right syntax in StoreParamsToHypo 
+  // (f(t) for edges, f(u,v) for faces ...)
+  if (shapeType == TopAbs_COMPOUND){
+    TopoDS_Shape theShape = SMESH_Gen_i::GetSMESHGen()->GeomObjectToShape( anObject );
+    TopoDS_Shape childShape;
+    TopoDS_Iterator anIt(theShape);
+    for(;anIt.More();anIt.Next()){
+      childShape = anIt.Value();
+      shapeType = childShape.ShapeType();
+      if(!childShape.IsNull()){
+        break;
+      }
+    }
+  }
   mySizeMapTable->setFocus();
   QString shapeEntry;
   shapeEntry = QString::fromStdString(entry);

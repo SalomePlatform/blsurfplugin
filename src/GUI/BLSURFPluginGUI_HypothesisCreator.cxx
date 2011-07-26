@@ -1873,101 +1873,30 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
     */
 
     TFaceEntryEnfVertexListMap::const_iterator evmIt = h_data.faceEntryEnfVertexListMap.begin();
-
-    BLSURFPlugin::TFaceEntryEnfVertexListMap_var allEnforcedVerticesByFace = h->GetAllEnforcedVerticesByFace();
-    hypNbVertex =  allEnforcedVerticesByFace->length();
+    // 1. Clear all enforced vertices in hypothesis
+    // 2. Add new enforced vertex according to h_data
     
-
-    // All enforced vertices were deleted
-    if (evmIt == h_data.faceEntryEnfVertexListMap.end() && hypNbVertex!=0) {
-      h->ClearAllEnforcedVertices();
-      ok = true;
-    }
-    else {
-      // All enforced vertices for a specific entry were deleted
-      for (int i=0 ; i<hypNbVertex; i++) {
-        BLSURFPlugin::TFaceEntryEnfVertexListMapElement el = allEnforcedVerticesByFace[i];
-        TEnfName entry = el.faceEntry.in();
-        if (h_data.faceEntryEnfVertexListMap.find(entry) == h_data.faceEntryEnfVertexListMap.end()) {
-          MESSAGE("Remove all enforced vertices for entry " << entry);
-          h->UnsetEnforcedVerticesEntry(entry.c_str());
+    h->ClearAllEnforcedVertices();
+    TEnfName faceEntry;
+    TEnfVertexList evs;
+    TEnfVertexList::const_iterator evsIt;
+    for ( ; evmIt != h_data.faceEntryEnfVertexListMap.end() ; ++evmIt)
+    {
+      faceEntry = evmIt->first;
+      evs = evmIt->second;
+      MESSAGE("Number of enforced vertices for face entry " << faceEntry << ": " << evs.size());
+      evsIt = evs.begin();
+      for ( ; evsIt != evs.end() ; ++evsIt)
+      {
+        x =y =z = 0;
+        if ((*evsIt)->coords.size()) {
+          x = (*evsIt)->coords[0];
+          y = (*evsIt)->coords[1];
+          z = (*evsIt)->coords[2];
         }
-      }
-
-      // One or several enforced vertices are added or removed for a specific entry
-      TEnfVertexList enfVertexFromHyp;
-      BLSURFPlugin::TEnfVertexList_var hypEnfVertexList;
-      TEnfName faceEntry;
-      TEnfVertexList evs;
-      TEnfVertexList::const_iterator evsIt, enfVertexToRemove;
-      for ( ; evmIt != h_data.faceEntryEnfVertexListMap.end() ; ++evmIt) {
-        faceEntry = evmIt->first;
-        evs = evmIt->second;
-        MESSAGE("Number of enforced vertices for face entry " << faceEntry << ": " << evs.size());
-        evsIt = evs.begin();
-
-        hypEnfVertexList = h->GetEnforcedVerticesEntry(faceEntry.c_str());
-        hypNbVertex = hypEnfVertexList->length();
-        MESSAGE("Number of enforced vertices from hypothesis: " << hypNbVertex);
-        enfVertexFromHyp.clear();
-        for (int i =0 ; i<hypNbVertex ; i++) {
-          TEnfVertex *_enfVertex = new TEnfVertex();
-          _enfVertex->name = string("");
-          _enfVertex->name = CORBA::string_dup(hypEnfVertexList[i].name.in());
-          _enfVertex->geomEntry = string("");
-          _enfVertex->geomEntry = CORBA::string_dup(hypEnfVertexList[i].geomEntry.in());
-          _enfVertex->grpName = string("");
-          _enfVertex->grpName = CORBA::string_dup(hypEnfVertexList[i].grpName.in());
-          for (int j=0 ; j< hypEnfVertexList[i].coords.length() ; j++)
-            _enfVertex->coords.push_back(hypEnfVertexList[i].coords[j]);
-          enfVertexFromHyp.insert(_enfVertex);
-          MESSAGE("From hyp: enf vertex " << _enfVertex->name);
-//           MESSAGE("From hyp: enf. vertex at " << _coords[0]<<", "<<_coords[1]<<", "<<_coords[2]);
-        }
-
-//         TEnfVertex *enfVertex;
-        for ( ; evsIt != evs.end() ; ++evsIt) {
-          x =y =z = 0;
-//           enfVertex = (*evsIt);
-          if ((*evsIt)->coords.size()) {
-            x = (*evsIt)->coords[0];
-            y = (*evsIt)->coords[1];
-            z = (*evsIt)->coords[2];
-          }
-          ret = h->SetEnforcedVertexEntry( faceEntry.c_str(), x, y, z, (*evsIt)->name.c_str(), (*evsIt)->geomEntry.c_str(), (*evsIt)->grpName.c_str());
-          enfVertexFromHyp.erase((*evsIt));
-          
-//           for (enfVertexToRemove = enfVertexFromHyp.begin() ; enfVertexToRemove != enfVertexFromHyp.end() ; ++enfVertexToRemove) {
-//             if (!TEnfVertexGUICmp(&enfVertex, &(*enfVertexToRemove))) {
-//               MESSAGE("Enf vertex  " << enfVertex.name << " must not be deleted")
-//               enfVertexFromHyp.erase(enfVertexToRemove);
-//             }
-//           }
-        }
-
-        // Remove old vertices
-        enfVertexToRemove = enfVertexFromHyp.begin();
-        for ( ; enfVertexToRemove!=enfVertexFromHyp.end() ; ++enfVertexToRemove) {
-//           enfVertex = (*enfVertexToRemove);
-          if (h_data.enfVertexList.find((*enfVertexToRemove)) != h_data.enfVertexList.end()) {
-          
-//           for ( evsIt=h_data.enfVertexList.begin();evsIt!=h_data.enfVertexList.end();evsIt++) {
-//             if (TEnfVertexGUICmp(&(*evsIt),&enfVertex)) {
-              MESSAGE("Remove enf vertex " << (*enfVertexToRemove)->name);
-              if ((*enfVertexToRemove)->coords.size()) {
-                x = (*enfVertexToRemove)->coords[0];
-                y = (*enfVertexToRemove)->coords[1];
-                z = (*enfVertexToRemove)->coords[2];
-              }
-              ret = h->UnsetEnforcedVertexEntry(faceEntry.c_str(), x, y, z, (*enfVertexToRemove)->geomEntry.c_str());
-              if (ret)
-                MESSAGE("SUCCESS");
-//             } // if
-//           } // for
-          } // if
-        } // for
+        ret = h->SetEnforcedVertexEntry( faceEntry.c_str(), x, y, z, (*evsIt)->name.c_str(), (*evsIt)->geomEntry.c_str(), (*evsIt)->grpName.c_str());
       } // for
-    } // else
+    } // for
   } // try
   catch(const std::exception& ex) {
     std::cout << "Exception: " << ex.what() << std::endl;

@@ -212,6 +212,32 @@ module BLSURFPlugin
     short GetVerbosity();
 
     /*!
+     * To optimize the CAD (merges edges and removes nano edges).
+     */
+    void SetPreCADOptimCAD(in boolean toOptimizeCAD);
+    boolean GetPreCADOptimCAD();
+
+    /*!
+     * To compute topology from scratch
+     */
+    void SetPreCADDiscardInput(in boolean toDiscardInput);
+    boolean GetPreCADDiscardInput();
+
+    /*!
+     * To help PreCAD treat some very dirty cases.
+     * If the treated object is manifold.
+     */
+    void SetPreCADManifoldGeom(in boolean manifold);
+    boolean GetPreCADManifoldGeom();
+
+    /*!
+     * To help PreCAD treat some very dirty cases.
+     * If the object is also closed (imagine a shell).
+     */
+    void SetPreCADClosedGeom(in boolean closed);
+    boolean GetPreCADClosedGeom();
+
+    /*!
      * Sets advanced option value
      */
     void SetOptionValue(in string optionName,

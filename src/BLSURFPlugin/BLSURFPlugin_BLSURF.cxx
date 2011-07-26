@@ -741,13 +741,6 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
     precad_set_param(pcs, "discard_input_topology", _precadDiscardInput ? "1" : "0");
     precad_set_param(pcs, "manifold_geometry",      _precadManifoldGeom ? "1" : "0");
     precad_set_param(pcs, "closed_geometry",        _precadClosedGeom ? "1" : "0");
-    /*
-    precad_set_param(pcs, "merge_edges",            "0");
-    precad_set_param(pcs, "remove_nano_edges",      "0");
-    precad_set_param(pcs, "discard_input_topology", "0");
-    precad_set_param(pcs, "manifold_geometry",      "0");
-    precad_set_param(pcs, "closed_geometry",        "0");
-    */
   }
   
   _smp_phy_size = _phySize;

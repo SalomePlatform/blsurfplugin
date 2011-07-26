@@ -371,6 +371,114 @@ CORBA::Short BLSURFPlugin_Hypothesis_i::GetVerbosity() {
 }
 
 //=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::SetPreCADOptimCAD
+ *
+ *  Set true or false
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetPreCADOptimCAD(CORBA::Boolean theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetPreCADOptimCAD");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetPreCADOptimCAD(theValue);
+  SMESH::TPythonDump() << _this() << ".SetPreCADOptimCAD( " << theValue << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetPreCADOptimCAD
+ *
+ *  Get true or false
+ */
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADOptimCAD() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCADOptimCAD");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetPreCADOptimCAD();
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::SetPreCADDiscardInput
+ *
+ *  Set true or false
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetPreCADDiscardInput(CORBA::Boolean theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetPreCADDiscardInput");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetPreCADDiscardInput(theValue);
+  SMESH::TPythonDump() << _this() << ".SetPreCADDiscardInput( " << theValue << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetPreCADDiscardInput
+ *
+ *  Get true or false
+ */
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADDiscardInput() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCADDiscardInput");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetPreCADDiscardInput();
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::SetPreCADManifoldGeom
+ *
+ *  Set true or false
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetPreCADManifoldGeom(CORBA::Boolean theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetPreCADManifoldGeom");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetPreCADManifoldGeom(theValue);
+  SMESH::TPythonDump() << _this() << ".SetPreCADManifoldGeom( " << theValue << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetPreCADManifoldGeom
+ *
+ *  Get true or false
+ */
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADManifoldGeom() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCADManifoldGeom");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetPreCADManifoldGeom();
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::SetPreCADClosedGeom
+ *
+ *  Set true or false
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetPreCADClosedGeom(CORBA::Boolean theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetPreCADClosedGeom");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetPreCADClosedGeom(theValue);
+  SMESH::TPythonDump() << _this() << ".SetPreCADClosedGeom( " << theValue << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetPreCADClosedGeom
+ *
+ *  Get true or false
+ */
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADClosedGeom() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCADClosedGeom");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetPreCADClosedGeom();
+}
+
+//=============================================================================
 
 void BLSURFPlugin_Hypothesis_i::SetOptionValue(const char* optionName, const char* optionValue)
     throw (SALOME::SALOME_Exception) {

@@ -976,6 +976,9 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
   blsurf_set_param(bls, "patch_independent", _decimesh ? "1" : "0");
   blsurf_set_param(bls, "element",           _quadAllowed ? "q1.0" : "p1");
   blsurf_set_param(bls, "verb",              to_string(_verb).c_str());
+#ifdef _DEBUG_
+  blsurf_set_param(bls, "debug",             "1");
+#endif
 }
 
 status_t curv_fun(real t, real *uv, real *dt, real *dtt, void *user_data);
@@ -1167,7 +1170,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
           FaceId2AttractorCoords.erase(faceKey);
         }
       }
-      
+
       // Class Attractors
       std::map<int,BLSURFPlugin_Attractor* >::iterator clAttractor_iter = FaceId2ClassAttractor.find(faceKey);
       if (clAttractor_iter != FaceId2ClassAttractor.end()){
@@ -1400,6 +1403,9 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   mesh_t *msh = NULL;
   blsurf_data_get_mesh(bls, &msh);
   if(!msh){
+    /* release the mesh object */
+    blsurf_data_regain_mesh(bls, msh);
+    /* clean up everything */
     blsurf_session_delete(bls);
     cad_delete(c);
     context_delete(ctx);
@@ -1407,7 +1413,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     return error(_comment);
     //return false;
   }
-
+  
   /* retrieve mesh data (see distene/mesh.h) */
   integer nv, ne, nt, nq, vtx[4], tag;
   real xyz[3];
@@ -1439,62 +1445,65 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     nodes[iv] = meshDS->AddNode(xyz[0], xyz[1], xyz[2]);
 
     // Create group of enforced vertices if requested
-    if(_hypothesis) {
-      BLSURFPlugin_Hypothesis::TEnfVertexCoords projVertex;
-      projVertex.clear();
-      projVertex.push_back((double)xyz[0]);
-      projVertex.push_back((double)xyz[1]);
-      projVertex.push_back((double)xyz[2]);
-      std::map< BLSURFPlugin_Hypothesis::TEnfVertexCoords, BLSURFPlugin_Hypothesis::TEnfVertexList >::const_iterator enfCoordsIt = EnfVertexCoords2EnfVertexList.find(projVertex);
-      if (enfCoordsIt != EnfVertexCoords2EnfVertexList.end()) {
-        MESSAGE("Found enforced vertex @ " << xyz[0] << ", " << xyz[1] << ", " << xyz[2])
-        BLSURFPlugin_Hypothesis::TEnfVertexList::const_iterator enfListIt = enfCoordsIt->second.begin();
-        BLSURFPlugin_Hypothesis::TEnfVertex *currentEnfVertex;
-        for (; enfListIt != enfCoordsIt->second.end(); ++enfListIt) {
-          currentEnfVertex = (*enfListIt);
-          if (currentEnfVertex->grpName != "") {
-            bool groupDone = false;
-            SMESH_Mesh::GroupIteratorPtr grIt = aMesh.GetGroups();
-            MESSAGE("currentEnfVertex->grpName: " << currentEnfVertex->grpName);
-            MESSAGE("Parsing the groups of the mesh");
-            while (grIt->more()) {
-              SMESH_Group * group = grIt->next();
-              if ( !group ) continue;
-              MESSAGE("Group: " << group->GetName());
-              SMESHDS_GroupBase* groupDS = group->GetGroupDS();
-              if ( !groupDS ) continue;
-              MESSAGE("group->SMDSGroup().GetType(): " << (groupDS->GetType()));
-              MESSAGE("group->SMDSGroup().GetType()==SMDSAbs_Node: " << (groupDS->GetType()==SMDSAbs_Node));
-              MESSAGE("currentEnfVertex->grpName.compare(group->GetStoreName())==0: " << (currentEnfVertex->grpName.compare(group->GetName())==0));
-              if ( groupDS->GetType()==SMDSAbs_Node && currentEnfVertex->grpName.compare(group->GetName())==0) {
-                SMESHDS_Group* aGroupDS = static_cast<SMESHDS_Group*>( groupDS );
-                aGroupDS->SMDSGroup().Add(nodes[iv]);
-                MESSAGE("Node ID: " << nodes[iv]->GetID());
-                // How can I inform the hypothesis ?
-//                 _hypothesis->AddEnfVertexNodeID(currentEnfVertex->grpName,nodes[iv]->GetID());
-                groupDone = true;
-                MESSAGE("Successfully added enforced vertex to existing group " << currentEnfVertex->grpName);
-                break;
-              }
-            }
-            if (!groupDone)
-            {
-              int groupId;
-              SMESH_Group* aGroup = aMesh.AddGroup(SMDSAbs_Node, currentEnfVertex->grpName.c_str(), groupId);
-              aGroup->SetName( currentEnfVertex->grpName.c_str() );
-              SMESHDS_Group* aGroupDS = static_cast<SMESHDS_Group*>( aGroup->GetGroupDS() );
+    BLSURFPlugin_Hypothesis::TEnfVertexCoords projVertex;
+    projVertex.clear();
+    projVertex.push_back((double)xyz[0]);
+    projVertex.push_back((double)xyz[1]);
+    projVertex.push_back((double)xyz[2]);
+    std::map< BLSURFPlugin_Hypothesis::TEnfVertexCoords, BLSURFPlugin_Hypothesis::TEnfVertexList >::const_iterator enfCoordsIt = EnfVertexCoords2EnfVertexList.find(projVertex);
+    if (enfCoordsIt != EnfVertexCoords2EnfVertexList.end()) {
+      MESSAGE("Found enforced vertex @ " << xyz[0] << ", " << xyz[1] << ", " << xyz[2]);
+      BLSURFPlugin_Hypothesis::TEnfVertexList::const_iterator enfListIt = enfCoordsIt->second.begin();
+      BLSURFPlugin_Hypothesis::TEnfVertex *currentEnfVertex;
+      for (; enfListIt != enfCoordsIt->second.end(); ++enfListIt) {
+        currentEnfVertex = (*enfListIt);
+        if (currentEnfVertex->grpName != "") {
+          bool groupDone = false;
+          SMESH_Mesh::GroupIteratorPtr grIt = aMesh.GetGroups();
+          MESSAGE("currentEnfVertex->grpName: " << currentEnfVertex->grpName);
+          MESSAGE("Parsing the groups of the mesh");
+          while (grIt->more()) {
+            SMESH_Group * group = grIt->next();
+            if ( !group ) continue;
+            MESSAGE("Group: " << group->GetName());
+            SMESHDS_GroupBase* groupDS = group->GetGroupDS();
+            if ( !groupDS ) continue;
+            MESSAGE("group->SMDSGroup().GetType(): " << (groupDS->GetType()));
+            MESSAGE("group->SMDSGroup().GetType()==SMDSAbs_Node: " << (groupDS->GetType()==SMDSAbs_Node));
+            MESSAGE("currentEnfVertex->grpName.compare(group->GetStoreName())==0: " << (currentEnfVertex->grpName.compare(group->GetName())==0));
+            if ( groupDS->GetType()==SMDSAbs_Node && currentEnfVertex->grpName.compare(group->GetName())==0) {
+              SMESHDS_Group* aGroupDS = static_cast<SMESHDS_Group*>( groupDS );
               aGroupDS->SMDSGroup().Add(nodes[iv]);
-              MESSAGE("Successfully created enforced vertex group " << currentEnfVertex->grpName);
+              MESSAGE("Node ID: " << nodes[iv]->GetID());
+              // How can I inform the hypothesis ?
+//                 _hypothesis->AddEnfVertexNodeID(currentEnfVertex->grpName,nodes[iv]->GetID());
               groupDone = true;
+              MESSAGE("Successfully added enforced vertex to existing group " << currentEnfVertex->grpName);
+              break;
             }
-            if (!groupDone)
-              throw SALOME_Exception(LOCALIZED("A enforced vertex node was not added to a group"));
           }
-          else
-            MESSAGE("Group name is empty: '"<<currentEnfVertex->grpName<<"' => group is not created");
+          if (!groupDone)
+          {
+            int groupId;
+            SMESH_Group* aGroup = aMesh.AddGroup(SMDSAbs_Node, currentEnfVertex->grpName.c_str(), groupId);
+            aGroup->SetName( currentEnfVertex->grpName.c_str() );
+            SMESHDS_Group* aGroupDS = static_cast<SMESHDS_Group*>( aGroup->GetGroupDS() );
+            aGroupDS->SMDSGroup().Add(nodes[iv]);
+            MESSAGE("Successfully created enforced vertex group " << currentEnfVertex->grpName);
+            groupDone = true;
+          }
+          if (!groupDone)
+            throw SALOME_Exception(LOCALIZED("A enforced vertex node was not added to a group"));
         }
+        else
+          MESSAGE("Group name is empty: '"<<currentEnfVertex->grpName<<"' => group is not created");
       }
     }
+#ifdef _DEBUG_
+    else
+      MESSAGE("No enforced vertex found @ " << xyz[0] << ", " << xyz[1] << ", " << xyz[2]);
+#endif
+
 
 
     // internal point are tagged to zero

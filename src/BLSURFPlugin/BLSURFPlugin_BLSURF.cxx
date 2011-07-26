@@ -1173,7 +1173,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       
       // Specific size map = Attractor
       std::map<int,std::vector<double> >::iterator attractor_iter = FaceId2AttractorCoords.begin();
-      int iatt=0;
+      
       for (; attractor_iter != FaceId2AttractorCoords.end(); ++attractor_iter) {
         if (attractor_iter->first == faceKey) {
           MESSAGE("Face indice: " << iface);
@@ -1202,10 +1202,10 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
             // Point is inside face and not on border
             MESSAGE("Point is in face: node is created");
             double uvCoords[2]   = {attractor_iter->second[0],attractor_iter->second[1]};
-            iatt++;
-            MESSAGE("Add cad point on (u,v)=(" << uvCoords[0] << "," << uvCoords[1] << ") with id = " << iatt);
-            cad_point_t* point_p = cad_point_new(fce, iatt, uvCoords);
-            cad_point_set_tag(point_p, iatt);
+            ienf++;
+            MESSAGE("Add cad point on (u,v)=(" << uvCoords[0] << "," << uvCoords[1] << ") with id = " << ienf);
+            cad_point_t* point_p = cad_point_new(fce, ienf, uvCoords);
+            cad_point_set_tag(point_p, ienf);
           }
           FaceId2AttractorCoords.erase(faceKey);
         }

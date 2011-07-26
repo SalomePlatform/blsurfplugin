@@ -53,7 +53,8 @@ public:
 
   enum PhysicalMesh {
     DefaultSize,
-    PhysicalUserDefined
+    PhysicalUserDefined,
+    SizeMap
   };
 
   enum GeometricMesh {

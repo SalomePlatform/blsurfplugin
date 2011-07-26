@@ -126,7 +126,7 @@ CORBA::Long BLSURFPlugin_Hypothesis_i::GetPhysicalMesh() {
  */
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetPhySize(CORBA::Double theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetPhySize");
+  MESSAGE("BLSURFPlugin_Hypothesis_i::SetPhySize");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetPhySize(theValue);
   SMESH::TPythonDump() << _this() << ".SetPhySize( " << theValue << " )";
@@ -140,7 +140,7 @@ void BLSURFPlugin_Hypothesis_i::SetPhySize(CORBA::Double theValue) {
  */
 //=============================================================================
 CORBA::Double BLSURFPlugin_Hypothesis_i::GetPhySize() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetPhySize");
+  MESSAGE("BLSURFPlugin_Hypothesis_i::GetPhySize");
   ASSERT(myBaseImpl);
   return this->GetImpl()->GetPhySize();
 }
@@ -1690,7 +1690,6 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexEntry(const char* theFaceEntry,
   ASSERT(myBaseImpl);
   MESSAGE("IDL : SetEnforcedVertexEntry(" << theFaceEntry << ", " << x << ", " << y << ", " << z << ", \"" << theVertexName << "\", \"" << theVertexEntry << "\", \"" << theGroupName << "\")");
   bool newValue = false;
-
   if (string(theVertexEntry).empty()) {
     try {
       ::BLSURFPlugin_Hypothesis::TEnfVertexCoordsList coordsList =

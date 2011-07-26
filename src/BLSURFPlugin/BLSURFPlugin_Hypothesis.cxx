@@ -154,13 +154,6 @@ void BLSURFPlugin_Hypothesis::SetTopology(Topology theTopology) {
 void BLSURFPlugin_Hypothesis::SetPhysicalMesh(PhysicalMesh thePhysicalMesh) {
   if (thePhysicalMesh != _physicalMesh) {
     _physicalMesh = thePhysicalMesh;
-    switch (_physicalMesh) {
-      case DefaultSize:
-      default:
-        _phySize = GetDefaultPhySize();
-        _gradation = GetDefaultGradation();
-        break;
-    }
     NotifySubMeshesHypothesisModification();
   }
 }
@@ -335,6 +328,7 @@ void BLSURFPlugin_Hypothesis::ClearOption(const std::string& optionName) {
 //=======================================================================
 void BLSURFPlugin_Hypothesis::SetSizeMapEntry(const std::string& entry, const std::string& sizeMap) {
   if (_sizeMap[entry].compare(sizeMap) != 0) {
+    SetPhysicalMesh(SizeMap);
     _sizeMap[entry] = sizeMap;
     NotifySubMeshesHypothesisModification();
   }
@@ -363,6 +357,7 @@ BLSURFPlugin_Hypothesis::TSizeMap BLSURFPlugin_Hypothesis::GetSizeMapEntries(con
 //=======================================================================
 void BLSURFPlugin_Hypothesis::SetAttractorEntry(const std::string& entry, const std::string& attractor) {
   if (_attractors[entry].compare(attractor) != 0) {
+    SetPhysicalMesh(SizeMap);
     _attractors[entry] = attractor;
     NotifySubMeshesHypothesisModification();
   }
@@ -391,6 +386,8 @@ BLSURFPlugin_Hypothesis::TSizeMap BLSURFPlugin_Hypothesis::GetAttractorEntries(c
 //=======================================================================
 void BLSURFPlugin_Hypothesis::SetClassAttractorEntry(const std::string& entry, const std::string& attEntry, double StartSize, double EndSize, double ActionRadius, double ConstantRadius)
 {
+  SetPhysicalMesh(SizeMap);
+
   // The new attractor can't be defined on the same face as another sizemap
   TSizeMap::iterator it  = _sizeMap.find( entry );
   if ( it != _sizeMap.end() ) {
@@ -513,6 +510,8 @@ bool BLSURFPlugin_Hypothesis::SetEnforcedVertex(TEntry theFaceEntry, TEnfName th
 
   MESSAGE("BLSURFPlugin_Hypothesis::SetEnforcedVertex("<< theFaceEntry << ", "
       << x << ", " << y << ", " << z << ", " << theVertexName << ", " << theVertexEntry << ", " << theGroupName << ")");
+
+  SetPhysicalMesh(SizeMap);
 
   //  TEnfVertexList::iterator it;
   bool toNotify = false;

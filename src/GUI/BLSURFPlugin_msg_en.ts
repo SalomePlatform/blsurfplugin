@@ -100,6 +100,10 @@
         <translation>Pre-process++</translation>
     </message>
     <message>
+        <source>BLSURF_TOPOLOGY_PRECAD</source>
+        <translation>PreCAD</translation>
+    </message>
+    <message>
         <source>BLSURF_VERBOSITY</source>
         <translation>Verbosity level</translation>
     </message>

@@ -100,6 +100,10 @@
         <translation>Prétraitement++</translation>
     </message>
     <message>
+        <source>BLSURF_TOPOLOGY_PRECAD</source>
+        <translation>PreCAD</translation>
+    </message>
+    <message>
         <source>BLSURF_VERBOSITY</source>
         <translation>Niveau de verbosité</translation>
     </message>

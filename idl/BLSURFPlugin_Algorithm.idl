@@ -123,6 +123,7 @@ module BLSURFPlugin
      * Sets topology usage way defining how mesh conformity is assured
      * value=0 - mesh conformity is assured by conformity of a shape
      * value=1,2 - mesh conformity is assured by pre-processing a CAD model
+     * value=3 - mesh conformity is assured by pre-processing a CAD model with Pre-CAD
      */
     void SetTopology(in long way);
     long GetTopology();

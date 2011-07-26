@@ -31,6 +31,7 @@
 extern "C"{
 #include <distene/api.h>
 #include <distene/blsurf.h>
+#include <distene/precad.h>
 }
 
 #include <structmember.h>
@@ -665,7 +666,10 @@ void createAttractorOnFace(TopoDS_Shape GeomShape, std::string AttractorFunction
 
 void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
                                         blsurf_session_t *             bls,
-                                        SMESH_Mesh&                   mesh)
+                                        precad_session_t *             pcs,
+                                        SMESH_Mesh&                   mesh,
+                                        bool *                  use_precad
+                                       )
 {
   int    _topology      = BLSURFPlugin_Hypothesis::GetDefaultTopology();
   int    _physicalMesh  = BLSURFPlugin_Hypothesis::GetDefaultPhysicalMesh();
@@ -677,6 +681,13 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
   bool   _quadAllowed   = BLSURFPlugin_Hypothesis::GetDefaultQuadAllowed();
   bool   _decimesh      = BLSURFPlugin_Hypothesis::GetDefaultDecimesh();
   int    _verb          = BLSURFPlugin_Hypothesis::GetDefaultVerbosity();
+
+  // PreCAD
+  int _precadOptimCad     = BLSURFPlugin_Hypothesis::GetDefaultPreCADOptimCAD();
+  int _precadDiscardInput = BLSURFPlugin_Hypothesis::GetDefaultPreCADDiscardInput();
+  int _precadManifoldGeom = BLSURFPlugin_Hypothesis::GetDefaultPreCADManifoldGeom();
+  int _precadClosedGeom   = BLSURFPlugin_Hypothesis::GetDefaultPreCADClosedGeom();
+
 
   if (hyp) {
     MESSAGE("BLSURFPlugin_BLSURF::SetParameters");
@@ -690,7 +701,6 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
     _quadAllowed   = hyp->GetQuadAllowed();
     _decimesh      = hyp->GetDecimesh();
     _verb          = hyp->GetVerbosity();
-
     if ( hyp->GetPhyMin() != ::BLSURFPlugin_Hypothesis::undefinedDouble() )
       blsurf_set_param(bls, "hphymin", to_string(hyp->GetPhyMin()).c_str());
     if ( hyp->GetPhyMax() != ::BLSURFPlugin_Hypothesis::undefinedDouble() )
@@ -708,21 +718,47 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
         blsurf_set_param(bls, opIt->first.c_str(), opIt->second.c_str());
       }
 
+    // PreCAD
+    _precadOptimCad = hyp->GetPreCADOptimCAD();
+    _precadDiscardInput = hyp->GetPreCADDiscardInput();
+    _precadManifoldGeom = hyp->GetPreCADManifoldGeom();
+    _precadClosedGeom = hyp->GetPreCADClosedGeom();
+    
   } else {
     //0020968: EDF1545 SMESH: Problem in the creation of a mesh group on geometry
     // GetDefaultPhySize() sometimes leads to computation failure
     _phySize = mesh.GetShapeDiagonalSize() / _gen->GetBoundaryBoxSegmentation();
     MESSAGE("BLSURFPlugin_BLSURF::SetParameters using defaults");
   }
+  
+  // PreCAD
+  if (_topology == BLSURFPlugin_Hypothesis::PreCAD) {
+    *use_precad = true;
+    precad_set_param(pcs, "verbose",                to_string(_verb).c_str());
+
+    precad_set_param(pcs, "merge_edges",            _precadOptimCad > 0 ? "1" : "0");
+    precad_set_param(pcs, "remove_nano_edges",      _precadOptimCad > 0 ? "1" : "0");
+    precad_set_param(pcs, "discard_input_topology", _precadDiscardInput ? "1" : "0");
+    precad_set_param(pcs, "manifold_geometry",      _precadManifoldGeom ? "1" : "0");
+    precad_set_param(pcs, "closed_geometry",        _precadClosedGeom ? "1" : "0");
+    /*
+    precad_set_param(pcs, "merge_edges",            "0");
+    precad_set_param(pcs, "remove_nano_edges",      "0");
+    precad_set_param(pcs, "discard_input_topology", "0");
+    precad_set_param(pcs, "manifold_geometry",      "0");
+    precad_set_param(pcs, "closed_geometry",        "0");
+    */
+  }
+  
   _smp_phy_size = _phySize;
-  blsurf_set_param(bls, "topo_points",       _topology > 0 ? "1" : "0");
-  blsurf_set_param(bls, "topo_curves",       _topology > 0 ? "1" : "0");
-  blsurf_set_param(bls, "topo_project",      _topology > 0 ? "1" : "0");
-  blsurf_set_param(bls, "clean_boundary",    _topology > 1 ? "1" : "0");
-  blsurf_set_param(bls, "close_boundary",    _topology > 1 ? "1" : "0");
+  blsurf_set_param(bls, "topo_points",       _topology == BLSURFPlugin_Hypothesis::Process || _topology == BLSURFPlugin_Hypothesis::Process2 ? "1" : "0");
+  blsurf_set_param(bls, "topo_curves",       _topology == BLSURFPlugin_Hypothesis::Process || _topology == BLSURFPlugin_Hypothesis::Process2 ? "1" : "0");
+  blsurf_set_param(bls, "topo_project",      _topology == BLSURFPlugin_Hypothesis::Process || _topology == BLSURFPlugin_Hypothesis::Process2 ? "1" : "0");
+  blsurf_set_param(bls, "clean_boundary",    _topology == BLSURFPlugin_Hypothesis::Process2 ? "1" : "0");
+  blsurf_set_param(bls, "close_boundary",    _topology == BLSURFPlugin_Hypothesis::Process2 ? "1" : "0");
   blsurf_set_param(bls, "hphy_flag",         to_string(_physicalMesh).c_str());
-//  blsurf_set_param(bls, "hphy_flag",         "2");
-  if ((to_string(_physicalMesh))=="2"){
+
+  if (_physicalMesh == BLSURFPlugin_Hypothesis::SizeMap){
     TopoDS_Shape GeomShape;
     TopoDS_Shape AttShape;
     TopAbs_ShapeEnum GeomType;
@@ -976,9 +1012,9 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
   blsurf_set_param(bls, "patch_independent", _decimesh ? "1" : "0");
   blsurf_set_param(bls, "element",           _quadAllowed ? "q1.0" : "p1");
   blsurf_set_param(bls, "verb",              to_string(_verb).c_str());
-#ifdef _DEBUG_
-  blsurf_set_param(bls, "debug",             "1");
-#endif
+// #ifdef _DEBUG_
+//   blsurf_set_param(bls, "debug",             "1");
+// #endif
 }
 
 status_t curv_fun(real t, real *uv, real *dt, real *dtt, void *user_data);
@@ -1024,8 +1060,6 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   /* create the CAD object we will work on. It is associated to the context ctx. */
   cad_t *c = cad_new(ctx);
 
-  blsurf_session_t *bls = blsurf_session_new(ctx);
-
   FacesWithSizeMap.Clear();
   FaceId2SizeMap.clear();
   FaceId2ClassAttractor.clear();
@@ -1035,15 +1069,26 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   VerticesWithSizeMap.Clear();
   VertexId2SizeMap.clear();
 
-  MESSAGE("BEGIN SetParameters");
-  SetParameters(_hypothesis, bls, aMesh);
-  MESSAGE("END SetParameters");
 
   /* Now fill the CAD object with data from your CAD
    * environement. This is the most complex part of a successfull
    * integration.
    */
 
+  // PreCAD
+  // If user requests it, send the CAD through Distene preprocessor : PreCAD
+  cad_t *cleanc = NULL;
+  precad_session_t *pcs = precad_session_new(ctx);
+  precad_data_set_cad(pcs, c);
+  
+  blsurf_session_t *bls = blsurf_session_new(ctx);
+
+  MESSAGE("BEGIN SetParameters");
+  bool use_precad = false;
+  SetParameters(_hypothesis, bls, pcs, aMesh, &use_precad);
+  MESSAGE("END SetParameters");
+  
+  
   // needed to prevent the opencascade memory managmement from freeing things
   vector<Handle(Geom2d_Curve)> curves;
   vector<Handle(Geom_Surface)> surfaces;
@@ -1074,7 +1119,9 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   int iface = 0;
   string bad_end = "return";
   int faceKey = -1;
-  int ienf = 0;
+  TopTools_IndexedMapOfShape _map;
+  TopExp::MapShapes(aShape,TopAbs_VERTEX,_map);
+  int ienf = _map.Extent();
   BLSURFPlugin_Attractor myAttractor;
   for (TopExp_Explorer face_iter(aShape,TopAbs_FACE);face_iter.More();face_iter.Next()) {
     TopoDS_Face f=TopoDS::Face(face_iter.Current());
@@ -1116,7 +1163,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       
       
       if (FaceId2SizeMap.find(faceKey)!=FaceId2SizeMap.end()){
-	MESSAGE("A size map is defined on face :"<<faceKey)
+        MESSAGE("A size map is defined on face :"<<faceKey)
         theSizeMapStr = FaceId2SizeMap[faceKey];
         // check if function ends with "return"
         if (theSizeMapStr.find(bad_end) == (theSizeMapStr.size()-bad_end.size()-1))
@@ -1354,8 +1401,35 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 
 
   PyGILState_Release(gstate);
-
-  blsurf_data_set_cad(bls, c);
+  
+  if (use_precad){
+    /* Now launch the PreCAD process */
+    status = precad_process(pcs);
+    if(status != STATUS_OK){
+      cout << "PreCAD processing failed with error code " << status << "\n";
+      // Now we can delete the PreCAD session 
+      precad_session_delete(pcs);
+    }
+    else {
+      // retrieve the pre-processed CAD object 
+      cleanc = precad_new_cad(pcs);
+      if(!cleanc){
+        cout << "Unable to retrieve PreCAD result \n";
+      }
+      
+      // Now we can delete the PreCAD session 
+      precad_session_delete(pcs);
+    }
+  }
+  
+  if (cleanc) {
+    // Give the pre-processed CAD object to the current BLSurf session
+    blsurf_data_set_cad(bls, cleanc);
+  }
+  else {
+    // Use the original one
+    blsurf_data_set_cad(bls, c);
+  }
 
   std::cout << std::endl;
   std::cout << "Beginning of Surface Mesh generation" << std::endl;
@@ -1499,11 +1573,6 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
           MESSAGE("Group name is empty: '"<<currentEnfVertex->grpName<<"' => group is not created");
       }
     }
-#ifdef _DEBUG_
-    else
-      MESSAGE("No enforced vertex found @ " << xyz[0] << ", " << xyz[1] << ", " << xyz[2]);
-#endif
-
 
 
     // internal point are tagged to zero

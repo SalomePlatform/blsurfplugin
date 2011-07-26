@@ -48,7 +48,8 @@ public:
   enum Topology {
     FromCAD,
     Process,
-    Process2
+    Process2,
+    PreCAD
   };
 
   enum PhysicalMesh {
@@ -109,6 +110,18 @@ public:
   void ClearEntry(const std::string& entry);
   void ClearSizeMaps();
 
+  void SetPreCADOptimCAD(bool theVal);
+  bool GetPreCADOptimCAD() const { return _preCADOptimCAD; }
+
+  void SetPreCADDiscardInput(bool theVal);
+  bool GetPreCADDiscardInput() const { return _preCADDiscardInput; }
+
+  void SetPreCADManifoldGeom(bool theVal);
+  bool GetPreCADManifoldGeom() const { return _preCADManifoldGeom; }
+
+  void SetPreCADClosedGeom(bool theVal);
+  bool GetPreCADClosedGeom() const { return _preCADClosedGeom; }
+    
   typedef std::map<std::string,std::string> TSizeMap;
 
   void SetSizeMapEntry(const std::string& entry,const std::string& sizeMap );
@@ -272,6 +285,12 @@ public:
   static bool            GetDefaultQuadAllowed();
   static bool            GetDefaultDecimesh();
   static int             GetDefaultVerbosity() { return 10; }
+  // PreCAD
+  static bool            GetDefaultPreCADOptimCAD() { return false; }
+  static bool            GetDefaultPreCADDiscardInput() { return false; }
+  static bool            GetDefaultPreCADManifoldGeom() { return false; }
+  static bool            GetDefaultPreCADClosedGeom() { return false; }
+  
   static TSizeMap        GetDefaultSizeMap() { return TSizeMap();}
   static TAttractorMap   GetDefaultAttractorMap() { return TAttractorMap(); }
 
@@ -330,6 +349,12 @@ private:
   bool            _quadAllowed;
   bool            _decimesh;
   int             _verb;
+  
+  bool            _preCADOptimCAD;
+  bool            _preCADDiscardInput;
+  bool            _preCADManifoldGeom;
+  bool            _preCADClosedGeom;
+  
   TOptionValues   _option2value;
   TOptionNames    _doubleOptions, _charOptions;
   TSizeMap        _sizeMap;

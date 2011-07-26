@@ -84,7 +84,8 @@
 enum Topology {
     FromCAD,
     Process,
-    Process2
+    Process2,
+    PreCAD
   } ;
 
 enum PhysicalMesh
@@ -734,7 +735,10 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 
   myTopology = new QComboBox( myAdvGroup );
   QStringList topologyTypes;
-  topologyTypes << tr( "BLSURF_TOPOLOGY_CAD" ) << tr( "BLSURF_TOPOLOGY_PROCESS" ) << tr( "BLSURF_TOPOLOGY_PROCESS2" );
+  topologyTypes << tr( "BLSURF_TOPOLOGY_CAD" ) 
+                << tr( "BLSURF_TOPOLOGY_PROCESS" ) 
+                << tr( "BLSURF_TOPOLOGY_PROCESS2" ) 
+                << tr( "BLSURF_TOPOLOGY_PRECAD" );
   myTopology->addItems( topologyTypes );
 
   myVerbosity = new QSpinBox( myAdvGroup );

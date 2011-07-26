@@ -55,6 +55,10 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   _quadAllowed(GetDefaultQuadAllowed()),
   _decimesh(GetDefaultDecimesh()),
   _verb(GetDefaultVerbosity()),
+  _preCADOptimCAD(GetDefaultPreCADOptimCAD()),
+  _preCADDiscardInput(GetDefaultPreCADDiscardInput()),
+  _preCADManifoldGeom(GetDefaultPreCADManifoldGeom()),
+  _preCADClosedGeom(GetDefaultPreCADClosedGeom()),
   _sizeMap(GetDefaultSizeMap()),
   _attractors(GetDefaultSizeMap()),
   _classAttractors(GetDefaultAttractorMap()),
@@ -260,6 +264,39 @@ void BLSURFPlugin_Hypothesis::SetVerbosity(int theVal) {
     NotifySubMeshesHypothesisModification();
   }
 }
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetPreCADOptimCAD(bool theVal) {
+  if (theVal != _preCADOptimCAD) {
+    _preCADOptimCAD = theVal;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetPreCADDiscardInput(bool theVal) {
+  if (theVal != _preCADDiscardInput) {
+    _preCADDiscardInput = theVal;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetPreCADManifoldGeom(bool theVal) {
+  if (theVal != _preCADManifoldGeom) {
+    _preCADManifoldGeom = theVal;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetPreCADClosedGeom(bool theVal) {
+  if (theVal != _preCADClosedGeom) {
+    _preCADClosedGeom = theVal;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
 //=============================================================================
 void BLSURFPlugin_Hypothesis::SetOptionValue(const std::string& optionName, const std::string& optionValue)
     throw (std::invalid_argument) {
@@ -918,6 +955,7 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save) {
   save << " " << (int) _topology << " " << (int) _physicalMesh << " " << (int) _geometricMesh << " " << _phySize << " "
       << _angleMeshS << " " << _gradation << " " << (int) _quadAllowed << " " << (int) _decimesh;
   save << " " << _phyMin << " " << _phyMax << " " << _angleMeshC << " " << _hgeoMin << " " << _hgeoMax << " " << _verb;
+  save << " " << (int) _preCADOptimCAD << " " << (int) _preCADDiscardInput << " " << (int) _preCADManifoldGeom << " " << (int) _preCADClosedGeom;
 
   TOptionValues::iterator op_val = _option2value.begin();
   if (op_val != _option2value.end()) {
@@ -1102,6 +1140,30 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   isOK = (load >> i);
   if (isOK)
     _verb = i;
+  else
+    load.clear(std::ios::badbit | load.rdstate());
+
+  isOK = (load >> i);
+  if (isOK)
+    _preCADOptimCAD = (bool) i;
+  else
+    load.clear(std::ios::badbit | load.rdstate());
+
+  isOK = (load >> i);
+  if (isOK)
+    _preCADDiscardInput = (bool) i;
+  else
+    load.clear(std::ios::badbit | load.rdstate());
+
+  isOK = (load >> i);
+  if (isOK)
+    _preCADManifoldGeom = (bool) i;
+  else
+    load.clear(std::ios::badbit | load.rdstate());
+
+  isOK = (load >> i);
+  if (isOK)
+    _preCADClosedGeom = (bool) i;
   else
     load.clear(std::ios::badbit | load.rdstate());
 

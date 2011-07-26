@@ -49,6 +49,7 @@
 extern "C"{
 #include "distene/blsurf.h"
 #include "distene/api.h"
+#include "distene/precad.h"
 }
 
 #include <BRepClass_FaceClassifier.hxx>
@@ -70,7 +71,7 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
                                  const TopoDS_Shape&                  aShape,
                                  SMESH_Hypothesis::Hypothesis_Status& aStatus);
 
-    void SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsurf_session_t *bls,SMESH_Mesh& aMesh);
+    void SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsurf_session_t *bls, precad_session_t *pcs, SMESH_Mesh& aMesh, bool *use_precad);
 
     virtual bool Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape);
 

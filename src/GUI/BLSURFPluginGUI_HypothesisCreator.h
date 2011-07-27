@@ -125,6 +125,7 @@ typedef struct
   double  myAngleMeshS, myAngleMeshC, myGradation;
   double  myPhySize, myGeoMin, myGeoMax, myPhyMin,myPhyMax;
   bool    myAllowQuadrangles, myDecimesh,mySmpsurface,mySmpedge,mySmppoint,myEnforcedVertex;
+  bool    myPreCADOptimCAD, myPreCADDiscardInput, myPreCADManifoldGeom, myPreCADClosedGeom;
   TEnfVertexList enfVertexList;
   TFaceEntryEnfVertexListMap faceEntryEnfVertexListMap;
   /* TODO GROUPS
@@ -239,6 +240,11 @@ private:
 
   QWidget*            myAdvGroup;
   QComboBox*          myTopology;
+  QGroupBox*          myPreCADGroupBox;
+  QCheckBox*          myPreCADOptimCAD;
+  QCheckBox*          myPreCADDiscardInput;
+  QCheckBox*          myPreCADManifoldGeom;
+  QCheckBox*          myPreCADClosedGeom;
   QSpinBox*           myVerbosity;
   QTableWidget*       myOptionTable;
 
@@ -289,8 +295,8 @@ private:
   SMESHGUI_SpinBox*   myZCoord;
 
   QLineEdit*          myGroupName;
-  QGroupBox*          makeGroupsCheck;
-  QLineEdit*          myGlobalGroupName;
+//   QGroupBox*          makeGroupsCheck;
+  QCheckBox*          myGlobalGroupName;
 
   QPushButton*        addVertexButton;
   QPushButton*        removeVertexButton;

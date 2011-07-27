@@ -124,6 +124,26 @@
         <translation>Clear option</translation>
     </message>
     <message>
+        <source>BLSURF_PRECAD_GROUP</source>
+        <translation>PreCAD options</translation>
+    </message>
+    <message>
+        <source>BLSURF_PRECAD_OPTIM_CAD</source>
+        <translation>Optimize CAD</translation>
+    </message>
+    <message>
+        <source>BLSURF_PRECAD_DISCARD_INPUT</source>
+        <translation>Discard input topology</translation>
+    </message>
+    <message>
+        <source>BLSURF_PRECAD_MANIFOLD_GEOM</source>
+        <translation>Manifold geometry</translation>
+    </message>
+    <message>
+        <source>BLSURF_PRECAD_CLOSED_GEOM</source>
+        <translation>Closed geometry</translation>
+    </message>
+    <message>
         <source>BLSURF_SIZE_MAP</source>
         <translation>Local Size</translation>
     </message>
@@ -196,8 +216,16 @@
         <translation>Select a shape</translation>
     </message>
     <message>
+        <source>BLS_SEL_VERTICES</source>
+        <translation>Select vertices</translation>
+    </message>
+    <message>
         <source>BLS_SEL_FACE</source>
         <translation>Select a face</translation>
+    </message>
+    <message>
+        <source>BLS_SEL_FACES</source>
+        <translation>Select faces</translation>
     </message>
     <message>
         <source>BLS_SEL_ATTRACTOR</source>
@@ -285,11 +313,11 @@
     </message>
     <message>
         <source>BLSURF_ENF_VER_VERTEX</source>
-        <translation>Add enforced vertex</translation>
+        <translation>Add</translation>
     </message>
     <message>
         <source>BLSURF_ENF_VER_REMOVE</source>
-        <translation>Remove vertex</translation>
+        <translation>Remove</translation>
     </message>
     <message>
         <source>BLSURF_ENF_VER_GROUPS</source>

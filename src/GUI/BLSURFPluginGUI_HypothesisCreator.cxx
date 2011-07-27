@@ -78,6 +78,7 @@
 #include <boost/algorithm/string.hpp>
 #include <structmember.h>
 #include <stdexcept>
+#include <algorithm>
 
 #define WITH_SIZE_BOUNDARIES
 
@@ -157,11 +158,12 @@ enum {
   ENF_VER_Y_COORD,
   ENF_VER_Z_COORD,
   ENF_VER_GROUP,
-  ENF_VER_SPACE,
-  ENF_VER_VERTEX_BTN,
-  ENF_VER_REMOVE_BTN,
-//   ENF_VER_SEPARATOR,
   ENF_VER_GROUP_CHECK,
+//   ENF_VER_SPACE,
+  ENF_VER_BTN,
+//   ENF_VER_VERTEX_BTN,
+//   ENF_VER_REMOVE_BTN,
+//   ENF_VER_SEPARATOR,
   ENF_VER_NB_LINES
 };
 
@@ -696,34 +698,42 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   int row = 0;
   if( isCreation() ) {
     aStdLayout->addWidget( new QLabel( tr( "SMESH_NAME" ), myStdGroup ),        row, 0, 1, 1 );
-    aStdLayout->addWidget( myName,                                              row++, 1, 1, 1 );
+    aStdLayout->addWidget( myName,                                              row++, 1, 1, 3 );
   }
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_GRADATION" ), myStdGroup ),    row, 0, 1, 1 );
-  aStdLayout->addWidget( myGradation,                                           row++, 1, 1, 1 );
   aStdLayout->addWidget( new QLabel( tr( "BLSURF_PHY_MESH" ), myStdGroup ),     row, 0, 1, 1 );
   aStdLayout->addWidget( myPhysicalMesh,                                        row++, 1, 1, 1 );
   aStdLayout->addWidget( new QLabel( tr( "BLSURF_HPHYDEF" ), myStdGroup),       row, 0, 1, 1 );
   aStdLayout->addWidget( myPhySize,                                             row++, 1, 1, 1 );
+  aStdLayout->addWidget( new QLabel( tr( "BLSURF_GRADATION" ), myStdGroup ),    row, 0, 1, 1 );
+  aStdLayout->addWidget( myGradation,                                           row++, 1, 1, 1 );
 #ifdef WITH_SIZE_BOUNDARIES
   aStdLayout->addWidget( new QLabel( tr( "BLSURF_HPHYMIN" ), myStdGroup ),      row, 0, 1, 1 );
   aStdLayout->addWidget( myPhyMin,                                              row++, 1, 1, 1 );
   aStdLayout->addWidget( new QLabel( tr( "BLSURF_HPHYMAX" ), myStdGroup ),      row, 0, 1, 1 );
   aStdLayout->addWidget( myPhyMax,                                              row++, 1, 1, 1 );
 #endif
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_GEOM_MESH" ), myStdGroup ),    row, 0, 1, 1 );
-  aStdLayout->addWidget( myGeometricMesh,                                       row++, 1, 1, 1 );
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_ANGLE_MESH_S" ), myStdGroup ), row, 0, 1, 1 );
-  aStdLayout->addWidget( myAngleMeshS,                                          row++, 1, 1, 1 );
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_ANGLE_MESH_C" ), myStdGroup ), row, 0, 1, 1 );
-  aStdLayout->addWidget( myAngleMeshC,                                          row++, 1, 1, 1 );
+  int maxrow = row;
+  if( isCreation() )
+    row = 1;
+  else
+    row = 0;
+  aStdLayout->addWidget( new QLabel( tr( "BLSURF_GEOM_MESH" ), myStdGroup ),    row, 2, 1, 1 );
+  aStdLayout->addWidget( myGeometricMesh,                                       row++, 3, 1, 1 );
+  aStdLayout->addWidget( new QLabel( tr( "BLSURF_ANGLE_MESH_S" ), myStdGroup ), row, 2, 1, 1 );
+  aStdLayout->addWidget( myAngleMeshS,                                          row++, 3, 1, 1 );
+  aStdLayout->addWidget( new QLabel( tr( "BLSURF_ANGLE_MESH_C" ), myStdGroup ), row, 2, 1, 1 );
+  aStdLayout->addWidget( myAngleMeshC,                                          row++, 3, 1, 1 );
 #ifdef WITH_SIZE_BOUNDARIES
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_HGEOMIN" ), myStdGroup ),      row, 0, 1, 1 );
-  aStdLayout->addWidget( myGeoMin,                                              row++, 1, 1, 1 );
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_HGEOMAX" ), myStdGroup ),      row, 0, 1, 1 );
-  aStdLayout->addWidget( myGeoMax,                                              row++, 1, 1, 1 );
+  aStdLayout->addWidget( new QLabel( tr( "BLSURF_HGEOMIN" ), myStdGroup ),      row, 2, 1, 1 );
+  aStdLayout->addWidget( myGeoMin,                                              row++, 3, 1, 1 );
+  aStdLayout->addWidget( new QLabel( tr( "BLSURF_HGEOMAX" ), myStdGroup ),      row, 2, 1, 1 );
+  aStdLayout->addWidget( myGeoMax,                                              row++, 3, 1, 1 );
 #endif
-  aStdLayout->addWidget( myAllowQuadrangles,                                    row++, 0, 1, 1 );
-  aStdLayout->addWidget( myDecimesh,                                            row++, 0, 1, 1 );
+  row = max(row,maxrow)+1;
+  aStdLayout->addWidget( myAllowQuadrangles,                                    row, 0, 1, 2 );
+  aStdLayout->addWidget( myDecimesh,                                            row++, 2, 1, 2 );
+  aStdLayout->setRowStretch(row,1);
+  maxrow = row;
 
   // advanced parameters
   myAdvGroup = new QWidget();
@@ -762,15 +772,30 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   addBtn->setMenu( new QMenu() );
   QPushButton* rmBtn = new QPushButton( tr( "REMOVE_OPTION"), myAdvGroup );
 
+  myPreCADGroupBox = new QGroupBox(tr("BLSURF_PRECAD_GROUP"),  myAdvGroup );
+  myPreCADGroupBox->setEnabled(false);
+  QGridLayout* aPreCADGroupLayout = new QGridLayout(myPreCADGroupBox);
+  myPreCADOptimCAD = new QCheckBox(tr("BLSURF_PRECAD_OPTIM_CAD"),myPreCADGroupBox);
+  aPreCADGroupLayout->addWidget(myPreCADOptimCAD);
+  myPreCADDiscardInput = new QCheckBox(tr("BLSURF_PRECAD_DISCARD_INPUT"),myPreCADGroupBox);
+  aPreCADGroupLayout->addWidget(myPreCADDiscardInput);
+  myPreCADManifoldGeom = new QCheckBox(tr("BLSURF_PRECAD_MANIFOLD_GEOM"),myPreCADGroupBox);
+  aPreCADGroupLayout->addWidget(myPreCADManifoldGeom);
+  myPreCADClosedGeom = new QCheckBox(tr("BLSURF_PRECAD_CLOSED_GEOM"),myPreCADGroupBox);
+  aPreCADGroupLayout->addWidget(myPreCADClosedGeom);
+  
 
   // ADD WIDGETS (ADVANCED TAB)
-  anAdvLayout->addWidget( new QLabel( tr( "BLSURF_TOPOLOGY" ), myAdvGroup ),  0, 0, 1, 1 );
-  anAdvLayout->addWidget( myTopology,                                         0, 1, 1, 1 );
-  anAdvLayout->addWidget( new QLabel( tr( "BLSURF_VERBOSITY" ), myAdvGroup ), 1, 0, 1, 1 );
-  anAdvLayout->addWidget( myVerbosity,                                        1, 1, 1, 1 );
-  anAdvLayout->addWidget( myOptionTable,                                      2, 0, 3, 2 );
-  anAdvLayout->addWidget( addBtn,                                             2, 2, 1, 1 );
-  anAdvLayout->addWidget( rmBtn,                                              3, 2, 1, 1 );
+  anAdvLayout->addWidget( new QLabel( tr( "BLSURF_VERBOSITY" ), myAdvGroup ), 0, 0, 1, 1 );
+  anAdvLayout->addWidget( myVerbosity,                                        0, 1, 1, 1 );
+  anAdvLayout->addWidget( new QLabel( tr( "BLSURF_TOPOLOGY" ), myAdvGroup ),  1, 0, 1, 1 );
+  anAdvLayout->addWidget( myTopology,                                         1, 1, 1, 1 );
+  anAdvLayout->addWidget( myPreCADGroupBox ,                                  2, 0, 1, 2 );
+  anAdvLayout->addWidget( addBtn,                                             0, 2, 1, 1 );
+  anAdvLayout->addWidget( rmBtn,                                              0, 3, 1, 1 );
+  anAdvLayout->addWidget( myOptionTable,                                      1, 2, 2, 2 );
+  anAdvLayout->setColumnStretch(2,0);
+  anAdvLayout->setRowStretch(3,1);
 
 
   // Size Maps parameters
@@ -887,7 +912,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   anSmpStdLayout->addWidget(mySmpSizeSpin,   SMP_SIZE,        2, 1, 1);
   anSmpStdLayout->setRowStretch(SMP_SPACE2, 1);
   
-  //ADVANCED TAB
+  // ADVANCED TAB
   anAttLayout->addWidget(myGeomSelWdg2,      SMP_GEOM_BTN_2,  1, 1, 2);
   anAttLayout->addWidget(myAttractorCheck,   ATT_CHECK,       1, 1, 2);
   anAttLayout->addWidget(myConstSizeCheck,   CONST_SIZE_CHECK,1, 1, 2);
@@ -946,11 +971,11 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 
   SMESH_NumberFilter* faceFilter = new SMESH_NumberFilter("GEOM", TopAbs_FACE, 0, shapeTypes1);
   myEnfFaceWdg = new StdMeshersGUI_ObjectReferenceParamWdg( faceFilter, 0, /*multiSel=*/true, /*stretch=*/false);
-  myEnfFaceWdg->SetDefaultText("Select Faces", "QLineEdit { color: grey }");
+  myEnfFaceWdg->SetDefaultText(tr("BLS_SEL_FACES"), "QLineEdit { color: grey }");
 
   SMESH_NumberFilter* vertexFilter = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 1, shapeTypes2);
   myEnfVertexWdg = new StdMeshersGUI_ObjectReferenceParamWdg( vertexFilter, 0, /*multiSel=*/true, /*stretch=*/false);
-  myEnfVertexWdg->SetDefaultText("Select Vertices", "QLineEdit { color: grey }");
+  myEnfVertexWdg->SetDefaultText(tr("BLS_SEL_VERTICES"), "QLineEdit { color: grey }");
 
   myEnfVertexWdg->AvoidSimultaneousSelection(myEnfFaceWdg);
 
@@ -976,19 +1001,19 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   removeVertexButton = new QPushButton(tr("BLSURF_ENF_VER_REMOVE"),myEnfGroup);
 
   // CheckBox for groups generation
-  makeGroupsCheck = new QGroupBox(tr("BLSURF_ENF_VER_GROUPS"), myEnfGroup);
-  makeGroupsCheck->setCheckable(true);
-  makeGroupsCheck->setChecked(false);
-  QGridLayout* aGroupLayout = new QGridLayout(makeGroupsCheck);
-  myGlobalGroupName = new QLineEdit(makeGroupsCheck);
-  aGroupLayout->addWidget(myGlobalGroupName);
+//   makeGroupsCheck = new QGroupBox(tr("BLSURF_ENF_VER_GROUPS"), myEnfGroup);
+//   makeGroupsCheck->setCheckable(true);
+//   makeGroupsCheck->setChecked(false);
+//   QGridLayout* aGroupLayout = new QGridLayout(makeGroupsCheck);
+  myGlobalGroupName = new QCheckBox(tr("BLSURF_ENF_VER_GROUPS"), myEnfGroup);
+  myGlobalGroupName->setChecked(false);
+//   aGroupLayout->addWidget(myGlobalGroupName);
 
-  anEnfLayout->addWidget(myEnforcedTreeWidget,     0, 0, ENF_VER_NB_LINES+1, 1);
+  anEnfLayout->addWidget(myEnforcedTreeWidget,     0, 0, ENF_VER_NB_LINES, 1);
   QGridLayout* anEnfLayout2 = new QGridLayout(myEnfGroup);
 //  FACE AND VERTEX SELECTION
   anEnfLayout2->addWidget(myEnfFaceWdg,             ENF_VER_FACE, 0, 1, 2);
   anEnfLayout2->addWidget(myEnfVertexWdg,           ENF_VER_VERTEX, 0, 1, 2);
-
   anEnfLayout2->addWidget(myXCoordLabel,            ENF_VER_X_COORD, 0, 1, 1);
   anEnfLayout2->addWidget(myXCoord,                 ENF_VER_X_COORD, 1, 1, 1);
   anEnfLayout2->addWidget(myYCoordLabel,            ENF_VER_Y_COORD, 0, 1, 1);
@@ -997,12 +1022,14 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   anEnfLayout2->addWidget(myZCoord,                 ENF_VER_Z_COORD, 1, 1, 1);
   anEnfLayout2->addWidget(myGroupNameLabel,         ENF_VER_GROUP, 0, 1, 1);
   anEnfLayout2->addWidget(myGroupName,              ENF_VER_GROUP, 1, 1, 1);
-  anEnfLayout2->setRowStretch(                      ENF_VER_SPACE, 1);
-  anEnfLayout2->addWidget(addVertexButton,          ENF_VER_VERTEX_BTN, 0, 1, 2);
-  anEnfLayout2->addWidget(removeVertexButton,       ENF_VER_REMOVE_BTN, 0, 1, 2);
-//   anEnfLayout->addWidget(line,                     ENF_VER_SEPARATOR, 0, 1, 2);
-  anEnfLayout2->addWidget(makeGroupsCheck,          ENF_VER_GROUP_CHECK, 0, 1, 2);
+  anEnfLayout2->addWidget(myGlobalGroupName,        ENF_VER_GROUP_CHECK, 0, 1, 2);
+//   anEnfLayout2->setRowStretch(                      ENF_VER_SPACE, 1);
+  anEnfLayout2->addWidget(addVertexButton,          ENF_VER_BTN, 0, 1, 1);
+  anEnfLayout2->addWidget(removeVertexButton,       ENF_VER_BTN, 1, 1, 1);
+  anEnfLayout2->setRowStretch(ENF_VER_NB_LINES+1, 1);
+//   anEnfLayout2->addWidget(makeGroupsCheck,          ENF_VER_GROUP_CHECK, 0, 1, 2);
   anEnfLayout->addLayout(anEnfLayout2, 0,1,ENF_VER_NB_LINES+1,2);
+//   anEnfLayout->setRowStretch(1, 1);
 
   // ---
   tab->insertTab( STD_TAB, myStdGroup, tr( "SMESH_ARGUMENTS" ) );
@@ -1064,7 +1091,7 @@ This method stop the selection of the widgets StdMeshersGUI_ObjectReferenceParam
 void BLSURFPluginGUI_HypothesisCreator::deactivateSelection(QWidget* old, QWidget* now)
 {
   if ((now == myXCoord) || (now == myYCoord) || (now == myZCoord)
-      || (now = myGroupName) || (now = makeGroupsCheck) || (now = myEnforcedTreeWidget)) {
+      || (now = myGroupName) || (now = myGlobalGroupName) || (now = myEnforcedTreeWidget)) {
     BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
     that->getGeomSelectionTool()->selectionMgr()->clearFilters();
     myEnfFaceWdg->deactivateSelection();
@@ -1330,7 +1357,7 @@ void BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices() {
     shapeName = myEnfFace->GetName();
 
     std::string groupName = myGroupName->text().toStdString();
-    if (makeGroupsCheck->isChecked())
+    if (myGlobalGroupName->isChecked())
       groupName = myGlobalGroupName->text().toStdString();
 
     if (boost::trim_copy(groupName).empty())
@@ -2007,7 +2034,7 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
           childValueY = child->data(ENF_VER_Y_COLUMN,Qt::EditRole).toDouble();
           childValueZ = child->data(ENF_VER_Z_COLUMN,Qt::EditRole).toDouble();
           vertexEntry = child->data(ENF_VER_ENTRY_COLUMN,Qt::EditRole).toString().toStdString();
-          if (makeGroupsCheck->isChecked())
+          if (myGlobalGroupName->isChecked())
             groupName = myGlobalGroupName->text().toStdString();
           else
             groupName = child->data(ENF_VER_GROUP_COLUMN,Qt::EditRole).toString().toStdString();

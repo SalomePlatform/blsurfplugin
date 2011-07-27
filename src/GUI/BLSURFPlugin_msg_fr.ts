@@ -124,6 +124,26 @@
         <translation>Effacer l&apos;option</translation>
     </message>
     <message>
+        <source>BLSURF_PRECAD_GROUP</source>
+        <translation>Options PreCAD</translation>
+    </message>
+    <message>
+        <source>BLSURF_PRECAD_OPTIM_CAD</source>
+        <translation>Optimiser la CAO</translation>
+    </message>
+    <message>
+        <source>BLSURF_PRECAD_DISCARD_INPUT</source>
+        <translation>Ignorer la topologie</translation>
+    </message>
+    <message>
+        <source>BLSURF_PRECAD_MANIFOLD_GEOM</source>
+        <translation>Géometrie manifolde</translation>
+    </message>
+    <message>
+        <source>BLSURF_PRECAD_CLOSED_GEOM</source>
+        <translation>Géometrie fermée</translation>
+    </message>
+    <message>
         <source>BLSURF_SIZE_MAP</source>
         <translation>Tailles locales</translation>
     </message>
@@ -208,8 +228,16 @@
         <translation>Sélectionnez un objet</translation>
     </message>
     <message>
+        <source>BLS_SEL_VERTICES</source>
+        <translation>Sélectionnez une/des point(s)</translation>
+    </message>
+    <message>
         <source>BLS_SEL_FACE</source>
         <translation>Sélectionnez une face</translation>
+    </message>
+    <message>
+        <source>BLS_SEL_FACES</source>
+        <translation>Sélectionnez une/des face(s)</translation>
     </message>
     <message>
         <source>BLS_SEL_ATTRACTOR</source>
@@ -285,11 +313,11 @@
     </message>
     <message>
         <source>BLSURF_ENF_VER_VERTEX</source>
-        <translation>Ajouter un point de passage</translation>
+        <translation>Ajouter</translation>
     </message>
     <message>
         <source>BLSURF_ENF_VER_REMOVE</source>
-        <translation>Supprimer un point</translation>
+        <translation>Supprimer</translation>
     </message>
     <message>
         <source>BLSURF_ENF_VER_GROUPS</source>

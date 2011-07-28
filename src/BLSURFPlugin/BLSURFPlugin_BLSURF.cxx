@@ -1148,7 +1148,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       cad_face_set_orientation(fce, CAD_ORIENTATION_FORWARD);
     }
     
-    if (HasSizeMapOnFace){
+    if (HasSizeMapOnFace && !use_precad){
 //       MESSAGE("A size map is defined on a face")
 //       std::cout << "A size map is defined on a face" << std::endl;
       // Classic size map
@@ -1409,7 +1409,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       if(!cleanc){
         cout << "Unable to retrieve PreCAD result \n";
       }
-      
+      cout << "PreCAD processing successfull \n";
       // Now we can delete the PreCAD session 
       precad_session_delete(pcs);
     }
@@ -1479,6 +1479,30 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 
     return error(_comment);
     //return false;
+  }
+  
+  std::string GMFFileName = _hypothesis->GetGMFFile();
+  if (GMFFileName != "") {
+//     bool GMFFileMode = _hypothesis->GetGMFFileMode();
+    bool asciiFound = (GMFFileName.find(".mesh",GMFFileName.length()-5) != std::string::npos);
+    bool binaryFound = (GMFFileName.find(".meshb",GMFFileName.length()-6) != std::string::npos);
+    if (!asciiFound && !binaryFound)
+      GMFFileName.append(".mesh");
+    /*
+    if (GMFFileMode) {
+      if (!binaryFound) {
+        if (asciiFound)
+          GMFFileName.append("b");
+        else
+          GMFFileName.append(".meshb");
+      }
+    }
+    else {
+      if (!asciiFound)
+        GMFFileName.append(".mesh");
+    }
+    */
+    mesh_write_mesh(msh, GMFFileName.c_str());
   }
   
   /* retrieve mesh data (see distene/mesh.h) */
@@ -1675,6 +1699,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   FacesWithEnforcedVertices.Statistics(std::cout);
   */
   
+  MESSAGE("END OF BLSURFPlugin_BLSURF::Compute()");
   return true;
 }
 

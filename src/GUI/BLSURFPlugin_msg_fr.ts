@@ -124,6 +124,22 @@
         <translation>Effacer l&apos;option</translation>
     </message>
     <message>
+        <source>BLSURF_GMF_FILE</source>
+        <translation>Export GMF</translation>
+    </message>
+    <message>
+        <source>BLSURF_GMF_MODE</source>
+        <translation>Binaire</translation>
+    </message>
+    <message>
+        <source>BLSURF_GMF_FILE_DIALOG</source>
+        <translation>Choisir un fichier au format GMF...</translation>
+    </message>
+    <message>
+        <source>BLSURF_GMF_FILE_FORMAT</source>
+        <translation>Fichier GMF (*.mesh *.meshb)</translation>
+    </message>
+    <message>
         <source>BLSURF_PRECAD_GROUP</source>
         <translation>Options PreCAD</translation>
     </message>

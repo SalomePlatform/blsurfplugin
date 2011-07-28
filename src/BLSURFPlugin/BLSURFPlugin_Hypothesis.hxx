@@ -286,7 +286,7 @@ public:
   static bool            GetDefaultDecimesh();
   static int             GetDefaultVerbosity() { return 10; }
   // PreCAD
-  static bool            GetDefaultPreCADOptimCAD() { return false; }
+  static bool            GetDefaultPreCADOptimCAD() { return true; }
   static bool            GetDefaultPreCADDiscardInput() { return false; }
   static bool            GetDefaultPreCADManifoldGeom() { return false; }
   static bool            GetDefaultPreCADClosedGeom() { return false; }
@@ -318,6 +318,14 @@ public:
   void ClearOption(const std::string& optionName);
   const TOptionValues& GetOptionValues() const { return _option2value; }
 
+  /*!
+    * Sets the file for export resulting mesh in GMF format
+    */
+//   void SetGMFFile(const std::string& theFileName, bool isBinary);
+  void SetGMFFile(const std::string& theFileName);
+  std::string GetGMFFile() const { return _GMFFileName; }
+//   bool GetGMFFileMode() const { return _GMFFileMode; }
+  
   // Persistence
   virtual std::ostream & SaveTo(std::ostream & save);
   virtual std::istream & LoadFrom(std::istream & load);
@@ -372,6 +380,9 @@ private:
   TFaceEntryEnfVertexEntryListMap _faceEntryEnfVertexEntryListMap;
   TEnfVertexEntryEnfVertexMap     _enfVertexEntryEnfVertexMap;
   TGroupNameNodeIDMap             _groupNameNodeIDMap;
+  
+  std::string     _GMFFileName;
+//   bool            _GMFFileMode;
   
   /* TODO GROUPS
   TGroupNameEnfVertexListMap _groupNameEnfVertexListMap;

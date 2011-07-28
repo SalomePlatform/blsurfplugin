@@ -2047,6 +2047,60 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVerticesEntry(const char* theFaceEn
 ///////////////////////
 
 
+//================================================================================
+/*!
+ * \brief Sets the file for export resulting mesh in GMF format
+ * \param theFileName - full name of the file (.mesh, .meshb)
+ * 
+ * After compute, export the resulting mesh in the given file with the GMF format (.mesh)
+ */
+//================================================================================  
+// void BLSURFPlugin_Hypothesis_i::SetGMFFile(const char* theFileName, CORBA::Boolean isBinary) {
+void BLSURFPlugin_Hypothesis_i::SetGMFFile(const char* theFileName) {
+  ASSERT(myBaseImpl);
+  MESSAGE("IDL : SetGMFFile(" << theFileName << ")");
+  bool valueChanged/*, modeChanged*/ = false;
+  try {
+    valueChanged = (this->GetImpl()->GetGMFFile() != theFileName);
+//     modeChanged = (this->GetImpl()->GetGMFFileMode() != isBinary);
+    if (valueChanged)// or (!valueChanged && modeChanged))
+      this->GetImpl()->SetGMFFile(theFileName);// ,isBinary);
+  } catch (const std::exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+  if (valueChanged)// or (!valueChanged && modeChanged))
+    SMESH::TPythonDump() << _this() << ".SetGMFFile(\"" << theFileName << "\")"; //", " << isBinary << ")";
+  MESSAGE("IDL : SetGMFFile END ");
+}
+
+//================================================================================
+/*!
+ * \brief Gets the file name for export resulting mesh in GMF format
+ * \retval char* - The file name
+ * 
+ * Returns the GMF file name
+ */
+//================================================================================  
+char* BLSURFPlugin_Hypothesis_i::GetGMFFile() {
+  ASSERT(myBaseImpl);
+  MESSAGE("IDL : GetGMFFile()");
+  return CORBA::string_dup(this->GetImpl()->GetGMFFile().c_str());
+}
+
+// //================================================================================
+// /*!
+//  * \brief Gets the file mode for export resulting mesh in GMF format
+//  * \retval CORBA::Boolean - TRUE if binary mode, FALSE if ascii mode
+//  * 
+//  * Returns the GMF file mode
+//  */
+// //================================================================================  
+// CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetGMFFileMode() {
+//   ASSERT(myBaseImpl);
+//   MESSAGE("IDL : GetGMFFileMode()");
+//   return this->GetImpl()->GetGMFFileMode();
+// }
+
 //=============================================================================
 /*!
  *  BLSURFPlugin_Hypothesis_i::GetImpl

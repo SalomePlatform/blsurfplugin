@@ -220,6 +220,14 @@ public:
    char* GetEnforcedVertexGroupName(CORBA::Double x, CORBA::Double y, CORBA::Double z) throw (SALOME::SALOME_Exception);
    */
   ///////////////////////
+  
+  /*!
+    * Sets the file for export resulting mesh in GMF format
+    */
+//   void SetGMFFile(const char* theFileName, CORBA::Boolean isBinary);
+  void SetGMFFile(const char* theFileName);
+  char* GetGMFFile();
+//   CORBA::Boolean GetGMFFileMode();
 
   // Get implementation
   ::BLSURFPlugin_Hypothesis* GetImpl();

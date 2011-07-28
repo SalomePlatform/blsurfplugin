@@ -58,6 +58,7 @@
 #include <QHeaderView>
 #include <QApplication>
 #include <QRadioButton>
+#include <QFileDialog>
 
 #include <QStandardItemModel>
 #include <QStandardItem>
@@ -776,6 +777,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   myPreCADGroupBox->setEnabled(false);
   QGridLayout* aPreCADGroupLayout = new QGridLayout(myPreCADGroupBox);
   myPreCADOptimCAD = new QCheckBox(tr("BLSURF_PRECAD_OPTIM_CAD"),myPreCADGroupBox);
+  myPreCADOptimCAD->setChecked(true);
   aPreCADGroupLayout->addWidget(myPreCADOptimCAD);
   myPreCADDiscardInput = new QCheckBox(tr("BLSURF_PRECAD_DISCARD_INPUT"),myPreCADGroupBox);
   aPreCADGroupLayout->addWidget(myPreCADDiscardInput);
@@ -784,6 +786,9 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   myPreCADClosedGeom = new QCheckBox(tr("BLSURF_PRECAD_CLOSED_GEOM"),myPreCADGroupBox);
   aPreCADGroupLayout->addWidget(myPreCADClosedGeom);
   
+  QPushButton* chooseGMFBtn = new QPushButton( tr( "BLSURF_GMF_FILE" ),  myAdvGroup );
+  myGMFFileName = new QLineEdit(myAdvGroup);
+//   myGMFFileMode = new QCheckBox(tr("BLSURF_GMF_MODE"),myAdvGroup);
 
   // ADD WIDGETS (ADVANCED TAB)
   anAdvLayout->addWidget( new QLabel( tr( "BLSURF_VERBOSITY" ), myAdvGroup ), 0, 0, 1, 1 );
@@ -793,9 +798,11 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   anAdvLayout->addWidget( myPreCADGroupBox ,                                  2, 0, 1, 2 );
   anAdvLayout->addWidget( addBtn,                                             0, 2, 1, 1 );
   anAdvLayout->addWidget( rmBtn,                                              0, 3, 1, 1 );
-  anAdvLayout->addWidget( myOptionTable,                                      1, 2, 2, 2 );
-  anAdvLayout->setColumnStretch(2,0);
-  anAdvLayout->setRowStretch(3,1);
+  anAdvLayout->addWidget( myOptionTable,                                      1, 2, 3, 2 );
+  anAdvLayout->addWidget( chooseGMFBtn,                                       3, 0, 1, 1 );
+  anAdvLayout->addWidget( myGMFFileName,                                      3, 1, 1, 1 );
+//   anAdvLayout->addWidget( myGMFFileMode,                                      4, 0, 1, 2 );
+  anAdvLayout->setRowStretch(4,1);
 
 
   // Size Maps parameters
@@ -1042,24 +1049,12 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   // ---
   connect( myGeometricMesh,     SIGNAL( activated( int ) ),            this,         SLOT( onGeometricMeshChanged() ) );
   connect( myPhysicalMesh,      SIGNAL( activated( int ) ),            this,         SLOT( onPhysicalMeshChanged() ) );
+  connect( myTopology,          SIGNAL( activated( int ) ),            this,         SLOT( onTopologyChanged( int ) ) );
   connect( addBtn->menu(),      SIGNAL( aboutToShow() ),               this,         SLOT( onAddOption() ) );
   connect( addBtn->menu(),      SIGNAL( triggered( QAction* ) ),       this,         SLOT( onOptionChosenInPopup( QAction* ) ) );
   connect( rmBtn,               SIGNAL( clicked()),                    this,         SLOT( onDeleteOption() ) );
+  connect( chooseGMFBtn,        SIGNAL( clicked()),                    this,         SLOT( onChooseGMFFile() ) );
 
-  connect( myEnforcedTreeWidget,SIGNAL( itemClicked(QTreeWidgetItem *, int)), this,  SLOT( synchronizeCoords() ) );
-  connect( myEnforcedTreeWidget,SIGNAL( itemChanged(QTreeWidgetItem *, int)), this,  SLOT( updateEnforcedVertexValues(QTreeWidgetItem *, int) ) );
-  connect( myEnforcedTreeWidget,SIGNAL( itemSelectionChanged() ),      this,         SLOT( synchronizeCoords() ) );
-  connect( addVertexButton,     SIGNAL( clicked()),                    this,         SLOT( onAddEnforcedVertices() ) );
-  connect( removeVertexButton,  SIGNAL( clicked()),                    this,         SLOT( onRemoveEnforcedVertex() ) );
-  connect( myEnfVertexWdg,      SIGNAL( contentModified()),            this,         SLOT( onSelectEnforcedVertex() ) );
-//   connect( myEnfVertexWdg,     SIGNAL( selectionActivated()),         this,         SLOT( onVertexSelectionActivated() ) );
-//   connect( myEnfFaceWdg,       SIGNAL( selectionActivated()),         this,         SLOT( onFaceSelectionActivated() ) );
-//   connect(QApplication::instance(), SIGNAL(focusChanged(QWidget*, QWidget*)), this, SLOT(deactivateSelection(QWidget*, QWidget*)));
-  connect( myGeometricMesh,     SIGNAL( activated( int ) ),            this,         SLOT( onGeometricMeshChanged() ) );
-  connect( myPhysicalMesh,      SIGNAL( activated( int ) ),            this,         SLOT( onPhysicalMeshChanged() ) );
-  connect( addBtn->menu(),      SIGNAL( aboutToShow() ),               this,         SLOT( onAddOption() ) );
-  connect( addBtn->menu(),      SIGNAL( triggered( QAction* ) ),       this,         SLOT( onOptionChosenInPopup( QAction* ) ) );
-  connect( rmBtn,               SIGNAL( clicked()),                    this,         SLOT( onDeleteOption() ) );
   // Size Maps
   connect( addMapButton,        SIGNAL( clicked()),                    this,         SLOT( onAddMap() ) );
   connect( removeMapButton,     SIGNAL( clicked()),                    this,         SLOT( onRemoveMap() ) );
@@ -1076,11 +1071,14 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 
   // Enforced vertices
   connect( myEnforcedTreeWidget,SIGNAL( itemClicked(QTreeWidgetItem *, int)), this,  SLOT( synchronizeCoords() ) );
+  connect( myEnforcedTreeWidget,SIGNAL( itemChanged(QTreeWidgetItem *, int)), this,  SLOT( updateEnforcedVertexValues(QTreeWidgetItem *, int) ) );
   connect( myEnforcedTreeWidget,SIGNAL( itemChanged(QTreeWidgetItem *, int)), this,  SLOT( update(QTreeWidgetItem *, int) ) );
   connect( myEnforcedTreeWidget,SIGNAL( itemSelectionChanged() ),      this,         SLOT( synchronizeCoords() ) );
   connect( addVertexButton,     SIGNAL( clicked()),                    this,         SLOT( onAddEnforcedVertices() ) );
   connect( removeVertexButton,  SIGNAL( clicked()),                    this,         SLOT( onRemoveEnforcedVertex() ) );
   connect( myEnfVertexWdg,      SIGNAL( contentModified()),            this,         SLOT( onSelectEnforcedVertex() ) );
+//   connect( myEnfVertexWdg,     SIGNAL( selectionActivated()),         this,         SLOT( onVertexSelectionActivated() ) );
+//   connect( myEnfFaceWdg,       SIGNAL( selectionActivated()),         this,         SLOT( onFaceSelectionActivated() ) );
 
   return fr;
 }
@@ -1473,6 +1471,11 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
     myName->setMinimumWidth( metrics.width( data.myName )+5 );
   }
   myTopology->setCurrentIndex( data.myTopology );
+  myPreCADGroupBox->setEnabled(data.myTopology == PreCAD);
+  myPreCADOptimCAD->setChecked( data.myPreCADOptimCAD );
+  myPreCADDiscardInput->setChecked( data.myPreCADDiscardInput );
+  myPreCADManifoldGeom->setChecked( data.myPreCADManifoldGeom );
+  myPreCADClosedGeom->setChecked( data.myPreCADClosedGeom );
   myPhysicalMesh->setCurrentIndex( data.myPhysicalMesh );
   myPhySize->SetValue( data.myPhySize );
 #ifdef WITH_SIZE_BOUNDARIES
@@ -1498,9 +1501,6 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
     myGeoMax->SetValue( data.myGeoMax );
 #endif
   myGeometricMesh->setCurrentIndex( data.myGeometricMesh );
-//   myAngleMeshS->setValue( data.myAngleMeshS );
-//   myAngleMeshC->setValue( data.myAngleMeshC );
-//   myGradation->setValue( data.myGradation );
   myAngleMeshS->SetValue( data.myAngleMeshS );
   myAngleMeshC->SetValue( data.myAngleMeshC );
   myGradation->SetValue( data.myGradation );
@@ -1529,7 +1529,9 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
     }
   }
   myOptionTable->resizeColumnToContents( OPTION_NAME_COLUMN );
-
+  myGMFFileName->setText(QString(data.myGMFFileName.c_str()));
+//   myGMFFileMode->setChecked(data.myGMFFileMode);
+  
   // Sizemaps
   MESSAGE("retrieveParams():that->mySMPMap.size() = " << that->mySMPMap.size());
   QMapIterator<QString, QString> i(that->mySMPMap);
@@ -1638,16 +1640,20 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   HypothesisData* data = SMESH::GetHypothesisData( hypType() );
   h_data.myName = isCreation() && data ? hypName() : "";
 
-  h_data.myTopology         = (int) h->GetTopology();
-  h_data.myPhysicalMesh     = (int) h->GetPhysicalMesh();
-  h_data.myPhySize          = h->GetPhySize();
-  h_data.myGeometricMesh    = (int) h->GetGeometricMesh();
-  h_data.myAngleMeshS       = h->GetAngleMeshS();
-  h_data.myAngleMeshC       = h->GetAngleMeshC();
-  h_data.myGradation        = h->GetGradation();
-  h_data.myAllowQuadrangles = h->GetQuadAllowed();
-  h_data.myDecimesh         = h->GetDecimesh();
-  h_data.myVerbosity        = h->GetVerbosity();
+  h_data.myTopology           = (int) h->GetTopology();
+  h_data.myPhysicalMesh       = (int) h->GetPhysicalMesh();
+  h_data.myPhySize            = h->GetPhySize();
+  h_data.myGeometricMesh      = (int) h->GetGeometricMesh();
+  h_data.myAngleMeshS         = h->GetAngleMeshS();
+  h_data.myAngleMeshC         = h->GetAngleMeshC();
+  h_data.myGradation          = h->GetGradation();
+  h_data.myAllowQuadrangles   = h->GetQuadAllowed();
+  h_data.myDecimesh           = h->GetDecimesh();
+  h_data.myVerbosity          = h->GetVerbosity();
+  h_data.myPreCADOptimCAD     = h->GetPreCADOptimCAD();
+  h_data.myPreCADDiscardInput = h->GetPreCADDiscardInput();
+  h_data.myPreCADManifoldGeom = h->GetPreCADManifoldGeom();
+  h_data.myPreCADClosedGeom   = h->GetPreCADClosedGeom();
 
 #ifdef WITH_SIZE_BOUNDARIES
   double PhyMin = h->GetPhyMin();
@@ -1667,6 +1673,9 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
 
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
   that->myOptions = h->GetOptionValues();
+  
+  h_data.myGMFFileName = h->GetGMFFile();
+//   h_data.myGMFFileMode = h->GetGMFFileMode();
 
   that->mySMPMap.clear();
   that->myATTMap.clear();
@@ -1826,6 +1835,14 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
       h->SetDecimesh( h_data.myDecimesh );
     if ( h->GetVerbosity() != h_data.myVerbosity )
       h->SetVerbosity( h_data.myVerbosity );
+    if ( h->GetPreCADOptimCAD() != h_data.myPreCADOptimCAD )
+      h->SetPreCADOptimCAD( h_data.myPreCADOptimCAD );
+    if ( h->GetPreCADDiscardInput() != h_data.myPreCADDiscardInput )
+      h->SetPreCADDiscardInput( h_data.myPreCADDiscardInput );
+    if ( h->GetPreCADManifoldGeom() != h_data.myPreCADManifoldGeom )
+      h->SetPreCADManifoldGeom( h_data.myPreCADManifoldGeom );
+    if ( h->GetPreCADClosedGeom() != h_data.myPreCADClosedGeom )
+      h->SetPreCADClosedGeom( h_data.myPreCADClosedGeom );
 
     if( ((int) h_data.myPhysicalMesh == PhysicalUserDefined)||((int) h_data.myPhysicalMesh == SizeMap) ) {
       if ( h->GetPhySize() != h_data.myPhySize )
@@ -1849,6 +1866,11 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
 #endif
 
     h->SetOptionValues( myOptions ); // is set in checkParams()
+    
+    if ( h->GetGMFFile() != h_data.myGMFFileName )
+//       || ( h->GetGMFFileMode() != h_data.myGMFFileMode ) )
+//       h->SetGMFFile( h_data.myGMFFileName.c_str(), h_data.myGMFFileMode );
+      h->SetGMFFile( h_data.myGMFFileName.c_str());
 
     BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
     QMapIterator<QString,QString> i(that->mySMPMap);
@@ -1907,7 +1929,8 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
     // 1. Clear all enforced vertices in hypothesis
     // 2. Add new enforced vertex according to h_data
     
-    h->ClearAllEnforcedVertices();
+    if ( h->GetAllEnforcedVertices()->length() > 0 )
+      h->ClearAllEnforcedVertices();
     TEnfName faceEntry;
     TEnfVertexList evs;
     TEnfVertexList::const_iterator evsIt;
@@ -1948,23 +1971,27 @@ Stores the widgets content to the hypothesis data.
 QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothesisData& h_data ) const
 {
   MESSAGE("BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets");
-  h_data.myName             = myName ? myName->text() : "";
-  h_data.myTopology         = myTopology->currentIndex();
-  h_data.myPhysicalMesh     = myPhysicalMesh->currentIndex();
-  h_data.myPhySize          = myPhySize->GetValue();
+  h_data.myName               = myName ? myName->text() : "";
+  h_data.myTopology           = myTopology->currentIndex();
+  h_data.myPhysicalMesh       = myPhysicalMesh->currentIndex();
+  h_data.myPhySize            = myPhySize->GetValue();
 #ifdef WITH_SIZE_BOUNDARIES
-  h_data.myPhyMin           = myPhyMin->GetValue();
-  h_data.myPhyMax           = myPhyMax->GetValue();
-  h_data.myGeoMin           = myGeoMin->GetValue();
-  h_data.myGeoMax           = myGeoMax->GetValue();
+  h_data.myPhyMin             = myPhyMin->GetValue();
+  h_data.myPhyMax             = myPhyMax->GetValue();
+  h_data.myGeoMin             = myGeoMin->GetValue();
+  h_data.myGeoMax             = myGeoMax->GetValue();
 #endif
-  h_data.myGeometricMesh    = myGeometricMesh->currentIndex();
-  h_data.myAngleMeshS       = myAngleMeshS->GetValue();
-  h_data.myAngleMeshC       = myAngleMeshC->GetValue();
-  h_data.myGradation        = myGradation->GetValue();
-  h_data.myAllowQuadrangles = myAllowQuadrangles->isChecked();
-  h_data.myDecimesh         = myDecimesh->isChecked();
-  h_data.myVerbosity        = myVerbosity->value();
+  h_data.myGeometricMesh      = myGeometricMesh->currentIndex();
+  h_data.myAngleMeshS         = myAngleMeshS->GetValue();
+  h_data.myAngleMeshC         = myAngleMeshC->GetValue();
+  h_data.myGradation          = myGradation->GetValue();
+  h_data.myAllowQuadrangles   = myAllowQuadrangles->isChecked();
+  h_data.myDecimesh           = myDecimesh->isChecked();
+  h_data.myVerbosity          = myVerbosity->value();
+  h_data.myPreCADOptimCAD     = myPreCADOptimCAD->isChecked();
+  h_data.myPreCADDiscardInput = myPreCADDiscardInput->isChecked();
+  h_data.myPreCADManifoldGeom = myPreCADManifoldGeom->isChecked();
+  h_data.myPreCADClosedGeom   = myPreCADClosedGeom->isChecked();
 
   QString guiHyp;
   guiHyp += tr("BLSURF_TOPOLOGY") + " = " + QString::number( h_data.myTopology ) + "; ";
@@ -1981,6 +2008,10 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
   guiHyp += "hgeomin = " + QString::number( h_data.myGeoMin ) + "; ";
   guiHyp += "hgeomax = " + QString::number( h_data.myGeoMax ) + "; ";
 #endif
+  guiHyp += tr("BLSURF_PRECAD_OPTIM_CAD") + " = " + QString(h_data.myPreCADOptimCAD ? "yes" : "no") + "; ";
+  guiHyp += tr("BLSURF_PRECAD_DISCARD_INPUT") + " = " + QString(h_data.myPreCADDiscardInput ? "yes" : "no") + "; ";
+  guiHyp += tr("BLSURF_PRECAD_MANIFOLD_GEOM") + " = " + QString(h_data.myPreCADManifoldGeom ? "yes" : "no") + "; ";
+  guiHyp += tr("BLSURF_PRECAD_CLOSED_GEOM") + " = " + QString(h_data.myPreCADClosedGeom ? "yes" : "no") + "; ";
 
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
   int row = 0, nbRows = myOptionTable->rowCount();
@@ -1998,6 +2029,9 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
         guiHyp += name + " = " + value + "; ";
     }
   }
+  
+  h_data.myGMFFileName = myGMFFileName->text().toStdString();
+//   h_data.myGMFFileMode = myGMFFileMode->isChecked();
 
   // SizeMap
   row = 0, nbRows = mySizeMapTable->topLevelItemCount();
@@ -2065,6 +2099,12 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
 
   MESSAGE("guiHyp : " << guiHyp.toLatin1().data());
   return guiHyp;
+}
+
+
+void BLSURFPluginGUI_HypothesisCreator::onTopologyChanged(int index) {
+  MESSAGE("BLSURFPluginGUI_HypothesisCreator::onTopologyChanged");
+  myPreCADGroupBox->setEnabled(index == PreCAD);
 }
 
 void BLSURFPluginGUI_HypothesisCreator::onPhysicalMeshChanged() {
@@ -2183,6 +2223,16 @@ void BLSURFPluginGUI_HypothesisCreator::onDeleteOption()
   while ( it.hasPrevious() )
     myOptionTable->removeRow( it.previous() );
 }
+
+void BLSURFPluginGUI_HypothesisCreator::onChooseGMFFile()
+{
+//   QFileDialog dlg(0);
+//   dlg.selectFile(myGMFFileName->text());
+//   dlg.setNameFilter(tr("BLSURF_GMF_FILE_FORMAT"));
+//   dlg.setDefaultSuffix(QString("mesh"));
+  myGMFFileName->setText(QFileDialog::getSaveFileName(0, tr("BLSURF_GMF_FILE_DIALOG"), myGMFFileName->text(), tr("BLSURF_GMF_FILE_FORMAT")));
+}
+
 
 // **********************
 // *** BEGIN SIZE MAP ***

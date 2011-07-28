@@ -377,7 +377,14 @@ module BLSURFPlugin
         raises (SALOME::SALOME_Exception);
     */
     ///////////////////////
-
+    
+    /*!
+     * Sets the file for export resulting mesh in GMF format
+     */
+//     void SetGMFFile(in string theFileName, in boolean isBinary);
+    void SetGMFFile(in string theFileName);
+    string GetGMFFile();
+//     boolean GetGMFFileMode();
   };
 };
 

@@ -76,7 +76,10 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
 {
   _name = "BLSURF_Parameters";
   _param_algo_dim = 2;
-
+  
+  _GMFFileName = ""; // no GMF export
+//   _GMFFileMode = false; // GMF ascii mode
+  
   // to disable writing boundaries
   //_phyMin = _phyMax = _hgeoMin = _hgeoMax = undefinedDouble();
 
@@ -268,6 +271,7 @@ void BLSURFPlugin_Hypothesis::SetVerbosity(int theVal) {
 //=============================================================================
 void BLSURFPlugin_Hypothesis::SetPreCADOptimCAD(bool theVal) {
   if (theVal != _preCADOptimCAD) {
+    SetTopology(PreCAD);
     _preCADOptimCAD = theVal;
     NotifySubMeshesHypothesisModification();
   }
@@ -276,6 +280,7 @@ void BLSURFPlugin_Hypothesis::SetPreCADOptimCAD(bool theVal) {
 //=============================================================================
 void BLSURFPlugin_Hypothesis::SetPreCADDiscardInput(bool theVal) {
   if (theVal != _preCADDiscardInput) {
+    SetTopology(PreCAD);
     _preCADDiscardInput = theVal;
     NotifySubMeshesHypothesisModification();
   }
@@ -284,6 +289,7 @@ void BLSURFPlugin_Hypothesis::SetPreCADDiscardInput(bool theVal) {
 //=============================================================================
 void BLSURFPlugin_Hypothesis::SetPreCADManifoldGeom(bool theVal) {
   if (theVal != _preCADManifoldGeom) {
+    SetTopology(PreCAD);
     _preCADManifoldGeom = theVal;
     NotifySubMeshesHypothesisModification();
   }
@@ -292,9 +298,19 @@ void BLSURFPlugin_Hypothesis::SetPreCADManifoldGeom(bool theVal) {
 //=============================================================================
 void BLSURFPlugin_Hypothesis::SetPreCADClosedGeom(bool theVal) {
   if (theVal != _preCADClosedGeom) {
+    SetTopology(PreCAD);
     _preCADClosedGeom = theVal;
     NotifySubMeshesHypothesisModification();
   }
+}
+
+//=============================================================================
+// void BLSURFPlugin_Hypothesis::SetGMFFile(const std::string& theFileName, bool isBinary)
+void BLSURFPlugin_Hypothesis::SetGMFFile(const std::string& theFileName)
+{
+  _GMFFileName = theFileName;
+//   _GMFFileMode = isBinary;
+  NotifySubMeshesHypothesisModification();
 }
 
 //=============================================================================

@@ -126,6 +126,8 @@ typedef struct
   double  myPhySize, myGeoMin, myGeoMax, myPhyMin,myPhyMax;
   bool    myAllowQuadrangles, myDecimesh,mySmpsurface,mySmpedge,mySmppoint,myEnforcedVertex;
   bool    myPreCADOptimCAD, myPreCADDiscardInput, myPreCADManifoldGeom, myPreCADClosedGeom;
+//   bool    myGMFFileMode;
+  std::string myGMFFileName;
   TEnfVertexList enfVertexList;
   TFaceEntryEnfVertexListMap faceEntryEnfVertexListMap;
   /* TODO GROUPS
@@ -191,7 +193,9 @@ protected slots:
   void                onGeometricMeshChanged();
   void                onAddOption();
   void                onDeleteOption();
+  void                onChooseGMFFile();
   void                onOptionChosenInPopup( QAction* );
+  void                onTopologyChanged( int );
   void                onMapGeomContentModified();
   void                onSmpItemClicked( QTreeWidgetItem *, int );
   void                onSmpTabChanged(int);
@@ -247,6 +251,8 @@ private:
   QCheckBox*          myPreCADClosedGeom;
   QSpinBox*           myVerbosity;
   QTableWidget*       myOptionTable;
+  QLineEdit*          myGMFFileName;
+//   QCheckBox*          myGMFFileMode;
 
   // Sizemap widgets
   QWidget             *mySmpGroup;

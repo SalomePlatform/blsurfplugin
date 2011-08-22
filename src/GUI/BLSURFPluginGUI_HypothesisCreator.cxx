@@ -776,15 +776,19 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   myPreCADGroupBox = new QGroupBox(tr("BLSURF_PRECAD_GROUP"),  myAdvGroup );
   myPreCADGroupBox->setEnabled(false);
   QGridLayout* aPreCADGroupLayout = new QGridLayout(myPreCADGroupBox);
-  myPreCADOptimCAD = new QCheckBox(tr("BLSURF_PRECAD_OPTIM_CAD"),myPreCADGroupBox);
-  myPreCADOptimCAD->setChecked(true);
-  aPreCADGroupLayout->addWidget(myPreCADOptimCAD);
+  myPreCADMergeEdges = new QCheckBox(tr("BLSURF_PRECAD_MERGE_EDGES"),myPreCADGroupBox);
+  myPreCADMergeEdges->setChecked(true);
+  aPreCADGroupLayout->addWidget(myPreCADMergeEdges,0,0,1,2);
+  myPreCADRemoveNanoEdges = new QCheckBox(tr("BLSURF_PRECAD_REMOVE_NANO_EDGES"),myPreCADGroupBox);
+  myPreCADRemoveNanoEdges->setChecked(true);
+  aPreCADGroupLayout->addWidget(myPreCADRemoveNanoEdges,1,0,1,2);
+  myPreCADEpsNano = new SMESHGUI_SpinBox(myPreCADGroupBox);
+  myPreCADEpsNano->RangeStepAndValidator(0, COORD_MAX, 10.0, "length_precision");
+  myPreCADEpsNano->setText("");
+  aPreCADGroupLayout->addWidget( new QLabel( tr( "BLSURF_PRECAD_EPS_NANO" ), myPreCADGroupBox ), 2, 0, 1, 1 );
+  aPreCADGroupLayout->addWidget(myPreCADEpsNano, 2, 1, 1, 1 );
   myPreCADDiscardInput = new QCheckBox(tr("BLSURF_PRECAD_DISCARD_INPUT"),myPreCADGroupBox);
-  aPreCADGroupLayout->addWidget(myPreCADDiscardInput);
-  myPreCADManifoldGeom = new QCheckBox(tr("BLSURF_PRECAD_MANIFOLD_GEOM"),myPreCADGroupBox);
-  aPreCADGroupLayout->addWidget(myPreCADManifoldGeom);
-  myPreCADClosedGeom = new QCheckBox(tr("BLSURF_PRECAD_CLOSED_GEOM"),myPreCADGroupBox);
-  aPreCADGroupLayout->addWidget(myPreCADClosedGeom);
+  aPreCADGroupLayout->addWidget(myPreCADDiscardInput, 3, 0, 1, 2);
   
   QPushButton* chooseGMFBtn = new QPushButton( tr( "BLSURF_GMF_FILE" ),  myAdvGroup );
   myGMFFileName = new QLineEdit(myAdvGroup);
@@ -1472,10 +1476,14 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
   }
   myTopology->setCurrentIndex( data.myTopology );
   myPreCADGroupBox->setEnabled(data.myTopology == PreCAD);
-  myPreCADOptimCAD->setChecked( data.myPreCADOptimCAD );
+  myPreCADMergeEdges->setChecked( data.myPreCADMergeEdges );
+  myPreCADRemoveNanoEdges->setChecked( data.myPreCADRemoveNanoEdges );
   myPreCADDiscardInput->setChecked( data.myPreCADDiscardInput );
-  myPreCADManifoldGeom->setChecked( data.myPreCADManifoldGeom );
-  myPreCADClosedGeom->setChecked( data.myPreCADClosedGeom );
+  MESSAGE("data.myPreCADEpsNano: "<<data.myPreCADEpsNano)
+  if (data.myPreCADEpsNano < 0)
+    myPreCADEpsNano->setText("");
+  else
+    myPreCADEpsNano->SetValue( data.myPreCADEpsNano );
   myPhysicalMesh->setCurrentIndex( data.myPhysicalMesh );
   myPhySize->SetValue( data.myPhySize );
 #ifdef WITH_SIZE_BOUNDARIES
@@ -1650,10 +1658,11 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   h_data.myAllowQuadrangles   = h->GetQuadAllowed();
   h_data.myDecimesh           = h->GetDecimesh();
   h_data.myVerbosity          = h->GetVerbosity();
-  h_data.myPreCADOptimCAD     = h->GetPreCADOptimCAD();
+  h_data.myPreCADMergeEdges   = h->GetPreCADMergeEdges();
+  h_data.myPreCADRemoveNanoEdges = h->GetPreCADRemoveNanoEdges();
   h_data.myPreCADDiscardInput = h->GetPreCADDiscardInput();
-  h_data.myPreCADManifoldGeom = h->GetPreCADManifoldGeom();
-  h_data.myPreCADClosedGeom   = h->GetPreCADClosedGeom();
+  double EpsNano = h->GetPreCADEpsNano();
+  h_data.myPreCADEpsNano      = EpsNano > 0 ? EpsNano : -1.0;
 
 #ifdef WITH_SIZE_BOUNDARIES
   double PhyMin = h->GetPhyMin();
@@ -1742,7 +1751,7 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   }
   
   // attractor new version
-  MESSAGE("retriveParams, Attractors")
+  MESSAGE("retrieveParams, Attractors")
   BLSURFPlugin::TAttParamsMap_var allMyAttractorParams = h->GetAttractorParams();
   for ( int i = 0;i<allMyAttractorParams->length(); ++i ) {
     BLSURFPlugin::TAttractorParams myAttractorParams =  allMyAttractorParams[i];
@@ -1835,14 +1844,14 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
       h->SetDecimesh( h_data.myDecimesh );
     if ( h->GetVerbosity() != h_data.myVerbosity )
       h->SetVerbosity( h_data.myVerbosity );
-    if ( h->GetPreCADOptimCAD() != h_data.myPreCADOptimCAD )
-      h->SetPreCADOptimCAD( h_data.myPreCADOptimCAD );
+    if ( h->GetPreCADMergeEdges() != h_data.myPreCADMergeEdges )
+      h->SetPreCADMergeEdges( h_data.myPreCADMergeEdges );
+    if ( h->GetPreCADRemoveNanoEdges() != h_data.myPreCADRemoveNanoEdges )
+      h->SetPreCADRemoveNanoEdges( h_data.myPreCADRemoveNanoEdges );
     if ( h->GetPreCADDiscardInput() != h_data.myPreCADDiscardInput )
       h->SetPreCADDiscardInput( h_data.myPreCADDiscardInput );
-    if ( h->GetPreCADManifoldGeom() != h_data.myPreCADManifoldGeom )
-      h->SetPreCADManifoldGeom( h_data.myPreCADManifoldGeom );
-    if ( h->GetPreCADClosedGeom() != h_data.myPreCADClosedGeom )
-      h->SetPreCADClosedGeom( h_data.myPreCADClosedGeom );
+    if ( h->GetPreCADEpsNano() != h_data.myPreCADEpsNano && h_data.myPreCADEpsNano > 0)
+      h->SetPreCADEpsNano( h_data.myPreCADEpsNano );
 
     if( ((int) h_data.myPhysicalMesh == PhysicalUserDefined)||((int) h_data.myPhysicalMesh == SizeMap) ) {
       if ( h->GetPhySize() != h_data.myPhySize )
@@ -1855,13 +1864,13 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
         h->SetAngleMeshC( h_data.myAngleMeshC );
     }
 #ifdef WITH_SIZE_BOUNDARIES
-    if (h_data.myPhyMin > 0)
+    if (h->GetPhyMin() != h_data.myPhyMin && h_data.myPhyMin > 0)
       h->SetPhyMin( h_data.myPhyMin );
-    if (h_data.myPhyMax > 0)
+    if (h->GetPhyMax() != h_data.myPhyMax && h_data.myPhyMax > 0)
       h->SetPhyMax( h_data.myPhyMax );
-    if (h_data.myGeoMin > 0)
+    if (h->GetGeoMin() != h_data.myGeoMin && h_data.myGeoMin > 0)
       h->SetGeoMin( h_data.myGeoMin );
-    if (h_data.myGeoMax > 0)
+    if (h->GetGeoMax() != h_data.myGeoMax && h_data.myGeoMax > 0)
       h->SetGeoMax( h_data.myGeoMax );
 #endif
 
@@ -1971,27 +1980,27 @@ Stores the widgets content to the hypothesis data.
 QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothesisData& h_data ) const
 {
   MESSAGE("BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets");
-  h_data.myName               = myName ? myName->text() : "";
-  h_data.myTopology           = myTopology->currentIndex();
-  h_data.myPhysicalMesh       = myPhysicalMesh->currentIndex();
-  h_data.myPhySize            = myPhySize->GetValue();
+  h_data.myName                  = myName ? myName->text() : "";
+  h_data.myTopology              = myTopology->currentIndex();
+  h_data.myPhysicalMesh          = myPhysicalMesh->currentIndex();
+  h_data.myPhySize               = myPhySize->GetValue();
 #ifdef WITH_SIZE_BOUNDARIES
-  h_data.myPhyMin             = myPhyMin->GetValue();
-  h_data.myPhyMax             = myPhyMax->GetValue();
-  h_data.myGeoMin             = myGeoMin->GetValue();
-  h_data.myGeoMax             = myGeoMax->GetValue();
+  h_data.myPhyMin                = myPhyMin->GetValue();
+  h_data.myPhyMax                = myPhyMax->GetValue();
+  h_data.myGeoMin                = myGeoMin->GetValue();
+  h_data.myGeoMax                = myGeoMax->GetValue();
 #endif
-  h_data.myGeometricMesh      = myGeometricMesh->currentIndex();
-  h_data.myAngleMeshS         = myAngleMeshS->GetValue();
-  h_data.myAngleMeshC         = myAngleMeshC->GetValue();
-  h_data.myGradation          = myGradation->GetValue();
-  h_data.myAllowQuadrangles   = myAllowQuadrangles->isChecked();
-  h_data.myDecimesh           = myDecimesh->isChecked();
-  h_data.myVerbosity          = myVerbosity->value();
-  h_data.myPreCADOptimCAD     = myPreCADOptimCAD->isChecked();
-  h_data.myPreCADDiscardInput = myPreCADDiscardInput->isChecked();
-  h_data.myPreCADManifoldGeom = myPreCADManifoldGeom->isChecked();
-  h_data.myPreCADClosedGeom   = myPreCADClosedGeom->isChecked();
+  h_data.myGeometricMesh         = myGeometricMesh->currentIndex();
+  h_data.myAngleMeshS            = myAngleMeshS->GetValue();
+  h_data.myAngleMeshC            = myAngleMeshC->GetValue();
+  h_data.myGradation             = myGradation->GetValue();
+  h_data.myAllowQuadrangles      = myAllowQuadrangles->isChecked();
+  h_data.myDecimesh              = myDecimesh->isChecked();
+  h_data.myVerbosity             = myVerbosity->value();
+  h_data.myPreCADMergeEdges      = myPreCADMergeEdges->isChecked();
+  h_data.myPreCADRemoveNanoEdges = myPreCADRemoveNanoEdges->isChecked();
+  h_data.myPreCADDiscardInput    = myPreCADDiscardInput->isChecked();
+  h_data.myPreCADEpsNano         = myPreCADEpsNano->GetValue();
 
   QString guiHyp;
   guiHyp += tr("BLSURF_TOPOLOGY") + " = " + QString::number( h_data.myTopology ) + "; ";
@@ -2008,10 +2017,10 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
   guiHyp += "hgeomin = " + QString::number( h_data.myGeoMin ) + "; ";
   guiHyp += "hgeomax = " + QString::number( h_data.myGeoMax ) + "; ";
 #endif
-  guiHyp += tr("BLSURF_PRECAD_OPTIM_CAD") + " = " + QString(h_data.myPreCADOptimCAD ? "yes" : "no") + "; ";
+  guiHyp += tr("BLSURF_PRECAD_MERGE_EDGES") + " = " + QString(h_data.myPreCADMergeEdges ? "yes" : "no") + "; ";
+  guiHyp += tr("BLSURF_PRECAD_REMOVE_NANO_EDGES") + " = " + QString(h_data.myPreCADRemoveNanoEdges ? "yes" : "no") + "; ";
   guiHyp += tr("BLSURF_PRECAD_DISCARD_INPUT") + " = " + QString(h_data.myPreCADDiscardInput ? "yes" : "no") + "; ";
-  guiHyp += tr("BLSURF_PRECAD_MANIFOLD_GEOM") + " = " + QString(h_data.myPreCADManifoldGeom ? "yes" : "no") + "; ";
-  guiHyp += tr("BLSURF_PRECAD_CLOSED_GEOM") + " = " + QString(h_data.myPreCADClosedGeom ? "yes" : "no") + "; ";
+  guiHyp += tr("BLSURF_PRECAD_EPS_NANO") + " = " + QString::number( h_data.myPreCADEpsNano ) + "; ";
 
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
   int row = 0, nbRows = myOptionTable->rowCount();

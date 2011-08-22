@@ -110,17 +110,17 @@ public:
   void ClearEntry(const std::string& entry);
   void ClearSizeMaps();
 
-  void SetPreCADOptimCAD(bool theVal);
-  bool GetPreCADOptimCAD() const { return _preCADOptimCAD; }
+  void SetPreCADMergeEdges(bool theVal);
+  bool GetPreCADMergeEdges() const { return _preCADMergeEdges; }
+
+  void SetPreCADRemoveNanoEdges(bool theVal);
+  bool GetPreCADRemoveNanoEdges() const { return _preCADRemoveNanoEdges; }
 
   void SetPreCADDiscardInput(bool theVal);
   bool GetPreCADDiscardInput() const { return _preCADDiscardInput; }
 
-  void SetPreCADManifoldGeom(bool theVal);
-  bool GetPreCADManifoldGeom() const { return _preCADManifoldGeom; }
-
-  void SetPreCADClosedGeom(bool theVal);
-  bool GetPreCADClosedGeom() const { return _preCADClosedGeom; }
+  void SetPreCADEpsNano(double theVal);
+  double GetPreCADEpsNano() const { return _preCADEpsNano; }
     
   typedef std::map<std::string,std::string> TSizeMap;
 
@@ -286,10 +286,10 @@ public:
   static bool            GetDefaultDecimesh();
   static int             GetDefaultVerbosity() { return 10; }
   // PreCAD
-  static bool            GetDefaultPreCADOptimCAD() { return true; }
+  static bool            GetDefaultPreCADMergeEdges() { return true; }
+  static bool            GetDefaultPreCADRemoveNanoEdges() { return true; }
   static bool            GetDefaultPreCADDiscardInput() { return false; }
-  static bool            GetDefaultPreCADManifoldGeom() { return false; }
-  static bool            GetDefaultPreCADClosedGeom() { return false; }
+//   static double          GetDefaultPreCADEpsNano() { return undefinedDouble(); }
   
   static TSizeMap        GetDefaultSizeMap() { return TSizeMap();}
   static TAttractorMap   GetDefaultAttractorMap() { return TAttractorMap(); }
@@ -358,10 +358,10 @@ private:
   bool            _decimesh;
   int             _verb;
   
-  bool            _preCADOptimCAD;
+  bool            _preCADMergeEdges;
+  bool            _preCADRemoveNanoEdges;
   bool            _preCADDiscardInput;
-  bool            _preCADManifoldGeom;
-  bool            _preCADClosedGeom;
+  bool            _preCADEpsNano;
   
   TOptionValues   _option2value;
   TOptionNames    _doubleOptions, _charOptions;

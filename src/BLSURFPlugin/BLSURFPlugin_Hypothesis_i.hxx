@@ -87,17 +87,17 @@ public:
   void SetVerbosity(CORBA::Short theVal) throw (SALOME::SALOME_Exception);
   CORBA::Short GetVerbosity();
 
-  void SetPreCADOptimCAD(CORBA::Boolean theValue);
-  CORBA::Boolean GetPreCADOptimCAD();
+  void SetPreCADMergeEdges(CORBA::Boolean theValue);
+  CORBA::Boolean GetPreCADMergeEdges();
+
+  void SetPreCADRemoveNanoEdges(CORBA::Boolean theValue);
+  CORBA::Boolean GetPreCADRemoveNanoEdges();
 
   void SetPreCADDiscardInput(CORBA::Boolean theValue);
   CORBA::Boolean GetPreCADDiscardInput();
 
-  void SetPreCADManifoldGeom(CORBA::Boolean theValue);
-  CORBA::Boolean GetPreCADManifoldGeom();
-
-  void SetPreCADClosedGeom(CORBA::Boolean theValue);
-  CORBA::Boolean GetPreCADClosedGeom();
+  void SetPreCADEpsNano(CORBA::Double theValue);
+  CORBA::Boolean GetPreCADEpsNano();
 
   void SetOptionValue(const char* optionName, const char* optionValue) throw (SALOME::SALOME_Exception);
   char* GetOptionValue(const char* optionName) throw (SALOME::SALOME_Exception);

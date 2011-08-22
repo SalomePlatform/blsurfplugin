@@ -55,10 +55,10 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   _quadAllowed(GetDefaultQuadAllowed()),
   _decimesh(GetDefaultDecimesh()),
   _verb(GetDefaultVerbosity()),
-  _preCADOptimCAD(GetDefaultPreCADOptimCAD()),
+  _preCADMergeEdges(GetDefaultPreCADMergeEdges()),
+  _preCADRemoveNanoEdges(GetDefaultPreCADRemoveNanoEdges()),
   _preCADDiscardInput(GetDefaultPreCADDiscardInput()),
-  _preCADManifoldGeom(GetDefaultPreCADManifoldGeom()),
-  _preCADClosedGeom(GetDefaultPreCADClosedGeom()),
+  _preCADEpsNano(GetDefaultMinSize()),
   _sizeMap(GetDefaultSizeMap()),
   _attractors(GetDefaultSizeMap()),
   _classAttractors(GetDefaultAttractorMap()),
@@ -95,7 +95,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
       };
   const char* charOptionNames[] = { "export_format", "export_option", "import_option", "prefix", "" // mark of end
       };
-
+  
   int i = 0;
   while (intOptionNames[i][0])
     _option2value[intOptionNames[i++]].clear();
@@ -111,6 +111,23 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
     _option2value[charOptionNames[i++]].clear();
   }
 
+  // PreCAD advanced options
+  const char* preCADintOptionNames[] = { "PRECAD_closed_geometry", "PRECAD_debug", "PRECAD_manifold_geometry", "PRECAD_create_tag_on_collision","" // mark of end
+      };
+  const char* preCADdoubleOptionNames[] = { "PRECAD_eps_nano_relative", "PRECAD_eps_sewing", "PRECAD_eps_sewing_relative", "PRECAD_periodic_tolerance",
+      "PRECAD_periodic_tolerance_relative", "PRECAD_periodic_split_tolerance", "PRECAD_periodic_split_tolerance_relative", "" // mark of end
+      };
+  
+  i = 0;
+  while (preCADintOptionNames[i][0])
+    _option2value[preCADintOptionNames[i++]].clear();
+
+  i = 0;
+  while (preCADdoubleOptionNames[i][0]) {
+    _doubleOptions.insert(preCADdoubleOptionNames[i]);
+    _option2value[preCADdoubleOptionNames[i++]].clear();
+  }
+      
   _sizeMap.clear();
   _attractors.clear();
   _faceEntryEnfVertexListMap.clear();
@@ -269,10 +286,19 @@ void BLSURFPlugin_Hypothesis::SetVerbosity(int theVal) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetPreCADOptimCAD(bool theVal) {
-  if (theVal != _preCADOptimCAD) {
+void BLSURFPlugin_Hypothesis::SetPreCADMergeEdges(bool theVal) {
+  if (theVal != _preCADMergeEdges) {
     SetTopology(PreCAD);
-    _preCADOptimCAD = theVal;
+    _preCADMergeEdges = theVal;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetPreCADRemoveNanoEdges(bool theVal) {
+  if (theVal != _preCADRemoveNanoEdges) {
+    SetTopology(PreCAD);
+    _preCADRemoveNanoEdges = theVal;
     NotifySubMeshesHypothesisModification();
   }
 }
@@ -287,19 +313,10 @@ void BLSURFPlugin_Hypothesis::SetPreCADDiscardInput(bool theVal) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetPreCADManifoldGeom(bool theVal) {
-  if (theVal != _preCADManifoldGeom) {
+void BLSURFPlugin_Hypothesis::SetPreCADEpsNano(double theVal) {
+  if (theVal != _preCADEpsNano) {
     SetTopology(PreCAD);
-    _preCADManifoldGeom = theVal;
-    NotifySubMeshesHypothesisModification();
-  }
-}
-
-//=============================================================================
-void BLSURFPlugin_Hypothesis::SetPreCADClosedGeom(bool theVal) {
-  if (theVal != _preCADClosedGeom) {
-    SetTopology(PreCAD);
-    _preCADClosedGeom = theVal;
+    _preCADEpsNano = theVal;
     NotifySubMeshesHypothesisModification();
   }
 }
@@ -971,7 +988,7 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save) {
   save << " " << (int) _topology << " " << (int) _physicalMesh << " " << (int) _geometricMesh << " " << _phySize << " "
       << _angleMeshS << " " << _gradation << " " << (int) _quadAllowed << " " << (int) _decimesh;
   save << " " << _phyMin << " " << _phyMax << " " << _angleMeshC << " " << _hgeoMin << " " << _hgeoMax << " " << _verb;
-  save << " " << (int) _preCADOptimCAD << " " << (int) _preCADDiscardInput << " " << (int) _preCADManifoldGeom << " " << (int) _preCADClosedGeom;
+  save << " " << (int) _preCADMergeEdges << " " << (int) _preCADRemoveNanoEdges << " " << (int) _preCADDiscardInput << " " << _preCADEpsNano ;
 
   TOptionValues::iterator op_val = _option2value.begin();
   if (op_val != _option2value.end()) {
@@ -1161,7 +1178,13 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
 
   isOK = (load >> i);
   if (isOK)
-    _preCADOptimCAD = (bool) i;
+    _preCADMergeEdges = (bool) i;
+  else
+    load.clear(std::ios::badbit | load.rdstate());
+
+  isOK = (load >> i);
+  if (isOK)
+    _preCADRemoveNanoEdges = (bool) i;
   else
     load.clear(std::ios::badbit | load.rdstate());
 
@@ -1171,15 +1194,9 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   else
     load.clear(std::ios::badbit | load.rdstate());
 
-  isOK = (load >> i);
+  isOK = (load >> val);
   if (isOK)
-    _preCADManifoldGeom = (bool) i;
-  else
-    load.clear(std::ios::badbit | load.rdstate());
-
-  isOK = (load >> i);
-  if (isOK)
-    _preCADClosedGeom = (bool) i;
+    _preCADEpsNano = val;
   else
     load.clear(std::ios::badbit | load.rdstate());
 

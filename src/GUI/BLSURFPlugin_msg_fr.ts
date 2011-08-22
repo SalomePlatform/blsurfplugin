@@ -144,20 +144,20 @@
         <translation>Options PreCAD</translation>
     </message>
     <message>
-        <source>BLSURF_PRECAD_OPTIM_CAD</source>
-        <translation>Optimiser la CAO</translation>
+        <source>BLSURF_PRECAD_MERGE_EDGES</source>
+        <translation>Fusionner des arêtes</translation>
+    </message>
+    <message>
+        <source>BLSURF_PRECAD_REMOVE_NANO_EDGES</source>
+        <translation>Supprimer les petites arêtes</translation>
     </message>
     <message>
         <source>BLSURF_PRECAD_DISCARD_INPUT</source>
         <translation>Ignorer la topologie</translation>
     </message>
     <message>
-        <source>BLSURF_PRECAD_MANIFOLD_GEOM</source>
-        <translation>Géometrie manifolde</translation>
-    </message>
-    <message>
-        <source>BLSURF_PRECAD_CLOSED_GEOM</source>
-        <translation>Géometrie fermée</translation>
+        <source>BLSURF_PRECAD_EPS_NANO</source>
+        <translation>Longueur max des petites arêtes</translation>
     </message>
     <message>
         <source>BLSURF_SIZE_MAP</source>

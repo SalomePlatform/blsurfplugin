@@ -372,29 +372,56 @@ CORBA::Short BLSURFPlugin_Hypothesis_i::GetVerbosity() {
 
 //=============================================================================
 /*!
- *  BLSURFPlugin_Hypothesis_i::SetPreCADOptimCAD
+ *  BLSURFPlugin_Hypothesis_i::SetPreCADMergeEdges
  *
  *  Set true or false
  */
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetPreCADOptimCAD(CORBA::Boolean theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetPreCADOptimCAD");
+void BLSURFPlugin_Hypothesis_i::SetPreCADMergeEdges(CORBA::Boolean theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetPreCADMergeEdges");
   ASSERT(myBaseImpl);
-  this->GetImpl()->SetPreCADOptimCAD(theValue);
-  SMESH::TPythonDump() << _this() << ".SetPreCADOptimCAD( " << theValue << " )";
+  this->GetImpl()->SetPreCADMergeEdges(theValue);
+  SMESH::TPythonDump() << _this() << ".SetPreCADMergeEdges( " << theValue << " )";
 }
 
 //=============================================================================
 /*!
- *  BLSURFPlugin_Hypothesis_i::GetPreCADOptimCAD
+ *  BLSURFPlugin_Hypothesis_i::GetPreCADMergeEdges
  *
  *  Get true or false
  */
 //=============================================================================
-CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADOptimCAD() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCADOptimCAD");
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADMergeEdges() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCADMergeEdges");
   ASSERT(myBaseImpl);
-  return this->GetImpl()->GetPreCADOptimCAD();
+  return this->GetImpl()->GetPreCADMergeEdges();
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::SetPreCADRemoveNanoEdges
+ *
+ *  Set true or false
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetPreCADRemoveNanoEdges(CORBA::Boolean theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetPreCADRemoveNanoEdges");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetPreCADRemoveNanoEdges(theValue);
+  SMESH::TPythonDump() << _this() << ".SetPreCADRemoveNanoEdges( " << theValue << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetPreCADRemoveNanoEdges
+ *
+ *  Get true or false
+ */
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADRemoveNanoEdges() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCADRemoveNanoEdges");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetPreCADRemoveNanoEdges();
 }
 
 //=============================================================================
@@ -426,56 +453,29 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADDiscardInput() {
 
 //=============================================================================
 /*!
- *  BLSURFPlugin_Hypothesis_i::SetPreCADManifoldGeom
+ *  BLSURFPlugin_Hypothesis_i::SetPreCADEpsNano
  *
- *  Set true or false
+ *  Set length for nano edges
  */
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetPreCADManifoldGeom(CORBA::Boolean theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetPreCADManifoldGeom");
+void BLSURFPlugin_Hypothesis_i::SetPreCADEpsNano(CORBA::Double theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetPreCADEpsNano");
   ASSERT(myBaseImpl);
-  this->GetImpl()->SetPreCADManifoldGeom(theValue);
-  SMESH::TPythonDump() << _this() << ".SetPreCADManifoldGeom( " << theValue << " )";
+  this->GetImpl()->SetPreCADEpsNano(theValue);
+  SMESH::TPythonDump() << _this() << ".SetPreCADEpsNano( " << theValue << " )";
 }
 
 //=============================================================================
 /*!
- *  BLSURFPlugin_Hypothesis_i::GetPreCADManifoldGeom
+ *  BLSURFPlugin_Hypothesis_i::GetPreCADEpsNano
  *
- *  Get true or false
+ *  Get length of nano edges
  */
 //=============================================================================
-CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADManifoldGeom() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCADManifoldGeom");
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADEpsNano() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCADEpsNano");
   ASSERT(myBaseImpl);
-  return this->GetImpl()->GetPreCADManifoldGeom();
-}
-
-//=============================================================================
-/*!
- *  BLSURFPlugin_Hypothesis_i::SetPreCADClosedGeom
- *
- *  Set true or false
- */
-//=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetPreCADClosedGeom(CORBA::Boolean theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetPreCADClosedGeom");
-  ASSERT(myBaseImpl);
-  this->GetImpl()->SetPreCADClosedGeom(theValue);
-  SMESH::TPythonDump() << _this() << ".SetPreCADClosedGeom( " << theValue << " )";
-}
-
-//=============================================================================
-/*!
- *  BLSURFPlugin_Hypothesis_i::GetPreCADClosedGeom
- *
- *  Get true or false
- */
-//=============================================================================
-CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADClosedGeom() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCADClosedGeom");
-  ASSERT(myBaseImpl);
-  return this->GetImpl()->GetPreCADClosedGeom();
+  return this->GetImpl()->GetPreCADEpsNano();
 }
 
 //=============================================================================

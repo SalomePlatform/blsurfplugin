@@ -144,20 +144,20 @@
         <translation>PreCAD options</translation>
     </message>
     <message>
-        <source>BLSURF_PRECAD_OPTIM_CAD</source>
-        <translation>Optimize CAD</translation>
+        <source>BLSURF_PRECAD_MERGE_EDGES</source>
+        <translation>Merge edges</translation>
+    </message>
+    <message>
+        <source>BLSURF_PRECAD_REMOVE_NANO_EDGES</source>
+        <translation>Remove nano edges</translation>
     </message>
     <message>
         <source>BLSURF_PRECAD_DISCARD_INPUT</source>
         <translation>Discard input topology</translation>
     </message>
     <message>
-        <source>BLSURF_PRECAD_MANIFOLD_GEOM</source>
-        <translation>Manifold geometry</translation>
-    </message>
-    <message>
-        <source>BLSURF_PRECAD_CLOSED_GEOM</source>
-        <translation>Closed geometry</translation>
+        <source>BLSURF_PRECAD_EPS_NANO</source>
+        <translation>Nano edge length</translation>
     </message>
     <message>
         <source>BLSURF_SIZE_MAP</source>

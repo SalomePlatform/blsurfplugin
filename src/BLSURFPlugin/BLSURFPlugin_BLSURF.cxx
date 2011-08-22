@@ -373,6 +373,12 @@ inline std::string to_string(int i)
 }
 
 double _smp_phy_size;
+// #if BLSURF_VERSION_LONG >= "3.1.1"
+// //   sizemap_t *geo_sizemap_e, *geo_sizemap_f;
+//   sizemap_t *iso_sizemap_p, *iso_sizemap_e, *iso_sizemap_f;
+// //   sizemap_t *clean_geo_sizemap_e, *clean_geo_sizemap_f;
+//   sizemap_t *clean_iso_sizemap_p, *clean_iso_sizemap_e, *clean_iso_sizemap_f;
+// #endif
 status_t size_on_surface(integer face_id, real *uv, real *size, void *user_data);
 status_t size_on_edge(integer edge_id, real t, real *size, void *user_data);
 status_t size_on_vertex(integer vertex_id, real *size, void *user_data);
@@ -664,7 +670,11 @@ void createAttractorOnFace(TopoDS_Shape GeomShape, std::string AttractorFunction
 
 /////////////////////////////////////////////////////////
 
-void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
+void BLSURFPlugin_BLSURF::SetParameters(
+// #if BLSURF_VERSION_LONG >= "3.1.1"
+//                                         cad_t *                          c,
+// #endif
+                                        const BLSURFPlugin_Hypothesis* hyp,
                                         blsurf_session_t *             bls,
                                         precad_session_t *             pcs,
                                         SMESH_Mesh&                   mesh,
@@ -683,10 +693,10 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
   int    _verb          = BLSURFPlugin_Hypothesis::GetDefaultVerbosity();
 
   // PreCAD
-  int _precadOptimCad     = BLSURFPlugin_Hypothesis::GetDefaultPreCADOptimCAD();
-  int _precadDiscardInput = BLSURFPlugin_Hypothesis::GetDefaultPreCADDiscardInput();
-  int _precadManifoldGeom = BLSURFPlugin_Hypothesis::GetDefaultPreCADManifoldGeom();
-  int _precadClosedGeom   = BLSURFPlugin_Hypothesis::GetDefaultPreCADClosedGeom();
+  int _precadMergeEdges      = BLSURFPlugin_Hypothesis::GetDefaultPreCADMergeEdges();
+  int _precadRemoveNanoEdges = BLSURFPlugin_Hypothesis::GetDefaultPreCADRemoveNanoEdges();
+  int _precadDiscardInput    = BLSURFPlugin_Hypothesis::GetDefaultPreCADDiscardInput();
+  double _precadEpsNano      = BLSURFPlugin_Hypothesis::GetDefaultMinSize();
 
 
   if (hyp) {
@@ -712,17 +722,27 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
 
     const BLSURFPlugin_Hypothesis::TOptionValues & opts = hyp->GetOptionValues();
     BLSURFPlugin_Hypothesis::TOptionValues::const_iterator opIt;
+    std::string preCADOptName;
+    size_t preCADstr_found;
     for ( opIt = opts.begin(); opIt != opts.end(); ++opIt )
       if ( !opIt->second.empty() ) {
-        MESSAGE("blsurf_set_param(): " << opIt->first << " = " << opIt->second);
-        blsurf_set_param(bls, opIt->first.c_str(), opIt->second.c_str());
+        preCADstr_found = opIt->first.find("PRECAD_");
+        if (preCADstr_found !=std::string::npos && int(preCADstr_found) == 0 && _topology == BLSURFPlugin_Hypothesis::PreCAD) {
+          preCADOptName = opIt->first.substr(preCADstr_found+7);
+          MESSAGE("precad_set_param(): " << preCADOptName << " = " << opIt->second);
+          blsurf_set_param(bls, preCADOptName.c_str(), opIt->second.c_str());
+        }
+        else {
+          MESSAGE("blsurf_set_param(): " << opIt->first << " = " << opIt->second);
+          blsurf_set_param(bls, opIt->first.c_str(), opIt->second.c_str());
+        }
       }
 
     // PreCAD
-    _precadOptimCad = hyp->GetPreCADOptimCAD();
+    _precadMergeEdges = hyp->GetPreCADMergeEdges();
+    _precadRemoveNanoEdges = hyp->GetPreCADRemoveNanoEdges();
     _precadDiscardInput = hyp->GetPreCADDiscardInput();
-    _precadManifoldGeom = hyp->GetPreCADManifoldGeom();
-    _precadClosedGeom = hyp->GetPreCADClosedGeom();
+    _precadEpsNano = hyp->GetPreCADEpsNano();
 
   } else {
     //0020968: EDF1545 SMESH: Problem in the creation of a mesh group on geometry
@@ -735,12 +755,11 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
   if (_topology == BLSURFPlugin_Hypothesis::PreCAD) {
     *use_precad = true;
     precad_set_param(pcs, "verbose",                to_string(_verb).c_str());
-
-    precad_set_param(pcs, "merge_edges",            _precadOptimCad > 0 ? "1" : "0");
-    precad_set_param(pcs, "remove_nano_edges",      _precadOptimCad > 0 ? "1" : "0");
+    precad_set_param(pcs, "merge_edges",            _precadMergeEdges ? "1" : "0");
+    precad_set_param(pcs, "remove_nano_edges",      _precadRemoveNanoEdges ? "1" : "0");
     precad_set_param(pcs, "discard_input_topology", _precadDiscardInput ? "1" : "0");
-    precad_set_param(pcs, "manifold_geometry",      _precadManifoldGeom ? "1" : "0");
-    precad_set_param(pcs, "closed_geometry",        _precadClosedGeom ? "1" : "0");
+    if ( _precadEpsNano != ::BLSURFPlugin_Hypothesis::undefinedDouble() )
+      precad_set_param(pcs, "eps_nano",               to_string(_precadEpsNano).c_str());
   }
 
   _smp_phy_size = _phySize;
@@ -750,7 +769,16 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
   blsurf_set_param(bls, "clean_boundary",    _topology == BLSURFPlugin_Hypothesis::Process2 ? "1" : "0");
   blsurf_set_param(bls, "close_boundary",    _topology == BLSURFPlugin_Hypothesis::Process2 ? "1" : "0");
   blsurf_set_param(bls, "hphy_flag",         to_string(_physicalMesh).c_str());
-
+  blsurf_set_param(bls, "hphydef",           to_string(_phySize).c_str());
+  blsurf_set_param(bls, "hgeo_flag",         to_string(_geometricMesh).c_str());
+  blsurf_set_param(bls, "relax_size",        _decimesh ? "0": to_string(_geometricMesh).c_str());
+  blsurf_set_param(bls, "angle_meshs",       to_string(_angleMeshS).c_str());
+  blsurf_set_param(bls, "angle_meshc",       to_string(_angleMeshC).c_str());
+  blsurf_set_param(bls, "gradation",         to_string(_gradation).c_str());
+  blsurf_set_param(bls, "patch_independent", _decimesh ? "1" : "0");
+  blsurf_set_param(bls, "element",           _quadAllowed ? "q1.0" : "p1");
+  blsurf_set_param(bls, "verb",              to_string(_verb).c_str());
+  
   if (_physicalMesh == BLSURFPlugin_Hypothesis::SizeMap){
     TopoDS_Shape GeomShape;
     TopoDS_Shape AttShape;
@@ -980,33 +1008,39 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
       }
     }
 
-//    if (HasSizeMapOnFace){
-    // In all size map cases (hphy_flag = 2), at least map on face must be defined
     MESSAGE("Setting Size Map on FACES ");
+// #if BLSURF_VERSION_LONG < "3.1.1"
     blsurf_data_set_sizemap_iso_cad_face(bls, size_on_surface, &_smp_phy_size);
-//    }
+// #else
+//     if (*use_precad)
+//       iso_sizemap_f = sizemap_new(c, distene_sizemap_type_iso_cad_face, (void *)size_on_surface, NULL);
+//     else
+//       clean_iso_sizemap_f = sizemap_new(c, distene_sizemap_type_iso_cad_face, (void *)size_on_surface, NULL);
+// #endif
 
     if (HasSizeMapOnEdge){
       MESSAGE("Setting Size Map on EDGES ");
+// #if BLSURF_VERSION_LONG < "3.1.1"
       blsurf_data_set_sizemap_iso_cad_edge(bls, size_on_edge, &_smp_phy_size);
+// #else
+//       if (*use_precad)
+//         iso_sizemap_e = sizemap_new(c, distene_sizemap_type_iso_cad_edge, (void *)size_on_edge, NULL);
+//       else
+//         clean_iso_sizemap_e = sizemap_new(c, distene_sizemap_type_iso_cad_edge, (void *)size_on_edge, NULL);
+// #endif
     }
     if (HasSizeMapOnVertex){
       MESSAGE("Setting Size Map on VERTICES ");
+// #if BLSURF_VERSION_LONG < "3.1.1"
       blsurf_data_set_sizemap_iso_cad_point(bls, size_on_vertex, &_smp_phy_size);
+// #else
+//       if (*use_precad)
+//         iso_sizemap_p = sizemap_new(c, distene_sizemap_type_iso_cad_point, (void *)size_on_vertex, NULL);
+//       else
+//         clean_iso_sizemap_p = sizemap_new(c, distene_sizemap_type_iso_cad_point, (void *)size_on_vertex, NULL);
+// #endif
     }
   }
-  blsurf_set_param(bls, "hphydef",           to_string(_phySize).c_str());
-  blsurf_set_param(bls, "hgeo_flag",         to_string(_geometricMesh).c_str());
-  blsurf_set_param(bls, "relax_size",        _decimesh ? "0": to_string(_geometricMesh).c_str());
-  blsurf_set_param(bls, "angle_meshs",       to_string(_angleMeshS).c_str());
-  blsurf_set_param(bls, "angle_meshc",       to_string(_angleMeshC).c_str());
-  blsurf_set_param(bls, "gradation",         to_string(_gradation).c_str());
-  blsurf_set_param(bls, "patch_independent", _decimesh ? "1" : "0");
-  blsurf_set_param(bls, "element",           _quadAllowed ? "q1.0" : "p1");
-  blsurf_set_param(bls, "verb",              to_string(_verb).c_str());
-// #ifdef _DEBUG_
-//   blsurf_set_param(bls, "debug",             "1");
-// #endif
 }
 
 status_t curv_fun(real t, real *uv, real *dt, real *dtt, void *user_data);
@@ -1077,7 +1111,11 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 
   MESSAGE("BEGIN SetParameters");
   bool use_precad = false;
-  SetParameters(_hypothesis, bls, pcs, aMesh, &use_precad);
+  SetParameters(
+// #if BLSURF_VERSION_LONG >= "3.1.1"
+//     c,
+// #endif
+    _hypothesis, bls, pcs, aMesh, &use_precad);
   MESSAGE("END SetParameters");
 
   // needed to prevent the opencascade memory managmement from freeing things
@@ -1408,7 +1446,26 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
         cout << "Unable to retrieve PreCAD result \n";
       }
       cout << "PreCAD processing successfull \n";
-      // Now we can delete the PreCAD session
+
+// #if BLSURF_VERSION_LONG >= "3.1.1"
+//       /* We can now get the updated sizemaps (if any) */
+// //       if(geo_sizemap_e)
+// //         clean_geo_sizemap_e = precad_new_sizemap(pcs, geo_sizemap_e);
+// // 
+// //       if(geo_sizemap_f)
+// //         clean_geo_sizemap_f = precad_new_sizemap(pcs, geo_sizemap_f);
+// 
+//       if(iso_sizemap_p)
+//         clean_iso_sizemap_p = precad_new_sizemap(pcs, iso_sizemap_p);
+// 
+//       if(iso_sizemap_e)
+//         clean_iso_sizemap_e = precad_new_sizemap(pcs, iso_sizemap_e);
+// 
+//       if(iso_sizemap_f)
+//         clean_iso_sizemap_f = precad_new_sizemap(pcs, iso_sizemap_f);
+// #endif
+      
+      // Now we can delete the PreCAD session 
       precad_session_delete(pcs);
     }
   }
@@ -1421,6 +1478,12 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     // Use the original one
     blsurf_data_set_cad(bls, c);
   }
+
+// #if BLSURF_VERSION_LONG >= "3.1.1"
+//   blsurf_data_set_sizemap(bls, clean_iso_sizemap_p);
+//   blsurf_data_set_sizemap(bls, clean_iso_sizemap_e);
+//   blsurf_data_set_sizemap(bls, clean_iso_sizemap_f);
+// #endif
 
   std::cout << std::endl;
   std::cout << "Beginning of Surface Mesh generation" << std::endl;
@@ -1455,6 +1518,31 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   if ( status != STATUS_OK) {
     // There was an error while meshing
     blsurf_session_delete(bls);
+
+// #if BLSURF_VERSION_LONG >= "3.1.1"
+// //     if(geo_sizemap_e)
+// //       distene_sizemap_delete(geo_sizemap_e);
+// //     if(geo_sizemap_f)
+// //       distene_sizemap_delete(geo_sizemap_f);
+//     if(iso_sizemap_p)
+//       distene_sizemap_delete(iso_sizemap_p);
+//     if(iso_sizemap_e)
+//       distene_sizemap_delete(iso_sizemap_e);
+//     if(iso_sizemap_f)
+//       distene_sizemap_delete(iso_sizemap_f);
+// 
+// //     if(clean_geo_sizemap_e)
+// //       distene_sizemap_delete(clean_geo_sizemap_e);
+// //     if(clean_geo_sizemap_f)
+// //       distene_sizemap_delete(clean_geo_sizemap_f);
+//     if(clean_iso_sizemap_p)
+//       distene_sizemap_delete(clean_iso_sizemap_p);
+//     if(clean_iso_sizemap_e)
+//       distene_sizemap_delete(clean_iso_sizemap_e);
+//     if(clean_iso_sizemap_f)
+//       distene_sizemap_delete(clean_iso_sizemap_f);
+// #endif
+      
     cad_delete(c);
     context_delete(ctx);
 
@@ -1472,6 +1560,31 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     blsurf_data_regain_mesh(bls, msh);
     /* clean up everything */
     blsurf_session_delete(bls);
+
+// #if BLSURF_VERSION_LONG >= "3.1.1"
+// //     if(geo_sizemap_e)
+// //       distene_sizemap_delete(geo_sizemap_e);
+// //     if(geo_sizemap_f)
+// //       distene_sizemap_delete(geo_sizemap_f);
+//     if(iso_sizemap_p)
+//       distene_sizemap_delete(iso_sizemap_p);
+//     if(iso_sizemap_e)
+//       distene_sizemap_delete(iso_sizemap_e);
+//     if(iso_sizemap_f)
+//       distene_sizemap_delete(iso_sizemap_f);
+// 
+// //     if(clean_geo_sizemap_e)
+// //       distene_sizemap_delete(clean_geo_sizemap_e);
+// //     if(clean_geo_sizemap_f)
+// //       distene_sizemap_delete(clean_geo_sizemap_f);
+//     if(clean_iso_sizemap_p)
+//       distene_sizemap_delete(clean_iso_sizemap_p);
+//     if(clean_iso_sizemap_e)
+//       distene_sizemap_delete(clean_iso_sizemap_e);
+//     if(clean_iso_sizemap_f)
+//       distene_sizemap_delete(clean_iso_sizemap_f);
+// #endif
+      
     cad_delete(c);
     context_delete(ctx);
 
@@ -1675,6 +1788,31 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 
   /* clean up everything */
   blsurf_session_delete(bls);
+  
+// #if BLSURF_VERSION_LONG >= "3.1.1"
+// //     if(geo_sizemap_e)
+// //       distene_sizemap_delete(geo_sizemap_e);
+// //     if(geo_sizemap_f)
+// //       distene_sizemap_delete(geo_sizemap_f);
+//     if(iso_sizemap_p)
+//       distene_sizemap_delete(iso_sizemap_p);
+//     if(iso_sizemap_e)
+//       distene_sizemap_delete(iso_sizemap_e);
+//     if(iso_sizemap_f)
+//       distene_sizemap_delete(iso_sizemap_f);
+// 
+// //     if(clean_geo_sizemap_e)
+// //       distene_sizemap_delete(clean_geo_sizemap_e);
+// //     if(clean_geo_sizemap_f)
+// //       distene_sizemap_delete(clean_geo_sizemap_f);
+//     if(clean_iso_sizemap_p)
+//       distene_sizemap_delete(clean_iso_sizemap_p);
+//     if(clean_iso_sizemap_e)
+//       distene_sizemap_delete(clean_iso_sizemap_e);
+//     if(clean_iso_sizemap_f)
+//       distene_sizemap_delete(clean_iso_sizemap_f);
+// #endif
+      
   cad_delete(c);
 
   context_delete(ctx);

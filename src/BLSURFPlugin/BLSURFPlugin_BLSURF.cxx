@@ -1592,7 +1592,9 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     //return false;
   }
 
-  std::string GMFFileName = _hypothesis->GetGMFFile();
+  std::string GMFFileName = BLSURFPlugin_Hypothesis::GetDefaultGMFFile();
+  if (_hypothesis)
+    GMFFileName = _hypothesis->GetGMFFile();
   if (GMFFileName != "") {
 //     bool GMFFileMode = _hypothesis->GetGMFFileMode();
     bool asciiFound = (GMFFileName.find(".mesh",GMFFileName.length()-5) != std::string::npos);

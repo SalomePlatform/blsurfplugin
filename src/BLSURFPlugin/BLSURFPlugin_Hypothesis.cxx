@@ -68,7 +68,8 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   _coordsEnfVertexMap(GetDefaultCoordsEnfVertexMap()),
   _faceEntryEnfVertexEntryListMap(GetDefaultFaceEntryEnfVertexEntryListMap()),
   _enfVertexEntryEnfVertexMap(GetDefaultEnfVertexEntryEnfVertexMap()),
-  _groupNameNodeIDMap(GetDefaultGroupNameNodeIDMap())
+  _groupNameNodeIDMap(GetDefaultGroupNameNodeIDMap()),
+  _GMFFileName(GetDefaultGMFFile())
 /* TODO GROUPS
  _groupNameEnfVertexListMap(GetDefaultGroupNameEnfVertexListMap()),
  _enfVertexGroupNameMap(GetDefaultEnfVertexGroupNameMap())
@@ -77,7 +78,6 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   _name = "BLSURF_Parameters";
   _param_algo_dim = 2;
   
-  _GMFFileName = ""; // no GMF export
 //   _GMFFileMode = false; // GMF ascii mode
   
   // to disable writing boundaries
@@ -1589,4 +1589,9 @@ bool BLSURFPlugin_Hypothesis::GetDefaultDecimesh() {
 //======================================================================
 double BLSURFPlugin_Hypothesis::GetDefaultPreCADEpsNano() {
   return undefinedDouble(); //1e-4;
+}
+
+//======================================================================
+std::string BLSURFPlugin_Hypothesis::GetDefaultGMFFile() {
+  return "";
 }

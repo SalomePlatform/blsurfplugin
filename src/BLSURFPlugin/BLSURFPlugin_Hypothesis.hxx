@@ -324,6 +324,7 @@ public:
 //   void SetGMFFile(const std::string& theFileName, bool isBinary);
   void SetGMFFile(const std::string& theFileName);
   std::string GetGMFFile() const { return _GMFFileName; }
+  static std::string GetDefaultGMFFile();
 //   bool GetGMFFileMode() const { return _GMFFileMode; }
   
   // Persistence

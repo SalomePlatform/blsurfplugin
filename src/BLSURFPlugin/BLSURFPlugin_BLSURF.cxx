@@ -696,7 +696,7 @@ void BLSURFPlugin_BLSURF::SetParameters(
   int _precadMergeEdges      = BLSURFPlugin_Hypothesis::GetDefaultPreCADMergeEdges();
   int _precadRemoveNanoEdges = BLSURFPlugin_Hypothesis::GetDefaultPreCADRemoveNanoEdges();
   int _precadDiscardInput    = BLSURFPlugin_Hypothesis::GetDefaultPreCADDiscardInput();
-  double _precadEpsNano      = BLSURFPlugin_Hypothesis::GetDefaultMinSize();
+  double _precadEpsNano      = BLSURFPlugin_Hypothesis::GetDefaultPreCADEpsNano();
 
 
   if (hyp) {

@@ -58,7 +58,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   _preCADMergeEdges(GetDefaultPreCADMergeEdges()),
   _preCADRemoveNanoEdges(GetDefaultPreCADRemoveNanoEdges()),
   _preCADDiscardInput(GetDefaultPreCADDiscardInput()),
-  _preCADEpsNano(GetDefaultMinSize()),
+  _preCADEpsNano(GetDefaultPreCADEpsNano()),
   _sizeMap(GetDefaultSizeMap()),
   _attractors(GetDefaultSizeMap()),
   _classAttractors(GetDefaultAttractorMap()),
@@ -1584,4 +1584,9 @@ bool BLSURFPlugin_Hypothesis::GetDefaultQuadAllowed() {
 //=============================================================================
 bool BLSURFPlugin_Hypothesis::GetDefaultDecimesh() {
   return false;
+}
+
+//======================================================================
+double BLSURFPlugin_Hypothesis::GetDefaultPreCADEpsNano() {
+  return undefinedDouble(); //1e-4;
 }

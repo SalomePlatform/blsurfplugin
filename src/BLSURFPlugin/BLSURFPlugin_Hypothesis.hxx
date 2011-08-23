@@ -286,10 +286,10 @@ public:
   static bool            GetDefaultDecimesh();
   static int             GetDefaultVerbosity() { return 10; }
   // PreCAD
-  static bool            GetDefaultPreCADMergeEdges() { return true; }
-  static bool            GetDefaultPreCADRemoveNanoEdges() { return true; }
+  static bool            GetDefaultPreCADMergeEdges() { return false; }
+  static bool            GetDefaultPreCADRemoveNanoEdges() { return false; }
   static bool            GetDefaultPreCADDiscardInput() { return false; }
-//   static double          GetDefaultPreCADEpsNano() { return undefinedDouble(); }
+  static double          GetDefaultPreCADEpsNano();
   
   static TSizeMap        GetDefaultSizeMap() { return TSizeMap();}
   static TAttractorMap   GetDefaultAttractorMap() { return TAttractorMap(); }

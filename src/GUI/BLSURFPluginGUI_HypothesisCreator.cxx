@@ -777,10 +777,8 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   myPreCADGroupBox->setEnabled(false);
   QGridLayout* aPreCADGroupLayout = new QGridLayout(myPreCADGroupBox);
   myPreCADMergeEdges = new QCheckBox(tr("BLSURF_PRECAD_MERGE_EDGES"),myPreCADGroupBox);
-  myPreCADMergeEdges->setChecked(true);
   aPreCADGroupLayout->addWidget(myPreCADMergeEdges,0,0,1,2);
   myPreCADRemoveNanoEdges = new QCheckBox(tr("BLSURF_PRECAD_REMOVE_NANO_EDGES"),myPreCADGroupBox);
-  myPreCADRemoveNanoEdges->setChecked(true);
   aPreCADGroupLayout->addWidget(myPreCADRemoveNanoEdges,1,0,1,2);
   myPreCADEpsNano = new SMESHGUI_SpinBox(myPreCADGroupBox);
   myPreCADEpsNano->RangeStepAndValidator(0, COORD_MAX, 10.0, "length_precision");

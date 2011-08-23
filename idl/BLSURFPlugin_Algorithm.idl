@@ -212,7 +212,7 @@ module BLSURFPlugin
     short GetVerbosity();
 
     /*!
-     * To optimize merges edges.
+     * To merges edges.
      */
     void SetPreCADMergeEdges(in boolean toMergeEdges);
     boolean GetPreCADMergeEdges();
@@ -230,8 +230,8 @@ module BLSURFPlugin
     boolean GetPreCADDiscardInput();
 
     /*!
-     * To help PreCAD treat some very dirty cases.
-     * If the treated object is manifold.
+     * Sets the length below which an edge is considered as nano 
+     * for the topology processing.
      */
     void SetPreCADEpsNano(in double epsNano);
     boolean GetPreCADEpsNano();

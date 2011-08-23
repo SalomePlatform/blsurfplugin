@@ -234,18 +234,22 @@ module BLSURFPlugin
      * for the topology processing.
      */
     void SetPreCADEpsNano(in double epsNano);
-    boolean GetPreCADEpsNano();
+    double GetPreCADEpsNano();
 
     /*!
      * Sets advanced option value
      */
     void SetOptionValue(in string optionName,
                         in string optionValue) raises (SALOME::SALOME_Exception);
+    void SetPreCADOptionValue(in string optionName,
+                        in string optionValue) raises (SALOME::SALOME_Exception);
     string GetOptionValue(in string optionName) raises (SALOME::SALOME_Exception);
+    string GetPreCADOptionValue(in string optionName) raises (SALOME::SALOME_Exception);
     /*!
      * Unsets advanced option
      */
     void UnsetOption(in string optionName);
+    void UnsetPreCADOption(in string optionName);
 
     /*!
      * Return array of strings each of which is option name concatenated
@@ -254,12 +258,14 @@ module BLSURFPlugin
      * Note: the method is mostly for interaction with GUI.
      */
     string_array GetOptionValues();
+    string_array GetPreCADOptionValues();
 
     /*!
      * Set option values each in the form "option_name[:option_value]".
      * Note: the method is mostly for interaction with GUI.
      */
     void SetOptionValues(in string_array options);
+    void SetPreCADOptionValues(in string_array options);
 
     /*!
      * SizeMap

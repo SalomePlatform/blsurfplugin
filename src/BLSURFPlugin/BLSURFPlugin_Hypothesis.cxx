@@ -95,10 +95,21 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
       };
   const char* charOptionNames[] = { "export_format", "export_option", "import_option", "prefix", "" // mark of end
       };
+
+  // PreCAD advanced options
+  const char* preCADintOptionNames[] = { "closed_geometry", "debug", "manifold_geometry", "create_tag_on_collision","" // mark of end
+      };
+  const char* preCADdoubleOptionNames[] = { "eps_nano_relative", "eps_sewing", "eps_sewing_relative", "periodic_tolerance",
+      "periodic_tolerance_relative", "periodic_split_tolerance", "periodic_split_tolerance_relative", "" // mark of end
+      };
   
   int i = 0;
   while (intOptionNames[i][0])
     _option2value[intOptionNames[i++]].clear();
+  
+  i = 0;
+  while (preCADintOptionNames[i][0])
+    _preCADoption2value[preCADintOptionNames[i++]].clear();
 
   i = 0;
   while (doubleOptionNames[i][0]) {
@@ -106,27 +117,17 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
     _option2value[doubleOptionNames[i++]].clear();
   }
   i = 0;
+  while (preCADdoubleOptionNames[i][0]) {
+    _preCADdoubleOptions.insert(preCADdoubleOptionNames[i]);
+    _preCADoption2value[preCADdoubleOptionNames[i++]].clear();
+  }
+  i = 0;
   while (charOptionNames[i][0]) {
     _charOptions.insert(charOptionNames[i]);
     _option2value[charOptionNames[i++]].clear();
   }
-
-  // PreCAD advanced options
-  const char* preCADintOptionNames[] = { "PRECAD_closed_geometry", "PRECAD_debug", "PRECAD_manifold_geometry", "PRECAD_create_tag_on_collision","" // mark of end
-      };
-  const char* preCADdoubleOptionNames[] = { "PRECAD_eps_nano_relative", "PRECAD_eps_sewing", "PRECAD_eps_sewing_relative", "PRECAD_periodic_tolerance",
-      "PRECAD_periodic_tolerance_relative", "PRECAD_periodic_split_tolerance", "PRECAD_periodic_split_tolerance_relative", "" // mark of end
-      };
   
-  i = 0;
-  while (preCADintOptionNames[i][0])
-    _option2value[preCADintOptionNames[i++]].clear();
 
-  i = 0;
-  while (preCADdoubleOptionNames[i][0]) {
-    _doubleOptions.insert(preCADdoubleOptionNames[i]);
-    _option2value[preCADdoubleOptionNames[i++]].clear();
-  }
       
   _sizeMap.clear();
   _attractors.clear();
@@ -376,6 +377,49 @@ void BLSURFPlugin_Hypothesis::SetOptionValue(const std::string& optionName, cons
 }
 
 //=============================================================================
+void BLSURFPlugin_Hypothesis::SetPreCADOptionValue(const std::string& optionName, const std::string& optionValue)
+    throw (std::invalid_argument) {
+  TOptionValues::iterator op_val = _preCADoption2value.find(optionName);
+  if (op_val == _preCADoption2value.end()) {
+    std::string msg = "Unknown BLSURF option: '" + optionName + "'";
+    throw std::invalid_argument(msg);
+  }
+  if (op_val->second != optionValue) {
+    const char* ptr = optionValue.c_str();
+    // strip white spaces
+    while (ptr[0] == ' ')
+      ptr++;
+    int i = strlen(ptr);
+    while (i != 0 && ptr[i - 1] == ' ')
+      i--;
+    // check value type
+    bool typeOk = true;
+    std::string typeName;
+    if (i == 0) {
+      // empty string
+    } else if (_preCADdoubleOptions.find(optionName) != _preCADdoubleOptions.end()) {
+      // check if value is double
+      char * endPtr;
+      strtod(ptr, &endPtr);
+      typeOk = (ptr != endPtr);
+      typeName = "real";
+    } else {
+      // check if value is int
+      char * endPtr;
+      strtol(ptr, &endPtr, 10);
+      typeOk = (ptr != endPtr);
+      typeName = "integer";
+    }
+    if (!typeOk) {
+      std::string msg = "PreCAD advanced option '" + optionName + "' = '" + optionValue + "' but must be " + typeName;
+      throw std::invalid_argument(msg);
+    }
+    op_val->second = optionValue;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
 std::string BLSURFPlugin_Hypothesis::GetOptionValue(const std::string& optionName) throw (std::invalid_argument) {
   TOptionValues::iterator op_val = _option2value.find(optionName);
   if (op_val == _option2value.end()) {
@@ -387,9 +431,27 @@ std::string BLSURFPlugin_Hypothesis::GetOptionValue(const std::string& optionNam
 }
 
 //=============================================================================
+std::string BLSURFPlugin_Hypothesis::GetPreCADOptionValue(const std::string& optionName) throw (std::invalid_argument) {
+  TOptionValues::iterator op_val = _preCADoption2value.find(optionName);
+  if (op_val == _preCADoption2value.end()) {
+    std::string msg = "Unknown PRECAD option: <";
+    msg += optionName + ">";
+    throw std::invalid_argument(msg);
+  }
+  return op_val->second;
+}
+
+//=============================================================================
 void BLSURFPlugin_Hypothesis::ClearOption(const std::string& optionName) {
   TOptionValues::iterator op_val = _option2value.find(optionName);
   if (op_val != _option2value.end())
+    op_val->second.clear();
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::ClearPreCADOption(const std::string& optionName) {
+  TOptionValues::iterator op_val = _preCADoption2value.find(optionName);
+  if (op_val != _preCADoption2value.end())
     op_val->second.clear();
 }
 
@@ -999,6 +1061,16 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save) {
     }
     save << " " << "__OPTIONS_END__";
   }
+  
+  op_val = _preCADoption2value.begin();
+  if (op_val != _preCADoption2value.end()) {
+    save << " " << "__PRECAD_OPTIONS_BEGIN__";
+    for (; op_val != _preCADoption2value.end(); ++op_val) {
+      if (!op_val->second.empty())
+        save << " " << op_val->first << " " << op_val->second << "%#"; // "%#" is a mark of value end
+    }
+    save << " " << "__PRECAD_OPTIONS_END__";
+  }
 
   TSizeMap::iterator it_sm = _sizeMap.begin();
   if (it_sm != _sizeMap.end()) {
@@ -1202,6 +1274,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
 
   std::string option_or_sm;
   bool hasOptions = false;
+  bool hasPreCADOptions = false;
   bool hasSizeMap = false;
   bool hasAttractor = false;
   bool hasNewAttractor = false;
@@ -1211,6 +1284,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   if (isOK)
     if (option_or_sm == "__OPTIONS_BEGIN__")
       hasOptions = true;
+    else if (option_or_sm == "__PRECAD_OPTIONS_BEGIN__")
+      hasPreCADOptions = true;
     else if (option_or_sm == "__SIZEMAP_BEGIN__")
       hasSizeMap = true;
     else if (option_or_sm == "__ATTRACTORS_BEGIN__")
@@ -1250,7 +1325,9 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   if (hasOptions) {
     isOK = (load >> option_or_sm);
     if (isOK)
-      if (option_or_sm == "__SIZEMAP_BEGIN__")
+      if (option_or_sm == "__PRECAD_OPTIONS_BEGIN__")
+        hasPreCADOptions = true;
+      else if (option_or_sm == "__SIZEMAP_BEGIN__")
         hasSizeMap = true;
       else if (option_or_sm == "__ATTRACTORS_BEGIN__")
         hasAttractor = true;
@@ -1260,6 +1337,45 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         hasEnforcedVertex = true;
   }
 
+  while (isOK && hasPreCADOptions) {
+    isOK = (load >> optName);
+    if (isOK) {
+      if (optName == "__PRECAD_OPTIONS_END__")
+        break;
+      isOK = (load >> optValue);
+    }
+    if (isOK) {
+      std::string & value = _preCADoption2value[optName];
+      value = optValue;
+      int len = value.size();
+      // continue reading until "%#" encountered
+      while (value[len - 1] != '#' || value[len - 2] != '%') {
+        isOK = (load >> optValue);
+        if (isOK) {
+          value += " ";
+          value += optValue;
+          len = value.size();
+        } else {
+          break;
+        }
+      }
+      value[len - 2] = '\0'; //cut off "%#"
+    }
+  }
+
+  if (hasPreCADOptions) {
+    isOK = (load >> option_or_sm);
+    if (isOK)
+      if (option_or_sm == "__SIZEMAP_BEGIN__")
+        hasSizeMap = true;
+      else if (option_or_sm == "__ATTRACTORS_BEGIN__")
+        hasAttractor = true;
+      else if (option_or_sm == "__NEW_ATTRACTORS_BEGIN__")
+        hasNewAttractor = true;
+      else if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
+        hasEnforcedVertex = true;
+  }
+  
   std::string smEntry, smValue;
   while (isOK && hasSizeMap) {
     isOK = (load >> smEntry);

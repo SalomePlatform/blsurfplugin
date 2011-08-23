@@ -112,12 +112,24 @@
         <translation>(Obligatory value)</translation>
     </message>
     <message>
+        <source>OPTION_TYPE_COLUMN</source>
+        <translation>Type</translation>
+    </message>
+    <message>
         <source>OPTION_NAME_COLUMN</source>
         <translation>Option</translation>
     </message>
     <message>
         <source>OPTION_VALUE_COLUMN</source>
         <translation>Value</translation>
+    </message>
+    <message>
+        <source>OPTION_MENU_BLSURF</source>
+        <translation>BLSURF</translation>
+    </message>
+    <message>
+        <source>OPTION_MENU_PRECAD</source>
+        <translation>PreCAD</translation>
     </message>
     <message>
         <source>REMOVE_OPTION</source>

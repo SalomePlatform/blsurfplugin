@@ -126,7 +126,7 @@ CORBA::Long BLSURFPlugin_Hypothesis_i::GetPhysicalMesh() {
  */
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetPhySize(CORBA::Double theValue) {
-  MESSAGE("BLSURFPlugin_Hypothesis_i::SetPhySize");
+//   MESSAGE("BLSURFPlugin_Hypothesis_i::SetPhySize");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetPhySize(theValue);
   SMESH::TPythonDump() << _this() << ".SetPhySize( " << theValue << " )";
@@ -140,7 +140,7 @@ void BLSURFPlugin_Hypothesis_i::SetPhySize(CORBA::Double theValue) {
  */
 //=============================================================================
 CORBA::Double BLSURFPlugin_Hypothesis_i::GetPhySize() {
-  MESSAGE("BLSURFPlugin_Hypothesis_i::GetPhySize");
+//   MESSAGE("BLSURFPlugin_Hypothesis_i::GetPhySize");
   ASSERT(myBaseImpl);
   return this->GetImpl()->GetPhySize();
 }
@@ -472,7 +472,7 @@ void BLSURFPlugin_Hypothesis_i::SetPreCADEpsNano(CORBA::Double theValue) {
  *  Get length of nano edges
  */
 //=============================================================================
-CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADEpsNano() {
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetPreCADEpsNano() {
   // MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCADEpsNano");
   ASSERT(myBaseImpl);
   return this->GetImpl()->GetPreCADEpsNano();
@@ -504,6 +504,30 @@ void BLSURFPlugin_Hypothesis_i::SetOptionValue(const char* optionName, const cha
 
 //=============================================================================
 
+void BLSURFPlugin_Hypothesis_i::SetPreCADOptionValue(const char* optionName, const char* optionValue)
+    throw (SALOME::SALOME_Exception) {
+  ASSERT(myBaseImpl);
+  bool valueChanged = false;
+  try {
+    valueChanged = (this->GetImpl()->GetPreCADOptionValue(optionName) != optionValue);
+    if (valueChanged)
+      this->GetImpl()->SetPreCADOptionValue(optionName, optionValue);
+  } catch (const std::invalid_argument& ex) {
+    SALOME::ExceptionStruct ExDescription;
+    ExDescription.text = ex.what();
+    ExDescription.type = SALOME::BAD_PARAM;
+    ExDescription.sourceFile = "BLSURFPlugin_Hypothesis::SetPreCADOptionValue(name,value)";
+    ExDescription.lineNumber = 0;
+    throw SALOME::SALOME_Exception(ExDescription);
+  } catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+  if (valueChanged)
+    SMESH::TPythonDump() << _this() << ".SetPreCADOptionValue( '" << optionName << "', '" << optionValue << "' )";
+}
+
+//=============================================================================
+
 char* BLSURFPlugin_Hypothesis_i::GetOptionValue(const char* optionName) throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
   try {
@@ -523,10 +547,37 @@ char* BLSURFPlugin_Hypothesis_i::GetOptionValue(const char* optionName) throw (S
 
 //=============================================================================
 
+char* BLSURFPlugin_Hypothesis_i::GetPreCADOptionValue(const char* optionName) throw (SALOME::SALOME_Exception) {
+  ASSERT(myBaseImpl);
+  try {
+    return CORBA::string_dup(this->GetImpl()->GetPreCADOptionValue(optionName).c_str());
+  } catch (const std::invalid_argument& ex) {
+    SALOME::ExceptionStruct ExDescription;
+    ExDescription.text = ex.what();
+    ExDescription.type = SALOME::BAD_PARAM;
+    ExDescription.sourceFile = "BLSURFPlugin_Hypothesis::GetPreCADOptionValue(name)";
+    ExDescription.lineNumber = 0;
+    throw SALOME::SALOME_Exception(ExDescription);
+  } catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+  return 0;
+}
+
+//=============================================================================
+
 void BLSURFPlugin_Hypothesis_i::UnsetOption(const char* optionName) {
   ASSERT(myBaseImpl);
   this->GetImpl()->ClearOption(optionName);
   SMESH::TPythonDump() << _this() << ".UnsetOption( '" << optionName << "' )";
+}
+
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::UnsetPreCADOption(const char* optionName) {
+  ASSERT(myBaseImpl);
+  this->GetImpl()->ClearPreCADOption(optionName);
+  SMESH::TPythonDump() << _this() << ".UnsetPreCADOption( '" << optionName << "' )";
 }
 
 //=============================================================================
@@ -536,6 +587,27 @@ BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetOptionValues() {
   BLSURFPlugin::string_array_var result = new BLSURFPlugin::string_array();
 
   const ::BLSURFPlugin_Hypothesis::TOptionValues & opts = this->GetImpl()->GetOptionValues();
+  result->length(opts.size());
+
+  ::BLSURFPlugin_Hypothesis::TOptionValues::const_iterator opIt = opts.begin();
+  for (int i = 0; opIt != opts.end(); ++opIt, ++i) {
+    string name_value = opIt->first;
+    if (!opIt->second.empty()) {
+      name_value += ":";
+      name_value += opIt->second;
+    }
+    result[i] = CORBA::string_dup(name_value.c_str());
+  }
+  return result._retn();
+}
+
+//=============================================================================
+
+BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetPreCADOptionValues() {
+  ASSERT(myBaseImpl);
+  BLSURFPlugin::string_array_var result = new BLSURFPlugin::string_array();
+
+  const ::BLSURFPlugin_Hypothesis::TOptionValues & opts = this->GetImpl()->GetPreCADOptionValues();
   result->length(opts.size());
 
   ::BLSURFPlugin_Hypothesis::TOptionValues::const_iterator opIt = opts.begin();
@@ -567,6 +639,26 @@ void BLSURFPlugin_Hypothesis_i::SetOptionValues(const BLSURFPlugin::string_array
         value = name_value.substr(colonPos + 1);
     }
     SetOptionValue(name.c_str(), value.c_str());
+  }
+}
+
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::SetPreCADOptionValues(const BLSURFPlugin::string_array& options)
+    throw (SALOME::SALOME_Exception) {
+  ASSERT(myBaseImpl);
+  for (int i = 0; i < options.length(); ++i) {
+    string name_value = options[i].in();
+    int colonPos = name_value.find(':');
+    string name, value;
+    if (colonPos == string::npos) // ':' not found
+      name = name_value;
+    else {
+      name = name_value.substr(0, colonPos);
+      if (colonPos < name_value.size() - 1 && name_value[colonPos] != ' ')
+        value = name_value.substr(colonPos + 1);
+    }
+    SetPreCADOptionValue(name.c_str(), value.c_str());
   }
 }
 
@@ -2083,7 +2175,7 @@ void BLSURFPlugin_Hypothesis_i::SetGMFFile(const char* theFileName) {
 //================================================================================  
 char* BLSURFPlugin_Hypothesis_i::GetGMFFile() {
   ASSERT(myBaseImpl);
-  MESSAGE("IDL : GetGMFFile()");
+//   MESSAGE("IDL : GetGMFFile()");
   return CORBA::string_dup(this->GetImpl()->GetGMFFile().c_str());
 }
 

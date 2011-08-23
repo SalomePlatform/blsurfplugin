@@ -125,7 +125,8 @@ typedef struct
   double  myAngleMeshS, myAngleMeshC, myGradation;
   double  myPhySize, myGeoMin, myGeoMax, myPhyMin,myPhyMax;
   bool    myAllowQuadrangles, myDecimesh,mySmpsurface,mySmpedge,mySmppoint,myEnforcedVertex;
-  bool    myPreCADMergeEdges, myPreCADRemoveNanoEdges, myPreCADDiscardInput, myPreCADEpsNano;
+  bool    myPreCADMergeEdges, myPreCADRemoveNanoEdges, myPreCADDiscardInput;
+  double  myPreCADEpsNano;
 //   bool    myGMFFileMode;
   std::string myGMFFileName;
   TEnfVertexList enfVertexList;
@@ -316,7 +317,7 @@ private:
   GeomSelectionTools*             GeomToolSelected;
   LightApp_SelectionMgr*          aSel;
 
-  BLSURFPlugin::string_array_var myOptions;
+  BLSURFPlugin::string_array_var myOptions, myPreCADOptions;
 
   PyObject *          main_mod;
   PyObject *          main_dict;

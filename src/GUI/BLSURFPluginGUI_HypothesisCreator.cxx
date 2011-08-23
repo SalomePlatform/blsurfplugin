@@ -109,6 +109,7 @@ enum {
   SMP_TAB,
   ENF_TAB,
   OPTION_ID_COLUMN = 0,
+  OPTION_TYPE_COLUMN,
   OPTION_NAME_COLUMN,
   OPTION_VALUE_COLUMN,
   NB_COLUMNS,
@@ -568,7 +569,11 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams() const
       QString value = myOptionTable->item( row, OPTION_VALUE_COLUMN )->text().trimmed();
       if ( !value.isEmpty() ) {
         try {
-          h->SetOptionValue( name.toLatin1().constData(), value.toLatin1().constData() );
+          QString optionType = myOptionTable->item( row, OPTION_TYPE_COLUMN )->text().trimmed();
+          if (optionType == "PRECAD")
+            h->SetPreCADOptionValue( name.toLatin1().constData(), value.toLatin1().constData() );
+          else if (optionType == "BLSURF")
+            h->SetOptionValue( name.toLatin1().constData(), value.toLatin1().constData() );
         }
         catch ( const SALOME::SALOME_Exception& ex )
         {
@@ -580,6 +585,7 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams() const
       }
     }
     h->SetOptionValues( myOptions ); // restore values
+    h->SetPreCADOptionValues( myPreCADOptions ); // restore values
   }
 
   // SizeMap and attractors
@@ -759,9 +765,10 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 
   myOptionTable = new QTableWidget( 0, NB_COLUMNS, myAdvGroup );
   QStringList headers;
-  headers << tr( "OPTION_ID_COLUMN" ) << tr( "OPTION_NAME_COLUMN" ) << tr( "OPTION_VALUE_COLUMN" );
+  headers << tr( "OPTION_ID_COLUMN" )<< tr( "OPTION_TYPE_COLUMN" )  << tr( "OPTION_NAME_COLUMN" ) << tr( "OPTION_VALUE_COLUMN" );
   myOptionTable->setHorizontalHeaderLabels( headers );
   myOptionTable->horizontalHeader()->hideSection( OPTION_ID_COLUMN );
+//   myOptionTable->horizontalHeader()->hideSection( OPTION_TYPE_COLUMN );
   myOptionTable->horizontalHeader()->setStretchLastSection(true);
   myOptionTable->horizontalHeader()->setDefaultAlignment(Qt::AlignLeft);
   //myOptionTable->setColumnReadOnly( OPTION_NAME_COLUMN, TRUE );//////
@@ -1061,11 +1068,11 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   connect( addMapButton,        SIGNAL( clicked()),                    this,         SLOT( onAddMap() ) );
   connect( removeMapButton,     SIGNAL( clicked()),                    this,         SLOT( onRemoveMap() ) );
   connect( modifyMapButton,     SIGNAL( clicked()),                    this,         SLOT( onModifyMap() ) );
-  connect( mySizeMapTable,      SIGNAL( cellChanged ( int, int  )),    this,         SLOT( onSetSizeMap(int,int ) ) );
+//   connect( mySizeMapTable,      SIGNAL( cellChanged ( int, int  )),    this,         SLOT( onSetSizeMap(int,int ) ) );
   connect( mySizeMapTable,      SIGNAL( itemClicked (QTreeWidgetItem *, int)),this,  SLOT( onSmpItemClicked(QTreeWidgetItem *, int) ) );
   connect( myGeomSelWdg2,       SIGNAL( contentModified() ),           this,         SLOT( onMapGeomContentModified() ) );
   connect( myGeomSelWdg1,       SIGNAL( contentModified() ),           this,         SLOT( onMapGeomContentModified() ) );
-  connect( myAttractorGroup,    SIGNAL( clicked(bool) ),               this,         SLOT( onAttractorGroupClicked(bool) ) );
+//   connect( myAttractorGroup,    SIGNAL( clicked(bool) ),               this,         SLOT( onAttractorGroupClicked(bool) ) );
   connect( mySizeMapTable,      SIGNAL( itemChanged (QTreeWidgetItem *, int)),this,  SLOT( onSetSizeMap(QTreeWidgetItem *, int) ) );
   connect( myAttractorCheck,    SIGNAL( stateChanged ( int )),         this,         SLOT( onAttractorClicked( int ) ) );
   connect( myConstSizeCheck,    SIGNAL( stateChanged ( int )),         this,         SLOT( onConstSizeClicked( int ) ) );
@@ -1074,7 +1081,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   // Enforced vertices
   connect( myEnforcedTreeWidget,SIGNAL( itemClicked(QTreeWidgetItem *, int)), this,  SLOT( synchronizeCoords() ) );
   connect( myEnforcedTreeWidget,SIGNAL( itemChanged(QTreeWidgetItem *, int)), this,  SLOT( updateEnforcedVertexValues(QTreeWidgetItem *, int) ) );
-  connect( myEnforcedTreeWidget,SIGNAL( itemChanged(QTreeWidgetItem *, int)), this,  SLOT( update(QTreeWidgetItem *, int) ) );
+//   connect( myEnforcedTreeWidget,SIGNAL( itemChanged(QTreeWidgetItem *, int)), this,  SLOT( update(QTreeWidgetItem *, int) ) );
   connect( myEnforcedTreeWidget,SIGNAL( itemSelectionChanged() ),      this,         SLOT( synchronizeCoords() ) );
   connect( addVertexButton,     SIGNAL( clicked()),                    this,         SLOT( onAddEnforcedVertices() ) );
   connect( removeVertexButton,  SIGNAL( clicked()),                    this,         SLOT( onRemoveEnforcedVertex() ) );
@@ -1525,6 +1532,30 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
         myOptionTable->setRowCount( row+1 );
         myOptionTable->setItem( row, OPTION_ID_COLUMN, new QTableWidgetItem( idStr ) );
         myOptionTable->item( row, OPTION_ID_COLUMN )->setFlags( 0 );
+        myOptionTable->setItem( row, OPTION_TYPE_COLUMN, new QTableWidgetItem( "BLSURF" ) );
+        myOptionTable->item( row, OPTION_TYPE_COLUMN )->setFlags( 0 );
+        myOptionTable->setItem( row, OPTION_NAME_COLUMN, new QTableWidgetItem( name_value[0] ) );
+        myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( 0 );
+        myOptionTable->setItem( row, OPTION_VALUE_COLUMN, new QTableWidgetItem( name_value[1] ) );
+        myOptionTable->item( row, OPTION_VALUE_COLUMN )->setFlags( Qt::ItemIsSelectable |
+                                      Qt::ItemIsEditable   |
+                                      Qt::ItemIsEnabled );
+      }
+    }
+  }
+  if ( myPreCADOptions.operator->() ) {
+//     MESSAGE("retrieveParams():myPreCADOptions->length() = " << myPreCADOptions->length());
+    for ( int i = 0, nb = myPreCADOptions->length(); i < nb; ++i ) {
+      QString option = that->myPreCADOptions[i].in();
+      QStringList name_value = option.split( ":", QString::KeepEmptyParts );
+      if ( name_value.count() > 1 ) {
+        QString idStr = QString("%1").arg( i );
+        int row = myOptionTable->rowCount();
+        myOptionTable->setRowCount( row+1 );
+        myOptionTable->setItem( row, OPTION_ID_COLUMN, new QTableWidgetItem( idStr ) );
+        myOptionTable->item( row, OPTION_ID_COLUMN )->setFlags( 0 );
+        myOptionTable->setItem( row, OPTION_TYPE_COLUMN, new QTableWidgetItem( "PRECAD" ) );
+        myOptionTable->item( row, OPTION_TYPE_COLUMN )->setFlags( 0 );
         myOptionTable->setItem( row, OPTION_NAME_COLUMN, new QTableWidgetItem( name_value[0] ) );
         myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( 0 );
         myOptionTable->setItem( row, OPTION_VALUE_COLUMN, new QTableWidgetItem( name_value[1] ) );
@@ -1680,6 +1711,7 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
 
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
   that->myOptions = h->GetOptionValues();
+  that->myPreCADOptions = h->GetPreCADOptionValues();
   
   h_data.myGMFFileName = h->GetGMFFile();
 //   h_data.myGMFFileMode = h->GetGMFFileMode();
@@ -1873,6 +1905,7 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
 #endif
 
     h->SetOptionValues( myOptions ); // is set in checkParams()
+    h->SetPreCADOptionValues( myPreCADOptions ); // is set in checkParams()
     
     if ( h->GetGMFFile() != h_data.myGMFFileName )
 //       || ( h->GetGMFFileMode() != h_data.myGMFFileMode ) )
@@ -2025,15 +2058,23 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
   for ( ; row < nbRows; ++row )
   {
     int id = myOptionTable->item( row, OPTION_ID_COLUMN )->text().toInt();
-    if ( id >= 0 && id < myOptions->length() )
+    std::string optionType = myOptionTable->item( row, OPTION_TYPE_COLUMN )->text().toStdString();
+    if ( id >= 0 && ( ( optionType == "BLSURF" && id < myOptions->length() ) || ( optionType == "PRECAD" && id < myPreCADOptions->length() ) ) )
     {
       QString name  = myOptionTable->item( row, OPTION_NAME_COLUMN )->text();
       QString value = myOptionTable->item( row, OPTION_VALUE_COLUMN )->text().trimmed();
       if ( value.isNull() )
         value = "";
-      that->myOptions[ id ] = ( name + ":" + value).toLatin1().constData();
-      if ( value != "" )
+      if (optionType == "PRECAD")
+        that->myPreCADOptions[ id ] = ( name + ":" + value).toLatin1().constData();
+      else
+        that->myOptions[ id ] = ( name + ":" + value).toLatin1().constData();
+
+      if ( value != "" ) {
+        if (optionType == "PRECAD")
+          guiHyp += "PRECAD_";
         guiHyp += name + " = " + value + "; ";
+      }
     }
   }
   
@@ -2165,11 +2206,21 @@ void BLSURFPluginGUI_HypothesisCreator::onAddOption()
   QMenu* menu = (QMenu*)sender();
   // fill popup with option names
   menu->clear();
+  QString name_value, name;
   if ( myOptions.operator->() ) {
+    QMenu* blsurfMenu = menu->addMenu(tr("OPTION_MENU_BLSURF"));
     for ( int i = 0, nb = myOptions->length(); i < nb; ++i ) {
-      QString name_value = myOptions[i].in();
-      QString name = name_value.split( ":", QString::KeepEmptyParts )[0];
-      menu->addAction( name );
+      name_value = myOptions[i].in();
+      name = name_value.split( ":", QString::KeepEmptyParts )[0];
+      blsurfMenu->addAction( name );
+    }
+  }
+  if ( myPreCADOptions.operator->() ) {
+    QMenu* preCADmenu = menu->addMenu(tr("OPTION_MENU_PRECAD"));
+    for ( int i = 0, nb = myPreCADOptions->length(); i < nb; ++i ) {
+      name_value = myPreCADOptions[i].in();
+      name = name_value.split( ":", QString::KeepEmptyParts )[0];
+      preCADmenu->addAction( name );
     }
   }
 }
@@ -2181,19 +2232,30 @@ void BLSURFPluginGUI_HypothesisCreator::onOptionChosenInPopup( QAction* a )
 
   int idx = menu->actions().indexOf( a );
   QString idStr = QString("%1").arg( idx );
-  QString option = myOptions[idx].in();
+  QString option, optionType;
+  if (menu->title() == tr("OPTION_MENU_BLSURF")) {
+    option = myOptions[idx].in();
+    optionType = "BLSURF";
+  }
+  else if (menu->title() == tr("OPTION_MENU_PRECAD")) {
+    option = myPreCADOptions[idx].in();
+    optionType = "PRECAD";
+  }
   QString optionName = option.split( ":", QString::KeepEmptyParts )[0];
 
   // look for a row with optionName
   int row = 0, nbRows = myOptionTable->rowCount();
   for ( ; row < nbRows; ++row )
     if ( myOptionTable->item( row, OPTION_ID_COLUMN )->text() == idStr )
-      break;
+      if ( myOptionTable->item( row, OPTION_TYPE_COLUMN )->text() == optionType )
+        break;
   // add a row if not found
   if ( row == nbRows ) {
     myOptionTable->setRowCount( row+1 );
     myOptionTable->setItem( row, OPTION_ID_COLUMN, new QTableWidgetItem( idStr ) );
     myOptionTable->item( row, OPTION_ID_COLUMN )->setFlags( 0 );
+    myOptionTable->setItem( row, OPTION_TYPE_COLUMN, new QTableWidgetItem( optionType ) );
+    myOptionTable->item( row, OPTION_TYPE_COLUMN )->setFlags( 0 );
     myOptionTable->setItem( row, OPTION_NAME_COLUMN, new QTableWidgetItem( optionName ) );
     myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( 0 );
     myOptionTable->setItem( row, OPTION_VALUE_COLUMN, new QTableWidgetItem( "" ) );
@@ -2220,8 +2282,12 @@ void BLSURFPluginGUI_HypothesisCreator::onDeleteOption()
     if ( !selectedRows.contains( row ) ) {
       selectedRows.append( row );
       int id = myOptionTable->item( row, OPTION_ID_COLUMN )->text().toInt();
-      if ( id >= 0 && id < myOptions->length() )
-        myOptions[ id ] = myOptionTable->item( row, OPTION_NAME_COLUMN )->text().toLatin1().constData();
+      std::string optionType = myOptionTable->item( row, OPTION_TYPE_COLUMN )->text().toStdString();
+      if ( id >= 0 )
+        if (optionType == "BLSURF" && id < myOptions->length() )
+          myOptions[ id ] = myOptionTable->item( row, OPTION_NAME_COLUMN )->text().toLatin1().constData();
+        else if (optionType == "PRECAD" && id < myPreCADOptions->length() )
+          myPreCADOptions[ id ] = myOptionTable->item( row, OPTION_NAME_COLUMN )->text().toLatin1().constData();
     }
   }
   qSort( selectedRows );

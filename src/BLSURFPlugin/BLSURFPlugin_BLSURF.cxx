@@ -722,18 +722,17 @@ void BLSURFPlugin_BLSURF::SetParameters(
 
     const BLSURFPlugin_Hypothesis::TOptionValues & opts = hyp->GetOptionValues();
     BLSURFPlugin_Hypothesis::TOptionValues::const_iterator opIt;
-    std::string preCADOptName;
-    size_t preCADstr_found;
     for ( opIt = opts.begin(); opIt != opts.end(); ++opIt )
       if ( !opIt->second.empty() ) {
-        preCADstr_found = opIt->first.find("PRECAD_");
-        if (preCADstr_found !=std::string::npos && int(preCADstr_found) == 0 && _topology == BLSURFPlugin_Hypothesis::PreCAD) {
-          preCADOptName = opIt->first.substr(preCADstr_found+7);
-          MESSAGE("precad_set_param(): " << preCADOptName << " = " << opIt->second);
-          blsurf_set_param(bls, preCADOptName.c_str(), opIt->second.c_str());
-        }
-        else {
-          MESSAGE("blsurf_set_param(): " << opIt->first << " = " << opIt->second);
+        MESSAGE("blsurf_set_param(): " << opIt->first << " = " << opIt->second);
+        blsurf_set_param(bls, opIt->first.c_str(), opIt->second.c_str());
+      }
+      
+    const BLSURFPlugin_Hypothesis::TOptionValues & preCADopts = hyp->GetPreCADOptionValues();
+    for ( opIt = preCADopts.begin(); opIt != preCADopts.end(); ++opIt )
+      if ( !opIt->second.empty() ) {
+        if (_topology == BLSURFPlugin_Hypothesis::PreCAD) {
+          MESSAGE("precad_set_param(): " << opIt->first << " = " << opIt->second);
           blsurf_set_param(bls, opIt->first.c_str(), opIt->second.c_str());
         }
       }

@@ -97,16 +97,21 @@ public:
   CORBA::Boolean GetPreCADDiscardInput();
 
   void SetPreCADEpsNano(CORBA::Double theValue);
-  CORBA::Boolean GetPreCADEpsNano();
+  CORBA::Double GetPreCADEpsNano();
 
   void SetOptionValue(const char* optionName, const char* optionValue) throw (SALOME::SALOME_Exception);
+  void SetPreCADOptionValue(const char* optionName, const char* optionValue) throw (SALOME::SALOME_Exception);
   char* GetOptionValue(const char* optionName) throw (SALOME::SALOME_Exception);
+  char* GetPreCADOptionValue(const char* optionName) throw (SALOME::SALOME_Exception);
 
   void UnsetOption(const char* optionName);
+  void UnsetPreCADOption(const char* optionName);
 
   BLSURFPlugin::string_array* GetOptionValues();
+  BLSURFPlugin::string_array* GetPreCADOptionValues();
 
   void SetOptionValues(const BLSURFPlugin::string_array& options) throw (SALOME::SALOME_Exception);
+  void SetPreCADOptionValues(const BLSURFPlugin::string_array& options) throw (SALOME::SALOME_Exception);
 
   void SetSizeMapEntry(const char* entry, const char* sizeMap) throw (SALOME::SALOME_Exception);
 
@@ -116,7 +121,7 @@ public:
 
   BLSURFPlugin::string_array* GetSizeMapEntries();
 
-  void SetSizeMapEntries(const BLSURFPlugin::string_array& options) throw (SALOME::SALOME_Exception);
+  void SetSizeMapEntries(const BLSURFPlugin::string_array& sizeMaps) throw (SALOME::SALOME_Exception);
 
   void SetSizeMap(GEOM::GEOM_Object_ptr GeomObj, const char* sizeMap);
 

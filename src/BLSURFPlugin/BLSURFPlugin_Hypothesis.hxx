@@ -314,9 +314,14 @@ public:
 
   void SetOptionValue(const std::string& optionName,
                       const std::string& optionValue) throw (std::invalid_argument);
+  void SetPreCADOptionValue(const std::string& optionName,
+                            const std::string& optionValue) throw (std::invalid_argument);
   std::string GetOptionValue(const std::string& optionName) throw (std::invalid_argument);
+  std::string GetPreCADOptionValue(const std::string& optionName) throw (std::invalid_argument);
   void ClearOption(const std::string& optionName);
+  void ClearPreCADOption(const std::string& optionName);
   const TOptionValues& GetOptionValues() const { return _option2value; }
+  const TOptionValues& GetPreCADOptionValues() const { return _preCADoption2value; }
 
   /*!
     * Sets the file for export resulting mesh in GMF format
@@ -362,10 +367,10 @@ private:
   bool            _preCADMergeEdges;
   bool            _preCADRemoveNanoEdges;
   bool            _preCADDiscardInput;
-  bool            _preCADEpsNano;
+  double          _preCADEpsNano;
   
-  TOptionValues   _option2value;
-  TOptionNames    _doubleOptions, _charOptions;
+  TOptionValues   _option2value, _preCADoption2value;
+  TOptionNames    _doubleOptions, _charOptions, _preCADdoubleOptions, _preCADcharOptions;
   TSizeMap        _sizeMap;
   TSizeMap        _attractors;
   TAttractorMap   _classAttractors;

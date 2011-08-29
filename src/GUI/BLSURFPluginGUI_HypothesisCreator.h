@@ -171,14 +171,8 @@ public:
   BLSURFPluginGUI_HypothesisCreator( const QString& );
   virtual ~BLSURFPluginGUI_HypothesisCreator();
 
-  virtual bool        checkParams() const;
+  virtual bool        checkParams(QString& msg) const;
   virtual QString     helpPage() const;
-  //void                insertElementType( TopAbs_ShapeEnum );
-  void                insertElement( GEOM::GEOM_Object_var, bool modify = false );
-  void                insertAttractor(GEOM::GEOM_Object_var, GEOM::GEOM_Object_var, bool modify = false);
-  int                 findRowFromEntry(QString entry);
-  CORBA::Object_var   entryToObject(QString entry);
-  static LightApp_SelectionMgr* selectionMgr();
 
 protected:
   virtual QFrame*     buildFrame    ();
@@ -214,7 +208,7 @@ protected slots:
   void                synchronizeCoords();
   void                updateEnforcedVertexValues(QTreeWidgetItem* , int );
   void                onSelectEnforcedVertex();
-  void                deactivateSelection(QWidget*, QWidget*);
+//   void                deactivateSelection(QWidget*, QWidget*);
   void                clearEnforcedVertexWidgets();
 
 private:
@@ -226,6 +220,12 @@ private:
   bool                sizeMapValidationFromEntry(QString,bool displayError = true);
   GeomSelectionTools* getGeomSelectionTool();
   GEOM::GEOM_Gen_var  getGeomEngine();
+  //void                insertElementType( TopAbs_ShapeEnum );
+  void                insertElement( GEOM::GEOM_Object_var, bool modify = false );
+  void                insertAttractor(GEOM::GEOM_Object_var, GEOM::GEOM_Object_var, bool modify = false);
+  int                 findRowFromEntry(QString entry);
+  CORBA::Object_var   entryToObject(QString entry);
+  static LightApp_SelectionMgr* selectionMgr();
 
 private:
   QWidget*            myStdGroup;
@@ -303,7 +303,7 @@ private:
 
   QLineEdit*          myGroupName;
 //   QGroupBox*          makeGroupsCheck;
-  QCheckBox*          myGlobalGroupName;
+//   QCheckBox*          myGlobalGroupName;
 
   QPushButton*        addVertexButton;
   QPushButton*        removeVertexButton;

@@ -160,7 +160,7 @@ enum {
   ENF_VER_Y_COORD,
   ENF_VER_Z_COORD,
   ENF_VER_GROUP,
-  ENF_VER_GROUP_CHECK,
+//   ENF_VER_GROUP_CHECK,
 //   ENF_VER_SPACE,
   ENF_VER_BTN,
 //   ENF_VER_VERTEX_BTN,
@@ -549,7 +549,7 @@ GEOM::GEOM_Gen_var BLSURFPluginGUI_HypothesisCreator::getGeomEngine()
 }
 
 
-bool BLSURFPluginGUI_HypothesisCreator::checkParams() const
+bool BLSURFPluginGUI_HypothesisCreator::checkParams(QString& msg) const
 {
   MESSAGE("BLSURFPluginGUI_HypothesisCreator::checkParams");
   bool ok = true;
@@ -965,6 +965,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
                   << tr("BLSURF_ENF_VER_ENTRY_COLUMN") << tr( "BLSURF_ENF_VER_GROUP_COLUMN" );
 
   myEnforcedTreeWidget->setHeaderLabels(enforcedHeaders);
+  myEnforcedTreeWidget->header()->setStretchLastSection(true);
   myEnforcedTreeWidget->setAlternatingRowColors(true);
   myEnforcedTreeWidget->setUniformRowHeights(true);
   myEnforcedTreeWidget->setAnimated(true);
@@ -1011,19 +1012,10 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   myGroupName = new QLineEdit(myEnfGroup);
 
   addVertexButton = new QPushButton(tr("BLSURF_ENF_VER_VERTEX"),myEnfGroup);
-//   QFrame *line = new QFrame(myEnfGroup);
-//   line->setFrameShape(QFrame::HLine);
-//   line->setFrameShadow(QFrame::Sunken);
   removeVertexButton = new QPushButton(tr("BLSURF_ENF_VER_REMOVE"),myEnfGroup);
 
-  // CheckBox for groups generation
-//   makeGroupsCheck = new QGroupBox(tr("BLSURF_ENF_VER_GROUPS"), myEnfGroup);
-//   makeGroupsCheck->setCheckable(true);
-//   makeGroupsCheck->setChecked(false);
-//   QGridLayout* aGroupLayout = new QGridLayout(makeGroupsCheck);
-  myGlobalGroupName = new QCheckBox(tr("BLSURF_ENF_VER_GROUPS"), myEnfGroup);
-  myGlobalGroupName->setChecked(false);
-//   aGroupLayout->addWidget(myGlobalGroupName);
+//   myGlobalGroupName = new QCheckBox(tr("BLSURF_ENF_VER_GROUPS"), myEnfGroup);
+//   myGlobalGroupName->setChecked(false);
 
   anEnfLayout->addWidget(myEnforcedTreeWidget,     0, 0, ENF_VER_NB_LINES, 1);
   QGridLayout* anEnfLayout2 = new QGridLayout(myEnfGroup);
@@ -1038,7 +1030,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   anEnfLayout2->addWidget(myZCoord,                 ENF_VER_Z_COORD, 1, 1, 1);
   anEnfLayout2->addWidget(myGroupNameLabel,         ENF_VER_GROUP, 0, 1, 1);
   anEnfLayout2->addWidget(myGroupName,              ENF_VER_GROUP, 1, 1, 1);
-  anEnfLayout2->addWidget(myGlobalGroupName,        ENF_VER_GROUP_CHECK, 0, 1, 2);
+//   anEnfLayout2->addWidget(myGlobalGroupName,        ENF_VER_GROUP_CHECK, 0, 1, 2);
 //   anEnfLayout2->setRowStretch(                      ENF_VER_SPACE, 1);
   anEnfLayout2->addWidget(addVertexButton,          ENF_VER_BTN, 0, 1, 1);
   anEnfLayout2->addWidget(removeVertexButton,       ENF_VER_BTN, 1, 1, 1);
@@ -1095,19 +1087,19 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 /** BLSURFPluginGUI_HypothesisCreator::deactivateSelection(QWidget*, QWidget*)
 This method stop the selection of the widgets StdMeshersGUI_ObjectReferenceParamWdg
 */
-void BLSURFPluginGUI_HypothesisCreator::deactivateSelection(QWidget* old, QWidget* now)
-{
-  if ((now == myXCoord) || (now == myYCoord) || (now == myZCoord)
-      || (now = myGroupName) || (now = myGlobalGroupName) || (now = myEnforcedTreeWidget)) {
-    BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
-    that->getGeomSelectionTool()->selectionMgr()->clearFilters();
-    myEnfFaceWdg->deactivateSelection();
-    myEnfVertexWdg->deactivateSelection();
-  }
-}
+// void BLSURFPluginGUI_HypothesisCreator::deactivateSelection(QWidget* old, QWidget* now)
+// {
+//   if ((now == myXCoord) || (now == myYCoord) || (now == myZCoord)
+//       || (now = myGroupName) || (now = myGlobalGroupName) || (now = myEnforcedTreeWidget)) {
+//     BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
+//     that->getGeomSelectionTool()->selectionMgr()->clearFilters();
+//     myEnfFaceWdg->deactivateSelection();
+//     myEnfVertexWdg->deactivateSelection();
+//   }
+// }
 
 /** 
- * This method resets the content of the X, Y, Z and GroupNAme widgets;
+ * This method resets the content of the X, Y, Z and GroupName widgets;
 **/
 void BLSURFPluginGUI_HypothesisCreator::clearEnforcedVertexWidgets()
 {
@@ -1117,7 +1109,7 @@ void BLSURFPluginGUI_HypothesisCreator::clearEnforcedVertexWidgets()
   myXCoord->setText("");
   myYCoord->setText("");
   myZCoord->setText("");
-  myGroupName->setText("");
+//   myGroupName->setText("");
 }
 
 /** BLSURFPluginGUI_HypothesisCreator::updateEnforcedVertexValues(item, column)
@@ -1128,8 +1120,8 @@ void BLSURFPluginGUI_HypothesisCreator::updateEnforcedVertexValues(QTreeWidgetIt
 //   MESSAGE("BLSURFPluginGUI_HypothesisCreator::updateEnforcedVertexValues");
   QVariant vertexName = item->data(ENF_VER_NAME_COLUMN, Qt::EditRole);
   QVariant x = item->data(ENF_VER_X_COLUMN, Qt::EditRole);
-  QVariant y = item->data(ENF_VER_X_COLUMN, Qt::EditRole);
-  QVariant z = item->data(ENF_VER_X_COLUMN, Qt::EditRole);
+  QVariant y = item->data(ENF_VER_Y_COLUMN, Qt::EditRole);
+  QVariant z = item->data(ENF_VER_Z_COLUMN, Qt::EditRole);
   QVariant entry = item->data(ENF_VER_ENTRY_COLUMN, Qt::EditRole);
   QString groupName = item->data(ENF_VER_GROUP_COLUMN, Qt::EditRole).toString();
   QTreeWidgetItem* parent = item->parent();
@@ -1364,8 +1356,8 @@ void BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices() {
     shapeName = myEnfFace->GetName();
 
     std::string groupName = myGroupName->text().toStdString();
-    if (myGlobalGroupName->isChecked())
-      groupName = myGlobalGroupName->text().toStdString();
+//     if (myGlobalGroupName->isChecked())
+//       groupName = myGlobalGroupName->text().toStdString();
 
     if (boost::trim_copy(groupName).empty())
       groupName = "";
@@ -1958,7 +1950,6 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
 
     // Enforced vertices
     bool ret;
-    int hypNbVertex;
     double x, y, z = 0;
     std::string enfName;
     /* TODO GROUPS
@@ -2116,9 +2107,9 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
           childValueY = child->data(ENF_VER_Y_COLUMN,Qt::EditRole).toDouble();
           childValueZ = child->data(ENF_VER_Z_COLUMN,Qt::EditRole).toDouble();
           vertexEntry = child->data(ENF_VER_ENTRY_COLUMN,Qt::EditRole).toString().toStdString();
-          if (myGlobalGroupName->isChecked())
-            groupName = myGlobalGroupName->text().toStdString();
-          else
+//           if (myGlobalGroupName->isChecked())
+//             groupName = myGlobalGroupName->text().toStdString();
+//           else
             groupName = child->data(ENF_VER_GROUP_COLUMN,Qt::EditRole).toString().toStdString();
 
           TEnfVertex *enfVertex = new TEnfVertex();

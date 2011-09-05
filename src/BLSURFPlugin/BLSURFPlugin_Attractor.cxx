@@ -100,10 +100,6 @@ bool BLSURFPlugin_Attractor::init(){
   
   // Calculation of the bounds of the face
   ShapeAnalysis::GetFaceUVBounds(_face,_u1,_u2,_v1,_v2);
-  MESSAGE("u1 = "<<_u1<<" ,u2  = "<<_u2);
-  MESSAGE("v1 = "<<_v1<<" ,v2  = "<<_v2);
-//   _gridU = floor (_u2 - _u1) / _step;
-//   _gridV = floor (_v2 - _v1) / _step;
 
   _gridU = 300;
   _gridV = 300;
@@ -141,14 +137,13 @@ bool BLSURFPlugin_Attractor::init(){
     gp_Pnt P = BRep_Tool::Pnt(aVertex);
     GeomAPI_ProjectPointOnSurf projector( P, aSurf );
     projector.LowerDistanceParameters(u0,v0);
-    MESSAGE("u0 = "<<u0<<" ,v0  = "<<v0);
     i0 = floor ( (u0 - _u1) * _gridU / (_u2 - _u1) + 0.5 );
     j0 = floor ( (v0 - _v1) * _gridV / (_v2 - _v1) + 0.5 );
     TPnt[0]=0.;                                                                // Set the distance of the starting point to 0.
     TPnt[1]=i0;
     TPnt[2]=j0;
     _DMap[i0][j0] = 0.;
-    _trial.insert(TPnt);         // Move starting point to _trial
+    _trial.insert(TPnt);                                                       // Move starting point to _trial
   }
     
 }
@@ -164,26 +159,22 @@ void BLSURFPlugin_Attractor::edgeInit(Handle(Geom_Surface) theSurf, const TopoDS
   ShapeConstruct_ProjectCurveOnSurface curveProjector;
   curveProjector.Init(theSurf, Precision::Confusion());
   curveProjector.PerformAdvanced (aCurve3d, first, last, aCurve2d);
-  //int N = 20 * (last - first) / _step;  // If the edge is a circle : 4>Pi so the number of points on the edge should be good -> 5 for ellipses
+  
   int N = 1200;
-  MESSAGE("Initialization of the starting points")
   for (i=0; i<=N; i++){
     P2 = aCurve2d->Value(first + i * (last-first) / N);
     i0 = floor( (P2.X() - _u1) * _gridU / (_u2 - _u1) + 0.5 );
     j0 = floor( (P2.Y() - _v1) * _gridV / (_v2 - _v1) + 0.5 );
-//     MESSAGE("i0 = "<<i0<<" , j0 = "<<j0)
     TPnt[0] = 0.;
     TPnt[1] = i0;
     TPnt[2] = j0;
     _DMap[i0][j0] = 0.;
     _trial.insert(TPnt);
   }
-  MESSAGE("_trial.size() = "<<_trial.size())
 }  
 
 
 void BLSURFPlugin_Attractor::SetParameters(double Start_Size, double End_Size, double Action_Radius, double Constant_Radius){
-  MESSAGE("BLSURFPlugin_Attractor::SetParameters")
   _startSize = Start_Size;
   _endSize = End_Size;
   _actionRadius = Action_Radius;
@@ -191,63 +182,6 @@ void BLSURFPlugin_Attractor::SetParameters(double Start_Size, double End_Size, d
 }
 
 double BLSURFPlugin_Attractor::_distance(double u, double v){
-  
-//   // calcul des coins du carre
-//   double stepU = (_u2 - _u1) / _gridU ;
-//   double stepV = (_v2 - _v1) / _gridV ;
-//   
-//   int i_sup =  floor ( fabs(u - _u1) / stepU ) + 1;
-//   int j_sup =  floor ( fabs(v - _v1) / stepV ) + 1;
-//   i_sup = std::min( i_sup, _gridU);
-//   j_sup = std::min( j_sup, _gridV);
-//   
-//   
-// //   int i_inf = floor ( (u - _u1) * _mapGrid / (_u2 - _u1) );
-// //   int j_inf = floor ( (v - _v1) * _mapGrid / (_v2 - _v1) );
-//   int i_inf = i_sup - 1;
-//   int j_inf = j_sup - 1;
-//   
-//   double u_sup = _vectU[i_sup];
-//   double v_sup = _vectV[j_sup];
-//   
-//   double u_inf = _vectU[i_inf];
-//   double v_inf = _vectV[j_inf];
-// //   
-// // //   MESSAGE("i_inf , i_sup, j_inf, j_sup = "<<i_inf<<" , "<<i_sup<<" , "<<j_inf<<" , "<<j_sup)
-// // //   MESSAGE("u = "<<u<<", _u1 ="<<_u1)
-// // //   MESSAGE("(u - _u1) / stepU = "<< (u - _u1) / stepU)
-//   double d1 = _DMap[i_sup][j_sup]; 
-//   double d2 = _DMap[i_sup][j_inf];
-//   double d3 = _DMap[i_inf][j_sup];
-//   double d4 = _DMap[i_inf][j_inf];
-// //   
-// //   double d = 0.25 * (d1 + d2 + d3 + d4);
-// //   //double d = d1;
-// //  //
-// // //   if (fabs(v_inf-v_sup) < 1e-14 || fabs(u_inf-u_sup) < 1e-14 ){
-// // //     MESSAGE("division par zero v_inf-v_sup = "<< fabs(v_inf-v_sup)<<" , u_inf-u_sup"<<fabs(u_inf-u_sup))
-// // //     MESSAGE("v_inf = "<< v_inf<<" , v_sup"<<v_sup)
-// // //     MESSAGE("u_inf = "<< u_inf<<" , u_sup"<<u_sup)
-// // //   }
-//   double P_inf =   d4 * ( 1 + (u_inf - u) / stepU + (v_inf - v) / stepV )
-//                  + d3 * ( (v - v_inf) / stepV )
-//                  + d2 * ( (u - u_inf) / stepU ) ;
-// 		 
-//   double P_sup =   d1 * ( 1 + (u - u_sup) / stepU + (v - v_sup) / stepV )
-//                  + d3 * ( (u_sup - u) / stepU )
-//                  + d2 * ( (v_sup - v) / stepV ) ;
-//   
-//   // calcul de la distance (interpolation lineaire)
-//   bool P_switch = (u+v > u_sup+v_sup);
-//   double d;
-//   if (P_switch){
-//     d = P_inf;
-//   }
-//   else {
-//     d = P_sup;
-//   }
-//   
-//   return d; 
   
   //   BLSURF seems to perform a linear interpolation so it's sufficient to give it a non-continuous distance map
   int i = floor ( (u - _u1) * _gridU / (_u2 - _u1) + 0.5 );
@@ -259,9 +193,6 @@ double BLSURFPlugin_Attractor::_distance(double u, double v){
 
 double BLSURFPlugin_Attractor::GetSize(double u, double v){   
   double myDist = 0.5 * (_distance(u,v) - _constantRadius + fabs(_distance(u,v) - _constantRadius));
-//   if (myDist<0){
-//     MESSAGE("Warning myDist<0 : myDist= "<<myDist)
-//   }
   switch(_type)
   {
     case TYPE_EXP:
@@ -310,8 +241,8 @@ void BLSURFPlugin_Attractor::BuildMap(){
     i0 = (*min)[1];
     j0 = (*min)[2];
     _known[i0][j0] = true;                       // Move it to "Known"
-//     MESSAGE("_DMap["<<i0<<"]["<<j0<<"] = "<<_DMap[i0][j0])
     _trial.erase(min);                           // Remove it from "Trial"
+    
     // Loop on neighbours of the trial min --------------------------------------------------------------------------------------------------------------
     for (i=i0 - 1 ; i <= i0 + 1 ; i++){ 
       if (!aSurf->IsUPeriodic()){                          // Periodic conditions in U	
@@ -332,7 +263,7 @@ void BLSURFPlugin_Attractor::BuildMap(){
         jp = (j + _gridV + 1) % (_gridV+1);
       
         if (!_known[ip][jp]){                              // If the distance is not known yet
-          aSurf->D1(_vectU[ip],_vectV[jp],P,D1U,D1V);      // Calculate the metric at (i,j)
+          aSurf->D1(_vectU[ip],_vectV[jp],P,D1U,D1V);      // Calculate the metric tensor at (i,j)
           // G(i,j)  =  | ||dS/du||**2          *     | 
           //            | <dS/du,dS/dv>  ||dS/dv||**2 |
           Guu = D1U.X()*D1U.X() +  D1U.Y()*D1U.Y() + D1U.Z()*D1U.Z();    // Guu = ||dS/du||**2    
@@ -343,6 +274,7 @@ void BLSURFPlugin_Attractor::BuildMap(){
           TPnt[1] = ip;
           TPnt[2] = jp;
           Dist_changed = false;
+          
           // Loop on neighbours to calculate the min distance from them ---------------------------------------------------------------------------------
           for (k=i - 1 ; k <= i + 1 ; k++){
             if (!aSurf->IsUPeriodic()){                              // Periodic conditions in U  
@@ -374,6 +306,7 @@ void BLSURFPlugin_Attractor::BuildMap(){
               }
             }
           } // End of the loop on neighbours --------------------------------------------------------------------------------------------------------------
+          
           if (Dist_changed) {                              // If distance has been updated, update _trial 
             found=_trial.find(TPnt);
             if (found != _trial.end()){
@@ -392,7 +325,6 @@ void BLSURFPlugin_Attractor::BuildMap(){
   _known.clear();
   _trial.clear();
   _isMapBuilt = true;
-  MESSAGE("_gridU = "<<_gridU<<" , _gridV = "<<_gridV)  
 } // end of BuildMap()
 
 

@@ -30,36 +30,46 @@ BLSURFPLUGIN_LDFLAGS=""
 BLSURFPLUGIN_CXXFLAGS=""
 
 AC_ARG_WITH(BLSURFplugin,
-	    [  --with-BLSURFplugin=DIR root directory path of BLSURF mesh plugin installation ])
+      --with-BLSURFplugin=DIR  root directory path of BLSURF mesh plugin installation,
+      BLSURFPLUGIN_DIR="$withval",BLSURFPLUGIN_DIR="")
 
-if test "$with_BLSURFplugin" != "no" ; then
-    if test "$with_BLSURFplugin" == "yes" || test "$with_BLSURFplugin" == "auto"; then
-	if test "x$BLSURFPLUGIN_ROOT_DIR" != "x" ; then
-            BLSURFPLUGIN_DIR=$BLSURFPLUGIN_ROOT_DIR
-        fi
-    else
-        BLSURFPLUGIN_DIR="$with_BLSURFplugin"
+if test "x$BLSURFPLUGIN_DIR" = "x" ; then
+
+# no --with-BLSURFplugin option used
+
+  if test "x$BLSURFPLUGIN_ROOT_DIR" != "x" ; then
+
+    # SALOME_ROOT_DIR environment variable defined
+    BLSURFPLUGIN_DIR=$BLSURFPLUGIN_ROOT_DIR
+
+  else
+
+    # search Salome binaries in PATH variable
+    AC_PATH_PROG(TEMP, libBLSURFEngine.so)
+    if test "x$TEMP" != "x" ; then
+      BLSURFPLUGIN_DIR=`dirname $TEMP`
     fi
 
-    if test "x$BLSURFPLUGIN_DIR" != "x" ; then
-	if test -f ${BLSURFPLUGIN_DIR}/lib${LIB_LOCATION_SUFFIX}/salome/libBLSURFEngine.so ; then
-	    BLSURFplugin_ok=yes
-	    AC_MSG_RESULT(Using BLSURF mesh plugin distribution in ${BLSURFPLUGIN_DIR})
-	    BLSURFPLUGIN_ROOT_DIR=${BLSURFPLUGIN_DIR}
-	    BLSURFPLUGIN_LDFLAGS=-L${BLSURFPLUGIN_DIR}/lib${LIB_LOCATION_SUFFIX}/salome
-	    BLSURFPLUGIN_CXXFLAGS=-I${BLSURFPLUGIN_DIR}/include/salome
-	else
-	    AC_MSG_WARN("Cannot find compiled BLSURF mesh plugin distribution")
-	fi
-    else
-	AC_MSG_WARN("Cannot find compiled BLSURF mesh plugin distribution")
-    fi
+  fi
+
 fi
 
-AC_MSG_RESULT(for BLSURF mesh plugin: $BLSURFplugin_ok)
+if test -f ${BLSURFPLUGIN_DIR}/lib${LIB_LOCATION_SUFFIX}/salome/libBLSURFEngine.so  ; then
+  BLSURFplugin_ok=yes
+  AC_MSG_RESULT(Using BLSURF mesh plugin distribution in ${BLSURFPLUGIN_DIR})
 
-AC_SUBST(BLSURFPLUGIN_ROOT_DIR)
-AC_SUBST(BLSURFPLUGIN_LDFLAGS)
-AC_SUBST(BLSURFPLUGIN_CXXFLAGS)
+  if test "x$BLSURFPLUGIN_ROOT_DIR" == "x" ; then
+    BLSURFPLUGIN_ROOT_DIR=${BLSURFPLUGIN_DIR}
+  fi
+  BLSURFPLUGIN_CXXFLAGS+=-I${BLSURFPLUGIN_ROOT_DIR}/include/salome
+  BLSURFPLUGIN_LDFLAGS+=-L${BLSURFPLUGIN_ROOT_DIR}/lib${LIB_LOCATION_SUFFIX}/salome
+  AC_SUBST(BLSURFPLUGIN_ROOT_DIR)
+  AC_SUBST(BLSURFPLUGIN_LDFLAGS)
+  AC_SUBST(BLSURFPLUGIN_CXXFLAGS)
+else
+  AC_MSG_WARN("Cannot find compiled BLSURF mesh plugin distribution")
+fi
+  
+AC_MSG_RESULT(for BLSURF mesh plugin: $BLSURFplugin_ok)
  
 ])dnl

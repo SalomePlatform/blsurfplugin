@@ -63,7 +63,10 @@ if test "$with_blsurf" != "no" ; then
     LOCAL_LIBS="-L$BLSURF_HOME/lib -lBLSurf -lPreCAD"
     if test $(`which arch`) = x86_64 ; then
       if test -f $BLSURF_HOME/lib/Linux_64/libBLSurf.so ; then
-        LOCAL_LIBS="-L$BLSURF_HOME/lib/Linux_64 -lBLSurf -ldistene -lPreCAD"
+        LOCAL_LIBS="-L$BLSURF_HOME/lib/Linux_64 -lBLSurf -ldistene"
+        if test -f $BLSURF_HOME/lib/Linux_64/libPreCAD.so ; then
+          LOCAL_LIBS="${LOCAL_LIBS} -lPreCAD"
+        fi
       fi
     fi
 

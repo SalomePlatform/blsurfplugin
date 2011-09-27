@@ -85,7 +85,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
 
 
   const char* intOptionNames[] = { "addsurf_ivertex", "background", "CheckAdjacentEdges", "CheckCloseEdges",
-      "CheckWellDefined", "coiter", "communication", "decim", "export_flag", "file_h", "frontal", "gridnu", "gridnv",
+      "CheckWellDefined", "coiter", "communication", "debug", "decim", "export_flag", "file_h", "frontal", "gridnu", "gridnv",
       "hinterpol_flag", "hmean_flag", "intermedfile", "memory", "normals", "optim", "pardom_flag", "pinch", "refs",
       "rigid", "surforient", "tconf", "topo_collapse", "" // mark of end
       };

@@ -578,8 +578,8 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams(QString& msg) const
         catch ( const SALOME::SALOME_Exception& ex )
         {
           SUIT_MessageBox::critical( dlg(),
-				     tr("SMESH_ERROR"),
-				     ex.details.text.in() );
+          tr("SMESH_ERROR"),
+          ex.details.text.in() );
           ok = false;
         }
       }
@@ -599,17 +599,25 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams(QString& msg) const
 
 //     int row = 0, nbRows = mySizeMapTable->rowCount();
     int row = 0, nbRows = mySizeMapTable->topLevelItemCount();
+    std::string e, s;
     for ( ; row < nbRows; ++row )
     {
       QString entry   = mySizeMapTable->topLevelItem( row )->data(SMP_ENTRY_COLUMN, Qt::EditRole).toString();
       QString sizeMap = mySizeMapTable->topLevelItem( row )->data(SMP_SIZEMAP_COLUMN, Qt::EditRole).toString();
+      MESSAGE("entry ="<<entry.toStdString())
       if ( !sizeMap.isEmpty() ) {
         if (that->sizeMapValidationFromRow(row))
         {
           try {
-            const char* e = entry.toLatin1().constData();
-            const char* s = that->mySMPMap[entry].toLatin1().constData();
-            h->SetSizeMapEntry( e, s );
+            MESSAGE("entry ="<<entry.toStdString())
+            MESSAGE("sizeMap ="<<sizeMap.toStdString())
+            
+            e = entry.toStdString();
+            s = that->mySMPMap[entry].toStdString();
+            MESSAGE("row = "<<row)
+            MESSAGE("e = "<<e)
+            MESSAGE("s = "<<s)
+            h->SetSizeMapEntry( e.c_str(), s.c_str() );
           }
           catch ( const SALOME::SALOME_Exception& ex )
           {
@@ -1942,7 +1950,7 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
             fullSizeMap = QString("def f(t): return ") + sizeMap;
           else if (that->mySMPShapeTypeMap[entry] == TopAbs_VERTEX)
             fullSizeMap = QString("def f(): return ") + sizeMap;
-      //         MESSAGE("SetSizeMapEntry("<<entry.toStdString()<<") = " <<fullSizeMap.toStdString());
+          MESSAGE("SetSizeMapEntry("<<entry.toStdString()<<") = " <<fullSizeMap.toStdString());
           h->SetSizeMapEntry( entry.toLatin1().constData(), fullSizeMap.toLatin1().constData() );
         }
       }
@@ -2483,8 +2491,9 @@ void BLSURFPluginGUI_HypothesisCreator::onSetSizeMap(QTreeWidgetItem* item, int 
     BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
     QString entry   = item->data(SMP_ENTRY_COLUMN, Qt::EditRole).toString();
     QString sizeMap = item->data(SMP_SIZEMAP_COLUMN, Qt::EditRole).toString();
-//     MESSAGE("entry: " << entry.toStdString() << ", sizeMap: " << sizeMap.toStdString());
+    MESSAGE("entry: " << entry.toStdString() << ", sizeMap: " << sizeMap.toStdString());
     if (! that->mySMPShapeTypeMap.contains(entry))
+      MESSAGE("no such entry in mySMPShapeTypeMap")
       return;
     if (that->mySMPMap.contains(entry))
       if (that->mySMPMap[entry] == sizeMap 
@@ -2746,7 +2755,8 @@ bool BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromRow(int myRow, bool
 
 bool BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromEntry(QString myEntry, bool displayError)
 {
-//   MESSAGE("BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromEntry()");
+  MESSAGE("BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromEntry()");
+  MESSAGE("myEntry = "<<myEntry.toStdString())
 
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
 

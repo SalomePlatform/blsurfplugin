@@ -28,7 +28,7 @@ AC_REQUIRE([AC_PROG_CXXCPP])dnl
 AC_CHECKING([for BLSURF commercial product])
 
 AC_LANG_SAVE
-AC_LANG_C
+AC_LANG_CPLUSPLUS
 
 BLSURF_INCLUDES=""
 BLSURF_LIBS=""
@@ -60,14 +60,13 @@ if test "$with_blsurf" != "no" ; then
     echo
 
     LOCAL_INCLUDES="-I$BLSURF_HOME/include"
-    LOCAL_LIBS="-L$BLSURF_HOME/lib -lBLSurf -lPreCAD"
+    LOCAL_LIBS="-L$BLSURF_HOME/lib/Linux"
     if test $(`which arch`) = x86_64 ; then
-      if test -f $BLSURF_HOME/lib/Linux_64/libBLSurf.so ; then
-        LOCAL_LIBS="-L$BLSURF_HOME/lib/Linux_64 -lBLSurf -ldistene"
-        if test -f $BLSURF_HOME/lib/Linux_64/libPreCAD.so ; then
-          LOCAL_LIBS="${LOCAL_LIBS} -lPreCAD"
-        fi
-      fi
+        LOCAL_LIBS="-L$BLSURF_HOME/lib/Linux_64"
+    fi
+    LOCAL_LIBS="${LOCAL_LIBS} -lBLSurf -ldistene"
+    if test -f ${LOCAL_LIBS}/libPreCAD.so ; then
+      LOCAL_LIBS="${LOCAL_LIBS} -lPreCAD"
     fi
 
     CPPFLAGS_old="$CPPFLAGS"
@@ -83,16 +82,17 @@ if test "$with_blsurf" != "no" ; then
 
       AC_MSG_CHECKING([for BLSURF library])
 
-      LDFLAGS_old="$LDFLAGS"
-      LDFLAGS="-L. $LOCAL_LIBS $LDFLAGS"
+      LIBS_old="$LIBS"
+      LIBS="-L. $LOCAL_LIBS $LIBS"
 
       AC_TRY_LINK(
-	[#include "distene/api.h"],
-	[distene_context_new()],
-	[BLSURF_ok=yes],[BLSURF_ok=no]
+extern "C" {
+#include "distene/api.h"
+},  distene_context_new(),
+	BLSURF_ok=yes,BLSURF_ok=no
 	)
 
-      LDFLAGS="$LDFLAGS_old"
+      LIBS="$LIBS_old"
 
       AC_MSG_RESULT([$BLSURF_ok])
     fi

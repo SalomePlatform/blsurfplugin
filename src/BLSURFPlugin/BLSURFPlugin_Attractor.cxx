@@ -145,7 +145,8 @@ bool BLSURFPlugin_Attractor::init(){
     _DMap[i0][j0] = 0.;
     _trial.insert(TPnt);                                                       // Move starting point to _trial
   }
-    
+
+  return true;
 }
 
 void BLSURFPlugin_Attractor::edgeInit(Handle(Geom_Surface) theSurf, const TopoDS_Edge& anEdge){

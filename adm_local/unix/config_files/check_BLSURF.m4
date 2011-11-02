@@ -61,7 +61,11 @@ if test "$with_blsurf" != "no" ; then
 
     LOCAL_INCLUDES="-I$BLSURF_HOME/include"
     LOCAL_LIBS="-L$BLSURF_HOME/lib/Linux"
-    if test $(`which arch`) = x86_64 ; then
+    archtest="$(`which arch`)"
+    if test "x$archtest" = "x" ; then
+      archtest="`uname -m`"
+    fi
+    if test $archtest = "x86_64" ; then
         LOCAL_LIBS="-L$BLSURF_HOME/lib/Linux_64"
     fi
     LOCAL_LIBS="${LOCAL_LIBS} -ldistene -lBLSurf -lPreCAD"

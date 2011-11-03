@@ -34,6 +34,9 @@
 #include <TopoDS_Face.hxx>
 #include <TopoDS_Shape.hxx>
 
+#ifdef HAVE_FINITE
+#undef HAVE_FINITE            // VSR: avoid compilation warning on Linux : "HAVE_FINITE" redefined
+#endif
 #include <Python.h>
 #include "SMESH_2D_Algo.hxx"
 #include "SMESH_Mesh.hxx"

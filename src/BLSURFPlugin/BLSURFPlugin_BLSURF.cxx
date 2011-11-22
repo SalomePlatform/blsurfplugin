@@ -1781,6 +1781,10 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     if ( BRep_Tool::Curve(TopoDS::Edge( emap( i )), loc, f,l).IsNull() )
       if ( SMESH_subMesh* sm = aMesh.GetSubMeshContaining( emap( i )))
         sm->SetIsAlwaysComputed( true );
+  for (int i = 1; i <= pmap.Extent(); i++)
+      if ( SMESH_subMesh* sm = aMesh.GetSubMeshContaining( pmap( i )))
+        if ( !sm->IsMeshComputed() )
+          sm->SetIsAlwaysComputed( true );
 
   delete [] nodes;
 

@@ -37,6 +37,15 @@
 #ifdef HAVE_FINITE
 #undef HAVE_FINITE            // VSR: avoid compilation warning on Linux : "HAVE_FINITE" redefined
 #endif
+// rnv: avoid compilation warning on Linux : "_POSIX_C_SOURCE" and "_XOPEN_SOURCE" are redefined
+#ifdef _POSIX_C_SOURCE
+#undef _POSIX_C_SOURCE
+#endif
+
+#ifdef _XOPEN_SOURCE
+#undef _XOPEN_SOURCE
+#endif
+
 #include <Python.h>
 #include "SMESH_2D_Algo.hxx"
 #include "SMESH_Mesh.hxx"

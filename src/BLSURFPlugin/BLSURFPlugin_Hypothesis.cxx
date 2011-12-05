@@ -87,7 +87,9 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   const char* intOptionNames[] = { "addsurf_ivertex", "background", "CheckAdjacentEdges", "CheckCloseEdges",
       "CheckWellDefined", "coiter", "communication", "debug", "decim", "export_flag", "file_h", "frontal", "gridnu", "gridnv",
       "hinterpol_flag", "hmean_flag", "intermedfile", "memory", "normals", "optim", "pardom_flag", "pinch", "refs",
-      "rigid", "surforient", "tconf", "topo_collapse", "" // mark of end
+      "rigid", "surforient", "tconf", "topo_collapse",
+      "proximity", "prox_nb_layer", "prox_ratio", // detects the volumic proximity of surfaces
+      "" // mark of end
       };
   const char* doubleOptionNames[] = { "addsurf_angle", "addsurf_R", "addsurf_H", "addsurf_FG", "addsurf_r",
       "addsurf_PA", "angle_compcurv", "angle_ridge", "CoefRectangle", "eps_collapse", "eps_ends", "eps_pardom", "LSS",

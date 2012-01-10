@@ -554,13 +554,13 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams(QString& msg) const
   MESSAGE("BLSURFPluginGUI_HypothesisCreator::checkParams");
   bool ok = true;
 
+  BLSURFPlugin::BLSURFPlugin_Hypothesis_var h =
+    BLSURFPlugin::BLSURFPlugin_Hypothesis::_narrow( hypothesis() );
+
   if ( ok )
   {
     myOptionTable->setFocus();
     QApplication::instance()->processEvents();
-
-    BLSURFPlugin::BLSURFPlugin_Hypothesis_var h =
-      BLSURFPlugin::BLSURFPlugin_Hypothesis::_narrow( initParamsHypothesis() );
 
     int row = 0, nbRows = myOptionTable->rowCount();
     for ( ; row < nbRows; ++row )
@@ -584,6 +584,9 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams(QString& msg) const
         }
       }
     }
+  }
+  if ( !ok )
+  {
     h->SetOptionValues( myOptions ); // restore values
     h->SetPreCADOptionValues( myPreCADOptions ); // restore values
   }
@@ -594,10 +597,6 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams(QString& msg) const
     mySizeMapTable->setFocus();
     QApplication::instance()->processEvents();
 
-    BLSURFPlugin::BLSURFPlugin_Hypothesis_var h = BLSURFPlugin::BLSURFPlugin_Hypothesis::_narrow( initParamsHypothesis() );
-    BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
-
-//     int row = 0, nbRows = mySizeMapTable->rowCount();
     int row = 0, nbRows = mySizeMapTable->topLevelItemCount();
     std::string e, s;
     for ( ; row < nbRows; ++row )
@@ -2259,8 +2258,8 @@ void BLSURFPluginGUI_HypothesisCreator::onOptionChosenInPopup( QAction* a )
     myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( 0 );
     myOptionTable->setItem( row, OPTION_VALUE_COLUMN, new QTableWidgetItem( "" ) );
     myOptionTable->item( row, OPTION_VALUE_COLUMN )->setFlags( Qt::ItemIsSelectable |
-							       Qt::ItemIsEditable   |
-							       Qt::ItemIsEnabled );
+                                                               Qt::ItemIsEditable   |
+                                                               Qt::ItemIsEnabled );
     myOptionTable->resizeColumnToContents( OPTION_NAME_COLUMN );
   }
   myOptionTable->clearSelection();
@@ -2351,7 +2350,7 @@ void BLSURFPluginGUI_HypothesisCreator::onSmpItemClicked(QTreeWidgetItem * item,
       QString attEntry = that->myATTMap[entry];
       CORBA::Object_var attObj = entryToObject(attEntry);
       myAttSizeSpin->setValue(phySize);
-      if (sizeMap.startsWith("Attractor")){	
+      if (sizeMap.startsWith("Attractor")){     
         myAttDistSpin->setValue(infDist);
         myAttractorCheck->setChecked(true);
       }
@@ -2622,7 +2621,7 @@ void BLSURFPluginGUI_HypothesisCreator::insertElement(GEOM::GEOM_Object_var anOb
     if (that->mySMPMap.contains(shapeEntry)) {  
       if (that->mySMPMap[shapeEntry] != "__TO_DELETE__") {
   //             MESSAGE("Size map for shape with name(entry): "<< shapeName << "(" << entry << ")");
-	return;
+        return;
       }
     }
     mySizeMapTable->addTopLevelItem(item);

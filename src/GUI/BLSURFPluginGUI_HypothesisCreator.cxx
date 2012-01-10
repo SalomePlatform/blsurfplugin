@@ -595,6 +595,7 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams(QString& msg) const
     mySizeMapTable->setFocus();
     QApplication::instance()->processEvents();
 
+    BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
     int row = 0, nbRows = mySizeMapTable->topLevelItemCount();
     std::string e, s;
     for ( ; row < nbRows; ++row )

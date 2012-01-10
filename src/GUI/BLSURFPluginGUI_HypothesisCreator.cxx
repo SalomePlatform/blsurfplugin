@@ -577,9 +577,7 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams(QString& msg) const
         }
         catch ( const SALOME::SALOME_Exception& ex )
         {
-          SUIT_MessageBox::critical( dlg(),
-          tr("SMESH_ERROR"),
-          ex.details.text.in() );
+          msg = ex.details.text.in();
           ok = false;
         }
       }
@@ -620,9 +618,7 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams(QString& msg) const
           }
           catch ( const SALOME::SALOME_Exception& ex )
           {
-            SUIT_MessageBox::critical( dlg(),
-                                       tr("SMESH_ERROR"),
-                                       ex.details.text.in() );
+            msg = ex.details.text.in();
             ok = false;
           }
         }

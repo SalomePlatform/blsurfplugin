@@ -41,7 +41,8 @@
                icon-id="mesh_algo_BLSURF.png"
                opt-hypos="BLSURF_Parameters"
                output="TRIA,QUAD"
-               dim="2"/>
+               dim="2"
+	       support-submeshes="true"/>
   </algorithms>
 </meshers-group>
 

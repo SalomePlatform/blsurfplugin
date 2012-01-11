@@ -246,6 +246,7 @@ BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF(int hypId, int studyId,
   _requireDescretBoundary = false;
   _onlyUnaryInput = false;
   _hypothesis = NULL;
+  _supportSubmeshes = true;
 
   smeshGen_i = SMESH_Gen_i::GetSMESHGen();
   CORBA::Object_var anObject = smeshGen_i->GetNS()->Resolve("/myStudyManager");

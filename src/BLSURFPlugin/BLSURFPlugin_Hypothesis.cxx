@@ -84,7 +84,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   //_phyMin = _phyMax = _hgeoMin = _hgeoMax = undefinedDouble();
 
 
-  const char* intOptionNames[] = { "addsurf_ivertex", "background", "CheckAdjacentEdges", "CheckCloseEdges",
+  const char* intOptionNames[] = { "addsurf_ivertex", "anisotropic", "background", "CheckAdjacentEdges", "CheckCloseEdges",
       "CheckWellDefined", "coiter", "communication", "debug", "decim", "export_flag", "file_h", "frontal", "gridnu", "gridnv",
       "hinterpol_flag", "hmean_flag", "intermedfile", "memory", "normals", "optim", "pardom_flag", "pinch", "refs",
       "rigid", "surforient", "tconf", "topo_collapse",
@@ -92,7 +92,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
       "" // mark of end
       };
   const char* doubleOptionNames[] = { "addsurf_angle", "addsurf_R", "addsurf_H", "addsurf_FG", "addsurf_r",
-      "addsurf_PA", "angle_compcurv", "angle_ridge", "CoefRectangle", "eps_collapse", "eps_ends", "eps_pardom", "LSS",
+      "addsurf_PA", "angle_compcurv", "angle_ridge", "anisotropic_ratio", "CoefRectangle", "eps_collapse", "eps_ends", "eps_pardom", "LSS",
       "topo_eps1", "topo_eps2", "" // mark of end
       };
   const char* charOptionNames[] = { "export_format", "export_option", "import_option", "prefix", "" // mark of end

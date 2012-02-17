@@ -62,6 +62,8 @@ public:
     DefaultGeom,
     UserDefined
   };
+
+  static const char* GetHypType() { return "BLSURF_Parameters"; }
   
   TopoDS_Shape entryToShape(std::string entry);
 

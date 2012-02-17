@@ -242,8 +242,8 @@ BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF(int hypId, int studyId,
 
   _name = "BLSURF";
   _shapeType = (1 << TopAbs_FACE); // 1 bit /shape type
-  _compatibleHypothesis.push_back("BLSURF_Parameters");
-  _requireDescretBoundary = false;
+  _compatibleHypothesis.push_back(BLSURFPlugin_Hypothesis::GetHypType());
+  _requireDiscreteBoundary = false;
   _onlyUnaryInput = false;
   _hypothesis = NULL;
   _supportSubmeshes = true;

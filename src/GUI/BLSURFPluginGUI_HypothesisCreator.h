@@ -118,17 +118,20 @@ typedef std::set< TEnfVertex*, CompareEnfVertices > TEnfVertexList;
 // Map Face Entry / List of enforced vertices
 typedef std::map< TEntry, TEnfVertexList > TFaceEntryEnfVertexListMap;
 
+// Map Face Entry / InternalEnforcedVertices
+typedef std::map< TEntry, bool > TFaceEntryInternalVerticesMap;
+
 typedef struct
 {
   int     myTopology, myVerbosity;
   int     myPhysicalMesh, myGeometricMesh;
   double  myAngleMeshS, myAngleMeshC, myGradation;
   double  myPhySize, myGeoMin, myGeoMax, myPhyMin,myPhyMax;
-  bool    myAllowQuadrangles, myDecimesh,mySmpsurface,mySmpedge,mySmppoint,myEnforcedVertex;
+  bool    myAllowQuadrangles, myDecimesh,mySmpsurface,mySmpedge,mySmppoint,myEnforcedVertex,myInternalEnforcedVerticesAllFaces;
   bool    myPreCADMergeEdges, myPreCADRemoveNanoEdges, myPreCADDiscardInput;
   double  myPreCADEpsNano;
 //   bool    myGMFFileMode;
-  std::string myGMFFileName;
+  std::string myGMFFileName, myInternalEnforcedVerticesAllFacesGroup;
   TEnfVertexList enfVertexList;
   TFaceEntryEnfVertexListMap faceEntryEnfVertexListMap;
   /* TODO GROUPS
@@ -201,8 +204,11 @@ protected slots:
   void                onModifyMap();
   void                onSetSizeMap(QTreeWidgetItem *, int);
 
-  void                addEnforcedVertex(std::string theFaceEntry, std::string theFaceName, double x=0, double y=0, double z=0, 
+  QTreeWidgetItem*    addEnforcedFace(std::string theFaceEntry, std::string theFaceName);
+
+  void                addEnforcedVertex(QTreeWidgetItem * theFaceItem, double x=0, double y=0, double z=0, 
                                         std::string vertexName = "", std::string geomEntry = "", std::string groupName = "");
+  
   void                onAddEnforcedVertices();
   void                onRemoveEnforcedVertex();
   void                synchronizeCoords();
@@ -210,6 +216,7 @@ protected slots:
   void                onSelectEnforcedVertex();
 //   void                deactivateSelection(QWidget*, QWidget*);
   void                clearEnforcedVertexWidgets();
+  void                onInternalVerticesClicked(int);
 
 private:
   bool                readParamsFromHypo( BlsurfHypothesisData& ) const;
@@ -307,6 +314,9 @@ private:
 
   QPushButton*        addVertexButton;
   QPushButton*        removeVertexButton;
+
+  QCheckBox           *myInternalEnforcedVerticesAllFaces;
+  QLineEdit           *myInternalEnforcedVerticesAllFacesGroup;
 
   // map =  entry , size map
   QMap<QString, QString>          mySMPMap;           // Map <face entry, size>

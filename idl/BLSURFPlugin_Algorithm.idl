@@ -96,6 +96,9 @@ module BLSURFPlugin
   };
   typedef sequence<TEnfVertexEntryEnfVertexElement> TEnfVertexEntryEnfVertexMap;
 
+  // List of Face Entry with internal enforced vertices activated
+  typedef sequence<TEntry> TFaceEntryInternalVerticesList;
+
   // Attractors
   struct TAttractorParams {
     string faceEntry;
@@ -313,8 +316,6 @@ module BLSURFPlugin
     void         SetClassAttractorEntry(in string entry, in string att_entry, in double StartSize, in double EndSize, in double ActionRadius, in double ConstantRadius );
     BLSURFPlugin::TAttParamsMap GetAttractorParams();
 
-
-
 /*
     void         SetCustomSizeMapEntry(in string entry, in string sizeMap);
     string       GetCustomSizeMapEntry(in string entry);
@@ -358,29 +359,28 @@ module BLSURFPlugin
     * Set/get/unset an enforced vertex on geom face given by entry
     */
     boolean SetEnforcedVertexEntry(in TEntry theFaceEntry, in double x, in double y, in double z, 
-                                   in TEnfName theVertexName, in TEntry theVertexEntry, in string groupName) raises (SALOME::SALOME_Exception);
-//    boolean SetEnforcedVertexEntryNamed(in TEntry theFaceEntry, in double x, in double y, in double z, in TEnfName theVertexName) raises (SALOME::SALOME_Exception);
-//    boolean SetEnforcedVertexEntryGeom(in TEntry theFaceEntry, in TEntry theVertexEntry, in TEnfName theVertexName) raises (SALOME::SALOME_Exception);
-    /* TODO GROUPS
-    void SetEnforcedVertexEntryWithGroup(in string theFaceEntry, in double x, in double y, in double z, in TEnfGroupName groupName)
-        raises (SALOME::SALOME_Exception);
-    */
-//     
+                                   in TEnfName theVertexName, in TEntry theVertexEntry, in TEnfGroupName groupName) raises (SALOME::SALOME_Exception);
+
     TEnfVertexList GetEnforcedVerticesEntry(in TEntry theFaceEntry) raises (SALOME::SALOME_Exception);
-//     
     boolean UnsetEnforcedVertexEntry(in TEntry theFaceEntry, in double x, in double y, in double z, in TEntry theVertexEntry) raises (SALOME::SALOME_Exception);
 //    boolean UnsetEnforcedVertexEntryGeom(in TEntry theFaceEntry, in TEntry theVertexEntry) raises (SALOME::SALOME_Exception);
     boolean UnsetEnforcedVerticesEntry(in TEntry theFaceEntry) raises (SALOME::SALOME_Exception);
 
-   /*!
-     * Set/get an enforced vertex on geom object and add it to a group
-    */
-    /* TODO GROUPS
-    void SetEnforcedVertexGroupName(in double x, in double y, in double z, in TEnfGroupName groupName)
-        raises (SALOME::SALOME_Exception);
-    string GetEnforcedVertexGroupName(in double x, in double y, in double z)
-        raises (SALOME::SALOME_Exception);
-    */
+    /*!
+     * To get/set internal vertices as enforced vertices
+     */
+    void          SetInternalEnforcedVertexAllFaces(in boolean toEnforceInternalVertices);
+    boolean       GetInternalEnforcedVertexAllFaces();
+    void          SetInternalEnforcedVertexAllFacesGroup(in TEnfGroupName groupName);
+    TEnfGroupName GetInternalEnforcedVertexAllFacesGroup();
+
+//  Enable internal enforced vertices on specific face if requested by user
+//    void          SetInternalEnforcedVertex(in GEOM::GEOM_Object theFace,in boolean toEnforceInternalVertices) raises (SALOME::SALOME_Exception);
+//    void          SetInternalEnforcedVertexWithGroup(in GEOM::GEOM_Object theFace, in boolean toEnforceInternalVertices, in TEnfGroupName groupName) raises (SALOME::SALOME_Exception);
+//    void          SetInternalEnforcedVertexEntry(in TEntry theFaceEntry, in boolean toEnforceInternalVertices, in TEnfGroupName groupName) raises (SALOME::SALOME_Exception);
+//    boolean       GetInternalEnforcedVertex(in GEOM::GEOM_Object theFace) raises (SALOME::SALOME_Exception);
+//    boolean       GetInternalEnforcedVertexEntry(in TEntry theFaceEntry) raises (SALOME::SALOME_Exception);
+//    TFaceEntryInternalVerticesList GetAllInternalEnforcedVerticesFaces();
     ///////////////////////
     
     /*!

@@ -311,7 +311,8 @@ void BLSURFPlugin_Hypothesis_i::SetQuadAllowed(CORBA::Boolean theValue) {
   // MESSAGE("BLSURFPlugin_Hypothesis_i::SetQuadAllowed");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetQuadAllowed(theValue);
-  SMESH::TPythonDump() << _this() << ".SetQuadAllowed( " << theValue << " )";
+  std::string theValueStr = theValue ? "True" : "False";
+  SMESH::TPythonDump() << _this() << ".SetQuadAllowed( " << theValueStr.c_str() << " )";
 }
 
 //=============================================================================
@@ -338,7 +339,8 @@ void BLSURFPlugin_Hypothesis_i::SetDecimesh(CORBA::Boolean theValue) {
   // MESSAGE("BLSURFPlugin_Hypothesis_i::SetDecimesh");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetDecimesh(theValue);
-  SMESH::TPythonDump() << _this() << ".SetDecimesh( " << theValue << " )";
+  std::string theValueStr = theValue ? "True" : "False";
+  SMESH::TPythonDump() << _this() << ".SetDecimesh( " << theValueStr.c_str() << " )";
 }
 
 //=============================================================================
@@ -381,7 +383,8 @@ void BLSURFPlugin_Hypothesis_i::SetPreCADMergeEdges(CORBA::Boolean theValue) {
   // MESSAGE("BLSURFPlugin_Hypothesis_i::SetPreCADMergeEdges");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetPreCADMergeEdges(theValue);
-  SMESH::TPythonDump() << _this() << ".SetPreCADMergeEdges( " << theValue << " )";
+  std::string theValueStr = theValue ? "True" : "False";
+  SMESH::TPythonDump() << _this() << ".SetPreCADMergeEdges( " << theValueStr.c_str() << " )";
 }
 
 //=============================================================================
@@ -408,7 +411,8 @@ void BLSURFPlugin_Hypothesis_i::SetPreCADRemoveNanoEdges(CORBA::Boolean theValue
   // MESSAGE("BLSURFPlugin_Hypothesis_i::SetPreCADRemoveNanoEdges");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetPreCADRemoveNanoEdges(theValue);
-  SMESH::TPythonDump() << _this() << ".SetPreCADRemoveNanoEdges( " << theValue << " )";
+  std::string theValueStr = theValue ? "True" : "False";
+  SMESH::TPythonDump() << _this() << ".SetPreCADRemoveNanoEdges( " << theValueStr.c_str() << " )";
 }
 
 //=============================================================================
@@ -435,7 +439,8 @@ void BLSURFPlugin_Hypothesis_i::SetPreCADDiscardInput(CORBA::Boolean theValue) {
   // MESSAGE("BLSURFPlugin_Hypothesis_i::SetPreCADDiscardInput");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetPreCADDiscardInput(theValue);
-  SMESH::TPythonDump() << _this() << ".SetPreCADDiscardInput( " << theValue << " )";
+  std::string theValueStr = theValue ? "True" : "False";
+  SMESH::TPythonDump() << _this() << ".SetPreCADDiscardInput( " << theValueStr.c_str() << " )";
 }
 
 //=============================================================================
@@ -1706,6 +1711,46 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeomWithGroup(GEOM::GEOM_Object
   }
 }
 
+//Enable internal enforced vertices on specific face if requested by user
+///*!
+// * Are internal enforced vertices used for a face ?
+// */
+//CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertex(GEOM::GEOM_Object_ptr theFace)
+//    throw (SALOME::SALOME_Exception) {
+//  ASSERT(myBaseImpl);
+
+//  if ((theFace->GetShapeType() != GEOM::FACE) && (theFace->GetShapeType() != GEOM::COMPOUND)) {
+//    MESSAGE("theFace shape type is not FACE or COMPOUND");
+//    THROW_SALOME_CORBA_EXCEPTION("theFace shape type is not FACE or COMPOUND", SALOME::BAD_PARAM);
+//  }
+
+//  string theFaceEntry = theFace->GetStudyEntry();
+  
+//  if (theFaceEntry.empty()) {
+//    GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+//    SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
+//    string aName;
+//    if (theFace->GetShapeType() == GEOM::FACE)
+//      aName = "Face_";
+//    if (theFace->GetShapeType() == GEOM::COMPOUND)
+//      aName = "Compound_";
+//    aName += theFace->GetEntry();
+//    SALOMEDS::SObject_ptr theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+//    if (!theSFace->_is_nil())
+//      theFaceEntry = theSFace->GetID();
+//  }
+//  if (theFaceEntry.empty())
+//    THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
+
+//  MESSAGE("IDL : GetName : " << theFace->GetName());
+//  MESSAGE("IDL : GetInternalEnforcedVertexEntry ( "<< theFaceEntry << ")");
+//  try {
+//    return GetInternalEnforcedVertexEntry(theFaceEntry.c_str());
+//  } catch (SALOME_Exception& ex) {
+//    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+//  }
+//}
+
 /*!
  * Get the list of all enforced vertices
  */
@@ -1737,7 +1782,7 @@ BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVertices(GEO
     THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
 
   MESSAGE("IDL : GetName : " << theFace->GetName());
-  MESSAGE("IDL : GetEnforcedVertexList ( "<< theFaceEntry << ")");
+  MESSAGE("IDL : GetEnforcedVerticesEntry ( "<< theFaceEntry << ")");
   try {
     return GetEnforcedVerticesEntry(theFaceEntry.c_str());
   } catch (SALOME_Exception& ex) {
@@ -1969,6 +2014,18 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexEntry(const char* theFaceEntry,
   return newValue;
 }
 
+//Enable internal enforced vertices on specific face if requested by user
+//CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertexEntry(const char* theFaceEntry)
+//    throw (SALOME::SALOME_Exception) {
+//  ASSERT(myBaseImpl);
+//  try {
+//    return this->GetImpl()->GetInternalEnforcedVertex(theFaceEntry);
+//  } catch (const std::exception& ex) {
+//    std::cout << "Exception: " << ex.what() << std::endl;
+//    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+//  }
+//}
+  
 BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVerticesEntry(const char* entry)
     throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
@@ -2084,6 +2141,132 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVerticesEntry(const char* theFaceEn
   MESSAGE("IDL : UnsetEnforcedVerticesEntry END ENTRY : " << theFaceEntry);
   return true;
 }
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexAllFaces
+ *
+ *  Set true or false
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexAllFaces(CORBA::Boolean theValue) {
+  MESSAGE("BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexAllFaces");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetInternalEnforcedVertexAllFaces(theValue);
+  std::string theValueStr = theValue ? "True" : "False";
+  SMESH::TPythonDump() << _this() << ".SetInternalEnforcedVertexAllFaces( " << theValueStr.c_str() << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertexAllFaces
+ *
+ *  Get true or false
+ */
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertexAllFaces() {
+  MESSAGE("BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertexAllFaces");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->_GetInternalEnforcedVertexAllFaces();
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexAllFacesGroup
+ *
+ *  Set group name
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexAllFacesGroup(const char*  groupName) {
+  MESSAGE("BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexAllFacesGroup");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetInternalEnforcedVertexAllFacesGroup(groupName);
+  SMESH::TPythonDump() << _this() << ".SetInternalEnforcedVertexAllFacesGroup( \"" << groupName << "\" )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertexAllFacesGroup
+ *
+ *  Get group name
+ */
+//=============================================================================
+char* BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertexAllFacesGroup() {
+  MESSAGE("BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertexAllFacesGroup");
+  ASSERT(myBaseImpl);
+  return CORBA::string_dup(this->GetImpl()->_GetInternalEnforcedVertexAllFacesGroup().c_str());
+}
+
+/*
+ * Enable internal enforced vertices on specific face if requested by user
+ *
+void BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertex(GEOM::GEOM_Object_ptr theFace, CORBA::Boolean toEnforceInternalVertices)
+ throw (SALOME::SALOME_Exception)
+{
+  MESSAGE("BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexForFace");
+  try {
+    SetInternalEnforcedVertexWithGroup(theFace, toEnforceInternalVertices);
+  } catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+}
+
+void BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexWithGroup(GEOM::GEOM_Object_ptr theFace, CORBA::Boolean toEnforceInternalVertices, const char* theGroupName)
+ throw (SALOME::SALOME_Exception)
+{
+  MESSAGE("BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexForFaceWithGroup");
+
+  if ((theFace->GetShapeType() != GEOM::FACE) && (theFace->GetShapeType() != GEOM::COMPOUND)) {
+    MESSAGE("theFace shape type is not FACE or COMPOUND");
+    THROW_SALOME_CORBA_EXCEPTION("theFace shape type is not FACE or COMPOUND", SALOME::BAD_PARAM);
+  }
+
+  string theFaceEntry = theFace->GetStudyEntry();
+
+  if (theFaceEntry.empty()) {
+    GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+    SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
+    string aName;
+    if (theFace->GetShapeType() == GEOM::FACE)
+      aName = "Face_";
+    if (theFace->GetShapeType() == GEOM::COMPOUND)
+      aName = "Compound_";
+    aName += theFace->GetEntry();
+    SALOMEDS::SObject_ptr theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    if (!theSFace->_is_nil())
+      theFaceEntry = theSFace->GetID();
+  }
+  if (theFaceEntry.empty())
+    THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
+
+  MESSAGE("IDL : GetName : " << theFace->GetName());
+  MESSAGE("IDL : GetInternalEnforcedVertexEntry ( "<< theFaceEntry << ")");
+  try {
+    SetInternalEnforcedVertexEntry(theFaceEntry.c_str(), toEnforceInternalVertices, theGroupName);
+  } catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+}
+
+void BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexEntry(const char* theFaceEntry, CORBA::Boolean toEnforceInternalVertices, const char* theGroupName)
+    throw (SALOME::SALOME_Exception)
+{
+  MESSAGE("BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexForFaceEntry");
+  ASSERT(myBaseImpl);
+  try {
+    this->GetImpl()->SetInternalEnforcedVertex(theFaceEntry, toEnforceInternalVertices, theGroupName);
+    std::string theValueStr = toEnforceInternalVertices ? "True" : "False";
+    if (string(theGroupName).empty())
+      SMESH::TPythonDump() << _this() << ".SetInternalEnforcedVertex( " << theFaceEntry << ", " << theValueStr.c_str() << " )";
+    else
+      SMESH::TPythonDump() << _this() << ".SetInternalEnforcedVertexWithGroup( " << theFaceEntry << ", " << theValueStr.c_str() << ", \"" << theGroupName << "\" )";
+  } catch (const std::exception& ex) {
+    std::cout << "Exception: " << ex.what() << std::endl;
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+}
+
+*/
 
 /* TODO GROUPS
  char* BLSURFPlugin_Hypothesis_i::GetEnforcedVertexGroupName(CORBA::Double x, CORBA::Double y, CORBA::Double z)

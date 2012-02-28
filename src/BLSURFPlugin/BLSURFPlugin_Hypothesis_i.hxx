@@ -218,12 +218,20 @@ public:
   bool UnsetEnforcedVerticesEntry(const char* theFaceEntry) throw (SALOME::SALOME_Exception);
 
   /*!
-   * Set/get node group to an enforced vertex
+   * To add internal vertices as enforced vertices
    */
-  /* TODO GROUPS
-   void  SetEnforcedVertexGroupName(CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* groupName) throw (SALOME::SALOME_Exception);
-   char* GetEnforcedVertexGroupName(CORBA::Double x, CORBA::Double y, CORBA::Double z) throw (SALOME::SALOME_Exception);
-   */
+  void SetInternalEnforcedVertexAllFaces(CORBA::Boolean toEnforceInternalVertices);
+  CORBA::Boolean GetInternalEnforcedVertexAllFaces();
+  void SetInternalEnforcedVertexAllFacesGroup(const char*  groupName = "");
+  char* GetInternalEnforcedVertexAllFacesGroup();
+
+// Enable internal enforced vertices on specific face if requested by user
+//  void SetInternalEnforcedVertex(GEOM::GEOM_Object_ptr theFace, CORBA::Boolean toEnforceInternalVertices) throw (SALOME::SALOME_Exception);
+//  void SetInternalEnforcedVertexWithGroup(GEOM::GEOM_Object_ptr theFace, CORBA::Boolean toEnforceInternalVertices, const char* theGroupName = "") throw (SALOME::SALOME_Exception);
+//  void SetInternalEnforcedVertexEntry(const char* theFaceEntry, CORBA::Boolean toEnforceInternalVertices, const char* theGroupName = "") throw (SALOME::SALOME_Exception);
+//  CORBA::Boolean GetInternalEnforcedVertex(GEOM::GEOM_Object_ptr theFace) throw (SALOME::SALOME_Exception);
+//  CORBA::Boolean GetInternalEnforcedVertexEntry(const char* theFaceEntry) throw (SALOME::SALOME_Exception);
+  
   ///////////////////////
   
   /*!

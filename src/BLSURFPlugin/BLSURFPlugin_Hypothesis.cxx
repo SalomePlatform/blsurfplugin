@@ -69,11 +69,8 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   _faceEntryEnfVertexEntryListMap(GetDefaultFaceEntryEnfVertexEntryListMap()),
   _enfVertexEntryEnfVertexMap(GetDefaultEnfVertexEntryEnfVertexMap()),
   _groupNameNodeIDMap(GetDefaultGroupNameNodeIDMap()),
-  _GMFFileName(GetDefaultGMFFile())
-/* TODO GROUPS
- _groupNameEnfVertexListMap(GetDefaultGroupNameEnfVertexListMap()),
- _enfVertexGroupNameMap(GetDefaultEnfVertexGroupNameMap())
- */
+  _GMFFileName(GetDefaultGMFFile()),
+  _enforcedInternalVerticesAllFaces(GetDefaultInternalEnforcedVertex())
 {
   _name = "BLSURF_Parameters";
   _param_algo_dim = 2;
@@ -636,6 +633,35 @@ void BLSURFPlugin_Hypothesis::ClearSizeMaps() {
   _classAttractors.clear();
 }
 
+// Enable internal enforced vertices on specific face if requested by user
+
+////=======================================================================
+////function : SetInternalEnforcedVertex
+////=======================================================================
+//void BLSURFPlugin_Hypothesis::SetInternalEnforcedVertex(TEntry theFaceEntry,
+//                                                        bool toEnforceInternalVertices,
+//                                                        TEnfGroupName theGroupName) {
+
+//  MESSAGE("BLSURFPlugin_Hypothesis::SetInternalEnforcedVertex("<< theFaceEntry << ", "
+//      << toEnforceInternalVertices << ", " << theGroupName << ")");
+  
+//  TFaceEntryInternalVerticesList::iterator it = _faceEntryInternalVerticesList.find(theFaceEntry);
+//  if (it != _faceEntryInternalVerticesList.end()) {
+//    if (!toEnforceInternalVertices) {
+//      _faceEntryInternalVerticesList.erase(it);
+//    }
+//  }
+//  else {
+//    if (toEnforceInternalVertices) {
+//      _faceEntryInternalVerticesList.insert(theFaceEntry);
+//    }
+//  }
+  
+//  // TODO
+//  // Take care of groups
+//}
+
+
 //=======================================================================
 //function : SetEnforcedVertex
 //=======================================================================
@@ -804,6 +830,18 @@ BLSURFPlugin_Hypothesis::TEnfVertex* BLSURFPlugin_Hypothesis::GetEnfVertex(const
   msg << "No enforced vertex with entry " << theEnfVertexEntry;
   throw std::invalid_argument(msg.str());
 }
+
+//Enable internal enforced vertices on specific face if requested by user
+////=======================================================================
+////function : GetInternalEnforcedVertex
+////=======================================================================
+
+//bool BLSURFPlugin_Hypothesis::GetInternalEnforcedVertex(const TEntry& theFaceEntry)
+//{
+//  if (_faceEntryInternalVerticesList.count(theFaceEntry) > 0)
+//    return true;
+//  return false;
+//}
 
 //=======================================================================
 //function : ClearEnforcedVertex
@@ -975,6 +1013,8 @@ void BLSURFPlugin_Hypothesis::ClearAllEnforcedVertices() {
   _coordsEnfVertexMap.clear();
   _faceEntryEnfVertexEntryListMap.clear();
   _enfVertexEntryEnfVertexMap.clear();
+//  Enable internal enforced vertices on specific face if requested by user
+//  _faceEntryInternalVerticesList.clear();
   NotifySubMeshesHypothesisModification();
 }
 
@@ -988,6 +1028,22 @@ void BLSURFPlugin_Hypothesis::ClearAllEnforcedVertices() {
 BLSURFPlugin_Hypothesis::TFaceEntryEnfVertexListMap BLSURFPlugin_Hypothesis::GetAllEnforcedVerticesByFace(
     const BLSURFPlugin_Hypothesis* hyp) {
   return hyp ? hyp->_GetAllEnforcedVerticesByFace() : GetDefaultFaceEntryEnfVertexListMap();
+}
+
+//Enable internal enforced vertices on specific face if requested by user
+//BLSURFPlugin_Hypothesis::TFaceEntryInternalVerticesList BLSURFPlugin_Hypothesis::GetAllInternalEnforcedVerticesByFace(
+//    const BLSURFPlugin_Hypothesis* hyp) {
+//  return hyp ? hyp->_GetAllInternalEnforcedVerticesByFace() : GetDefaultFaceEntryInternalVerticesMap();
+//}
+
+bool BLSURFPlugin_Hypothesis::GetInternalEnforcedVertexAllFaces(const BLSURFPlugin_Hypothesis* hyp)
+{
+  return hyp ? hyp->_GetInternalEnforcedVertexAllFaces() : GetDefaultInternalEnforcedVertex();
+}
+
+BLSURFPlugin_Hypothesis::TEnfGroupName BLSURFPlugin_Hypothesis::GetInternalEnforcedVertexAllFacesGroup(const BLSURFPlugin_Hypothesis* hyp)
+{
+  return hyp ? hyp->_GetInternalEnforcedVertexAllFacesGroup() : BLSURFPlugin_Hypothesis::TEnfGroupName();
 }
 
 BLSURFPlugin_Hypothesis::TEnfVertexList BLSURFPlugin_Hypothesis::GetAllEnforcedVertices(
@@ -1045,6 +1101,26 @@ void BLSURFPlugin_Hypothesis::RemoveEnfVertexNodeID(TEnfGroupName theGroupName,i
   std::ostringstream msg;
   msg << "No group " << theGroupName;
   throw std::invalid_argument(msg.str());
+}
+
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetInternalEnforcedVertexAllFaces(bool toEnforceInternalVertices) {
+  if (toEnforceInternalVertices != _enforcedInternalVerticesAllFaces) {
+    _enforcedInternalVerticesAllFaces = toEnforceInternalVertices;
+    if (toEnforceInternalVertices)
+      SetPhysicalMesh(SizeMap);
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetInternalEnforcedVertexAllFacesGroup(BLSURFPlugin_Hypothesis::TEnfGroupName theGroupName) {
+  if (string(theGroupName) != string(_enforcedInternalVerticesAllFacesGroup)) {
+    _enforcedInternalVerticesAllFacesGroup = theGroupName;
+    NotifySubMeshesHypothesisModification();
+  }
 }
 
 //=============================================================================
@@ -1713,3 +1789,9 @@ double BLSURFPlugin_Hypothesis::GetDefaultPreCADEpsNano() {
 std::string BLSURFPlugin_Hypothesis::GetDefaultGMFFile() {
   return "";
 }
+
+//=============================================================================
+bool BLSURFPlugin_Hypothesis::GetDefaultInternalEnforcedVertex() {
+  return false;
+}
+

@@ -473,7 +473,13 @@ void _createEnforcedVertexOnFace(TopoDS_Face faceShape, gp_Pnt aPnt, BLSURFPlugi
   MESSAGE("("<< myPoint.xyz.X() << ", " << myPoint.xyz.Y() << ", " << myPoint.xyz.Z() <<") / (" << aPnt.X() << ", " << aPnt.Y() << ", " << aPnt.Z()<<")");
   EnfVertexCoords2ProjVertex[s_coords] = enf_coords;
   MESSAGE("Group name is: \"" << enfVertex->grpName << "\"");
-  EnfVertexCoords2EnfVertexList[s_coords].insert(enfVertex);
+  pair<BLSURFPlugin_Hypothesis::TEnfVertexList::iterator,bool> ret;
+  BLSURFPlugin_Hypothesis::TEnfVertexList::iterator it;
+  ret = EnfVertexCoords2EnfVertexList[s_coords].insert(enfVertex);
+  if (ret.second == false) {
+    it = ret.first;
+    (*it)->grpName = enfVertex->grpName;
+  }
 
   int key = 0;
   if (! FacesWithEnforcedVertices.Contains(faceShape)) {
@@ -1004,6 +1010,38 @@ void BLSURFPlugin_BLSURF::SetParameters(
         if (GeomType == TopAbs_FACE){
           HasSizeMapOnFace = true;
           createEnforcedVertexOnFace(GeomShape, enfIt->second);
+        }
+      }
+    }
+
+    // Internal vertices
+    bool useInternalVertexAllFaces = BLSURFPlugin_Hypothesis::GetInternalEnforcedVertexAllFaces(hyp);
+    if (useInternalVertexAllFaces) {
+      std::string grpName = BLSURFPlugin_Hypothesis::GetInternalEnforcedVertexAllFacesGroup(hyp);
+      MESSAGE("Setting Internal Enforced Vertices");
+      GeomShape = mesh.GetShapeToMesh();
+      gp_Pnt aPnt;
+      TopExp_Explorer exp (GeomShape, TopAbs_FACE);
+      for (; exp.More(); exp.Next()){
+        MESSAGE("Iterating shapes. Shape type is " << exp.Current().ShapeType());
+        TopExp_Explorer exp_face (exp.Current(), TopAbs_VERTEX);
+        for (; exp_face.More(); exp_face.Next())
+        {
+          // Get coords of vertex
+          // Check if current coords is already in enfVertexList
+          // If coords not in enfVertexList, add new enfVertex
+          aPnt = BRep_Tool::Pnt(TopoDS::Vertex(exp_face.Current()));
+          MESSAGE("Found vertex on face at " << aPnt.X() <<", "<<aPnt.Y()<<", "<<aPnt.Z());
+          BLSURFPlugin_Hypothesis::TEnfVertex* enfVertex = new BLSURFPlugin_Hypothesis::TEnfVertex();
+          enfVertex->coords.push_back(aPnt.X());
+          enfVertex->coords.push_back(aPnt.Y());
+          enfVertex->coords.push_back(aPnt.Z());
+          enfVertex->name = "";
+          enfVertex->faceEntries.clear();
+          enfVertex->geomEntry = "";
+          enfVertex->grpName = grpName;
+          _createEnforcedVertexOnFace( TopoDS::Face(exp.Current()),  aPnt, enfVertex);
+          HasSizeMapOnFace = true;
         }
       }
     }
@@ -1697,7 +1735,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
             groupDone = true;
           }
           if (!groupDone)
-            throw SALOME_Exception(LOCALIZED("A enforced vertex node was not added to a group"));
+            throw SALOME_Exception(LOCALIZED("An enforced vertex node was not added to a group"));
         }
         else
           MESSAGE("Group name is empty: '"<<currentEnfVertex->grpName<<"' => group is not created");

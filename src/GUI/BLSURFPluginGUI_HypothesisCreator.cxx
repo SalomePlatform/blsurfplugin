@@ -163,6 +163,9 @@ enum {
 //   ENF_VER_GROUP_CHECK,
 //   ENF_VER_SPACE,
   ENF_VER_BTN,
+  ENF_VER_SEPARATOR,
+  ENF_VER_INTERNAL_ALL_FACES,
+  ENF_VER_INTERNAL_ALL_FACES_GROUP,
 //   ENF_VER_VERTEX_BTN,
 //   ENF_VER_REMOVE_BTN,
 //   ENF_VER_SEPARATOR,
@@ -1018,6 +1021,11 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   addVertexButton = new QPushButton(tr("BLSURF_ENF_VER_VERTEX"),myEnfGroup);
   removeVertexButton = new QPushButton(tr("BLSURF_ENF_VER_REMOVE"),myEnfGroup);
 
+  myInternalEnforcedVerticesAllFaces = new QCheckBox(tr("Use internal vertices of all faces"),myEnfGroup);
+
+  QLabel* myInternalEnforcedVerticesAllFacesGroupLabel = new QLabel( tr( "BLSURF_ENF_VER_GROUP_LABEL" ), myEnfGroup );
+  myInternalEnforcedVerticesAllFacesGroup = new QLineEdit(myEnfGroup);
+
 //   myGlobalGroupName = new QCheckBox(tr("BLSURF_ENF_VER_GROUPS"), myEnfGroup);
 //   myGlobalGroupName->setChecked(false);
 
@@ -1038,6 +1046,9 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 //   anEnfLayout2->setRowStretch(                      ENF_VER_SPACE, 1);
   anEnfLayout2->addWidget(addVertexButton,          ENF_VER_BTN, 0, 1, 1);
   anEnfLayout2->addWidget(removeVertexButton,       ENF_VER_BTN, 1, 1, 1);
+  anEnfLayout2->addWidget(myInternalEnforcedVerticesAllFaces, ENF_VER_INTERNAL_ALL_FACES, 0, 1, 2);
+  anEnfLayout2->addWidget(myInternalEnforcedVerticesAllFacesGroupLabel, ENF_VER_INTERNAL_ALL_FACES_GROUP, 0, 1, 1);
+  anEnfLayout2->addWidget(myInternalEnforcedVerticesAllFacesGroup, ENF_VER_INTERNAL_ALL_FACES_GROUP, 1, 1, 1);
   anEnfLayout2->setRowStretch(ENF_VER_NB_LINES+1, 1);
 //   anEnfLayout2->addWidget(makeGroupsCheck,          ENF_VER_GROUP_CHECK, 0, 1, 2);
   anEnfLayout->addLayout(anEnfLayout2, 0,1,ENF_VER_NB_LINES+1,2);
@@ -1082,6 +1093,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   connect( addVertexButton,     SIGNAL( clicked()),                    this,         SLOT( onAddEnforcedVertices() ) );
   connect( removeVertexButton,  SIGNAL( clicked()),                    this,         SLOT( onRemoveEnforcedVertex() ) );
   connect( myEnfVertexWdg,      SIGNAL( contentModified()),            this,         SLOT( onSelectEnforcedVertex() ) );
+  connect( myInternalEnforcedVerticesAllFaces, SIGNAL( stateChanged ( int )), this,  SLOT( onInternalVerticesClicked( int ) ) );
 //   connect( myEnfVertexWdg,     SIGNAL( selectionActivated()),         this,         SLOT( onVertexSelectionActivated() ) );
 //   connect( myEnfFaceWdg,       SIGNAL( selectionActivated()),         this,         SLOT( onFaceSelectionActivated() ) );
 
@@ -1103,7 +1115,7 @@ This method stop the selection of the widgets StdMeshersGUI_ObjectReferenceParam
 // }
 
 /** 
- * This method resets the content of the X, Y, Z and GroupName widgets;
+ * This method resets the content of the X, Y, Z widgets;
 **/
 void BLSURFPluginGUI_HypothesisCreator::clearEnforcedVertexWidgets()
 {
@@ -1213,11 +1225,10 @@ void BLSURFPluginGUI_HypothesisCreator::synchronizeCoords() {
   }
 }
 
-/** BLSURFPluginGUI_HypothesisCreator::addEnforcedVertex(entry, shapeName, x, y, z)
-This method adds an enforced vertex (x,y,z) to shapeName in the tree widget.
+/** BLSURFPluginGUI_HypothesisCreator::addEnforcedFace(entry, shapeName, useInternalVertices)
+This method adds a face containing enforced vertices in the tree widget.
 */
-void BLSURFPluginGUI_HypothesisCreator::addEnforcedVertex(std::string theFaceEntry, std::string theFaceName,
-    double x, double y, double z, std::string vertexName, std::string geomEntry, std::string groupName) {
+QTreeWidgetItem* BLSURFPluginGUI_HypothesisCreator::addEnforcedFace(std::string theFaceEntry, std::string theFaceName) {
   // Find theFaceEntry item
   QList<QTreeWidgetItem* > theItemList = myEnforcedTreeWidget->findItems(QString(theFaceEntry.c_str()),Qt::MatchExactly,ENF_VER_FACE_ENTRY_COLUMN);
   QTreeWidgetItem* theItem;
@@ -1231,7 +1242,16 @@ void BLSURFPluginGUI_HypothesisCreator::addEnforcedVertex(std::string theFaceEnt
   else {
     theItem = theItemList[0];
   }
+  return theItem;
+}
 
+/** BLSURFPluginGUI_HypothesisCreator::addEnforcedVertex(entry, shapeName, x, y, z)
+This method adds an enforced vertex (x,y,z) to shapeName in the tree widget.
+*/
+void BLSURFPluginGUI_HypothesisCreator::addEnforcedVertex(QTreeWidgetItem* theItem, double x, double y, double z, 
+                                                          std::string vertexName, std::string geomEntry, std::string groupName) {
+
+  std::string theFaceName = theItem->data(ENF_VER_NAME_COLUMN,Qt::EditRole).toString().toStdString();
 //   MESSAGE("theItemName is " << theItem->text(ENF_VER_NAME_COLUMN).toStdString());
   bool okToCreate = true;
 
@@ -1358,15 +1378,15 @@ void BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices() {
     myEnfFace = myEnfFaceWdg->GetObject< GEOM::GEOM_Object >(i);
     entry = myEnfFace->GetStudyEntry();
     shapeName = myEnfFace->GetName();
-
+    
+    QTreeWidgetItem * faceItem = addEnforcedFace(entry, shapeName);
+    
     std::string groupName = myGroupName->text().toStdString();
-//     if (myGlobalGroupName->isChecked())
-//       groupName = myGlobalGroupName->text().toStdString();
 
     if (boost::trim_copy(groupName).empty())
       groupName = "";
 
-    if (selEnfVertex <= 1)
+    if (selEnfVertex == 1)
     {
       double x,y,z;
       x = myXCoord->GetValue();
@@ -1374,10 +1394,10 @@ void BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices() {
       z = myZCoord->GetValue();
       if (selEnfVertex == 1) {
         myEnfVertex = myEnfVertexWdg->GetObject< GEOM::GEOM_Object >();
-        addEnforcedVertex(entry, shapeName, x, y, z, myEnfVertex->GetName(),myEnfVertex->GetStudyEntry(), groupName);
+        addEnforcedVertex(faceItem, x, y, z, myEnfVertex->GetName(),myEnfVertex->GetStudyEntry(), groupName);
       }
       else
-        addEnforcedVertex(entry, shapeName, x, y, z, "", "", groupName);
+        addEnforcedVertex(faceItem, x, y, z, "", "", groupName);
     }
     else
     {
@@ -1396,9 +1416,9 @@ void BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices() {
         if (myEnfVertex->GetShapeType() == GEOM::VERTEX) {
           measureOp->PointCoordinates (myEnfVertex, x, y, z);
           if ( measureOp->IsDone() )
-            addEnforcedVertex(entry, shapeName, x, y, z, myEnfVertex->GetName(),myEnfVertex->GetStudyEntry(), groupName);
+            addEnforcedVertex(faceItem, x, y, z, myEnfVertex->GetName(),myEnfVertex->GetStudyEntry(), groupName);
         } else if (myEnfVertex->GetShapeType() == GEOM::COMPOUND) {
-            addEnforcedVertex(entry, shapeName, 0, 0, 0, myEnfVertex->GetName(),myEnfVertex->GetStudyEntry(), groupName);
+            addEnforcedVertex(faceItem, 0, 0, 0, myEnfVertex->GetName(),myEnfVertex->GetStudyEntry(), groupName);
         }
       }
     }
@@ -1457,6 +1477,17 @@ void BLSURFPluginGUI_HypothesisCreator::onRemoveEnforcedVertex() {
   }
 
   myEnforcedTreeWidget->selectionModel()->clearSelection();
+}
+
+
+void BLSURFPluginGUI_HypothesisCreator::onInternalVerticesClicked(int state)
+{
+  if (state == Qt::Checked) {
+    myInternalEnforcedVerticesAllFacesGroup->setEnabled(true);
+  }
+  if (state == Qt::Unchecked) {
+    myInternalEnforcedVerticesAllFacesGroup->setEnabled(false);
+  }
 }
 
 /** BLSURFPluginGUI_HypothesisCreator::retrieveParams()
@@ -1609,20 +1640,16 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
   // Enforced vertices
   MESSAGE("retrieveParams(): data.entryCoordsListMap.size() = " << data.faceEntryEnfVertexListMap.size());
   TFaceEntryEnfVertexListMap::const_iterator evmIt = data.faceEntryEnfVertexListMap.begin();
+
   for ( ; evmIt != data.faceEntryEnfVertexListMap.end() ; ++evmIt) {
     TEntry entry = (*evmIt).first;
     std::string shapeName = myGeomToolSelected->getNameFromEntry(entry);
     MESSAGE("Face entry: " << entry);
     MESSAGE("Face name: " << shapeName);
+    
+    QTreeWidgetItem* faceItem = that->addEnforcedFace(entry, shapeName);
 
     TEnfVertexList evs = (*evmIt).second;
-//     try  {
-//       evs = (*evmIt).second;
-//     }
-//     catch(...) {
-//       MESSAGE("evs = (*evmIt).second: FAIL");
-//       break;
-//     }
 
     TEnfVertexList::const_iterator evsIt = evs.begin();
     TEnfVertex *enfVertex;
@@ -1635,12 +1662,16 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
         y = enfVertex->coords[1];
         z = enfVertex->coords[2];
       }
-      that->addEnforcedVertex(entry, shapeName, x, y, z, enfVertex->name, enfVertex->geomEntry, enfVertex->grpName);
+      that->addEnforcedVertex(faceItem, x, y, z, enfVertex->name, enfVertex->geomEntry, enfVertex->grpName);
     }
   }
   
   for (int column = 0; column < myEnforcedTreeWidget->columnCount(); ++column)
     myEnforcedTreeWidget->resizeColumnToContents(column);
+
+  myInternalEnforcedVerticesAllFaces->setChecked(data.myInternalEnforcedVerticesAllFaces);
+  myInternalEnforcedVerticesAllFacesGroup->setText(QString(data.myInternalEnforcedVerticesAllFacesGroup.c_str()));
+  myInternalEnforcedVerticesAllFacesGroup->setEnabled(data.myInternalEnforcedVerticesAllFaces);
 
   // update widgets
   that->onPhysicalMeshChanged();
@@ -1837,6 +1868,8 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
       h_data.faceEntryEnfVertexListMap.erase(entry);
     }
   }
+  h_data.myInternalEnforcedVerticesAllFaces = h->GetInternalEnforcedVertexAllFaces();
+  h_data.myInternalEnforcedVerticesAllFacesGroup = h->GetInternalEnforcedVertexAllFacesGroup();
 
   return true;
 }
@@ -1986,6 +2019,12 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
         ret = h->SetEnforcedVertexEntry( faceEntry.c_str(), x, y, z, (*evsIt)->name.c_str(), (*evsIt)->geomEntry.c_str(), (*evsIt)->grpName.c_str());
       } // for
     } // for
+
+    if ( h->GetInternalEnforcedVertexAllFaces() != h_data.myInternalEnforcedVerticesAllFaces )
+      h->SetInternalEnforcedVertexAllFaces( h_data.myInternalEnforcedVerticesAllFaces );
+    if ( h->GetInternalEnforcedVertexAllFacesGroup() != h_data.myInternalEnforcedVerticesAllFacesGroup )
+      h->SetInternalEnforcedVertexAllFacesGroup( h_data.myInternalEnforcedVerticesAllFacesGroup.c_str() );
+
   } // try
   catch(const std::exception& ex) {
     std::cout << "Exception: " << ex.what() << std::endl;
@@ -2139,6 +2178,9 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
       }
     }
   }
+
+  h_data.myInternalEnforcedVerticesAllFaces      = myInternalEnforcedVerticesAllFaces->isChecked();
+  h_data.myInternalEnforcedVerticesAllFacesGroup = myInternalEnforcedVerticesAllFacesGroup->text().toStdString();
 
   MESSAGE("guiHyp : " << guiHyp.toLatin1().data());
   return guiHyp;

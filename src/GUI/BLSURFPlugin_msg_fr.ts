@@ -348,8 +348,12 @@
         <translation>Supprimer</translation>
     </message>
     <message>
-        <source>BLSURF_ENF_VER_GROUPS</source>
-        <translation>Groupe unique</translation>
+        <source>Use internal vertices</source>
+        <translation>Utiliser les points internes</translation>
+    </message>
+    <message>
+        <source>Use internal vertices of all faces</source>
+        <translation>Utiliser les points internes de toutes les faces</translation>
     </message>
 </context>
 </TS>

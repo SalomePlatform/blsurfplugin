@@ -205,6 +205,9 @@ public:
   // Map Face Entry / List of enforced vertices
   typedef std::map< TEntry, TEnfVertexList > TFaceEntryEnfVertexListMap;
 
+  // List of Face Entry with internal enforced vertices activated
+  typedef std::set< TEntry > TFaceEntryInternalVerticesList;
+
   // Map Face Entry / List of coords
   typedef std::map< TEntry, TEnfVertexCoordsList > TFaceEntryCoordsListMap;
 
@@ -265,15 +268,22 @@ public:
   static TFaceEntryEnfVertexEntryListMap  GetAllEnfVertexEntriesByFace(const BLSURFPlugin_Hypothesis* hyp);
   static TEnfVertexEntryEnfVertexMap      GetAllEnforcedVerticesByEnfVertexEntry(const BLSURFPlugin_Hypothesis* hyp);
 
-  
   /*!
-    * \brief Set/get node group to an enforced vertex
-    */
-  /* TODO GROUPS
-  void SetEnforcedVertexGroupName(double x, double y, double z, const TEnfGroupName& groupName) throw (std::invalid_argument);
-  TEnfGroupName GetEnforcedVertexGroupName(double x, double y, double z) throw (std::invalid_argument);
-  TEnfVertexList GetEnforcedVertexByGroupName(TEnfGroupName& groupName) throw (std::invalid_argument);
-  */
+   * \brief Internal enforced vertices
+   */
+  void SetInternalEnforcedVertexAllFaces(bool toEnforceInternalVertices);
+  const bool _GetInternalEnforcedVertexAllFaces() const { return _enforcedInternalVerticesAllFaces; }
+  static bool GetInternalEnforcedVertexAllFaces( const BLSURFPlugin_Hypothesis* hyp );
+  void SetInternalEnforcedVertexAllFacesGroup(TEnfGroupName theGroupName);
+  const TEnfGroupName _GetInternalEnforcedVertexAllFacesGroup() const { return _enforcedInternalVerticesAllFacesGroup; }
+  static TEnfGroupName GetInternalEnforcedVertexAllFacesGroup( const BLSURFPlugin_Hypothesis* hyp );
+
+//  Enable internal enforced vertices on specific face if requested by user
+//  static TFaceEntryInternalVerticesList GetDefaultFaceEntryInternalVerticesMap() { return TFaceEntryInternalVerticesList(); }
+//  const TFaceEntryInternalVerticesList  _GetAllInternalEnforcedVerticesByFace() const { return _faceEntryInternalVerticesList; }
+//  static TFaceEntryInternalVerticesList GetAllInternalEnforcedVerticesByFace(const BLSURFPlugin_Hypothesis* hyp);
+//  void SetInternalEnforcedVertex(TEntry theFaceEntry, bool toEnforceInternalVertices, TEnfGroupName theGroupName);
+//  bool GetInternalEnforcedVertex(const TEntry& theFaceEntry);
 
   static Topology        GetDefaultTopology();
   static PhysicalMesh    GetDefaultPhysicalMesh();
@@ -303,6 +313,8 @@ public:
   static TFaceEntryEnfVertexEntryListMap  GetDefaultFaceEntryEnfVertexEntryListMap() { return TFaceEntryEnfVertexEntryListMap(); }
   static TEnfVertexEntryEnfVertexMap      GetDefaultEnfVertexEntryEnfVertexMap() { return TEnfVertexEntryEnfVertexMap(); }
   static TGroupNameNodeIDMap              GetDefaultGroupNameNodeIDMap() { return TGroupNameNodeIDMap(); }
+
+  static bool            GetDefaultInternalEnforcedVertex();
 
   /* TODO GROUPS
   static TGroupNameEnfVertexListMap GetDefaultGroupNameEnfVertexListMap() { return TGroupNameEnfVertexListMap(); }
@@ -389,12 +401,14 @@ private:
   TEnfVertexEntryEnfVertexMap     _enfVertexEntryEnfVertexMap;
   TGroupNameNodeIDMap             _groupNameNodeIDMap;
   
+//  Enable internal enforced vertices on specific face if requested by user
+//  TFaceEntryInternalVerticesList  _faceEntryInternalVerticesList;
+  bool            _enforcedInternalVerticesAllFaces;
+  TEnfGroupName   _enforcedInternalVerticesAllFacesGroup;
+  
   std::string     _GMFFileName;
 //   bool            _GMFFileMode;
-  
-  /* TODO GROUPS
-  TGroupNameEnfVertexListMap _groupNameEnfVertexListMap;
-  */
+
 //   TSizeMap      _customSizeMap;
 };
 

@@ -2201,7 +2201,8 @@ status_t message_cb(message_t *msg, void *user_data)
   char *desc;
   message_get_number(msg, &errnumber);
   message_get_description(msg, &desc);
-  if ( errnumber < 0 ) {
+  string err( desc );
+  if ( errnumber < 0 || err.find("license") != string::npos ) {
     string * error = (string*)user_data;
 //   if ( !error->empty() )
 //     *error += "\n";

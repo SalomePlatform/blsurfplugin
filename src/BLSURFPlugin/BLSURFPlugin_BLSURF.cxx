@@ -1097,13 +1097,6 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 
   MESSAGE("BLSURFPlugin_BLSURF::Compute");
 
-//   if (aShape.ShapeType() == TopAbs_COMPOUND) {
-//     MESSAGE("  the shape is a COMPOUND");
-//   }
-//   else {
-//     MESSAGE("  the shape is UNKNOWN");
-//   };
-
   // Fix problem with locales
   Kernel_Utils::Localizer aLocalizer;
 
@@ -1189,7 +1182,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   TopTools_IndexedMapOfShape _map;
   TopExp::MapShapes(aShape,TopAbs_VERTEX,_map);
   int ienf = _map.Extent();
-  BLSURFPlugin_Attractor myAttractor;
+
   for (TopExp_Explorer face_iter(aShape,TopAbs_FACE);face_iter.More();face_iter.Next()) {
     TopoDS_Face f=TopoDS::Face(face_iter.Current());
 
@@ -1314,9 +1307,10 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
           MESSAGE("Check position of vertex =(" << xyzCoords[0] << "," << xyzCoords[1] << "," << xyzCoords[2] << ")");
           gp_Pnt P(xyzCoords[0],xyzCoords[1],xyzCoords[2]);
           BRepClass_FaceClassifier scl(f,P,1e-7);
-          // scl.Perform() is bugged. The function was rewritten
-//          scl.Perform();
-          BRepClass_FaceClassifierPerform(&scl,f,P,1e-7);
+          // OCC 6.3sp6 : scl.Perform() is bugged. The function was rewritten
+//          BRepClass_FaceClassifierPerform(&scl,f,P,1e-7);
+          // OCC 6.5.2: scl.Perform() is not bugged anymore
+          scl.Perform(f, P, 1e-7);
           TopAbs_State result = scl.State();
           MESSAGE("Position of point on face: "<<result);
           if ( result == TopAbs_OUT ) {

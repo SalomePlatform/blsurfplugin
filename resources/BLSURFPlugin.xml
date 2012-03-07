@@ -36,13 +36,20 @@
 		dim="2"/>
   </hypotheses>
   <algorithms>
+
     <algorithm type="BLSURF"
                label-id="BLSURF"
                icon-id="mesh_algo_BLSURF.png"
                opt-hypos="BLSURF_Parameters"
                output="TRIA,QUAD"
                dim="2"
-	       support-submeshes="true"/>
+	       support-submeshes="true">
+      <python-wrap>
+        <algo>BLSURF=Triangle(algo=smesh.BLSURF)</algo>
+        <hypo>BLSURF_Parameters=Parameters()</hypo>
+      </python-wrap>
+    </algorithm>
+
   </algorithms>
 </meshers-group>
 

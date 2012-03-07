@@ -246,7 +246,7 @@ void BLSURFPlugin_Attractor::BuildMap(){
     
     // Loop on neighbours of the trial min --------------------------------------------------------------------------------------------------------------
     for (i=i0 - 1 ; i <= i0 + 1 ; i++){ 
-      if (!aSurf->IsUPeriodic()){                          // Periodic conditions in U	
+      if (!aSurf->IsUPeriodic()){                          // Periodic conditions in U  
         if (i > _gridU ){
           break; }
         else if (i < 0){
@@ -288,7 +288,7 @@ void BLSURFPlugin_Attractor::BuildMap(){
             kp = (k + _gridU + 1) % (_gridU+1);                      // periodic index
             for (n=j - 1 ; n <= j + 1 ; n++){ 
               if (!aSurf->IsVPeriodic()){                            // Periodic conditions in V 
-                if(n > _gridV){	  
+                if(n > _gridV){   
                   break;
                 }
                 else if (n < 0){

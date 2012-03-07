@@ -71,3 +71,6 @@ libBLSURFEngine_la_LDFLAGS  =			\
 	$(MED_LDFLAGS) -lSalomeIDLMED \
 	$(KERNEL_LDFLAGS) -lOpUtil -lSalomeGenericObj -lSalomeNS -lSALOMELocalTrace -lSALOMEBasics \
 	$(BOOST_LIB_REGEX)
+
+# Scripts to be installed.
+dist_salomescript_DATA= BLSURFPluginDC.py

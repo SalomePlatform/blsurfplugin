@@ -185,7 +185,12 @@ void BLSURFPlugin_Hypothesis::SetPhysicalMesh(PhysicalMesh thePhysicalMesh) {
 //=============================================================================
 void BLSURFPlugin_Hypothesis::SetPhySize(double theVal) {
   if (theVal != _phySize) {
-    _phySize = theVal;
+    if (theVal == 0) {
+      _phySize = GetPhyMax();
+      MESSAGE("Warning: nul physical size is not allowed");
+    }
+    else
+      _phySize = theVal;
     NotifySubMeshesHypothesisModification();
   }
 }

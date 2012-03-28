@@ -21,7 +21,7 @@
 # Project related configuration options
 #---------------------------------------------------------------------------
 PROJECT_NAME      = "BLSURFPLUGIN Module Reference Manual v.@VERSION@"
-OUTPUT_DIRECTORY  = BLSURFPLUGIN
+OUTPUT_DIRECTORY  = .
 CREATE_SUBDIRS	  = NO
 OUTPUT_LANGUAGE   = English
 TAB_SIZE          = 5
@@ -35,7 +35,7 @@ WARNINGS          = YES
 #---------------------------------------------------------------------------
 #Input related options
 #---------------------------------------------------------------------------
-INPUT             = @srcdir@/input		  
+INPUT             = @srcdir@/input
 FILE_PATTERNS     = *.doc
 IMAGE_PATH        = @srcdir@/images
 
@@ -44,9 +44,9 @@ IMAGE_PATH        = @srcdir@/images
 #---------------------------------------------------------------------------
 GENERATE_HTML     = YES
 HTML_OUTPUT       = .
-HTML_HEADER       = @srcdir@/static/header.html
+HTML_HEADER       = @builddir@/static/header.html
 HTML_FOOTER       = @srcdir@/static/footer.html
-#HTML_STYLESHEET  = @srcdir@/static/doxygen.css
+HTML_STYLESHEET  = @srcdir@/static/doxygen.css
 TOC_EXPAND        = YES
 DISABLE_INDEX     = NO
 GENERATE_TREEVIEW = YES
@@ -61,3 +61,12 @@ GENERATE_LATEX    = NO
 #RTF related options
 #---------------------------------------------------------------------------
 GENERATE_RTF      = NO
+
+#---------------------------------------------------------------------------
+#External reference options
+#---------------------------------------------------------------------------
+
+#rnv: 07.04.2011 Workaround for the doxygen 1.7.3:
+#because it wrongly defines location of the html files for search.
+TAGFILES          = blsurfpluginpy_doc.tag=../BLSURFPLUGIN/blsurfpluginpy_doc
+SEARCHENGINE      = YES

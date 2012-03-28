@@ -434,7 +434,11 @@ AC_OUTPUT([ \
   doc/Makefile \
   doc/salome/Makefile \
   doc/salome/gui/Makefile \
-  doc/salome/gui/doxyfile \
+  doc/salome/gui/BLSURFPLUGIN/Makefile \
+  doc/salome/gui/BLSURFPLUGIN/doxyfile \
+  doc/salome/gui/BLSURFPLUGIN/doxyfile_py \
+  doc/salome/gui/BLSURFPLUGIN/static/header.html \
+  doc/salome/gui/BLSURFPLUGIN/static/header_py.html \
   doc/salome/tui/Makefile \
   doc/salome/tui/doxyfile \
   bin/VERSION \

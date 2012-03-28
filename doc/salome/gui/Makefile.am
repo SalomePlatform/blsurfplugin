@@ -23,20 +23,9 @@
 #
 include $(top_srcdir)/adm_local/unix/make_common_starter.am
 
-EXTRA_DIST += images input static
+SUBDIRS = BLSURFPLUGIN
 
-usr_docs: doxyfile
-	echo "Running doxygen in directory: "`pwd`; \
-	$(DOXYGEN) $<
+usr_docs:
+	(cd BLSURFPLUGIN && $(MAKE) $(AM_MAKEFLAGS) usr_docs)
 
 docs: usr_docs
-
-clean-local:
-	-rm -fr BLSURFPLUGIN doxygen.bak
-
-install-data-local: usr_docs
-	$(INSTALL) -d $(DESTDIR)$(docdir)/gui
-	cp -rp BLSURFPLUGIN $(DESTDIR)$(docdir)/gui
-
-uninstall-local:
-	rm -rf $(DESTDIR)$(docdir)/gui/BLSURFPLUGIN

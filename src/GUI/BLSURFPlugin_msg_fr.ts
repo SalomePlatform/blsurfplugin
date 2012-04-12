@@ -33,11 +33,11 @@
     </message>
     <message>
         <source>BLSURF_DEFAULT_GEOM</source>
-        <translation>Défaut</translation>
+        <translation>Inactif</translation>
     </message>
     <message>
         <source>BLSURF_DEFAULT_USER</source>
-        <translation>Défaut</translation>
+        <translation>Inactif</translation>
     </message>
     <message>
         <source>BLSURF_GEOM_MESH</source>

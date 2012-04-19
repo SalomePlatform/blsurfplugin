@@ -9,8 +9,10 @@ Documentation for BLSURFPlugin package is available in linear form grouped by cl
 Below you can see an example of usage of the BLSURFPlugin package for mesh generation:
 
 \anchor tui_blsurf
-<h2>Construction of Mesh using BLSurf algorithm</h2>
-<h3>Basic hypothesis</h3>
+
+\section blsurf_construct_mesh Construction of Mesh using BLSurf algorithm
+
+\subsection blsurf_construct_mesh_basic_hypo Basic hypothesis
 \code
 import geompy
 import smesh
@@ -46,7 +48,7 @@ algo2d = blsurfMesh.Triangle(algo=smesh.BLSURF)
 # End of script
 \endcode
 
-<h3>Adding sizemaps</h3>
+\subsection blsurf_construct_mesh_sizemaps Adding sizemaps
 \code
 # optional - set physical mesh to 2 = Size Map
 algo2d.SetPhysicalMesh( 2 )
@@ -67,9 +69,8 @@ blsurfMesh.Compute()
 # End of script
 \endcode
 
-<h3>Adding enforced vertices</h3>
+\subsection blsurf_construct_mesh_enforced_vertices Adding enforced vertices
 \code
-
 # Add enforced vertex for Face_1 on (50, 50, 50)
 # The projection coordinates will be (50, 50, 0)
 algo2d.SetEnforcedVertex(Face_1, 50, 50, 50)
@@ -101,12 +102,10 @@ algo2d.UnsetEnforcedVertices(Face_1)
 blsurfMesh.Compute()
 
 # End of script
-
 \endcode
 
-<h3>Adding an attractor</h3>
+\subsection blsurf_construct_mesh_attractor Adding an attractor
 \code
-
 # Add an attractor on Face_2, which shape is Wire_1
 
 # The size on Wire_1 is 1 and will grow until a maximum of 36.641 (physical size set above) 
@@ -122,12 +121,10 @@ algo2d.SetGradation( 2.5 )
 blsurfMesh.Compute()
 
 # End of script
-
 \endcode
 
-<h3>Using internal vertices</h3>
+\subsection blsurf_construct_mesh_internal_vertices Using internal vertices
 \code
-
 # Creating a geometry containing internal vertices
 Face_3 = geompy.MakeFaceHW(1, 1, 1)
 Vertex_2 = geompy.MakeVertex(0.2, 0.2, 0)

@@ -2,18 +2,19 @@
 
 \mainpage Introduction to BLSURFPLUGIN
 
-\note BLSURFPLUGI plugin used BLSURF commercial mesher and require a
-license to be used within the Mesh module.
+\b BLSURFPLUGIN SALOME module represents a meshing plug-in that can be
+used within the SALOME Mesh module for generation of 2D mesh.
 
-\n \b BLSURFPLUGIN plugin is destined for:
+\note BLSURFPLUGIN plugin uses DISTENE BLSurf commercial meshing
+software and requires a license at the run time (to work within the
+Mesh module).
 
-<ul>
-<li>Meshing 2D geometric entities.</li>
-</ul>
+\b BLSURFPLUGIN plugin is destined for:
+- Meshing of the 2D geometric entities.
 
-To manage parameters of the BLSURFPLUGIN use \subpage blsurf_hypo_page.
+To manage parameters of the BLSURFPLUGIN, use \subpage blsurf_hypo_page.
 
-Also all BLSURFPLUGIN functionalities are accessible via
+Also, all BLSURFPLUGIN functionalities are accessible via the
 \subpage blsurfplugin_python_interface_page "BLSURFPLUGIN Python interface".
 
 */

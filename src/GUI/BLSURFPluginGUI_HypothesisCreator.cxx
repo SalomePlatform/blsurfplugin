@@ -1021,7 +1021,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   addVertexButton = new QPushButton(tr("BLSURF_ENF_VER_VERTEX"),myEnfGroup);
   removeVertexButton = new QPushButton(tr("BLSURF_ENF_VER_REMOVE"),myEnfGroup);
 
-  myInternalEnforcedVerticesAllFaces = new QCheckBox(tr("Use internal vertices of all faces"),myEnfGroup);
+  myInternalEnforcedVerticesAllFaces = new QCheckBox(tr("BLSURF_ENF_VER_INTERNAL_VERTICES"),myEnfGroup);
 
   QLabel* myInternalEnforcedVerticesAllFacesGroupLabel = new QLabel( tr( "BLSURF_ENF_VER_GROUP_LABEL" ), myEnfGroup );
   myInternalEnforcedVerticesAllFacesGroup = new QLineEdit(myEnfGroup);

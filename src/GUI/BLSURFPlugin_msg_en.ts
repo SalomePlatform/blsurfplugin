@@ -348,8 +348,8 @@
         <translation>Remove</translation>
     </message>
     <message>
-        <source>BLSURF_ENF_VER_GROUPS</source>
-        <translation>Unique group</translation>
+        <source>BLSURF_ENF_VER_INTERNAL_VERTICES</source>
+        <translation>Use internal vertices of all faces</translation>
     </message>
 </context>
 </TS>

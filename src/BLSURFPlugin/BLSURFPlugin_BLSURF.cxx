@@ -1492,7 +1492,8 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
           double t                = nData.param;
           real uv[2]              = { nData.u, nData.v };
           SMESH_TNodeXYZ nXYZ( nData.node );
-          dcad_edge_discretization_set_vertex_coordinates( dedge, iN+1, t, uv, nXYZ._xyz );
+          real xyz[3]             = { nXYZ.X(), nXYZ.Y(), nXYZ.Z() };
+          dcad_edge_discretization_set_vertex_coordinates( dedge, iN+1, t, uv, xyz );
         }
         dcad_edge_discretization_set_property(dedge, DISTENE_DCAD_PROPERTY_REQUIRED);
       }

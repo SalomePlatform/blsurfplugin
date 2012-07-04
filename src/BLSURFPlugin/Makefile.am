@@ -66,7 +66,7 @@ libBLSURFEngine_la_LDFLAGS  =			\
 	$(PYTHON_LIBS) \
 	$(CAS_KERNEL) -lTKBRep -lTKGeomBase -lTKGeomAlgo -lTKTopAlgo -lTKLCAF -lTKXSBase -lTKG2d -lTKG3d -lTKShHealing \
 	$(BLSURF_LIBS) \
-	$(SMESH_LDFLAGS) -lSMESHimpl -lSMESHEngine -lStdMeshersEngine -lSMDS -lSMESHDS	\
+	$(SMESH_LDFLAGS) -lSMESHimpl -lSMESHEngine -lStdMeshers -lStdMeshersEngine -lSMDS -lSMESHDS \
 	$(GEOM_LDFLAGS) -lGEOMbasic \
 	$(MED_LDFLAGS) -lSalomeIDLMED \
 	$(KERNEL_LDFLAGS) -lOpUtil -lSalomeGenericObj -lSalomeNS -lSALOMELocalTrace -lSALOMEBasics \

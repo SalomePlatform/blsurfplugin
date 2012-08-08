@@ -1386,7 +1386,7 @@ void BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices() {
     if (boost::trim_copy(groupName).empty())
       groupName = "";
 
-    if (selEnfVertex == 1)
+    if (selEnfVertex <= 1)
     {
       double x,y,z;
       x = myXCoord->GetValue();

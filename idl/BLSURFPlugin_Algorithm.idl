@@ -1,30 +1,33 @@
-//  Copyright (C) 2007-2008  CEA/DEN, EDF R&D
+// Copyright (C) 2007-2012  CEA/DEN, EDF R&D
 //
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License.
 //
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-//  Lesser General Public License for more details.
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
 //
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 //
-//  See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
+// See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 //
+
 // ---
 // File    : BLSURFPlugin_Algorithm.idl
 // Authors : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
+//           Size maps developement: Nicolas GEIMER (OCC) & Gilles DAVID (EURIWARE)
 // ---
 //
 #ifndef _SMESH_BLSURFALGORITHM_IDL_
 #define _SMESH_BLSURFALGORITHM_IDL_
 
 #include "SMESH_Hypothesis.idl"
+#include "GEOM_Gen.idl"
 #include "SALOME_Exception.idl"
 
 /*!
@@ -34,6 +37,79 @@ module BLSURFPlugin
 {
   typedef sequence<string> string_array;
 
+  // Enforced vertex name
+  typedef string TEnfName;
+  // Entry
+  typedef string TEntry;
+  typedef sequence<TEntry> TEntryList;
+  // Group name
+  typedef string TEnfGroupName;
+  
+  // Coordinates of enforced vertex
+  typedef sequence<double,3> TEnfVertexCoords;
+  // List of coords
+  typedef sequence<TEnfVertexCoords> TEnfVertexCoordsList;
+  
+  // Enforced vertex
+  struct TEnfVertex {
+    TEnfName name;
+    TEntry geomEntry;
+    TEnfVertexCoords coords;
+    TEnfGroupName grpName;
+    TEntryList faceEntries;
+  };
+  // List of enforced vertices
+  typedef sequence<TEnfVertex> TEnfVertexList;
+
+  // Map Face Entry / List of enforced vertices
+  struct TFaceEntryEnfVertexListMapElement {
+    TEntry faceEntry;
+    TEnfVertexList enfVertexList;
+  };
+  typedef sequence<TFaceEntryEnfVertexListMapElement> TFaceEntryEnfVertexListMap;
+  
+  // Map Face Entry / List of coords
+  struct TFaceEntryCoordsListMapElement {
+    TEntry faceEntry;
+    TEnfVertexCoordsList coordsList;
+  };
+  typedef sequence<TFaceEntryCoordsListMapElement> TFaceEntryCoordsListMap;
+  
+  // Map Face Entry / List of enf vertex entries
+  struct TFaceEntryEnfVertexEntryListMapElement {
+    TEntry faceEntry;
+    TEntryList enfVertexEntryList;
+  };
+  typedef sequence<TFaceEntryEnfVertexEntryListMapElement> TFaceEntryEnfVertexEntryListMap;
+  
+  // Map Coords / Enforced vertex
+  struct TCoordsEnfVertexElement {
+    TEnfVertexCoords coords;
+    TEnfVertex enfVertex;
+  };
+  typedef sequence<TCoordsEnfVertexElement> TCoordsEnfVertexMap;
+  
+  // Map Enf Vertex Entry / Enforced vertex
+  struct TEnfVertexEntryEnfVertexElement {
+    TEntry enfVertexEntry;
+    TEnfVertex enfVertex;
+  };
+  typedef sequence<TEnfVertexEntryEnfVertexElement> TEnfVertexEntryEnfVertexMap;
+
+  // List of Face Entry with internal enforced vertices activated
+  typedef sequence<TEntry> TFaceEntryInternalVerticesList;
+
+  // Attractors
+  struct TAttractorParams {
+    string faceEntry;
+    string attEntry;
+    double startSize;
+    double endSize;
+    double infDist;
+    double constDist;
+  };
+  typedef sequence<TAttractorParams> TAttParamsMap;
+  
   /*!
    * BLSURFPlugin_BLSURF: interface of BLSURF algorithm
    */
@@ -50,6 +126,7 @@ module BLSURFPlugin
      * Sets topology usage way defining how mesh conformity is assured
      * value=0 - mesh conformity is assured by conformity of a shape
      * value=1,2 - mesh conformity is assured by pre-processing a CAD model
+     * value=3 - mesh conformity is assured by pre-processing a CAD model with Pre-CAD
      */
     void SetTopology(in long way);
     long GetTopology();
@@ -58,6 +135,7 @@ module BLSURFPlugin
      * Sets a way to define size of mesh elements to generate
      * 0 - size is defined automatically
      * 1 - size is set by SetPhySize() method
+     * 2 - size is set by SetPhySize() method. A sizemap is defined.
      */
     void SetPhysicalMesh(in long isCustom);
     long GetPhysicalMesh();
@@ -137,15 +215,44 @@ module BLSURFPlugin
     short GetVerbosity();
 
     /*!
+     * To merges edges.
+     */
+    void SetPreCADMergeEdges(in boolean toMergeEdges);
+    boolean GetPreCADMergeEdges();
+
+    /*!
+     * To remove nano edges.
+     */
+    void SetPreCADRemoveNanoEdges(in boolean toRemoveNanoEdges);
+    boolean GetPreCADRemoveNanoEdges();
+
+    /*!
+     * To compute topology from scratch
+     */
+    void SetPreCADDiscardInput(in boolean toDiscardInput);
+    boolean GetPreCADDiscardInput();
+
+    /*!
+     * Sets the length below which an edge is considered as nano 
+     * for the topology processing.
+     */
+    void SetPreCADEpsNano(in double epsNano);
+    double GetPreCADEpsNano();
+
+    /*!
      * Sets advanced option value
      */
     void SetOptionValue(in string optionName,
                         in string optionValue) raises (SALOME::SALOME_Exception);
+    void SetPreCADOptionValue(in string optionName,
+                        in string optionValue) raises (SALOME::SALOME_Exception);
     string GetOptionValue(in string optionName) raises (SALOME::SALOME_Exception);
+    string GetPreCADOptionValue(in string optionName) raises (SALOME::SALOME_Exception);
     /*!
      * Unsets advanced option
      */
     void UnsetOption(in string optionName);
+    void UnsetPreCADOption(in string optionName);
 
     /*!
      * Return array of strings each of which is option name concatenated
@@ -154,14 +261,136 @@ module BLSURFPlugin
      * Note: the method is mostly for interaction with GUI.
      */
     string_array GetOptionValues();
+    string_array GetPreCADOptionValues();
 
     /*!
      * Set option values each in the form "option_name[:option_value]".
      * Note: the method is mostly for interaction with GUI.
      */
     void SetOptionValues(in string_array options);
-  };
+    void SetPreCADOptionValues(in string_array options);
 
+    /*!
+     * SizeMap
+     */
+    void SetSizeMapEntries(in string_array sizeMaps);
+    void ClearSizeMaps();
+
+    void UnsetEntry(in string entry);
+
+    /*!
+     * Set/unset a SizeMap on geom object
+     */
+    void         SetSizeMap(in GEOM::GEOM_Object GeomObj, in string sizeMap);
+    void         UnsetSizeMap(in GEOM::GEOM_Object GeomObj);
+    
+    /*!
+     * Set a SizeMap on geom object given by entry
+     */
+    void         SetSizeMapEntry(in string entry, in string sizeMap);
+    string       GetSizeMapEntry(in string entry);
+    string_array GetSizeMapEntries();
+
+    /*!
+     * Set/unset an attractor on geom object
+     */
+    void         SetAttractor(in GEOM::GEOM_Object GeomObj, in string attractor);
+    void         UnsetAttractor(in GEOM::GEOM_Object GeomObj);
+    
+    /*!
+     * Set an attractor on geom object given by entry
+     */
+    void         SetAttractorEntry(in string entry, in string attractor);
+    string       GetAttractorEntry(in string entry);
+    string_array GetAttractorEntries();
+
+    /*!
+     * Set/unset an attractor given as geom object on another geom object
+     */
+    void         SetAttractorGeom(in GEOM::GEOM_Object GeomObj, in GEOM::GEOM_Object AttractorShape, in double StartSize, in double EndSize, in double ActionRadius, in double ConstantRadius);
+    void         UnsetAttractorGeom(in GEOM::GEOM_Object GeomObj);
+
+    /*!
+     * Set an attractor given by entry on a geom object given by entry
+     */
+    void         SetClassAttractorEntry(in string entry, in string att_entry, in double StartSize, in double EndSize, in double ActionRadius, in double ConstantRadius );
+    BLSURFPlugin::TAttParamsMap GetAttractorParams();
+
+/*
+    void         SetCustomSizeMapEntry(in string entry, in string sizeMap);
+    string       GetCustomSizeMapEntry(in string entry);
+    void         SetCustomSizeMap(in GEOM::GEOM_Object GeomObj, in string sizeMap);
+    void         UnsetCustomSizeMap(in GEOM::GEOM_Object GeomObj);
+    string_array GetCustomSizeMapEntries();
+*/
+    ///////////////////////
+    // ENFORCED VERTEXES //
+    ///////////////////////
+    
+    TFaceEntryEnfVertexListMap      GetAllEnforcedVerticesByFace();
+    TEnfVertexList                  GetAllEnforcedVertices();
+    
+    TFaceEntryCoordsListMap         GetAllCoordsByFace();
+    TCoordsEnfVertexMap             GetAllEnforcedVerticesByCoords();
+    
+    TFaceEntryEnfVertexEntryListMap GetAllEnfVertexEntriesByFace();
+    TEnfVertexEntryEnfVertexMap     GetAllEnforcedVerticesByEnfVertexEntry();
+    
+    void                            ClearAllEnforcedVertices();
+    
+   /*!
+    * Set/get/unset an enforced vertex on geom face
+    */
+    boolean SetEnforcedVertex(in GEOM::GEOM_Object theFace, in double x, in double y, in double z) raises (SALOME::SALOME_Exception);
+    boolean SetEnforcedVertexNamed(in GEOM::GEOM_Object theFace, in double x, in double y, in double z, in TEnfName theVertexName) raises (SALOME::SALOME_Exception);
+    boolean SetEnforcedVertexGeom(in GEOM::GEOM_Object theFace, in GEOM::GEOM_Object theVertex) raises (SALOME::SALOME_Exception);
+    boolean SetEnforcedVertexWithGroup(in GEOM::GEOM_Object theFace, in double x, in double y, in double z, in TEnfGroupName groupName) raises (SALOME::SALOME_Exception);
+    boolean SetEnforcedVertexNamedWithGroup(in GEOM::GEOM_Object theFace, in double x, in double y, in double z, in TEnfName theVertexName, in TEnfGroupName groupName) raises (SALOME::SALOME_Exception);
+    boolean SetEnforcedVertexGeomWithGroup(in GEOM::GEOM_Object theFace, in GEOM::GEOM_Object theVertex, in TEnfGroupName groupName) raises (SALOME::SALOME_Exception);
+
+    
+    TEnfVertexList GetEnforcedVertices(in GEOM::GEOM_Object theFace) raises (SALOME::SALOME_Exception);
+    
+    boolean UnsetEnforcedVertex(in GEOM::GEOM_Object theFace, in double x, in double y, in double z) raises (SALOME::SALOME_Exception);
+    boolean UnsetEnforcedVertexGeom(in GEOM::GEOM_Object theFace, in GEOM::GEOM_Object theVertex) raises (SALOME::SALOME_Exception);
+    boolean UnsetEnforcedVertices(in GEOM::GEOM_Object theFace) raises (SALOME::SALOME_Exception);
+    
+   /*!
+    * Set/get/unset an enforced vertex on geom face given by entry
+    */
+    boolean SetEnforcedVertexEntry(in TEntry theFaceEntry, in double x, in double y, in double z, 
+                                   in TEnfName theVertexName, in TEntry theVertexEntry, in TEnfGroupName groupName) raises (SALOME::SALOME_Exception);
+
+    TEnfVertexList GetEnforcedVerticesEntry(in TEntry theFaceEntry) raises (SALOME::SALOME_Exception);
+    boolean UnsetEnforcedVertexEntry(in TEntry theFaceEntry, in double x, in double y, in double z, in TEntry theVertexEntry) raises (SALOME::SALOME_Exception);
+//    boolean UnsetEnforcedVertexEntryGeom(in TEntry theFaceEntry, in TEntry theVertexEntry) raises (SALOME::SALOME_Exception);
+    boolean UnsetEnforcedVerticesEntry(in TEntry theFaceEntry) raises (SALOME::SALOME_Exception);
+
+    /*!
+     * To get/set internal vertices as enforced vertices
+     */
+    void          SetInternalEnforcedVertexAllFaces(in boolean toEnforceInternalVertices);
+    boolean       GetInternalEnforcedVertexAllFaces();
+    void          SetInternalEnforcedVertexAllFacesGroup(in TEnfGroupName groupName);
+    TEnfGroupName GetInternalEnforcedVertexAllFacesGroup();
+
+//  Enable internal enforced vertices on specific face if requested by user
+//    void          SetInternalEnforcedVertex(in GEOM::GEOM_Object theFace,in boolean toEnforceInternalVertices) raises (SALOME::SALOME_Exception);
+//    void          SetInternalEnforcedVertexWithGroup(in GEOM::GEOM_Object theFace, in boolean toEnforceInternalVertices, in TEnfGroupName groupName) raises (SALOME::SALOME_Exception);
+//    void          SetInternalEnforcedVertexEntry(in TEntry theFaceEntry, in boolean toEnforceInternalVertices, in TEnfGroupName groupName) raises (SALOME::SALOME_Exception);
+//    boolean       GetInternalEnforcedVertex(in GEOM::GEOM_Object theFace) raises (SALOME::SALOME_Exception);
+//    boolean       GetInternalEnforcedVertexEntry(in TEntry theFaceEntry) raises (SALOME::SALOME_Exception);
+//    TFaceEntryInternalVerticesList GetAllInternalEnforcedVerticesFaces();
+    ///////////////////////
+    
+    /*!
+     * Sets the file for export resulting mesh in GMF format
+     */
+//     void SetGMFFile(in string theFileName, in boolean isBinary);
+    void SetGMFFile(in string theFileName);
+    string GetGMFFile();
+//     boolean GetGMFFileMode();
+  };
 };
 
 #endif

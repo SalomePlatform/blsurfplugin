@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='us-ascii'?>
 <!DOCTYPE meshers PUBLIC "" "desktop.dtd">
 <!--
-  Copyright (C) 2007-2008  CEA/DEN, EDF R&D
+  Copyright (C) 2007-2012  CEA/DEN, EDF R&D
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -36,12 +36,20 @@
 		dim="2"/>
   </hypotheses>
   <algorithms>
+
     <algorithm type="BLSURF"
                label-id="BLSURF"
                icon-id="mesh_algo_BLSURF.png"
                opt-hypos="BLSURF_Parameters"
                output="TRIA,QUAD"
-               dim="2"/>
+               dim="2"
+	       support-submeshes="true">
+      <python-wrap>
+        <algo>BLSURF=Triangle(algo=smesh.BLSURF)</algo>
+        <hypo>BLSURF_Parameters=Parameters()</hypo>
+      </python-wrap>
+    </algorithm>
+
   </algorithms>
 </meshers-group>
 

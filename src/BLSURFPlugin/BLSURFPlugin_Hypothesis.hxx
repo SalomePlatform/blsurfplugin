@@ -1,35 +1,42 @@
-//  Copyright (C) 2007-2008  CEA/DEN, EDF R&D
+// Copyright (C) 2007-2012  CEA/DEN, EDF R&D
 //
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License.
 //
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-//  Lesser General Public License for more details.
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
 //
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 //
-//  See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
+// See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 //
+
 // ---
 // File    : BLSURFPlugin_Hypothesis.hxx
 // Authors : Francis KLOSS (OCC) & Patrick LAUG (INRIA) & Lioka RAZAFINDRAZAKA (CEA)
 //           & Aurelien ALLEAUME (DISTENE)
+//           Size maps developement: Nicolas GEIMER (OCC) & Gilles DAVID (EURIWARE)
 // ---
 //
 #ifndef _BLSURFPlugin_Hypothesis_HXX_
 #define _BLSURFPlugin_Hypothesis_HXX_
 
 #include "SMESH_Hypothesis.hxx"
+#include <vector>
 #include <map>
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <cstring>
+#include <sstream>
+#include <utilities.h>
+#include "BLSURFPlugin_Attractor.hxx"
 
 //  Parameters for work of BLSURF
 
@@ -41,18 +48,24 @@ public:
   enum Topology {
     FromCAD,
     Process,
-    Process2
+    Process2,
+    PreCAD
   };
 
   enum PhysicalMesh {
     DefaultSize,
-    PhysicalUserDefined
+    PhysicalUserDefined,
+    SizeMap
   };
 
   enum GeometricMesh {
     DefaultGeom,
     UserDefined
   };
+
+  static const char* GetHypType() { return "BLSURF_Parameters"; }
+  
+  TopoDS_Shape entryToShape(std::string entry);
 
   void SetTopology(Topology theTopology);
   Topology GetTopology() const { return _topology; }
@@ -95,19 +108,218 @@ public:
 
   void SetVerbosity(int theVal);
   int GetVerbosity() const { return _verb; }
+  
+  void ClearEntry(const std::string& entry);
+  void ClearSizeMaps();
 
-  static Topology      GetDefaultTopology();
-  static PhysicalMesh  GetDefaultPhysicalMesh();
-  static double        GetDefaultPhySize();
-  static double        GetDefaultMaxSize();
-  static double        GetDefaultMinSize();
-  static GeometricMesh GetDefaultGeometricMesh();
-  static double        GetDefaultAngleMeshS();
-  static double        GetDefaultAngleMeshC() { return GetDefaultAngleMeshS(); }
-  static double        GetDefaultGradation();
-  static bool          GetDefaultQuadAllowed();
-  static bool          GetDefaultDecimesh();
-  static int           GetDefaultVerbosity() { return 10; }
+  void SetPreCADMergeEdges(bool theVal);
+  bool GetPreCADMergeEdges() const { return _preCADMergeEdges; }
+
+  void SetPreCADRemoveNanoEdges(bool theVal);
+  bool GetPreCADRemoveNanoEdges() const { return _preCADRemoveNanoEdges; }
+
+  void SetPreCADDiscardInput(bool theVal);
+  bool GetPreCADDiscardInput() const { return _preCADDiscardInput; }
+
+  void SetPreCADEpsNano(double theVal);
+  double GetPreCADEpsNano() const { return _preCADEpsNano; }
+    
+  typedef std::map<std::string,std::string> TSizeMap;
+
+  void SetSizeMapEntry(const std::string& entry,const std::string& sizeMap );
+  std::string  GetSizeMapEntry(const std::string& entry);
+  const TSizeMap& _GetSizeMapEntries() const { return _sizeMap; }
+  /*!
+   * \brief Return the size maps
+   */
+  static TSizeMap GetSizeMapEntries(const BLSURFPlugin_Hypothesis* hyp);
+
+
+  void SetAttractorEntry(const std::string& entry,const std::string& attractor );
+  std::string GetAttractorEntry(const std::string& entry);
+  const TSizeMap& _GetAttractorEntries() const { return _attractors; };
+  /*!
+   * \brief Return the attractors
+   */
+  static TSizeMap GetAttractorEntries(const BLSURFPlugin_Hypothesis* hyp);
+
+
+/*
+  void SetCustomSizeMapEntry(const std::string& entry,const std::string& sizeMap );
+  std::string  GetCustomSizeMapEntry(const std::string& entry);
+  void UnsetCustomSizeMap(const std::string& entry);
+  const TSizeMap& GetCustomSizeMapEntries() const { return _customSizeMap; }
+ */
+  
+  typedef std::map< std::string, BLSURFPlugin_Attractor* > TAttractorMap;
+  typedef std::map< std::string, std::vector<double> > TParamsMap; //TODO à finir 
+  
+  void SetClassAttractorEntry(const std::string& entry, const std::string& att_entry, double StartSize, double EndSize, double ActionRadius, double ConstantRadius);
+  std::string  GetClassAttractorEntry(const std::string& entry);
+  const TAttractorMap& _GetClassAttractorEntries() const { return _classAttractors; }
+  /*!
+   * \brief Return the attractors entries
+   */
+  static TAttractorMap GetClassAttractorEntries(const BLSURFPlugin_Hypothesis* hyp);
+
+  /*!
+   * To set/get/unset an enforced vertex
+   */
+  // Name
+  typedef std::string TEnfName;
+  // Entry
+  typedef std::string TEntry;
+  // List of entries
+  typedef std::set<TEntry> TEntryList;
+  // Group name
+  typedef std::string TEnfGroupName;
+  // Coordinates
+  typedef std::vector<double> TEnfVertexCoords;
+  typedef std::set< TEnfVertexCoords > TEnfVertexCoordsList;
+
+  // Enforced vertex
+  struct TEnfVertex {
+    TEnfName name;
+    TEntry geomEntry;
+    TEnfVertexCoords coords;
+    TEnfGroupName grpName;
+    TEntryList faceEntries;
+  };
+    
+  struct CompareEnfVertices
+  {
+    bool operator () (const TEnfVertex* e1, const TEnfVertex* e2) const {
+      if (e1 && e2) {
+        if (e1->coords.size() && e2->coords.size())
+          return (e1->coords < e2->coords);
+        else
+          return (e1->geomEntry < e2->geomEntry);
+      }
+      return false;
+    }
+  };
+
+  // List of enforced vertices
+  typedef std::set< TEnfVertex*, CompareEnfVertices > TEnfVertexList;
+
+  // Map Face Entry / List of enforced vertices
+  typedef std::map< TEntry, TEnfVertexList > TFaceEntryEnfVertexListMap;
+
+  // List of Face Entry with internal enforced vertices activated
+  typedef std::set< TEntry > TFaceEntryInternalVerticesList;
+
+  // Map Face Entry / List of coords
+  typedef std::map< TEntry, TEnfVertexCoordsList > TFaceEntryCoordsListMap;
+
+  // Map Face Entry / List of Vertex entry
+  typedef std::map< TEntry, TEntryList > TFaceEntryEnfVertexEntryListMap;
+  
+  // Map Coords / Enforced vertex
+  typedef std::map< TEnfVertexCoords, TEnfVertex* > TCoordsEnfVertexMap;
+
+  // Map Vertex entry / Enforced vertex
+  typedef std::map< TEntry, TEnfVertex* > TEnfVertexEntryEnfVertexMap;
+
+  typedef std::map< TEnfGroupName, std::set<int> > TGroupNameNodeIDMap;
+  /* TODO GROUPS
+  // Map Group Name / List of enforced vertices
+  typedef std::map< TEnfGroupName , TEnfVertexList > TGroupNameEnfVertexListMap;
+  */
+
+  
+  bool                  SetEnforcedVertex(TEntry theFaceEntry, TEnfName theVertexName, TEntry theVertexEntry, TEnfGroupName theGroupName,
+                                          double x = 0.0, double y = 0.0, double z = 0.0);
+  TEnfVertexList        GetEnfVertexList(const TEntry& theFaceEntry) throw (std::invalid_argument);
+  TEnfVertexCoordsList  GetEnfVertexCoordsList(const TEntry& theFaceEntry) throw (std::invalid_argument);
+  TEntryList            GetEnfVertexEntryList (const TEntry& theFaceEntry) throw (std::invalid_argument);
+  TEnfVertex*           GetEnfVertex(TEnfVertexCoords coords) throw (std::invalid_argument);
+  TEnfVertex*           GetEnfVertex(const TEntry& theEnfVertexEntry) throw (std::invalid_argument);
+  void                  AddEnfVertexNodeID(TEnfGroupName theGroupName,int theNodeID);
+  std::set<int>         GetEnfVertexNodeIDs(TEnfGroupName theGroupName) throw (std::invalid_argument);
+  void                  RemoveEnfVertexNodeID(TEnfGroupName theGroupName,int theNodeID) throw (std::invalid_argument);
+  
+  bool ClearEnforcedVertex(const TEntry& theFaceEntry, double x = 0.0, double y = 0.0, double z = 0.0, const TEntry& theVertexEntry="") throw (std::invalid_argument);
+  bool ClearEnforcedVertices(const TEntry& theFaceEntry) throw (std::invalid_argument);
+
+  void ClearAllEnforcedVertices();
+
+  const TFaceEntryEnfVertexListMap  _GetAllEnforcedVerticesByFace() const { return _faceEntryEnfVertexListMap; }
+  const TEnfVertexList              _GetAllEnforcedVertices() const { return _enfVertexList; }
+
+  const TFaceEntryCoordsListMap     _GetAllCoordsByFace() const { return _faceEntryCoordsListMap; }
+  const TCoordsEnfVertexMap         _GetAllEnforcedVerticesByCoords() const { return _coordsEnfVertexMap; }
+
+  const TFaceEntryEnfVertexEntryListMap _GetAllEnfVertexEntriesByFace() const { return _faceEntryEnfVertexEntryListMap; }
+  const TEnfVertexEntryEnfVertexMap     _GetAllEnforcedVerticesByEnfVertexEntry() const { return _enfVertexEntryEnfVertexMap; }
+
+//   TODO GROUPS
+//   const TEnfVertexGroupNameMap _GetEnforcedVertexGroupNameMap() const { return _enfVertexGroupNameMap; }
+  
+
+  /*!
+   * \brief Return the enforced vertices
+   */
+  static TFaceEntryEnfVertexListMap       GetAllEnforcedVerticesByFace(const BLSURFPlugin_Hypothesis* hyp);
+  static TEnfVertexList                   GetAllEnforcedVertices(const BLSURFPlugin_Hypothesis* hyp);
+
+  static TFaceEntryCoordsListMap          GetAllCoordsByFace(const BLSURFPlugin_Hypothesis* hyp);
+  static TCoordsEnfVertexMap              GetAllEnforcedVerticesByCoords(const BLSURFPlugin_Hypothesis* hyp);
+
+  static TFaceEntryEnfVertexEntryListMap  GetAllEnfVertexEntriesByFace(const BLSURFPlugin_Hypothesis* hyp);
+  static TEnfVertexEntryEnfVertexMap      GetAllEnforcedVerticesByEnfVertexEntry(const BLSURFPlugin_Hypothesis* hyp);
+
+  /*!
+   * \brief Internal enforced vertices
+   */
+  void SetInternalEnforcedVertexAllFaces(bool toEnforceInternalVertices);
+  const bool _GetInternalEnforcedVertexAllFaces() const { return _enforcedInternalVerticesAllFaces; }
+  static bool GetInternalEnforcedVertexAllFaces( const BLSURFPlugin_Hypothesis* hyp );
+  void SetInternalEnforcedVertexAllFacesGroup(TEnfGroupName theGroupName);
+  const TEnfGroupName _GetInternalEnforcedVertexAllFacesGroup() const { return _enforcedInternalVerticesAllFacesGroup; }
+  static TEnfGroupName GetInternalEnforcedVertexAllFacesGroup( const BLSURFPlugin_Hypothesis* hyp );
+
+//  Enable internal enforced vertices on specific face if requested by user
+//  static TFaceEntryInternalVerticesList GetDefaultFaceEntryInternalVerticesMap() { return TFaceEntryInternalVerticesList(); }
+//  const TFaceEntryInternalVerticesList  _GetAllInternalEnforcedVerticesByFace() const { return _faceEntryInternalVerticesList; }
+//  static TFaceEntryInternalVerticesList GetAllInternalEnforcedVerticesByFace(const BLSURFPlugin_Hypothesis* hyp);
+//  void SetInternalEnforcedVertex(TEntry theFaceEntry, bool toEnforceInternalVertices, TEnfGroupName theGroupName);
+//  bool GetInternalEnforcedVertex(const TEntry& theFaceEntry);
+
+  static Topology        GetDefaultTopology();
+  static PhysicalMesh    GetDefaultPhysicalMesh();
+  static double          GetDefaultPhySize();
+  static double          GetDefaultMaxSize();
+  static double          GetDefaultMinSize();
+  static GeometricMesh   GetDefaultGeometricMesh();
+  static double          GetDefaultAngleMeshS();
+  static double          GetDefaultAngleMeshC() { return GetDefaultAngleMeshS(); }
+  static double          GetDefaultGradation();
+  static bool            GetDefaultQuadAllowed();
+  static bool            GetDefaultDecimesh();
+  static int             GetDefaultVerbosity() { return 10; }
+  // PreCAD
+  static bool            GetDefaultPreCADMergeEdges() { return false; }
+  static bool            GetDefaultPreCADRemoveNanoEdges() { return false; }
+  static bool            GetDefaultPreCADDiscardInput() { return false; }
+  static double          GetDefaultPreCADEpsNano();
+  
+  static TSizeMap        GetDefaultSizeMap() { return TSizeMap();}
+  static TAttractorMap   GetDefaultAttractorMap() { return TAttractorMap(); }
+
+  static TFaceEntryEnfVertexListMap       GetDefaultFaceEntryEnfVertexListMap() { return TFaceEntryEnfVertexListMap(); }
+  static TEnfVertexList                   GetDefaultEnfVertexList() { return TEnfVertexList(); }
+  static TFaceEntryCoordsListMap          GetDefaultFaceEntryCoordsListMap() { return TFaceEntryCoordsListMap(); }
+  static TCoordsEnfVertexMap              GetDefaultCoordsEnfVertexMap() { return TCoordsEnfVertexMap(); }
+  static TFaceEntryEnfVertexEntryListMap  GetDefaultFaceEntryEnfVertexEntryListMap() { return TFaceEntryEnfVertexEntryListMap(); }
+  static TEnfVertexEntryEnfVertexMap      GetDefaultEnfVertexEntryEnfVertexMap() { return TEnfVertexEntryEnfVertexMap(); }
+  static TGroupNameNodeIDMap              GetDefaultGroupNameNodeIDMap() { return TGroupNameNodeIDMap(); }
+
+  static bool            GetDefaultInternalEnforcedVertex();
+
+  /* TODO GROUPS
+  static TGroupNameEnfVertexListMap GetDefaultGroupNameEnfVertexListMap() { return TGroupNameEnfVertexListMap(); }
+  static TEnfVertexGroupNameMap     GetDefaultEnfVertexGroupNameMap() { return TEnfVertexGroupNameMap(); }
+  */
 
   static double undefinedDouble() { return -1.0; }
 
@@ -116,10 +328,24 @@ public:
 
   void SetOptionValue(const std::string& optionName,
                       const std::string& optionValue) throw (std::invalid_argument);
+  void SetPreCADOptionValue(const std::string& optionName,
+                            const std::string& optionValue) throw (std::invalid_argument);
   std::string GetOptionValue(const std::string& optionName) throw (std::invalid_argument);
+  std::string GetPreCADOptionValue(const std::string& optionName) throw (std::invalid_argument);
   void ClearOption(const std::string& optionName);
+  void ClearPreCADOption(const std::string& optionName);
   const TOptionValues& GetOptionValues() const { return _option2value; }
+  const TOptionValues& GetPreCADOptionValues() const { return _preCADoption2value; }
 
+  /*!
+    * Sets the file for export resulting mesh in GMF format
+    */
+//   void SetGMFFile(const std::string& theFileName, bool isBinary);
+  void SetGMFFile(const std::string& theFileName);
+  std::string GetGMFFile() const { return _GMFFileName; }
+  static std::string GetDefaultGMFFile();
+//   bool GetGMFFileMode() const { return _GMFFileMode; }
+  
   // Persistence
   virtual std::ostream & SaveTo(std::ostream & save);
   virtual std::istream & LoadFrom(std::istream & load);
@@ -140,18 +366,50 @@ public:
    */
   virtual bool SetParametersByDefaults(const TDefaults& dflts, const SMESH_Mesh* theMesh=0);
 
+
 private:
-  Topology      _topology;
-  PhysicalMesh  _physicalMesh;
-  double        _phySize, _phyMin, _phyMax;
-  GeometricMesh _geometricMesh;
-  double        _angleMeshS, _angleMeshC, _hgeoMin, _hgeoMax;
-  double        _gradation;
-  bool          _quadAllowed;
-  bool          _decimesh;
-  int           _verb;
-  TOptionValues _option2value;
-  TOptionNames  _doubleOptions, _charOptions;
+  Topology        _topology;
+  PhysicalMesh    _physicalMesh;
+  double          _phySize, _phyMin, _phyMax;
+  GeometricMesh   _geometricMesh;
+  double          _angleMeshS, _angleMeshC, _hgeoMin, _hgeoMax;
+  double          _gradation;
+  bool            _quadAllowed;
+  bool            _decimesh;
+  int             _verb;
+  
+  bool            _preCADMergeEdges;
+  bool            _preCADRemoveNanoEdges;
+  bool            _preCADDiscardInput;
+  double          _preCADEpsNano;
+  
+  TOptionValues   _option2value, _preCADoption2value;
+  TOptionNames    _doubleOptions, _charOptions, _preCADdoubleOptions, _preCADcharOptions;
+  TSizeMap        _sizeMap;
+  TSizeMap        _attractors;
+  TAttractorMap   _classAttractors;
+  TSizeMap        _attEntry;
+  TParamsMap      _attParams;
+
+  TFaceEntryEnfVertexListMap  _faceEntryEnfVertexListMap;
+  TEnfVertexList              _enfVertexList;
+  // maps to get "manual" enf vertex (through their coordinates)
+  TFaceEntryCoordsListMap     _faceEntryCoordsListMap;
+  TCoordsEnfVertexMap         _coordsEnfVertexMap;
+  // maps to get "geom" enf vertex (through their geom entries)
+  TFaceEntryEnfVertexEntryListMap _faceEntryEnfVertexEntryListMap;
+  TEnfVertexEntryEnfVertexMap     _enfVertexEntryEnfVertexMap;
+  TGroupNameNodeIDMap             _groupNameNodeIDMap;
+  
+//  Enable internal enforced vertices on specific face if requested by user
+//  TFaceEntryInternalVerticesList  _faceEntryInternalVerticesList;
+  bool            _enforcedInternalVerticesAllFaces;
+  TEnfGroupName   _enforcedInternalVerticesAllFacesGroup;
+  
+  std::string     _GMFFileName;
+//   bool            _GMFFileMode;
+
+//   TSizeMap      _customSizeMap;
 };
 
 #endif

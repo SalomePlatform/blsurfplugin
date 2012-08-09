@@ -1,30 +1,31 @@
-dnl  Copyright (C) 2007-2008  CEA/DEN, EDF R&D
+dnl Copyright (C) 2007-2012  CEA/DEN, EDF R&D
 dnl
-dnl  This library is free software; you can redistribute it and/or
-dnl  modify it under the terms of the GNU Lesser General Public
-dnl  License as published by the Free Software Foundation; either
-dnl  version 2.1 of the License.
+dnl This library is free software; you can redistribute it and/or
+dnl modify it under the terms of the GNU Lesser General Public
+dnl License as published by the Free Software Foundation; either
+dnl version 2.1 of the License.
 dnl
-dnl  This library is distributed in the hope that it will be useful,
-dnl  but WITHOUT ANY WARRANTY; without even the implied warranty of
-dnl  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-dnl  Lesser General Public License for more details.
+dnl This library is distributed in the hope that it will be useful,
+dnl but WITHOUT ANY WARRANTY; without even the implied warranty of
+dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+dnl Lesser General Public License for more details.
 dnl
-dnl  You should have received a copy of the GNU Lesser General Public
-dnl  License along with this library; if not, write to the Free Software
-dnl  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+dnl You should have received a copy of the GNU Lesser General Public
+dnl License along with this library; if not, write to the Free Software
+dnl Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 dnl
-dnl  See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
+dnl See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 dnl
+
 dnl  File   : check_BLSURF.m4
 dnl  Author : Vadim SANDLER, Open CASCADE S.A.S (vadim.sandler@opencascade.com)
-
+dnl
 AC_DEFUN([CHECK_BLSURF],[
 
 AC_REQUIRE([AC_PROG_CXX])dnl
 AC_REQUIRE([AC_PROG_CXXCPP])dnl
 
-AC_CHECKING(for BLSURF commercial product)
+AC_CHECKING([for BLSURF commercial product])
 
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
@@ -32,7 +33,7 @@ AC_LANG_CPLUSPLUS
 BLSURF_INCLUDES=""
 BLSURF_LIBS=""
 
-AC_ARG_WITH(blsurf,
+AC_ARG_WITH([blsurf],
 	    [  --with-blsurf=DIR       root directory path of BLSURF installation])
 
 BLSURF_ok=no
@@ -58,34 +59,43 @@ if test "$with_blsurf" != "no" ; then
     echo BLSURF commercial product to generate 2D mesh.
     echo
 
-    BLSURF_INCLUDES="-I$BLSURF_HOME/include"
-    BLSURF_LIBS="-L$BLSURF_HOME/lib -lBLSurf"
+    LOCAL_INCLUDES="-I$BLSURF_HOME/include"
+    LOCAL_LIBS="-L$BLSURF_HOME/lib/Linux"
+    archtest="$(`which arch`)"
+    if test "x$archtest" = "x" ; then
+      archtest="`uname -m`"
+    fi
+    if test $archtest = "x86_64" ; then
+        LOCAL_LIBS="-L$BLSURF_HOME/lib/Linux_64"
+    fi
+    LOCAL_LIBS="${LOCAL_LIBS} -ldistene -lBLSurf -lPreCAD"
 
     CPPFLAGS_old="$CPPFLAGS"
     CXXFLAGS_old="$CXXFLAGS"
-    CPPFLAGS="$BLSURF_INCLUDES $CPPFLAGS"
-    CXXFLAGS="$BLSURF_INCLUDES $CXXFLAGS"
+    CPPFLAGS="$LOCAL_INCLUDES $CPPFLAGS"
+    CXXFLAGS="$LOCAL_INCLUDES $CXXFLAGS"
 
-    AC_MSG_CHECKING(for BLSURF header file)
+    AC_MSG_CHECKING([for BLSURF header file])
 
-    AC_CHECK_HEADER(distene/api.h,BLSURF_ok=yes,BLSURF_ok=no)
+    AC_CHECK_HEADER([distene/api.h],[BLSURF_ok=yes],[BLSURF_ok=no])
 
     if test "x$BLSURF_ok" == "xyes"; then
 
-      AC_MSG_CHECKING(for BLSURF library)
+      AC_MSG_CHECKING([for BLSURF library])
 
-      LDFLAGS_old="$LDFLAGS"
-      LDFLAGS="-L. -$BLSURF_LIBS $LDFLAGS"
+      LIBS_old="$LIBS"
+      LIBS="-L. $LOCAL_LIBS $LIBS"
 
       AC_TRY_LINK(
-	#include "distene/api.h",
-	BLSURF_init();,
+extern "C" {
+#include "distene/api.h"
+},  distene_context_new(),
 	BLSURF_ok=yes,BLSURF_ok=no
 	)
 
-      LDFLAGS="$LDFLAGS_old"
+      LIBS="$LIBS_old"
 
-      AC_MSG_RESULT($BLSURF_ok)
+      AC_MSG_RESULT([$BLSURF_ok])
     fi
 
     CPPFLAGS="$CPPFLAGS_old"
@@ -95,11 +105,13 @@ if test "$with_blsurf" != "no" ; then
 fi
 
 if test "x$BLSURF_ok" == xno ; then
-  AC_MSG_RESULT(for BLSURF: no)
-  AC_MSG_WARN(BLSURF includes or libraries are not found or are not properly installed)
-  AC_MSG_WARN(Cannot build without BLSURF. Use --with-blsurf option to define BLSURF installation.)
+  AC_MSG_RESULT([for BLSURF: no])
+  AC_MSG_WARN([BLSURF includes or libraries are not found or are not properly installed])
+  AC_MSG_WARN([Cannot build without BLSURF. Use --with-blsurf option to define BLSURF installation.])
 else
-  AC_MSG_RESULT(for BLSURF: yes)
+  BLSURF_INCLUDES=$LOCAL_INCLUDES
+  BLSURF_LIBS=$LOCAL_LIBS
+  AC_MSG_RESULT([for BLSURF: yes])
 fi
 
 AC_SUBST(BLSURF_INCLUDES)

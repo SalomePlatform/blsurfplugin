@@ -1,0 +1,458 @@
+/*!
+
+\page blsurf_hypo_page BLSURF Parameters hypothesis
+
+\anchor blsurf_top
+BLSURF Parameters hypothesis works only with \b DISTENE \b BLSurf 2d
+algorithm. This algorithm is a commercial software. To obtain a
+licence, visit http://www.distene.com/corp/eval-distene.html 
+
+\tableofcontents					     
+
+\section blsurf_general_parameters General parameters
+
+\image html blsurf_parameters.png
+
+- <b>Name</b> - allows defining the name of the hypothesis (BLSURF
+Parameters_n by default).
+
+- <b>Physical Mesh</b> - can be set to <em>None</em>, <em>Custom</em>
+  or <em>Size Map</em>
+
+  - if set to <em>Custom</em>, allows user input in the in <b>User size</b>,
+  <b>Max Physical Size</b> and <b>Min Physical  Size</b> fields.
+
+  - if set to <em>Size Map</em>, behaves like <em>Custom</em> mode and takes into
+  account the custom elements sizes given in the Size Map tab.
+
+- <b>User size</b> - defines the size of the generated mesh elements.
+
+- <b>Max Physical Size</b> - defines the upper limit of mesh element size.
+
+- <b>Min Physical Size</b> - defines the lower limit of mesh element size.
+
+- <b>Geometrical mesh</b> - if set to <em>Custom</em>, allows user input in
+<b>Angle Mesh S</b>, <b>Angle Mesh C</b> and <b>Gradation</b>
+fields. These fields control computation of the element size, so
+called <i>geometrical size</i>, conform to the surface geometry
+considering local curvatures. If both the <b>User size</b> and the
+<i>geometrical size</i> are defined, the  eventual element size
+corresponds to the least of the two.
+
+- <b>Angle Mesh S</b> - maximum angle between the mesh face and the
+tangent to the geometrical surface at each mesh node, in degrees.
+
+- <b>Angle Mesh C</b> - maximum angle between the mesh edge and the
+tangent to the geometrical curve at each mesh node, in degrees.
+
+- <b>Max Geometrical Size</b> - defines the upper limit of the
+  <i>geometrical size</i>.
+
+- <b>Min Geometrical Size</b> - defines the lower limit of the
+  <i>geometrical size</i>.
+
+- <b>Gradation</b> - maximum ratio between the lengths of two adjacent
+  edges.
+
+- <b>Allow Quadrangles</b> - if checked, allows the creation of
+  quadrilateral elements.
+
+- <b>Patch independent</b> - if checked, geometrical edges are not
+respected and all geometrical faces are meshed as one hyper-face.
+
+\ref blsurf_top "Back to top"
+
+\section blsurf_advanced_parameters Advanced parameters
+
+The notion of <i>diag</i> used in the descriptions means the diagonal
+of the bounding box of the geometrical object to mesh.
+
+\image html blsurf_parameters_advanced.png
+
+- <b>Verbosity level</b> - defines the percentage of "verbosity" of
+BLSURF [0-100].
+
+- <b>Topology</b> - allows creation of a conform mesh on a shell of
+not sewed faces. The following choices are allowed:
+
+  - <em>"From CAD"</em> means that mesh conformity is assured by conformity
+  of a shape.
+
+  - <em>"Pre-process"</em> and <em>"Pre-process++"</em> allow the BLSURF software to
+  pre-process the geometrical model to eventually produce a conform
+  mesh.
+
+  - <em>"PreCAD"</em> is an auxiliary CAD pre-processing module which has 
+  two main goals:
+
+    - Complete missing or inadequate CAD descriptions.
+
+    - Perform topology reconstruction and specific geometry 
+    enhancement for mesh generation.
+
+    \n This module requires a specific licence. The following PreCAD
+    options are the most significant and important ones:
+
+    - <b>Merge Edges</b> - allows PreCAD to optimize the geometry by merging some
+    edges. This option is 0 by default.
+
+    - <b>Remove nano edges</b> - allows PreCAD to optimize the geometry by removing 
+    the nano edges whenever possible. This option is 0 by default.
+
+    - <b>Nano edge length</b> - gives the length below which an edge is considered as nano 
+    for the topology processing. See also the \b remove_nano_edges option. If unset, PreCAD
+    default value is \f$\mathrm{diag} \times 10^{-5}\f$.
+
+    - <b>Discard input topology</b> - computes the CAD topology from scratch, 
+    without considering the topological information contained in the original CAD
+    (useful for iges files). This option is 0 by default.
+
+- <b>ExportGMF</b> - saves the computed mesh into a GMF file (.mesh or .meshb).
+
+- <b>Add option</b> - provides the choice of multiple PreCAD and BLSURF 
+advanced options, which appear, if selected, in a table where it is 
+possible to input the value of the option and edit it later.
+
+- <b>Clear option</b> - removes the option selected in the table.
+
+The following BLSURF options are commonly usable:
+
+- \b topo_eps1 (real) - is the tolerance level inside a CAD
+patch. By default is equal to \f$\mathrm{diag} \times 10^{-4}\f$. This tolerance is used to
+identify nodes to merge within one geometrical face when \b Topology
+option is to pre-process.
+
+- \b topo_eps2 (real) - is the tolerance level between two CAD
+patches. By default is equal to \f$\mathrm{diag} \times 10^{-4}\f$. This tolerance is used to
+identify nodes to merge over different geometrical faces when
+\b Topology option is to pre-process.
+
+- \b LSS (real) - is an abbreviation for "length of sub-segment". It is
+a maximal allowed length of a mesh edge. Default is \f$0.5\f$.
+
+- \b frontal (integer)
+
+  - 1 - the mesh generator inserts points with an advancing front method.
+
+  -  0 - it inserts them with an algebraic method (on internal edges). This method is
+  slightly faster but generates less regular meshes.
+
+  \n Default is 0.
+
+- \anchor blsurf_hinterpol_flag \b hinterpol_flag (integer) - determines the computation of an
+interpolated value <i>v</i> between two points <i>P1</i> and <i>P2</i> on a
+curve. Let <i>h1</i> be the value at point <i>P1,</i> <i>h2</i> be the value at point
+<i>P2,</i> and <i>t</i> be a parameter varying from 0 to 1 when moving from <i>P1
+to</i> <i>P2</i>.
+
+  - 0 - the interpolation is linear: \f$v = h1 + t (h2 - h1 )\f$
+
+  - 1 - the interpolation is geometric: \f$v = h1 \times \left( \frac{h1}{h2} \right)^{t}\f$
+
+  - 2 - the interpolation is sinusoidal: \f$v = \frac{h1+h2}{2} + \frac{h1-h2}{2 \cdot \cos(\pi \cdot t)}\f$
+
+  \n Default is 0.
+
+- \anchor blsurf_hmean_flag \b hmean_flag (integer) - determines the computation of the average of several
+values:
+
+  - -1 - the minimum is computed.
+
+  - 0 or 2 - the arithmetic average is computed.
+
+  - 1 - the geometric average is computed.
+
+  \n Default is 0.
+
+- \b CheckAdjacentEdges, \b CheckCloseEdges and \b CheckWellDefined
+(integers) - give the number of calls of equally named subroutines the
+purpose of which is to improve the mesh of domains having narrow
+parts. At each iteration,\b CheckCloseEdges decreases the sizes of the
+edges when two boundary curves are neighboring,\b CheckAdjacentEdges
+balances the sizes of adjacent edges, and \b CheckWellDefined checks if
+the parametric domain is well defined. Default values are 0.
+
+- \b CoefRectangle (real)- defines the relative thickness of the rectangles
+used by subroutine \b CheckCloseEdges (see above). Default is 0.25.
+
+- \b eps_collapse (real) - if more than 0.0, BLSURF removes
+curves whose lengths are less than \b eps_collapse. To obtain an
+approximate value of the length of a curve, it is arbitrarily
+split into 20 edges. Default is 0.0.
+
+- \b eps_ends (real) - is used to detect the curves whose lengths are very
+small, that sometimes constitutes an error. A message is printed
+if \f$\left|P2-P1\right| < eps\_ends\f$, where <i>P1</i> and <i>P2</i> are the
+extremities of a curve. Default is \f$\frac{\mathrm{diag}}{500.0}\f$.
+
+- \b prefix (char) - is a prefix of the files generated by
+BLSURF. Default is "x".
+
+- \b refs (integer) - reference of a surface, used when exporting
+files. Default is 1.
+
+The following PreCAD options are commonly usable. 
+
+- \b closed_geometry (int) - describes whether the working geometry 
+should be closed or not. When activated, this option helps PreCAD to process 
+the dirtiest geometries. By default this option is 0.
+
+- \b debug (int) - If debug = 1 PreCAD will be very verbose and will output 
+some intermediate files in the working directory. By default this
+option is 0.
+
+- \b eps_nano_relative (real) -  the same as \b eps_nano, but relatively to 
+the diagonal of the box bounding the geometry. By default this option is \f$10^{-5}\f$.
+
+- \b eps_sewing (real) - tolerance of the assembly. It rarely requires to be tuned. 
+By default this option is \f$\mathrm{diag} \times 5 \cdot 10^{-4}\f$.
+
+- \b eps_sewing_relative (real) -  the same as \b eps_nano but relatively to 
+the diagonal of the box bounding the geometry. By default this option
+is \f$5 \cdot 10^{-4}\f$.
+
+- \b manifold_geometry (int) - describes whether the working geometry should be manifold or not.
+When activated, this option helps PreCAD to process the dirtiest
+geometries. By default this option is 0.
+
+- \b create_tag_collision (int) - creates new tags from original ones in case 
+of collision (entity merge or association for example). By default
+this option is 0.
+
+- \b periodic_tolerance (real) - defines the maximum distance error accepted between 
+two sets of periodic entities. By default this option is \f$\mathrm{diag} \times 10^{-5}\f$.
+
+- \b periodic_tolerance_relative (real) -  the same as \b periodic_tolerance but in a relative unit.
+By default this option is \f$10^{-5}\f$.
+
+- \b periodic_split_tolerance (real) - This periodicity processing related option defines 
+the minimum distance between a CAD point and an imprinted point. It allows to indirectly 
+control the number of created points and small edges. By default this
+option is \f$\mathrm{diag} \times 10^{-4}\f$.
+
+- \b periodic_split_tolerance_relative (real -  the same as \b
+periodic_split_tolerance but in a relative unit. By default this
+option is \f$10^{-4}\f$.
+
+The following advanced options are not documented and you can use them
+at your own risk.
+
+- Integer variables:
+  - addsurf_ivertex
+  - anisotropic
+  - background
+  - coiter
+  - communication
+  - decim
+  - export_flag
+  - file_h
+  - gridnu
+  - gridnv
+  - intermedfile
+  - memory
+  - normals
+  - optim
+  - pardom_flag
+  - pinch
+  - rigid
+  - surforient
+  - tconf
+  - topo_collapse
+- Real variables:
+  - addsurf_angle
+  - addsurf_R
+  - addsurf_H
+  - addsurf_FG
+  - addsurf_r
+  - addsurf_PA
+  - angle_compcurv
+  - angle_ridge
+  - anisotropic_ratio
+  - eps_pardom
+- String variables:
+  - export_format
+  - export_option
+  - import_option
+
+\ref blsurf_top "Back to top"
+
+\section blsurf_local_size Local size
+
+Local sizes can be defined on faces, edges or vertices:
+
+- The faces, edges and vertices can belong to the meshed geometrical
+object or to its sub-shapes (created using <b>Explode</b> command).
+
+- Groups of faces, edges and vertices are also handled.
+
+- It is possible to attribute the same size to several geometries using multi-selection.
+
+- The sizes are constant values or python functions.
+
+- In case of a python function, the following rules must be respected:
+
+  - The name of the function is f.
+
+  - If geometry is a face or a group of faces, the function is f(u,v).
+
+  - If geometry is an edge or a group of edges, the function is f(t).
+
+  - If geometry is a vertex or a group of vertices, the function is f().
+
+  - The function must return a double.
+
+3 different types of size maps can be defined:
+
+-# \ref blsurf_sizemap_computation "Computation of the physical size"
+-# \ref blsurf_attractor "Advanced maps"
+-# \ref blsurf_attractor_computation "Computation of attractors"
+
+\ref blsurf_top "Back to top"
+
+\subsection blsurf_sizemap_computation Computation of the physical size
+
+\image html blsurf_parameters_sizemap1.png 
+
+The physical size is obtained by querying sizemap functions associated
+to the input CAD object for surfaces, curves and points.
+Each function can either return a value h (which is then trimmed
+between the two bounds hphymin and hphymax), or "no answer" (by not
+assigning a value to h), thus providing great flexibility in the
+specification of the sizes. The computation depends on whether point P
+is internal to a surface, internal to a curve, or at the end of
+several curves:
+
+- If point P is internal to a surface, the CAD surface size function
+is queried. If no answer is returned, one interpolates with the values
+at the vertices of the discretized interface curves.
+
+- If point P is internal to a curve, the CAD curve size function is
+queried first. If no answer is returned, the surface size function is
+queried for every adjacent surface and the mean value of the returned
+values is computed. If no answer is returned, sizes h1 and h2 at both
+ends of the curve are considered (see next item) and the interpolated
+value is computed.
+
+- If point P is at the extremity of several curves, the CAD point size
+function is queried first. If no answer is returned, the curve size
+function is queried for every adjacent curve and the mean value of the
+returned values is computed. If no answer is returned, the surface
+size function is queried for every adjacent surface and the mean value
+of the returned values is computed. If there is still no answer
+returned, the default value hphydef is kept.
+
+In order to compute the mean of several values, the arithmetic mean is
+used by default, but this can be modified by the parameter
+\ref blsurf_hmean_flag "hmean flag". In the same way, in order to
+interpolate two values, a linear interpolation is used by default, but
+this can be modified by \ref blsurf_hinterpol_flag "hinterpol flag". 
+
+\ref blsurf_local_size "Back to \"Local size\""\n
+\ref blsurf_top "Back to top"
+
+\subsection blsurf_attractor Advanced maps
+
+\image html blsurf_parameters_sizemap2.png 
+
+More specific size maps can be defined on faces. 
+
+- <i> Attractors </i> allow to define the size of the mesh elements
+on a face so that the mesh is the finest on the attractor shape and
+becomes coarser when getting far from this shape.
+
+  - The selected attractor can be a Vertex, an Edge, a Wire or a
+  Compound mixing several entities of those types.
+
+  - The attractor doesn't have to be a sub-shape of the shape to mesh.
+
+  - The size will grow exponentially (see the formula below) but is
+  bounded by gradation, \n so if you want the formula to be strictly
+  respected, you should set the <i>gradation</i> 
+  to its maximum (2.5) in the <i>arguments</i> tab. 
+
+- Furthermore you can choose to <i> keep the size constant </i>
+until a certain distance from a shape. This option can be combined or
+not with an <i>attractor</i> size map described above. 
+
+  - If the two options are combined the size will remain constant
+  until the distance specified in "constant over" and grow then as
+  prescribed by the attractor function.
+
+  - Else the growing is only controled by the standard arguments of
+  BLSURF (gradation ...).
+
+\image html blsurf_const_size_near_shape2.png "Example of size map with constant size option, the size is kept constant on the left side of the surface until a certain distance"
+
+\note The validation of the hypothesis might take a few seconds if
+attractors are defined or the "constant size" option is used because a
+map of distances has to be built on the whole surface for each face
+where such a hypothesis has been defined.
+
+\sa Sample TUI Script of the \ref tui_blsurf "creation of a BLSurf hypothesis", including size map.
+
+\ref blsurf_local_size "Back to \"Local size\""\n
+\ref blsurf_top "Back to top"
+
+\subsection blsurf_attractor_computation Computation of attractors
+
+The size grows exponentially following the equation : 
+\f$h(d) = \mathrm{User Size} + (\mathrm{h\_start} - \mathrm{User Size}) \times e ^ { - \left( \frac{d}{R} \right) ^ {2} }\f$
+
+Where :
+
+- h_start is the desired size on the given attractor shape
+
+- d is the distance of the current point from the attractor
+shape. The distance is the geodesic distance (i.e. calculated by following the surface to be meshed)
+
+- R is called the distance of influence and allows controlling the growth rate of the mesh
+
+\image html blsurf_attractors2.png "Example of mesh created using attractors, the attractors here are the side edges and the size grows from the side of the surface towards the apex"
+
+\ref blsurf_local_size "Back to \"Local size\""\n
+\ref blsurf_top "Back to top"
+
+\section blsurf_enforced_elements Enforced vertices
+
+\image html blsurf_parameters_enforced_vertices.png
+
+It is possible to define some enforced vertices to BLSurf algorithm.
+An enforced vertex is defined on a Face or a Compound by
+
+- selecting an existing Vertex or Compound,
+
+- or creating a new vertex given its coordinates.
+
+The enforced vertex is the projection of a point defined by its
+(x,y,z) coordinates on the selected face.
+
+- It is possible to define several enforced vertices on a face or a group of faces.
+
+- If the projected point is on the boundary or outside of the face, it will be ignored.
+
+- If a group name is specified, the enforced nodes will be added in the group. If the group does not exist it will be created.
+
+\sa Sample TUI Script of the \ref tui_blsurf "creation of a BLSurf hypothesis", including enforced vertices.
+
+\ref blsurf_top "Back to top"
+
+\section blsurf_limitations Limitations
+
+Currently BLSURF plugin has the following limitations.
+
+- BLSURF algorithm cannot be used as a local algorithm (on
+sub-meshes) or as a provider of a low-level
+mesh for some 3D algorithms, because the BLSURF mesher (and
+consequently plugin) does not provide the information on node
+parameters on edges (U) and faces (U,V). For example the
+following combinations of algorithms are impossible:
+
+  - global MEFISTO or Quadrangle(mapping) + local BLSURF;
+
+  - BLSURF + Projection 2D from faces meshed by BLSURF;
+
+  - local BLSURF + Extrusion 3D;
+  
+\ref blsurf_top "Back to top"
+
+*/

@@ -1,21 +1,22 @@
-#  Copyright (C) 2007-2008  CEA/DEN, EDF R&D
+# Copyright (C) 2007-2012  CEA/DEN, EDF R&D
 #
-#  This library is free software; you can redistribute it and/or
-#  modify it under the terms of the GNU Lesser General Public
-#  License as published by the Free Software Foundation; either
-#  version 2.1 of the License.
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License.
 #
-#  This library is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#  Lesser General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
 #
-#  You should have received a copy of the GNU Lesser General Public
-#  License along with this library; if not, write to the Free Software
-#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 #
-#  See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
+# See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 #
+
 # ---
 # File   : Makefile.am
 # Author : Vadim SANDLER, Open CASCADE S.A.S (vadim.sandler@opencascade.com)
@@ -24,14 +25,14 @@
 include $(top_srcdir)/adm_local/unix/make_common_starter.am
 
 # header files 
-salomeinclude_HEADERS =
+salomeinclude_HEADERS =	\
+	BLSURFPluginGUI_HypothesisCreator.h
 
 # Libraries targets
 lib_LTLIBRARIES = libBLSURFPluginGUI.la
 
-dist_libBLSURFPluginGUI_la_SOURCES =		\
-	BLSURFPluginGUI.cxx			\
-	BLSURFPluginGUI_HypothesisCreator.h	\
+dist_libBLSURFPluginGUI_la_SOURCES = \
+	BLSURFPluginGUI.cxx \
 	BLSURFPluginGUI_HypothesisCreator.cxx
 
 MOC_FILES = \
@@ -51,20 +52,24 @@ libBLSURFPluginGUI_la_CPPFLAGS = 	\
 	$(GEOM_CXXFLAGS)		\
 	$(MED_CXXFLAGS)			\
 	$(SMESH_CXXFLAGS)		\
+	$(VTK_INCLUDES)	\
 	$(BOOST_CPPFLAGS)		\
 	$(CORBA_CXXFLAGS)		\
 	$(CORBA_INCLUDES)		\
 	$(BLSURF_INCLUDES)		\
 	-I$(srcdir)/../BLSURFPlugin	\
-	-I$(top_builddir)/idl		\
-	-I$(top_builddir)/salome_adm/unix
+	-I$(top_builddir)/idl
 
 libBLSURFPluginGUI_la_LDFLAGS =			\
+	$(QT_LIBS) \
 	../BLSURFPlugin/libBLSURFEngine.la	\
-	${SMESH_LDFLAGS} -lSMESH		\
+	$(GUI_LDFLAGS) -lqtx -lSalomeApp -lsuit -lSalomeObject -lLightApp	\
+	$(GEOM_LDFLAGS) -lGEOM \
+	${SMESH_LDFLAGS} -lSMESH -lGeomSelectionTools -lStdMeshersGUI -lSMESHFiltersSelection \
 	$(CAS_KERNEL) $(BLSURF_LIBS)
 
 # resources files
 nodist_salomeres_DATA =		\
 	BLSURFPlugin_images.qm	\
-	BLSURFPlugin_msg_en.qm
+	BLSURFPlugin_msg_en.qm  \
+	BLSURFPlugin_msg_fr.qm

@@ -1323,8 +1323,9 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
           gp_Pnt P(xyzCoords[0],xyzCoords[1],xyzCoords[2]);
           BRepClass_FaceClassifier scl(f,P,1e-7);
           // scl.Perform() is bugged. The function was rewritten
-//          scl.Perform();
-          BRepClass_FaceClassifierPerform(&scl,f,P,1e-7);
+          // BRepClass_FaceClassifierPerform(&scl,f,P,1e-7);
+          // OCC 6.5.2: scl.Perform() is not bugged anymore
+          scl.Perform(f, P, 1e-7);
           TopAbs_State result = scl.State();
           MESSAGE("Position of point on face: "<<result);
           if ( result == TopAbs_OUT )

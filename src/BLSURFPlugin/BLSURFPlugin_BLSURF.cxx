@@ -2338,6 +2338,11 @@ bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh&         aMesh,
     //_angleMeshS    = hyp->GetAngleMeshS();
     _angleMeshC    = _hypothesis->GetAngleMeshC();
     _quadAllowed   = _hypothesis->GetQuadAllowed();
+  } else {
+    //0020968: EDF1545 SMESH: Problem in the creation of a mesh group on geometry
+    // GetDefaultPhySize() sometimes leads to computation failure
+    _phySize = aMesh.GetShapeDiagonalSize() / _gen->GetBoundaryBoxSegmentation();
+    MESSAGE("BLSURFPlugin_BLSURF::SetParameters using defaults");
   }
 
   bool IsQuadratic = false;

@@ -21,11 +21,6 @@
 # @package BLSURFPluginDC
 # Python API for the BLSURF meshing plug-in module.
 
-##
-# @package smesh
-# Documentation of the methods dynamically added by the BLSURF meshing plug-in to the
-# smesh.Mesh class.
-
 from smesh import Mesh_Algorithm, AssureGeomPublished
 
 # Topology treatment way of BLSURF

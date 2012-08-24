@@ -21,7 +21,8 @@
 # @package BLSURFPluginDC
 # Python API for the BLSURF meshing plug-in module.
 
-from smesh import Mesh_Algorithm, AssureGeomPublished
+from smesh_algorithm import Mesh_Algorithm
+from smesh import AssureGeomPublished
 
 # Topology treatment way of BLSURF
 FromCAD, PreProcess, PreProcessPlus, PreCAD = 0,1,2,3

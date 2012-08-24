@@ -33,7 +33,22 @@
     <hypothesis type="BLSURF_Parameters"
 		label-id="BLSURF Parameters"
 		icon-id="mesh_hypo_BLSURF.png"
-		dim="2"/>
+		dim="2">
+      <python-wrap>
+        <accumulative-methods>
+          SetEnforcedVertex,
+          SetEnforcedVertexNamed,
+          SetEnforcedVertexGeom,
+          SetEnforcedVertexWithGroup,
+          SetEnforcedVertexNamedWithGroup,
+          SetEnforcedVertexGeomWithGroup,
+          UnsetEnforcedVertex,
+          UnsetEnforcedVertexGeom,
+          UnsetEnforcedVertices
+        </accumulative-methods>
+      </python-wrap>
+    </hypothesis>
+
   </hypotheses>
   <algorithms>
 

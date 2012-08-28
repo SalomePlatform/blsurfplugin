@@ -1028,11 +1028,13 @@ void BLSURFPlugin_BLSURF::SetParameters(
         TopExp_Explorer exp_face (exp.Current(), TopAbs_VERTEX);
         for (; exp_face.More(); exp_face.Next())
         {
+          // check if a vertex is internal
+          if ( exp_face.Current().Orientation() != TopAbs_INTERNAL &&
+               SMESH_MesherHelper::GetAncestors( exp_face.Current(), mesh, TopAbs_EDGE )->more())
+            continue;
           // Get coords of vertex
           // Check if current coords is already in enfVertexList
           // If coords not in enfVertexList, add new enfVertex
-          if ( exp_face.Current().Orientation() != TopAbs_INTERNAL )
-            continue;
           aPnt = BRep_Tool::Pnt(TopoDS::Vertex(exp_face.Current()));
           MESSAGE("Found vertex on face at " << aPnt.X() <<", "<<aPnt.Y()<<", "<<aPnt.Z());
           BLSURFPlugin_Hypothesis::TEnfVertex* enfVertex = new BLSURFPlugin_Hypothesis::TEnfVertex();

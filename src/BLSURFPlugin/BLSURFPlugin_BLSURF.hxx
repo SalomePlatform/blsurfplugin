@@ -47,7 +47,7 @@
 #endif
 
 #include <Python.h>
-#include "SMESH_2D_Algo.hxx"
+#include "SMESH_Algo.hxx"
 #include "SMESH_Mesh.hxx"
 #include <SMESHDS_Mesh.hxx>
 #include <SMDS_MeshElement.hxx>

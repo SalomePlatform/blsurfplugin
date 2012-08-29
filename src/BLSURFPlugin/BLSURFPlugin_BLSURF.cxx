@@ -1047,6 +1047,8 @@ void BLSURFPlugin_BLSURF::SetParameters(
           enfVertex->grpName = grpName;
           _createEnforcedVertexOnFace( TopoDS::Face(exp.Current()),  aPnt, enfVertex);
           HasSizeMapOnFace = true;
+          // prevent creation of a node on an internal vertex by SMESH Engine
+          mesh.GetSubMesh( exp_face.Current() )->SetIsAlwaysComputed( true );
         }
       }
     }

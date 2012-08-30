@@ -689,6 +689,10 @@ void BLSURFPlugin_BLSURF::SetParameters(
                                         bool *                  use_precad
                                        )
 {
+  // rnc : Bug 1457
+  // Clear map so that it is not stored in the algorithm with old enforced vertices in it
+  EnfVertexCoords2EnfVertexList.clear();
+  
   int    _topology      = BLSURFPlugin_Hypothesis::GetDefaultTopology();
   int    _physicalMesh  = BLSURFPlugin_Hypothesis::GetDefaultPhysicalMesh();
   double _phySize       = BLSURFPlugin_Hypothesis::GetDefaultPhySize();

@@ -430,7 +430,7 @@ The enforced vertex is the projection of a point defined by its
 
 - If the projected point is on the boundary or outside of the face, it will be ignored.
 
-- If a group name is specified, the enforced nodes will be added in the group. If the group does not exist it will be created.
+- If a group name is specified : If the group exists, the enforced nodes will be added in the existing group, if the group does not exist it will be created.
 
 \sa Sample TUI Script of the \ref tui_blsurf "creation of a BLSurf hypothesis", including enforced vertices.
 

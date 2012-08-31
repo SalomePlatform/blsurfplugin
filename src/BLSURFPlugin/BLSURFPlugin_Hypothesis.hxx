@@ -184,6 +184,7 @@ public:
     TEnfVertexCoords coords;
     TEnfGroupName grpName;
     TEntryList faceEntries;
+    TopoDS_Vertex vertex;
   };
     
   struct CompareEnfVertices

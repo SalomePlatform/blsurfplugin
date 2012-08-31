@@ -1049,10 +1049,9 @@ void BLSURFPlugin_BLSURF::SetParameters(
           enfVertex->faceEntries.clear();
           enfVertex->geomEntry = "";
           enfVertex->grpName = grpName;
+          enfVertex->vertex = TopoDS::Vertex( exp_face.Current() );
           _createEnforcedVertexOnFace( TopoDS::Face(exp.Current()),  aPnt, enfVertex);
           HasSizeMapOnFace = true;
-          // prevent creation of a node on an internal vertex by SMESH Engine
-          mesh.GetSubMesh( exp_face.Current() )->SetIsAlwaysComputed( true );
         }
       }
     }
@@ -1202,6 +1201,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   helper.SetIsQuadratic( haveQudraticSubMesh );
   bool needMerge = false;
   set< SMESH_subMesh* > edgeSubmeshes;
+  set< SMESH_subMesh* >& mergeSubmeshes = edgeSubmeshes;
 
   /* Now fill the CAD object with data from your CAD
    * environement. This is the most complex part of a successfull
@@ -1422,7 +1422,22 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
             ienf++;
             MESSAGE("Add cad point on (u,v)=(" << uvCoords[0] << "," << uvCoords[1] << ") with id = " << ienf);
             cad_point_t* point_p = cad_point_new(fce, ienf, uvCoords);
-            cad_point_set_tag(point_p, ienf);
+            int tag = 0;
+            std::map< BLSURFPlugin_Hypothesis::TEnfVertexCoords, BLSURFPlugin_Hypothesis::TEnfVertexList >::const_iterator enfCoordsIt = EnfVertexCoords2EnfVertexList.find(xyzCoords);
+            if (enfCoordsIt != EnfVertexCoords2EnfVertexList.end() &&
+                !enfCoordsIt->second.empty() )
+            {
+              TopoDS_Vertex     v = (*enfCoordsIt->second.begin())->vertex;
+              if ( v.IsNull() ) v = (*enfCoordsIt->second.rbegin())->vertex;
+              if ( !v.IsNull() ) {
+                tag = pmap.Add( v );
+                mergeSubmeshes.insert( aMesh.GetSubMesh( v ));
+                //if ( tag != pmap.Extent() )
+                  needMerge = true;
+              }
+            }
+            if ( tag == 0 ) tag = ienf;
+            cad_point_set_tag(point_p, tag);
           }
         }
         FaceId2EnforcedVertexCoords.erase(faceKey);
@@ -1906,8 +1921,8 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 
   if ( needMerge )
   {
-    set< SMESH_subMesh* >::iterator smIt = edgeSubmeshes.begin();
-    for ( ; smIt != edgeSubmeshes.end(); ++smIt )
+    set< SMESH_subMesh* >::iterator smIt = mergeSubmeshes.begin();
+    for ( ; smIt != mergeSubmeshes.end(); ++smIt )
     {
       SMESH_subMesh* sm = *smIt;
       SMESH_subMeshIteratorPtr subsmIt = sm->getDependsOnIterator( /*includeSelf=*/true,

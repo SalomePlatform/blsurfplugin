@@ -1029,13 +1029,9 @@ void BLSURFPlugin_BLSURF::SetParameters(
       TopExp_Explorer exp (GeomShape, TopAbs_FACE);
       for (; exp.More(); exp.Next()){
         MESSAGE("Iterating shapes. Shape type is " << exp.Current().ShapeType());
-        TopExp_Explorer exp_face (exp.Current(), TopAbs_VERTEX);
+        TopExp_Explorer exp_face (exp.Current(), TopAbs_VERTEX, TopAbs_EDGE);
         for (; exp_face.More(); exp_face.Next())
         {
-          // check if a vertex is internal
-          if ( exp_face.Current().Orientation() != TopAbs_INTERNAL &&
-               SMESH_MesherHelper::GetAncestors( exp_face.Current(), mesh, TopAbs_EDGE )->more())
-            continue;
           // Get coords of vertex
           // Check if current coords is already in enfVertexList
           // If coords not in enfVertexList, add new enfVertex

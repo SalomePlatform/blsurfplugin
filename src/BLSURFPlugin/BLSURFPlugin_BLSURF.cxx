@@ -1904,12 +1904,11 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     };
   }
 
-  // SetIsAlwaysComputed( true ) to sub-meshes of degenerated EDGEs
+  // SetIsAlwaysComputed( true ) to sub-meshes of EDGEs w/o mesh
   TopLoc_Location loc; double f,l;
   for (int i = 1; i <= emap.Extent(); i++)
-    if ( BRep_Tool::Curve(TopoDS::Edge( emap( i )), loc, f,l).IsNull() )
-      if ( SMESH_subMesh* sm = aMesh.GetSubMeshContaining( emap( i )))
-        sm->SetIsAlwaysComputed( true );
+    if ( SMESH_subMesh* sm = aMesh.GetSubMeshContaining( emap( i )))
+      sm->SetIsAlwaysComputed( true );
   for (int i = 1; i <= pmap.Extent(); i++)
       if ( SMESH_subMesh* sm = aMesh.GetSubMeshContaining( pmap( i )))
         if ( !sm->IsMeshComputed() )

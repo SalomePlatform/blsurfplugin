@@ -36,6 +36,17 @@
 		dim="2">
       <python-wrap>
         <accumulative-methods>
+          SetOptionValue,
+          SetPreCADOptionValue,
+          UnsetOption,
+          UnsetPreCADOption,
+          SetSizeMap,
+          SetConstantSizeMap,
+          UnsetSizeMap,
+          SetAttractor,
+          UnsetAttractor,
+          SetAttractorGeom,
+          UnsetAttractorGeom,
           SetEnforcedVertex,
           SetEnforcedVertexNamed,
           SetEnforcedVertexGeom,

@@ -1134,6 +1134,7 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save) {
       << _angleMeshS << " " << _gradation << " " << (int) _quadAllowed << " " << (int) _decimesh;
   save << " " << _phyMin << " " << _phyMax << " " << _angleMeshC << " " << _hgeoMin << " " << _hgeoMax << " " << _verb;
   save << " " << (int) _preCADMergeEdges << " " << (int) _preCADRemoveNanoEdges << " " << (int) _preCADDiscardInput << " " << _preCADEpsNano ;
+  save << " " << (int) _enforcedInternalVerticesAllFaces;
 
   TOptionValues::iterator op_val = _option2value.begin();
   if (op_val != _option2value.end()) {
@@ -1352,6 +1353,12 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   isOK = (load >> val);
   if (isOK)
     _preCADEpsNano = val;
+  else
+    load.clear(std::ios::badbit | load.rdstate());
+
+  isOK = (load >> i);
+  if (isOK)
+    _enforcedInternalVerticesAllFaces = (bool) i;
   else
     load.clear(std::ios::badbit | load.rdstate());
 

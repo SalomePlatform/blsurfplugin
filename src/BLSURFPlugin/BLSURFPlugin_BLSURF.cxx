@@ -689,6 +689,10 @@ void BLSURFPlugin_BLSURF::SetParameters(
                                         bool *                  use_precad
                                        )
 {
+  // rnc : Bug 1457
+  // Clear map so that it is not stored in the algorithm with old enforced vertices in it
+  EnfVertexCoords2EnfVertexList.clear();
+  
   int    _topology      = BLSURFPlugin_Hypothesis::GetDefaultTopology();
   int    _physicalMesh  = BLSURFPlugin_Hypothesis::GetDefaultPhysicalMesh();
   double _phySize       = BLSURFPlugin_Hypothesis::GetDefaultPhySize();
@@ -1025,7 +1029,7 @@ void BLSURFPlugin_BLSURF::SetParameters(
       TopExp_Explorer exp (GeomShape, TopAbs_FACE);
       for (; exp.More(); exp.Next()){
         MESSAGE("Iterating shapes. Shape type is " << exp.Current().ShapeType());
-        TopExp_Explorer exp_face (exp.Current(), TopAbs_VERTEX);
+        TopExp_Explorer exp_face (exp.Current(), TopAbs_VERTEX, TopAbs_EDGE);
         for (; exp_face.More(); exp_face.Next())
         {
           // Get coords of vertex
@@ -1041,6 +1045,7 @@ void BLSURFPlugin_BLSURF::SetParameters(
           enfVertex->faceEntries.clear();
           enfVertex->geomEntry = "";
           enfVertex->grpName = grpName;
+          enfVertex->vertex = TopoDS::Vertex( exp_face.Current() );
           _createEnforcedVertexOnFace( TopoDS::Face(exp.Current()),  aPnt, enfVertex);
           HasSizeMapOnFace = true;
         }
@@ -1192,6 +1197,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   helper.SetIsQuadratic( haveQudraticSubMesh );
   bool needMerge = false;
   set< SMESH_subMesh* > edgeSubmeshes;
+  set< SMESH_subMesh* >& mergeSubmeshes = edgeSubmeshes;
 
   /* Now fill the CAD object with data from your CAD
    * environement. This is the most complex part of a successfull
@@ -1323,8 +1329,9 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
           gp_Pnt P(xyzCoords[0],xyzCoords[1],xyzCoords[2]);
           BRepClass_FaceClassifier scl(f,P,1e-7);
           // scl.Perform() is bugged. The function was rewritten
-//          scl.Perform();
-          BRepClass_FaceClassifierPerform(&scl,f,P,1e-7);
+          // BRepClass_FaceClassifierPerform(&scl,f,P,1e-7);
+          // OCC 6.5.2: scl.Perform() is not bugged anymore
+          scl.Perform(f, P, 1e-7);
           TopAbs_State result = scl.State();
           MESSAGE("Position of point on face: "<<result);
           if ( result == TopAbs_OUT )
@@ -1411,7 +1418,22 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
             ienf++;
             MESSAGE("Add cad point on (u,v)=(" << uvCoords[0] << "," << uvCoords[1] << ") with id = " << ienf);
             cad_point_t* point_p = cad_point_new(fce, ienf, uvCoords);
-            cad_point_set_tag(point_p, ienf);
+            int tag = 0;
+            std::map< BLSURFPlugin_Hypothesis::TEnfVertexCoords, BLSURFPlugin_Hypothesis::TEnfVertexList >::const_iterator enfCoordsIt = EnfVertexCoords2EnfVertexList.find(xyzCoords);
+            if (enfCoordsIt != EnfVertexCoords2EnfVertexList.end() &&
+                !enfCoordsIt->second.empty() )
+            {
+              TopoDS_Vertex     v = (*enfCoordsIt->second.begin())->vertex;
+              if ( v.IsNull() ) v = (*enfCoordsIt->second.rbegin())->vertex;
+              if ( !v.IsNull() ) {
+                tag = pmap.Add( v );
+                mergeSubmeshes.insert( aMesh.GetSubMesh( v ));
+                //if ( tag != pmap.Extent() )
+                  needMerge = true;
+              }
+            }
+            if ( tag == 0 ) tag = ienf;
+            cad_point_set_tag(point_p, tag);
           }
         }
         FaceId2EnforcedVertexCoords.erase(faceKey);
@@ -1882,12 +1904,11 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     };
   }
 
-  // SetIsAlwaysComputed( true ) to sub-meshes of degenerated EDGEs
+  // SetIsAlwaysComputed( true ) to sub-meshes of EDGEs w/o mesh
   TopLoc_Location loc; double f,l;
   for (int i = 1; i <= emap.Extent(); i++)
-    if ( BRep_Tool::Curve(TopoDS::Edge( emap( i )), loc, f,l).IsNull() )
-      if ( SMESH_subMesh* sm = aMesh.GetSubMeshContaining( emap( i )))
-        sm->SetIsAlwaysComputed( true );
+    if ( SMESH_subMesh* sm = aMesh.GetSubMeshContaining( emap( i )))
+      sm->SetIsAlwaysComputed( true );
   for (int i = 1; i <= pmap.Extent(); i++)
       if ( SMESH_subMesh* sm = aMesh.GetSubMeshContaining( pmap( i )))
         if ( !sm->IsMeshComputed() )
@@ -1895,8 +1916,8 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 
   if ( needMerge )
   {
-    set< SMESH_subMesh* >::iterator smIt = edgeSubmeshes.begin();
-    for ( ; smIt != edgeSubmeshes.end(); ++smIt )
+    set< SMESH_subMesh* >::iterator smIt = mergeSubmeshes.begin();
+    for ( ; smIt != mergeSubmeshes.end(); ++smIt )
     {
       SMESH_subMesh* sm = *smIt;
       SMESH_subMeshIteratorPtr subsmIt = sm->getDependsOnIterator( /*includeSelf=*/true,
@@ -2337,6 +2358,11 @@ bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh&         aMesh,
     //_angleMeshS    = hyp->GetAngleMeshS();
     _angleMeshC    = _hypothesis->GetAngleMeshC();
     _quadAllowed   = _hypothesis->GetQuadAllowed();
+  } else {
+    //0020968: EDF1545 SMESH: Problem in the creation of a mesh group on geometry
+    // GetDefaultPhySize() sometimes leads to computation failure
+    _phySize = aMesh.GetShapeDiagonalSize() / _gen->GetBoundaryBoxSegmentation();
+    MESSAGE("BLSURFPlugin_BLSURF::SetParameters using defaults");
   }
 
   bool IsQuadratic = false;

@@ -149,7 +149,7 @@ typedef struct
 //   BLSURFPluginGUI_ObjectReferenceParamWdg( SUIT_SelectionFilter* filter, 
 //                                          QWidget*              parent,
 //                                          bool                  multiSelection=false);
-//   BLSURFPluginGUI_ObjectReferenceParamWdg( MeshObjectType objType,
+//   BLSURFPluginGUI_ObjectReferenceParamWdg( SMESH::MeshObjectType objType,
 //                                          QWidget*       parent,
 //                                          bool           multiSelection=false);
 //   ~BLSURFPluginGUI_ObjectReferenceParamWdg();

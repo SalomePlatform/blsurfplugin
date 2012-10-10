@@ -440,7 +440,7 @@ bool EnforcedTreeWidgetDelegate::vertexExists(QAbstractItemModel *model,
 // 
 // 
 // BLSURFPluginGUI_ObjectReferenceParamWdg::BLSURFPluginGUI_ObjectReferenceParamWdg
-// ( MeshObjectType objType, QWidget* parent, bool multiSelection )
+// ( SMESH::MeshObjectType objType, QWidget* parent, bool multiSelection )
 //   : StdMeshersGUI_ObjectReferenceParamWdg( objType, parent, multiSelection )
 // {
 //   init();

@@ -39,6 +39,7 @@ extern "C"{
 #include <Basics_Utils.hxx>
 #include <Basics_OCCTVersion.hxx>
 
+#include <SMDS_EdgePosition.hxx>
 #include <SMESHDS_Group.hxx>
 #include <SMESH_Gen.hxx>
 #include <SMESH_Group.hxx>
@@ -46,6 +47,7 @@ extern "C"{
 #include <SMESH_MeshEditor.hxx>
 #include <SMESH_MesherHelper.hxx>
 #include <StdMeshers_FaceSide.hxx>
+#include <StdMeshers_ViscousLayers2D.hxx>
 
 #include <utilities.h>
 
@@ -95,7 +97,6 @@ extern "C"{
 #include <GeomAPI_ProjectPointOnSurf.hxx>
 #include <gp_XY.hxx>
 #include <gp_XYZ.hxx>
-// #include <BRepClass_FaceClassifier.hxx>
 #include <TopTools_MapOfShape.hxx>
 
 /* ==================================
@@ -244,6 +245,7 @@ BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF(int hypId, int studyId,
   _name = "BLSURF";
   _shapeType = (1 << TopAbs_FACE); // 1 bit /shape type
   _compatibleHypothesis.push_back(BLSURFPlugin_Hypothesis::GetHypType());
+  _compatibleHypothesis.push_back(StdMeshers_ViscousLayers2D::GetHypType());
   _requireDiscreteBoundary = false;
   _onlyUnaryInput = false;
   _hypothesis = NULL;
@@ -319,38 +321,42 @@ bool BLSURFPlugin_BLSURF::CheckHypothesis
                           const TopoDS_Shape&                  aShape,
                           SMESH_Hypothesis::Hypothesis_Status& aStatus)
 {
-  _hypothesis = NULL;
+  _hypothesis        = NULL;
+  _haveViscousLayers = false;
 
   list<const SMESHDS_Hypothesis*>::const_iterator itl;
   const SMESHDS_Hypothesis* theHyp;
 
-  const list<const SMESHDS_Hypothesis*>& hyps = GetUsedHypothesis(aMesh, aShape);
-  int nbHyp = hyps.size();
-  if (!nbHyp)
+  const list<const SMESHDS_Hypothesis*>& hyps = GetUsedHypothesis(aMesh, aShape,
+                                                                  /*ignoreAuxiliary=*/false);
+  aStatus = SMESH_Hypothesis::HYP_OK;
+  if ( hyps.empty() )
   {
-    aStatus = SMESH_Hypothesis::HYP_OK;
     return true;  // can work with no hypothesis
   }
 
-  itl = hyps.begin();
-  theHyp = (*itl); // use only the first hypothesis
-
-  string hypName = theHyp->GetName();
-
-  if (hypName == "BLSURF_Parameters")
+  for ( itl = hyps.begin(); itl != hyps.end(); ++itl )
   {
-    _hypothesis = static_cast<const BLSURFPlugin_Hypothesis*> (theHyp);
-    ASSERT(_hypothesis);
-    if ( _hypothesis->GetPhysicalMesh() == BLSURFPlugin_Hypothesis::DefaultSize &&
-         _hypothesis->GetGeometricMesh() == BLSURFPlugin_Hypothesis::DefaultGeom )
-      //  hphy_flag = 0 and hgeo_flag = 0 is not allowed (spec)
-      aStatus = SMESH_Hypothesis::HYP_BAD_PARAMETER;
+    theHyp = *itl;
+    string hypName = theHyp->GetName();
+    if ( hypName == BLSURFPlugin_Hypothesis::GetHypType() )
+    {
+      _hypothesis = static_cast<const BLSURFPlugin_Hypothesis*> (theHyp);
+      ASSERT(_hypothesis);
+      if ( _hypothesis->GetPhysicalMesh() == BLSURFPlugin_Hypothesis::DefaultSize &&
+           _hypothesis->GetGeometricMesh() == BLSURFPlugin_Hypothesis::DefaultGeom )
+        //  hphy_flag = 0 and hgeo_flag = 0 is not allowed (spec)
+        aStatus = SMESH_Hypothesis::HYP_BAD_PARAMETER;
+    }
+    else if ( hypName == StdMeshers_ViscousLayers2D::GetHypType() )
+    {
+      _haveViscousLayers = true;
+    }
     else
-      aStatus = SMESH_Hypothesis::HYP_OK;
+    {
+      aStatus = SMESH_Hypothesis::HYP_INCOMPATIBLE;
+    }
   }
-  else
-    aStatus = SMESH_Hypothesis::HYP_INCOMPATIBLE;
-
   return aStatus == SMESH_Hypothesis::HYP_OK;
 }
 
@@ -1089,6 +1095,7 @@ void BLSURFPlugin_BLSURF::SetParameters(
 
 namespace
 {
+  // --------------------------------------------------------------------------
   /*!
    * \brief Class correctly terminating usage of BLSURF library at destruction
    */
@@ -1111,37 +1118,194 @@ namespace
     }
     ~BLSURF_Cleaner()
     {
-      blsurf_session_delete(_bls);
+      Clean( /*exceptContext=*/false );
+    }
+    void Clean(const bool exceptContext)
+    {
+      if ( _bls )
+      {
+        blsurf_session_delete(_bls); _bls = 0;
 
-      // #if BLSURF_VERSION_LONG >= "3.1.1"
-      // //     if(geo_sizemap_e)
-      // //       distene_sizemap_delete(geo_sizemap_e);
-      // //     if(geo_sizemap_f)
-      // //       distene_sizemap_delete(geo_sizemap_f);
-      //     if(iso_sizemap_p)
-      //       distene_sizemap_delete(iso_sizemap_p);
-      //     if(iso_sizemap_e)
-      //       distene_sizemap_delete(iso_sizemap_e);
-      //     if(iso_sizemap_f)
-      //       distene_sizemap_delete(iso_sizemap_f);
-      // 
-      // //     if(clean_geo_sizemap_e)
-      // //       distene_sizemap_delete(clean_geo_sizemap_e);
-      // //     if(clean_geo_sizemap_f)
-      // //       distene_sizemap_delete(clean_geo_sizemap_f);
-      //     if(clean_iso_sizemap_p)
-      //       distene_sizemap_delete(clean_iso_sizemap_p);
-      //     if(clean_iso_sizemap_e)
-      //       distene_sizemap_delete(clean_iso_sizemap_e);
-      //     if(clean_iso_sizemap_f)
-      //       distene_sizemap_delete(clean_iso_sizemap_f);
-      // #endif
-      
-      cad_delete(_cad);
-      dcad_delete(_dcad);
-      context_delete(_ctx);
+        // #if BLSURF_VERSION_LONG >= "3.1.1"
+        // //     if(geo_sizemap_e)
+        // //       distene_sizemap_delete(geo_sizemap_e);
+        // //     if(geo_sizemap_f)
+        // //       distene_sizemap_delete(geo_sizemap_f);
+        //     if(iso_sizemap_p)
+        //       distene_sizemap_delete(iso_sizemap_p);
+        //     if(iso_sizemap_e)
+        //       distene_sizemap_delete(iso_sizemap_e);
+        //     if(iso_sizemap_f)
+        //       distene_sizemap_delete(iso_sizemap_f);
+        // 
+        // //     if(clean_geo_sizemap_e)
+        // //       distene_sizemap_delete(clean_geo_sizemap_e);
+        // //     if(clean_geo_sizemap_f)
+        // //       distene_sizemap_delete(clean_geo_sizemap_f);
+        //     if(clean_iso_sizemap_p)
+        //       distene_sizemap_delete(clean_iso_sizemap_p);
+        //     if(clean_iso_sizemap_e)
+        //       distene_sizemap_delete(clean_iso_sizemap_e);
+        //     if(clean_iso_sizemap_f)
+        //       distene_sizemap_delete(clean_iso_sizemap_f);
+        // #endif
+
+        cad_delete(_cad); _cad = 0;
+        dcad_delete(_dcad); _dcad = 0;
+        if ( !exceptContext )
+        {
+          context_delete(_ctx); _ctx = 0;
+        }
+      }
     }
   };
+
+  // --------------------------------------------------------------------------
+  /*!
+   * \brief A curve of internal boundary of viscous layer
+   */
+  class TProxyPCurve : public Geom2d_Curve
+  {
+    const UVPtStructVec& _noDataVec;
+    Handle(Geom2d_Curve) _pcurve;
+    double               _sign;
+
+    int locateU( const double U, double& r ) const
+    {
+      const double eps = 1e-10;
+      double normU =
+        ( U - _noDataVec[0].param ) / ( _noDataVec.back().param - _noDataVec[0].param );
+      int i = int( normU * ( _noDataVec.size() - 1 ));
+      while ( _noDataVec[ i ].normParam > normU + eps && i != 0 )
+        --i;
+      while ( i+1 < _noDataVec.size() && _noDataVec[ i+1 ].normParam < normU - eps )
+        ++i;
+      //cout << "U " << U << " normU " << normU << " i " << i << " _noDataVec.size() " << _noDataVec.size() << endl;
+      r = 0;
+      if ( normU > eps && normU < 1.- eps && i+1 < _noDataVec.size() )
+        r = ( normU - _noDataVec[i].normParam ) /
+          ( _noDataVec[i+1].normParam - _noDataVec[i].normParam );
+      return i;
+    }
+  public:
+    TProxyPCurve( const SMESH_ProxyMesh::SubMesh* edgeSM,
+                  Handle(Geom2d_Curve)            pcurve)
+      : _noDataVec( edgeSM->GetUVPtStructVec() ), _pcurve( pcurve )
+    {
+      _sign = ( _noDataVec.back().param > _noDataVec[0].param ? +1 : -1 );
+    }
+    void D0(const Standard_Real U, gp_Pnt2d& P) const
+    {
+      double r;
+      int i = locateU( U, r );
+      P.SetCoord( _noDataVec[i].u, _noDataVec[i].v );
+      if ( r > 0 )
+        P = ( 1-r ) * P.XY() + r * gp_XY( _noDataVec[i+1].u, _noDataVec[i+1].v );
+      //cout << "U " << U << "i,r = ( "<< i << ", "<< r << " )\t P ( " << P.X() << ", " << P.Y() <<" )" << endl;
+    }
+    gp_Vec2d DN(const Standard_Real U,const Standard_Integer N) const
+    {
+      double r;
+      int i    = locateU( U, r );
+      double u = _noDataVec[i].param;
+      if ( r > 0 )
+        u = ( 1-r ) * u + r * _noDataVec[i+1].param;
+      gp_Vec2d dn = _pcurve->DN( u, N );
+      //cout << "U " << U << " D" << N << " " << dn.X() << ", " << dn.Y() << end;
+      return dn;
+    }
+    // virtual methods not used within BLSURF plug-in
+    void Reverse()                                         {}
+    Standard_Real ReversedParameter(const double U ) const { return 1 - U; }
+    Standard_Real FirstParameter() const                   { return 0;}
+    Standard_Real LastParameter() const                    { return 1;}
+    Standard_Boolean IsClosed() const                      { return false; }
+    Standard_Boolean IsPeriodic() const                    { return false; }
+    GeomAbs_Shape Continuity() const                       { return GeomAbs_G2; }
+    Standard_Boolean IsCN(const int N) const               { return false; }
+    void Transform(const gp_Trsf2d&)                       {}
+    Handle_Geom2d_Geometry Copy() const                    {return Handle_Geom2d_Geometry();}
+    void D1(const Standard_Real U,gp_Pnt2d& P,gp_Vec2d& V1) const {}
+    void D2(const Standard_Real U,gp_Pnt2d& P,gp_Vec2d& V1,gp_Vec2d& V2) const {}
+    void D3(const Standard_Real U,gp_Pnt2d& P,gp_Vec2d& V1,gp_Vec2d& V2,gp_Vec2d& V3) const {}
+
+    //DEFINE_STANDARD_RTTI(TProxyPCurve);
+  };
+  DEFINE_STANDARD_HANDLE(TProxyPCurve,Geom2d_Curve);
+  // --------------------------------------------------------------------------
+  // comparator to sort nodes by position in the following order:
+  // SMDS_TOP_FACE=2, SMDS_TOP_EDGE=1, SMDS_TOP_VERTEX=0, SMDS_TOP_3DSPACE=3
+  struct NodePosCompare
+  {
+    int operator()( const SMDS_MeshNode* n1, const SMDS_MeshNode* n2 )
+    {
+      SMDS_TypeOfPosition pos1 = n1->GetPosition()->GetTypeOfPosition();
+      SMDS_TypeOfPosition pos2 = n2->GetPosition()->GetTypeOfPosition();
+      if ( pos1 == pos2 ) return 0;
+      if ( pos1 < pos2 || pos1 == SMDS_TOP_3DSPACE ) return 1;
+      return -1;
+    }
+  };
+
+  //================================================================================
+  /*!
+   * \brief Fills groups on nodes to be merged
+   */
+  //================================================================================
+
+  void getNodeGroupsToMerge( const SMESHDS_SubMesh*                smDS,
+                             const TopoDS_Shape&                   shape,
+                             SMESH_MeshEditor::TListOfListOfNodes& nodeGroupsToMerge)
+  {
+    SMDS_NodeIteratorPtr nIt = smDS->GetNodes();
+    switch ( shape.ShapeType() )
+    {
+    case TopAbs_VERTEX: {
+      std::list< const SMDS_MeshNode* > nodes;
+      while ( nIt->more() )
+        nodes.push_back( nIt->next() );
+      if ( nodes.size() > 1 )
+        nodeGroupsToMerge.push_back( nodes );
+      break;
+    }
+    case TopAbs_EDGE: {
+      std::multimap< double, const SMDS_MeshNode* > u2node;
+      while ( nIt->more() )
+      {
+        const SMDS_MeshNode* n = nIt->next();
+        double u = static_cast< const SMDS_EdgePosition* >( n->GetPosition() )->GetUParameter();
+        u2node.insert( make_pair( u, n ));
+      }
+      if ( u2node.size() < 2 ) return;
+
+      double tol = (( u2node.rbegin()->first - u2node.begin()->first ) / 20.) / u2node.size();
+      std::multimap< double, const SMDS_MeshNode* >::iterator un2, un1;
+      for ( un2 = u2node.begin(), un1 = un2++; un2 != u2node.end(); un1 = un2++ )
+      {
+        if (( un2->first - un1->first ) <= tol )
+        {
+          std::list< const SMDS_MeshNode* > nodes;
+          nodes.push_back( un1->second );
+          while (( un2->first - un1->first ) <= tol )
+          {
+            nodes.push_back( un2->second );
+            if ( ++un2 == u2node.end()) {
+              --un2;
+              break;
+            }
+          }
+          // make nodes created on the boundary of viscous layer replace nodes created
+          // by BLSURF as their SMDS_Position is more correct
+          nodes.sort( NodePosCompare() );
+          nodeGroupsToMerge.push_back( nodes );
+        }
+      }
+      break;
+    }
+    default: ;
+    }
+  }
+
 } // namespace
 
 status_t curv_fun(real t, real *uv, real *dt, real *dtt, void *user_data);
@@ -1166,205 +1330,245 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   /* create a distene context (generic object) */
   status_t status = STATUS_ERROR;
 
-  context_t *ctx =  context_new();
-
-  /* Set the message callback in the working context */
-  context_set_message_callback(ctx, message_cb, &_comment);
-#ifdef WITH_SMESH_CANCEL_COMPUTE
-  _compute_canceled = false;
-  context_set_interrupt_callback(ctx, interrupt_cb, this);
-#else
-  context_set_interrupt_callback(ctx, interrupt_cb, NULL);
-#endif
-
-  /* create the CAD object we will work on. It is associated to the context ctx. */
-  cad_t *c = cad_new(ctx);
-  dcad_t *dcad = dcad_new(c);
-
-  FacesWithSizeMap.Clear();
-  FaceId2SizeMap.clear();
-  FaceId2ClassAttractor.clear();
-  FaceIndex2ClassAttractor.clear();
-  EdgesWithSizeMap.Clear();
-  EdgeId2SizeMap.clear();
-  VerticesWithSizeMap.Clear();
-  VertexId2SizeMap.clear();
-
+  SMESHDS_Mesh* meshDS = aMesh.GetMeshDS();
   SMESH_MesherHelper helper( aMesh );
-  // do not call helper.IsQuadraticSubMesh() because submeshes
+  // do not call helper.IsQuadraticSubMesh() because sub-meshes
   // may be cleaned and helper.myTLinkNodeMap gets invalid in such a case
   const bool haveQudraticSubMesh = SMESH_MesherHelper( aMesh ).IsQuadraticSubMesh( aShape );
   helper.SetIsQuadratic( haveQudraticSubMesh );
   bool needMerge = false;
-  set< SMESH_subMesh* > edgeSubmeshes;
-  set< SMESH_subMesh* >& mergeSubmeshes = edgeSubmeshes;
+  set< SMESHDS_SubMesh* > edgeSubmeshes, proxySubmeshes;
+  set< SMESHDS_SubMesh* >& mergeSubmeshes = edgeSubmeshes;
 
-  /* Now fill the CAD object with data from your CAD
-   * environement. This is the most complex part of a successfull
-   * integration.
-   */
-
-  // PreCAD
-  // If user requests it, send the CAD through Distene preprocessor : PreCAD
-  cad_t *cleanc = NULL;
-  precad_session_t *pcs = precad_session_new(ctx);
-  precad_data_set_cad(pcs, c);
-
-  blsurf_session_t *bls = blsurf_session_new(ctx);
-
-  // an object that correctly deletes all blsurf objects at destruction
-  BLSURF_Cleaner cleaner( ctx,bls,c,dcad );
-
-  MESSAGE("BEGIN SetParameters");
-  bool use_precad = false;
-  SetParameters(
-// #if BLSURF_VERSION_LONG >= "3.1.1"
-//     c,
-// #endif
-    _hypothesis, bls, pcs, aMesh, &use_precad);
-  MESSAGE("END SetParameters");
-
-  // needed to prevent the opencascade memory managmement from freeing things
-  vector<Handle(Geom2d_Curve)> curves;
-  vector<Handle(Geom_Surface)> surfaces;
-
-  surfaces.resize(0);
-  curves.resize(0);
+  vector< SMESH_ProxyMesh::Ptr > viscousMeshPerFace;
 
   TopTools_IndexedMapOfShape fmap;
   TopTools_IndexedMapOfShape emap;
   TopTools_IndexedMapOfShape pmap;
 
-  fmap.Clear();
-  FaceId2PythonSmp.clear();
-  emap.Clear();
-  EdgeId2PythonSmp.clear();
-  pmap.Clear();
-  VertexId2PythonSmp.clear();
+  // Issue 0019864. On DebianSarge, FE signals do not obey to OSD::SetSignal(false)
+#ifndef WNT
+  feclearexcept( FE_ALL_EXCEPT );
+  int oldFEFlags = fedisableexcept( FE_ALL_EXCEPT );
+#endif
 
-  assert(Py_IsInitialized());
-  PyGILState_STATE gstate;
-  gstate = PyGILState_Ensure();
+  for ( int iLoop = 0; iLoop < 2; ++iLoop ) /* mesh of the 1st loop will be
+                                               discarded if _haveViscousLayers */
+  {
+    context_t *ctx =  context_new();
 
-  string theSizeMapStr;
+    /* Set the message callback in the working context */
+    context_set_message_callback(ctx, message_cb, &_comment);
+#ifdef WITH_SMESH_CANCEL_COMPUTE
+    _compute_canceled = false;
+    context_set_interrupt_callback(ctx, interrupt_cb, this);
+#else
+    context_set_interrupt_callback(ctx, interrupt_cb, NULL);
+#endif
 
-  /****************************************************************************************
-                                  FACES
-  *****************************************************************************************/
-  int iface = 0;
-  string bad_end = "return";
-  int faceKey = -1;
-  TopTools_IndexedMapOfShape _map;
-  TopExp::MapShapes(aShape,TopAbs_VERTEX,_map);
-  int ienf = _map.Extent();
+    /* create the CAD object we will work on. It is associated to the context ctx. */
+    cad_t *c     = cad_new(ctx);
+    dcad_t *dcad = dcad_new(c);
 
-  for (TopExp_Explorer face_iter(aShape,TopAbs_FACE);face_iter.More();face_iter.Next()) {
-    TopoDS_Face f=TopoDS::Face(face_iter.Current());
+    FacesWithSizeMap.Clear();
+    FaceId2SizeMap.clear();
+    FaceId2ClassAttractor.clear();
+    FaceIndex2ClassAttractor.clear();
+    EdgesWithSizeMap.Clear();
+    EdgeId2SizeMap.clear();
+    VerticesWithSizeMap.Clear();
+    VertexId2SizeMap.clear();
 
-    // make INTERNAL face oriented FORWARD (issue 0020993)
-    if (f.Orientation() != TopAbs_FORWARD && f.Orientation() != TopAbs_REVERSED )
-      f.Orientation(TopAbs_FORWARD);
-
-    if (fmap.FindIndex(f) > 0)
-      continue;
-
-    fmap.Add(f);
-    iface++;
-    surfaces.push_back(BRep_Tool::Surface(f));
-
-    /* create an object representing the face for blsurf */
-    /* where face_id is an integer identifying the face.
-     * surf_function is the function that defines the surface
-     * (For this face, it will be called by blsurf with your_face_object_ptr
-     * as last parameter.
+    /* Now fill the CAD object with data from your CAD
+     * environement. This is the most complex part of a successfull
+     * integration.
      */
-    cad_face_t *fce = cad_face_new(c, iface, surf_fun, surfaces.back());
 
-    /* by default a face has no tag (color). The following call sets it to the same value as the face_id : */
-    cad_face_set_tag(fce, iface);
+    // PreCAD
+    // If user requests it, send the CAD through Distene preprocessor : PreCAD
+    cad_t *cleanc = NULL; // preprocessed cad
+    precad_session_t *pcs = precad_session_new(ctx);
+    precad_data_set_cad(pcs, c);
 
-    /* Set face orientation (optional if you want a well oriented output mesh)*/
-    if(f.Orientation() != TopAbs_FORWARD){
-      cad_face_set_orientation(fce, CAD_ORIENTATION_REVERSED);
-    } else {
-      cad_face_set_orientation(fce, CAD_ORIENTATION_FORWARD);
+    blsurf_session_t *bls = blsurf_session_new(ctx);
+
+    // an object that correctly deletes all blsurf objects at destruction
+    BLSURF_Cleaner cleaner( ctx,bls,c,dcad );
+
+    MESSAGE("BEGIN SetParameters");
+    bool use_precad = false;
+    SetParameters(
+                  // #if BLSURF_VERSION_LONG >= "3.1.1"
+                  //     c,
+                  // #endif
+                  _hypothesis, bls, pcs, aMesh, &use_precad);
+    MESSAGE("END SetParameters");
+
+    // needed to prevent the opencascade memory managmement from freeing things
+    vector<Handle(Geom2d_Curve)> curves;
+    vector<Handle(Geom_Surface)> surfaces;
+
+    fmap.Clear();
+    emap.Clear();
+    pmap.Clear();
+    FaceId2PythonSmp.clear();
+    EdgeId2PythonSmp.clear();
+    VertexId2PythonSmp.clear();
+
+    /****************************************************************************************
+                                          FACES
+    *****************************************************************************************/
+    int iface = 0;
+    string bad_end = "return";
+    int faceKey = -1;
+    TopTools_IndexedMapOfShape _map;
+    TopExp::MapShapes(aShape,TopAbs_VERTEX,_map);
+    int ienf = _map.Extent();
+
+    // Compute viscous layers at 2nd loop
+    {
+      TopTools_MapOfShape map;
+      if ( iLoop == 1 )
+        for (TopExp_Explorer face_iter(aShape,TopAbs_FACE);face_iter.More();face_iter.Next())
+        {
+          const TopoDS_Face& f = TopoDS::Face(face_iter.Current());
+          if ( !map.Add( f )) continue;
+          iface = map.Extent();
+          viscousMeshPerFace[ iface ] = StdMeshers_ViscousLayers2D::Compute( aMesh, f );
+          if ( !viscousMeshPerFace[ iface ] )
+            return false; // error in StdMeshers_ViscousLayers2D::Compute()
+          if ( viscousMeshPerFace[ iface ]->NbProxySubMeshes() < 1 )
+            viscousMeshPerFace[ iface ].reset();
+        }
+      else
+      {
+        for (TopExp_Explorer face_iter(aShape,TopAbs_FACE);face_iter.More();face_iter.Next())
+          map.Add( face_iter.Current());
+        viscousMeshPerFace.resize( map.Extent() + 1 );
+      }
+      iface = 0;
     }
 
-    if (HasSizeMapOnFace && !use_precad){
-//       MESSAGE("A size map is defined on a face")
-//       std::cout << "A size map is defined on a face" << std::endl;
-      // Classic size map
-      faceKey = FacesWithSizeMap.FindIndex(f);
+    assert(Py_IsInitialized());
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    string theSizeMapStr;
+
+    for (TopExp_Explorer face_iter(aShape,TopAbs_FACE);face_iter.More();face_iter.Next())
+    {
+      TopoDS_Face f = TopoDS::Face(face_iter.Current());
+
+      // make INTERNAL face oriented FORWARD (issue 0020993)
+      if (f.Orientation() != TopAbs_FORWARD && f.Orientation() != TopAbs_REVERSED )
+        f.Orientation(TopAbs_FORWARD);
+
+      if (fmap.FindIndex(f) > 0)
+        continue;
+      iface = fmap.Add(f);
+
+      if ( iLoop == 1 && !viscousMeshPerFace[ iface ])
+        continue; // mesh already computed on f
+
+      surfaces.push_back(BRep_Tool::Surface(f));
+
+      /* create an object representing the face for blsurf */
+      /* where face_id is an integer identifying the face.
+       * surf_function is the function that defines the surface
+       * (For this face, it will be called by blsurf with your_face_object_ptr
+       * as last parameter.
+       */
+      cad_face_t *fce = cad_face_new(c, iface, surf_fun, surfaces.back());
+
+      /* by default a face has no tag (color).
+         The following call sets it to the same value as the face_id : */
+      cad_face_set_tag(fce, iface);
+
+      /* Set face orientation (optional if you want a well oriented output mesh)*/
+      if(f.Orientation() != TopAbs_FORWARD)
+        cad_face_set_orientation(fce, CAD_ORIENTATION_REVERSED);
+      else 
+        cad_face_set_orientation(fce, CAD_ORIENTATION_FORWARD);
+
+      if (HasSizeMapOnFace && !use_precad)
+      {
+        // -----------------
+        // Classic size map
+        // -----------------
+        faceKey = FacesWithSizeMap.FindIndex(f);
 
 
-      if (FaceId2SizeMap.find(faceKey)!=FaceId2SizeMap.end()){
-        MESSAGE("A size map is defined on face :"<<faceKey)
-        theSizeMapStr = FaceId2SizeMap[faceKey];
-        // check if function ends with "return"
-        if (theSizeMapStr.find(bad_end) == (theSizeMapStr.size()-bad_end.size()-1))
-          continue;
-        // Expr To Python function, verification is performed at validation in GUI
-        PyObject * obj = NULL;
-        obj= PyRun_String(theSizeMapStr.c_str(), Py_file_input, main_dict, NULL);
-        Py_DECREF(obj);
-        PyObject * func = NULL;
-        func = PyObject_GetAttrString(main_mod, "f");
-        FaceId2PythonSmp[iface]=func;
-        FaceId2SizeMap.erase(faceKey);
-      }
-
-      // Specific size map = Attractor
-      std::map<int,std::vector<double> >::iterator attractor_iter = FaceId2AttractorCoords.begin();
-
-      for (; attractor_iter != FaceId2AttractorCoords.end(); ++attractor_iter) {
-        if (attractor_iter->first == faceKey) {
-          MESSAGE("Face indice: " << iface);
-          MESSAGE("Adding attractor");
-
-          double xyzCoords[3]  = {attractor_iter->second[2],
-                                  attractor_iter->second[3],
-                                  attractor_iter->second[4]};
-
-          MESSAGE("Check position of vertex =(" << xyzCoords[0] << "," << xyzCoords[1] << "," << xyzCoords[2] << ")");
-          gp_Pnt P(xyzCoords[0],xyzCoords[1],xyzCoords[2]);
-          BRepClass_FaceClassifier scl(f,P,1e-7);
-          // scl.Perform() is bugged. The function was rewritten
-          // BRepClass_FaceClassifierPerform(&scl,f,P,1e-7);
-          // OCC 6.5.2: scl.Perform() is not bugged anymore
-          scl.Perform(f, P, 1e-7);
-          TopAbs_State result = scl.State();
-          MESSAGE("Position of point on face: "<<result);
-          if ( result == TopAbs_OUT )
-              MESSAGE("Point is out of face: node is not created");
-          if ( result == TopAbs_UNKNOWN )
-              MESSAGE("Point position on face is unknown: node is not created");
-          if ( result == TopAbs_ON )
-              MESSAGE("Point is on border of face: node is not created");
-          if ( result == TopAbs_IN )
-          {
-            // Point is inside face and not on border
-            MESSAGE("Point is in face: node is created");
-            double uvCoords[2]   = {attractor_iter->second[0],attractor_iter->second[1]};
-            ienf++;
-            MESSAGE("Add cad point on (u,v)=(" << uvCoords[0] << "," << uvCoords[1] << ") with id = " << ienf);
-            cad_point_t* point_p = cad_point_new(fce, ienf, uvCoords);
-            cad_point_set_tag(point_p, ienf);
-          }
-          FaceId2AttractorCoords.erase(faceKey);
+        if (FaceId2SizeMap.find(faceKey)!=FaceId2SizeMap.end()) {
+          MESSAGE("A size map is defined on face :"<<faceKey)
+            theSizeMapStr = FaceId2SizeMap[faceKey];
+          // check if function ends with "return"
+          if (theSizeMapStr.find(bad_end) == (theSizeMapStr.size()-bad_end.size()-1))
+            continue;
+          // Expr To Python function, verification is performed at validation in GUI
+          PyObject * obj = NULL;
+          obj= PyRun_String(theSizeMapStr.c_str(), Py_file_input, main_dict, NULL);
+          Py_DECREF(obj);
+          PyObject * func = NULL;
+          func = PyObject_GetAttrString(main_mod, "f");
+          FaceId2PythonSmp[iface]=func;
+          FaceId2SizeMap.erase(faceKey);
         }
-      }
 
-      // Class Attractors
-      std::map<int,BLSURFPlugin_Attractor* >::iterator clAttractor_iter = FaceId2ClassAttractor.find(faceKey);
-      if (clAttractor_iter != FaceId2ClassAttractor.end()){
+        // Specific size map = Attractor
+        std::map<int,std::vector<double> >::iterator attractor_iter = FaceId2AttractorCoords.begin();
+
+        for (; attractor_iter != FaceId2AttractorCoords.end(); ++attractor_iter) {
+          if (attractor_iter->first == faceKey) {
+            MESSAGE("Face indice: " << iface);
+            MESSAGE("Adding attractor");
+
+            double xyzCoords[3]  = {attractor_iter->second[2],
+                                    attractor_iter->second[3],
+                                    attractor_iter->second[4]};
+
+            MESSAGE("Check position of vertex =(" << xyzCoords[0] << "," << xyzCoords[1] << "," << xyzCoords[2] << ")");
+            gp_Pnt P(xyzCoords[0],xyzCoords[1],xyzCoords[2]);
+            BRepClass_FaceClassifier scl(f,P,1e-7);
+            // scl.Perform() is bugged. The function was rewritten
+            // scl.Perform();
+            BRepClass_FaceClassifierPerform( &scl, f, P, 1e-7 );
+            TopAbs_State result = scl.State();
+            MESSAGE("Position of point on face: "<<result);
+            if ( result == TopAbs_OUT )
+              MESSAGE("Point is out of face: node is not created");
+            if ( result == TopAbs_UNKNOWN )
+              MESSAGE("Point position on face is unknown: node is not created");
+            if ( result == TopAbs_ON )
+              MESSAGE("Point is on border of face: node is not created");
+            if ( result == TopAbs_IN )
+            {
+              // Point is inside face and not on border
+              MESSAGE("Point is in face: node is created");
+              double uvCoords[2] = {attractor_iter->second[0],attractor_iter->second[1]};
+              ienf++;
+              MESSAGE("Add cad point on (u,v)=(" << uvCoords[0] << "," << uvCoords[1] << ") with id = " << ienf);
+              cad_point_t* point_p = cad_point_new(fce, ienf, uvCoords);
+              cad_point_set_tag(point_p, ienf);
+            }
+            FaceId2AttractorCoords.erase(faceKey);
+          }
+        }
+
+        // -----------------
+        // Class Attractors
+        // -----------------
+        std::map<int,BLSURFPlugin_Attractor* >::iterator clAttractor_iter = FaceId2ClassAttractor.find(faceKey);
+        if (clAttractor_iter != FaceId2ClassAttractor.end()){
           MESSAGE("Face indice: " << iface);
           MESSAGE("Adding attractor");
           FaceIndex2ClassAttractor[iface]=clAttractor_iter->second;
           FaceId2ClassAttractor.erase(clAttractor_iter);
         }
-      }
+      } // if (HasSizeMapOnFace && !use_precad)
 
+      // ------------------
       // Enforced Vertices
+      // ------------------
       faceKey = FacesWithEnforcedVertices.FindIndex(f);
       std::map<int,BLSURFPlugin_Hypothesis::TEnfVertexCoordsList >::const_iterator evmIt = FaceId2EnforcedVertexCoords.find(faceKey);
       if (evmIt != FaceId2EnforcedVertexCoords.end()) {
@@ -1384,7 +1588,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
           gp_Pnt P(xyzCoords[0],xyzCoords[1],xyzCoords[2]);
           BRepClass_FaceClassifier scl(f,P,1e-7);
           // OCC 6.3sp6 : scl.Perform() is bugged. The function was rewritten
-//          BRepClass_FaceClassifierPerform(&scl,f,P,1e-7);
+          // BRepClass_FaceClassifierPerform(&scl,f,P,1e-7);
           // OCC 6.5.2: scl.Perform() is not bugged anymore
           scl.Perform(f, P, 1e-7);
           TopAbs_State result = scl.State();
@@ -1423,11 +1627,14 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
             if (enfCoordsIt != EnfVertexCoords2EnfVertexList.end() &&
                 !enfCoordsIt->second.empty() )
             {
+              // to merge nodes of an INTERNAL vertex belonging to several faces
               TopoDS_Vertex     v = (*enfCoordsIt->second.begin())->vertex;
               if ( v.IsNull() ) v = (*enfCoordsIt->second.rbegin())->vertex;
               if ( !v.IsNull() ) {
                 tag = pmap.Add( v );
-                mergeSubmeshes.insert( aMesh.GetSubMesh( v ));
+                SMESH_subMesh* vSM = aMesh.GetSubMesh( v );
+                vSM->ComputeStateEngine( SMESH_subMesh::COMPUTE );
+                mergeSubmeshes.insert( vSM->GetSubMeshDS() );
                 //if ( tag != pmap.Extent() )
                   needMerge = true;
               }
@@ -1437,118 +1644,38 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
           }
         }
         FaceId2EnforcedVertexCoords.erase(faceKey);
-      }
-//       else
-//         std::cout << "No enforced vertex defined" << std::endl;
-//     }
 
-
-    /****************************************************************************************
-                                    EDGES
-                   now create the edges associated to this face
-    *****************************************************************************************/
-    int edgeKey = -1;
-    for (TopExp_Explorer edge_iter(f,TopAbs_EDGE);edge_iter.More();edge_iter.Next()) {
-      TopoDS_Edge e = TopoDS::Edge(edge_iter.Current());
-      int ic = emap.FindIndex(e);
-      if (ic <= 0)
-        ic = emap.Add(e);
-
-      double tmin,tmax;
-      curves.push_back(BRep_Tool::CurveOnSurface(e, f, tmin, tmax));
-
-      if (HasSizeMapOnEdge){
-        edgeKey = EdgesWithSizeMap.FindIndex(e);
-        if (EdgeId2SizeMap.find(edgeKey)!=EdgeId2SizeMap.end()) {
-          MESSAGE("Sizemap defined on edge with index " << edgeKey);
-          theSizeMapStr = EdgeId2SizeMap[edgeKey];
-          if (theSizeMapStr.find(bad_end) == (theSizeMapStr.size()-bad_end.size()-1))
-            continue;
-          // Expr To Python function, verification is performed at validation in GUI
-          PyObject * obj = NULL;
-          obj= PyRun_String(theSizeMapStr.c_str(), Py_file_input, main_dict, NULL);
-          Py_DECREF(obj);
-          PyObject * func = NULL;
-          func = PyObject_GetAttrString(main_mod, "f");
-          EdgeId2PythonSmp[ic]=func;
-          EdgeId2SizeMap.erase(edgeKey);
-        }
-      }
-
-      /* attach the edge to the current blsurf face */
-      cad_edge_t *edg = cad_edge_new(fce, ic, tmin, tmax, curv_fun, curves.back());
-
-      /* by default an edge has no tag (color). The following call sets it to the same value as the edge_id : */
-      cad_edge_set_tag(edg, ic);
-
-      /* by default, an edge does not necessalry appear in the resulting mesh,
-     unless the following property is set :
-      */
-      cad_edge_set_property(edg, EDGE_PROPERTY_SOFT_REQUIRED);
-
-      /* by default an edge is a boundary edge */
-      if (e.Orientation() == TopAbs_INTERNAL)
-        cad_edge_set_property(edg, EDGE_PROPERTY_INTERNAL);
-
-      // pass existing nodes of sub-meshes to BLSURF
-      SMESH_subMesh* sm = aMesh.GetSubMesh( e );
-      if ( !sm->IsEmpty() )
-      {
-        edgeSubmeshes.insert( sm );
-
-        StdMeshers_FaceSide edgeOfFace( f, e, &aMesh, e.Orientation() == TopAbs_FORWARD,
-                                        /*ignoreMedium=*/haveQudraticSubMesh);
-        if ( edgeOfFace.MissVertexNode() )
-          return error(COMPERR_BAD_INPUT_MESH,"No node on vertex");
-
-        const int nbNodes = edgeOfFace.NbPoints();
-
-        dcad_edge_discretization_t *dedge;
-        dcad_get_edge_discretization(dcad, edg, &dedge);
-        dcad_edge_discretization_set_vertex_count( dedge, nbNodes );
-
-        const std::vector<UVPtStruct>& nodeData = edgeOfFace.GetUVPtStruct();
-        for ( int iN = 0; iN < nbNodes; ++iN )
-        {
-          const UVPtStruct& nData = nodeData[ iN ];
-          double t                = nData.param;
-          real uv[2]              = { nData.u, nData.v };
-          SMESH_TNodeXYZ nXYZ( nData.node );
-          dcad_edge_discretization_set_vertex_coordinates( dedge, iN+1, t, uv, nXYZ._xyz );
-        }
-        dcad_edge_discretization_set_property(dedge, DISTENE_DCAD_PROPERTY_REQUIRED);
-      }
+      } // evmIt != FaceId2EnforcedVertexCoords.end()
+      //       else
+      //         std::cout << "No enforced vertex defined" << std::endl;
+      //     }
 
       /****************************************************************************************
-                                      VERTICES
+                                           EDGES
+                        now create the edges associated to this face
       *****************************************************************************************/
+      int edgeKey = -1;
+      for (TopExp_Explorer edge_iter(f,TopAbs_EDGE);edge_iter.More();edge_iter.Next())
+      {
+        TopoDS_Edge e = TopoDS::Edge(edge_iter.Current());
+        int ic = emap.FindIndex(e);
+        if (ic <= 0)
+          ic = emap.Add(e);
 
-      int npts = 0;
-      int ip1, ip2, *ip;
-      gp_Pnt2d e0 = curves.back()->Value(tmin);
-      gp_Pnt ee0 = surfaces.back()->Value(e0.X(), e0.Y());
-      Standard_Real d1=0,d2=0;
+        const SMESH_ProxyMesh::SubMesh* proxySubMesh = 0;
+        if ( viscousMeshPerFace[ iface ])
+          proxySubMesh = viscousMeshPerFace[ iface ]->GetProxySubMesh( e );
 
-      int vertexKey = -1;
-      for (TopExp_Explorer ex_edge(e ,TopAbs_VERTEX); ex_edge.More(); ex_edge.Next()) {
-        TopoDS_Vertex v = TopoDS::Vertex(ex_edge.Current());
-        ++npts;
-        if (npts == 1){
-          ip = &ip1;
-          d1 = ee0.SquareDistance(BRep_Tool::Pnt(v));
-        } else {
-          ip = &ip2;
-          d2 = ee0.SquareDistance(BRep_Tool::Pnt(v));
-        }
-        *ip = pmap.FindIndex(v);
-        if(*ip <= 0)
-          *ip = pmap.Add(v);
+        double tmin,tmax;
+        curves.push_back(BRep_Tool::CurveOnSurface(e, f, tmin, tmax));
+        if ( proxySubMesh )
+          curves.back() = new TProxyPCurve( proxySubMesh, curves.back() );
 
-        if (HasSizeMapOnVertex){
-          vertexKey = VerticesWithSizeMap.FindIndex(v);
-          if (VertexId2SizeMap.find(vertexKey)!=VertexId2SizeMap.end()){
-            theSizeMapStr = VertexId2SizeMap[vertexKey];
-            //MESSAGE("VertexId2SizeMap[faceKey]: " << VertexId2SizeMap[vertexKey]);
+        if (HasSizeMapOnEdge){
+          edgeKey = EdgesWithSizeMap.FindIndex(e);
+          if (EdgeId2SizeMap.find(edgeKey)!=EdgeId2SizeMap.end()) {
+            MESSAGE("Sizemap defined on edge with index " << edgeKey);
+            theSizeMapStr = EdgeId2SizeMap[edgeKey];
             if (theSizeMapStr.find(bad_end) == (theSizeMapStr.size()-bad_end.size()-1))
               continue;
             // Expr To Python function, verification is performed at validation in GUI
@@ -1557,352 +1684,522 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
             Py_DECREF(obj);
             PyObject * func = NULL;
             func = PyObject_GetAttrString(main_mod, "f");
-            VertexId2PythonSmp[*ip]=func;
-            VertexId2SizeMap.erase(vertexKey);   // do not erase if using a vector
+            EdgeId2PythonSmp[ic]=func;
+            EdgeId2SizeMap.erase(edgeKey);
           }
         }
-      }
-      if (npts != 2) {
-        // should not happen
-        MESSAGE("An edge does not have 2 extremities.");
-      } else {
-        if (d1 < d2) {
-          // This defines the curves extremity connectivity
-          cad_edge_set_extremities(edg, ip1, ip2);
-          /* set the tag (color) to the same value as the extremity id : */
-          cad_edge_set_extremities_tag(edg, ip1, ip2);
-        }
-        else {
-          cad_edge_set_extremities(edg, ip2, ip1);
-          cad_edge_set_extremities_tag(edg, ip2, ip1);
-        }
-      }
-    } // for edge
-  } //for face
-
-  // Clear mesh from already meshed edges if possible else
-  // remember that merge is needed
-  set< SMESH_subMesh* >::iterator smIt = edgeSubmeshes.begin();
-  for ( ; smIt != edgeSubmeshes.end(); ++smIt )
-  {
-    SMESH_subMesh* sm = *smIt;
-    SMESH_subMeshIteratorPtr subsmIt = sm->getDependsOnIterator( /*includeSelf=*/true,
-                                                                 /*complexFirst=*/false);
-    while ( subsmIt->more() )
-    {
-      sm = subsmIt->next();
-      if ( SMESHDS_SubMesh* smDS = sm->GetSubMeshDS() )
-      {
-        SMDS_NodeIteratorPtr nIt = smDS->GetNodes();
-        if ( nIt->more() )
+        /* data of nodes existing on the edge */
+        StdMeshers_FaceSidePtr nodeData;
+        SMESH_subMesh* sm = aMesh.GetSubMesh( e );
+        if ( !sm->IsEmpty() )
         {
-          const SMDS_MeshNode* n = nIt->next();
-          if ( n->NbInverseElements( SMDSAbs_Face ) > 0 )
-          {
-            needMerge = true;
-            // add existing medium nodes to helper
-            if ( aMesh.NbEdges( ORDER_QUADRATIC ) > 0 )
-            {
-              SMDS_ElemIteratorPtr edgeIt = smDS->GetElements();
-              while ( edgeIt->more() )
-                helper.AddTLinks( static_cast<const SMDS_MeshEdge*>(edgeIt->next()));
+          SMESH_subMeshIteratorPtr subsmIt = sm->getDependsOnIterator( /*includeSelf=*/true,
+                                                                       /*complexFirst=*/false);
+          while ( subsmIt->more() ) 
+            edgeSubmeshes.insert( subsmIt->next()->GetSubMeshDS() );
+
+          if ( viscousMeshPerFace[ iface ])
+            if ( const SMESHDS_SubMesh* smDS = viscousMeshPerFace[ iface ]->GetProxySubMesh( e ))
+            { // protect proxySubmeshes from clearing
+              proxySubmeshes.insert( const_cast<SMESHDS_SubMesh*>( smDS ));
+              proxySubmeshes.insert( meshDS->MeshElements( e ));
+              proxySubmeshes.insert( meshDS->MeshElements( helper.IthVertex( 0, e )));
+              proxySubmeshes.insert( meshDS->MeshElements( helper.IthVertex( 1, e )));
             }
+          nodeData.reset( new StdMeshers_FaceSide( f, e, &aMesh, /*isForwrd = */true,
+                                                   /*ignoreMedium=*/haveQudraticSubMesh,
+                                                   viscousMeshPerFace[ iface ]));
+          if ( nodeData->MissVertexNode() )
+            return error(COMPERR_BAD_INPUT_MESH,"No node on vertex");
+
+          const std::vector<UVPtStruct>& nodeDataVec = nodeData->GetUVPtStruct();
+          if ( !nodeDataVec.empty() )
+          {
+            if ( Abs( nodeDataVec[0].param - tmin ) > Abs( nodeDataVec.back().param - tmin ))
+            {
+              nodeData->Reverse();
+              nodeData->GetUVPtStruct(); // nodeData recomputes nodeDataVec
+            }
+            // tmin and tmax can change in case of viscous layer on an adjacent edge
+            tmin = nodeDataVec.front().param;
+            tmax = nodeDataVec.back().param;
+            //cout << "tmin = "<<tmin << ", tmax = "<< tmax << endl;
           }
           else
           {
-            sm->ComputeStateEngine( SMESH_subMesh::CLEAN );
+            cout << "---------------- Invalid nodeData" << endl;
+            nodeData.reset();
           }
         }
+
+        /* attach the edge to the current blsurf face */
+        cad_edge_t *edg = cad_edge_new(fce, ic, tmin, tmax, curv_fun, curves.back());
+
+        /* by default an edge has no tag (color).
+           The following call sets it to the same value as the edge_id : */
+        cad_edge_set_tag(edg, ic);
+
+        /* by default, an edge does not necessalry appear in the resulting mesh,
+           unless the following property is set :
+        */
+        cad_edge_set_property(edg, EDGE_PROPERTY_SOFT_REQUIRED);
+
+        /* by default an edge is a boundary edge */
+        if (e.Orientation() == TopAbs_INTERNAL)
+          cad_edge_set_property(edg, EDGE_PROPERTY_INTERNAL);
+
+        // pass existing nodes of sub-meshes to BLSURF
+        if ( nodeData )
+        {
+          const std::vector<UVPtStruct>& nodeDataVec = nodeData->GetUVPtStruct();
+          const int                      nbNodes     = nodeDataVec.size();
+
+          dcad_edge_discretization_t *dedge;
+          dcad_get_edge_discretization(dcad, edg, &dedge);
+          dcad_edge_discretization_set_vertex_count( dedge, nbNodes );
+
+          //cout << endl << " EDGE " << ic << endl;
+          for ( int iN = 0; iN < nbNodes; ++iN )
+          {
+            const UVPtStruct& nData = nodeDataVec[ iN ];
+            double t                = nData.param;
+            real uv[2]              = { nData.u, nData.v };
+            SMESH_TNodeXYZ nXYZ( nData.node );
+            //cout << "\tt = " << t << " uv = ( " << uv[0] << ","<< uv[1] << " ) ID " << nData.node->GetID() << endl;
+            dcad_edge_discretization_set_vertex_coordinates( dedge, iN+1, t, uv, nXYZ._xyz );
+          }
+          dcad_edge_discretization_set_property(dedge, DISTENE_DCAD_PROPERTY_REQUIRED);
+        }
+
+        /****************************************************************************************
+                                      VERTICES
+        *****************************************************************************************/
+
+        int npts = 0;
+        int ip1, ip2, *ip;
+        gp_Pnt2d e0 = curves.back()->Value(tmin);
+        gp_Pnt ee0 = surfaces.back()->Value(e0.X(), e0.Y());
+        Standard_Real d1=0,d2=0;
+
+        int vertexKey = -1;
+        for (TopExp_Explorer ex_edge(e ,TopAbs_VERTEX); ex_edge.More(); ex_edge.Next()) {
+          TopoDS_Vertex v = TopoDS::Vertex(ex_edge.Current());
+          ++npts;
+          if (npts == 1){
+            ip = &ip1;
+            d1 = ee0.SquareDistance(BRep_Tool::Pnt(v));
+          } else {
+            ip = &ip2;
+            d2 = ee0.SquareDistance(BRep_Tool::Pnt(v));
+          }
+          *ip = pmap.FindIndex(v);
+          if(*ip <= 0)
+            *ip = pmap.Add(v);
+
+          if (HasSizeMapOnVertex){
+            vertexKey = VerticesWithSizeMap.FindIndex(v);
+            if (VertexId2SizeMap.find(vertexKey)!=VertexId2SizeMap.end()){
+              theSizeMapStr = VertexId2SizeMap[vertexKey];
+              //MESSAGE("VertexId2SizeMap[faceKey]: " << VertexId2SizeMap[vertexKey]);
+              if (theSizeMapStr.find(bad_end) == (theSizeMapStr.size()-bad_end.size()-1))
+                continue;
+              // Expr To Python function, verification is performed at validation in GUI
+              PyObject * obj = NULL;
+              obj= PyRun_String(theSizeMapStr.c_str(), Py_file_input, main_dict, NULL);
+              Py_DECREF(obj);
+              PyObject * func = NULL;
+              func = PyObject_GetAttrString(main_mod, "f");
+              VertexId2PythonSmp[*ip]=func;
+              VertexId2SizeMap.erase(vertexKey);   // do not erase if using a vector
+            }
+          }
+        }
+        if (npts != 2) {
+          // should not happen
+          MESSAGE("An edge does not have 2 extremities.");
+        } else {
+          if (d1 < d2) {
+            // This defines the curves extremity connectivity
+            cad_edge_set_extremities(edg, ip1, ip2);
+            /* set the tag (color) to the same value as the extremity id : */
+            cad_edge_set_extremities_tag(edg, ip1, ip2);
+          }
+          else {
+            cad_edge_set_extremities(edg, ip2, ip1);
+            cad_edge_set_extremities_tag(edg, ip2, ip1);
+          }
+        }
+      } // for edge
+    } //for face
+
+    // Clear mesh from already meshed edges if possible else
+    // remember that merge is needed
+    set< SMESHDS_SubMesh* >::iterator smIt = edgeSubmeshes.begin();
+    for ( ; smIt != edgeSubmeshes.end(); ++smIt ) // loop on already meshed EDGEs
+    {
+      SMESHDS_SubMesh* smDS = *smIt;
+      if ( !smDS ) continue;
+      SMDS_NodeIteratorPtr nIt = smDS->GetNodes();
+      if ( nIt->more() )
+      {
+        const SMDS_MeshNode* n = nIt->next();
+        if ( n->NbInverseElements( SMDSAbs_Face ) > 0 )
+        {
+          needMerge = true;
+          // add existing medium nodes to helper
+          if ( aMesh.NbEdges( ORDER_QUADRATIC ) > 0 )
+          {
+            SMDS_ElemIteratorPtr edgeIt = smDS->GetElements();
+            while ( edgeIt->more() )
+              helper.AddTLinks( static_cast<const SMDS_MeshEdge*>(edgeIt->next()));
+          }
+          continue;
+        }
+      }
+      if ( proxySubmeshes.count( smDS ))
+      {
+        needMerge = true;
+      }
+      else
+      {
+        SMDS_ElemIteratorPtr eIt = smDS->GetElements();
+        while ( eIt->more() ) meshDS->RemoveFreeElement( eIt->next(), smDS );
+        SMDS_NodeIteratorPtr nIt = smDS->GetNodes();
+        while ( nIt->more() ) meshDS->RemoveFreeNode( nIt->next(), smDS );
       }
     }
-  }
 
-  PyGILState_Release(gstate);
+    if (use_precad) {
+      /* Now launch the PreCAD process */
+      status = precad_process(pcs);
+      if(status != STATUS_OK){
+        cout << "PreCAD processing failed with error code " << status << "\n";
+      }
+      else {
+        // retrieve the pre-processed CAD object
+        cleanc = precad_new_cad(pcs);
+        if(!cleanc){
+          cout << "Unable to retrieve PreCAD result \n";
+        }
+        cout << "PreCAD processing successfull \n";
 
-  if (use_precad){
-    /* Now launch the PreCAD process */
-    status = precad_process(pcs);
-    if(status != STATUS_OK){
-      cout << "PreCAD processing failed with error code " << status << "\n";
+        // #if BLSURF_VERSION_LONG >= "3.1.1"
+        //       /* We can now get the updated sizemaps (if any) */
+        // //       if(geo_sizemap_e)
+        // //         clean_geo_sizemap_e = precad_new_sizemap(pcs, geo_sizemap_e);
+        // // 
+        // //       if(geo_sizemap_f)
+        // //         clean_geo_sizemap_f = precad_new_sizemap(pcs, geo_sizemap_f);
+        //
+        //       if(iso_sizemap_p)
+        //         clean_iso_sizemap_p = precad_new_sizemap(pcs, iso_sizemap_p);
+        //
+        //       if(iso_sizemap_e)
+        //         clean_iso_sizemap_e = precad_new_sizemap(pcs, iso_sizemap_e);
+        //
+        //       if(iso_sizemap_f)
+        //         clean_iso_sizemap_f = precad_new_sizemap(pcs, iso_sizemap_f);
+        // #endif
+      }
       // Now we can delete the PreCAD session
       precad_session_delete(pcs);
     }
-    else {
-      // retrieve the pre-processed CAD object
-      cleanc = precad_new_cad(pcs);
-      if(!cleanc){
-        cout << "Unable to retrieve PreCAD result \n";
-      }
-      cout << "PreCAD processing successfull \n";
 
-// #if BLSURF_VERSION_LONG >= "3.1.1"
-//       /* We can now get the updated sizemaps (if any) */
-// //       if(geo_sizemap_e)
-// //         clean_geo_sizemap_e = precad_new_sizemap(pcs, geo_sizemap_e);
-// // 
-// //       if(geo_sizemap_f)
-// //         clean_geo_sizemap_f = precad_new_sizemap(pcs, geo_sizemap_f);
-// 
-//       if(iso_sizemap_p)
-//         clean_iso_sizemap_p = precad_new_sizemap(pcs, iso_sizemap_p);
-// 
-//       if(iso_sizemap_e)
-//         clean_iso_sizemap_e = precad_new_sizemap(pcs, iso_sizemap_e);
-// 
-//       if(iso_sizemap_f)
-//         clean_iso_sizemap_f = precad_new_sizemap(pcs, iso_sizemap_f);
-// #endif
-      
-      // Now we can delete the PreCAD session 
-      precad_session_delete(pcs);
-    }
-  }
-
-  blsurf_data_set_dcad(bls, dcad);
-  if (cleanc) {
-    // Give the pre-processed CAD object to the current BLSurf session
-    blsurf_data_set_cad(bls, cleanc);
-  }
-  else {
-    // Use the original one
-    blsurf_data_set_cad(bls, c);
-  }
-
-// #if BLSURF_VERSION_LONG >= "3.1.1"
-//   blsurf_data_set_sizemap(bls, clean_iso_sizemap_p);
-//   blsurf_data_set_sizemap(bls, clean_iso_sizemap_e);
-//   blsurf_data_set_sizemap(bls, clean_iso_sizemap_f);
-// #endif
-
-  std::cout << std::endl;
-  std::cout << "Beginning of Surface Mesh generation" << std::endl;
-  std::cout << std::endl;
-
-  // Issue 0019864. On DebianSarge, FE signals do not obey to OSD::SetSignal(false)
-#ifndef WNT
-  feclearexcept( FE_ALL_EXCEPT );
-  int oldFEFlags = fedisableexcept( FE_ALL_EXCEPT );
-#endif
-
-  try {
-    OCC_CATCH_SIGNALS;
-
-    status = blsurf_compute_mesh(bls);
-
-  }
-  catch ( std::exception& exc ) {
-    _comment += exc.what();
-  }
-  catch (Standard_Failure& ex) {
-    _comment += ex.DynamicType()->Name();
-    if ( ex.GetMessageString() && strlen( ex.GetMessageString() )) {
-      _comment += ": ";
-      _comment += ex.GetMessageString();
-    }
-  }
-  catch (...) {
-    if ( _comment.empty() )
-      _comment = "Exception in blsurf_compute_mesh()";
-  }
-  if ( status != STATUS_OK) {
-    // There was an error while meshing
-    //return error(_comment);
-  }
-
-  std::cout << std::endl;
-  std::cout << "End of Surface Mesh generation" << std::endl;
-  std::cout << std::endl;
-
-  mesh_t *msh = NULL;
-  blsurf_data_get_mesh(bls, &msh);
-  if(!msh){
-    /* release the mesh object */
-    blsurf_data_regain_mesh(bls, msh);
-    return error(_comment);
-  }
-
-  std::string GMFFileName = BLSURFPlugin_Hypothesis::GetDefaultGMFFile();
-  if (_hypothesis)
-    GMFFileName = _hypothesis->GetGMFFile();
-  if (GMFFileName != "") {
-//     bool GMFFileMode = _hypothesis->GetGMFFileMode();
-    bool asciiFound = (GMFFileName.find(".mesh",GMFFileName.length()-5) != std::string::npos);
-    bool binaryFound = (GMFFileName.find(".meshb",GMFFileName.length()-6) != std::string::npos);
-    if (!asciiFound && !binaryFound)
-      GMFFileName.append(".mesh");
-    /*
-    if (GMFFileMode) {
-      if (!binaryFound) {
-        if (asciiFound)
-          GMFFileName.append("b");
-        else
-          GMFFileName.append(".meshb");
-      }
+    blsurf_data_set_dcad(bls, dcad);
+    if (cleanc) {
+      // Give the pre-processed CAD object to the current BLSurf session
+      blsurf_data_set_cad(bls, cleanc);
     }
     else {
-      if (!asciiFound)
+      // Use the original one
+      blsurf_data_set_cad(bls, c);
+    }
+
+    // #if BLSURF_VERSION_LONG >= "3.1.1"
+    //   blsurf_data_set_sizemap(bls, clean_iso_sizemap_p);
+    //   blsurf_data_set_sizemap(bls, clean_iso_sizemap_e);
+    //   blsurf_data_set_sizemap(bls, clean_iso_sizemap_f);
+    // #endif
+
+    std::cout << std::endl;
+    std::cout << "Beginning of Surface Mesh generation" << std::endl;
+    std::cout << std::endl;
+
+    try {
+      OCC_CATCH_SIGNALS;
+
+      status = blsurf_compute_mesh(bls);
+
+    }
+    catch ( std::exception& exc ) {
+      _comment += exc.what();
+    }
+    catch (Standard_Failure& ex) {
+      _comment += ex.DynamicType()->Name();
+      if ( ex.GetMessageString() && strlen( ex.GetMessageString() )) {
+        _comment += ": ";
+        _comment += ex.GetMessageString();
+      }
+    }
+    catch (...) {
+      if ( _comment.empty() )
+        _comment = "Exception in blsurf_compute_mesh()";
+    }
+    if ( status != STATUS_OK) {
+      // There was an error while meshing
+      error(_comment);
+    }
+
+    PyGILState_Release(gstate);
+
+    std::cout << std::endl;
+    std::cout << "End of Surface Mesh generation" << std::endl;
+    std::cout << std::endl;
+
+    mesh_t *msh = NULL;
+    blsurf_data_get_mesh(bls, &msh);
+    if(!msh){
+      /* release the mesh object */
+      blsurf_data_regain_mesh(bls, msh);
+      return error(_comment);
+    }
+
+    std::string GMFFileName = BLSURFPlugin_Hypothesis::GetDefaultGMFFile();
+    if (_hypothesis)
+      GMFFileName = _hypothesis->GetGMFFile();
+    if (GMFFileName != "") {
+      //     bool GMFFileMode = _hypothesis->GetGMFFileMode();
+      bool asciiFound = (GMFFileName.find(".mesh",GMFFileName.length()-5) != std::string::npos);
+      bool binaryFound = (GMFFileName.find(".meshb",GMFFileName.length()-6) != std::string::npos);
+      if (!asciiFound && !binaryFound)
         GMFFileName.append(".mesh");
-    }
-    */
-    mesh_write_mesh(msh, GMFFileName.c_str());
-  }
-
-  /* retrieve mesh data (see distene/mesh.h) */
-  integer nv, ne, nt, nq, vtx[4], tag;
-  real xyz[3];
-
-  mesh_get_vertex_count(msh, &nv);
-  mesh_get_edge_count(msh, &ne);
-  mesh_get_triangle_count(msh, &nt);
-  mesh_get_quadrangle_count(msh, &nq);
-
-
-  SMESHDS_Mesh* meshDS = aMesh.GetMeshDS();
-  SMDS_MeshNode** nodes = new SMDS_MeshNode*[nv+1];
-  bool* tags = new bool[nv+1];
-
-  /* enumerated vertices */
-  for(int iv=1;iv<=nv;iv++) {
-    mesh_get_vertex_coordinates(msh, iv, xyz);
-    mesh_get_vertex_tag(msh, iv, &tag);
-    // Issue 0020656. Use vertex coordinates
-    if ( tag > 0 && tag <= pmap.Extent() ) {
-      TopoDS_Vertex v = TopoDS::Vertex(pmap(tag));
-      double tol = BRep_Tool::Tolerance( v );
-      gp_Pnt p = BRep_Tool::Pnt( v );
-      if ( p.IsEqual( gp_Pnt( xyz[0], xyz[1], xyz[2]), 2*tol))
-        xyz[0] = p.X(), xyz[1] = p.Y(), xyz[2] = p.Z();
-      else
-        tag = 0; // enforced or attracted vertex
-    }
-    nodes[iv] = meshDS->AddNode(xyz[0], xyz[1], xyz[2]);
-
-    // Create group of enforced vertices if requested
-    BLSURFPlugin_Hypothesis::TEnfVertexCoords projVertex;
-    projVertex.clear();
-    projVertex.push_back((double)xyz[0]);
-    projVertex.push_back((double)xyz[1]);
-    projVertex.push_back((double)xyz[2]);
-    std::map< BLSURFPlugin_Hypothesis::TEnfVertexCoords, BLSURFPlugin_Hypothesis::TEnfVertexList >::const_iterator enfCoordsIt = EnfVertexCoords2EnfVertexList.find(projVertex);
-    if (enfCoordsIt != EnfVertexCoords2EnfVertexList.end()) {
-      MESSAGE("Found enforced vertex @ " << xyz[0] << ", " << xyz[1] << ", " << xyz[2]);
-      BLSURFPlugin_Hypothesis::TEnfVertexList::const_iterator enfListIt = enfCoordsIt->second.begin();
-      BLSURFPlugin_Hypothesis::TEnfVertex *currentEnfVertex;
-      for (; enfListIt != enfCoordsIt->second.end(); ++enfListIt) {
-        currentEnfVertex = (*enfListIt);
-        if (currentEnfVertex->grpName != "") {
-          bool groupDone = false;
-          SMESH_Mesh::GroupIteratorPtr grIt = aMesh.GetGroups();
-          MESSAGE("currentEnfVertex->grpName: " << currentEnfVertex->grpName);
-          MESSAGE("Parsing the groups of the mesh");
-          while (grIt->more()) {
-            SMESH_Group * group = grIt->next();
-            if ( !group ) continue;
-            MESSAGE("Group: " << group->GetName());
-            SMESHDS_GroupBase* groupDS = group->GetGroupDS();
-            if ( !groupDS ) continue;
-            MESSAGE("group->SMDSGroup().GetType(): " << (groupDS->GetType()));
-            MESSAGE("group->SMDSGroup().GetType()==SMDSAbs_Node: " << (groupDS->GetType()==SMDSAbs_Node));
-            MESSAGE("currentEnfVertex->grpName.compare(group->GetStoreName())==0: " << (currentEnfVertex->grpName.compare(group->GetName())==0));
-            if ( groupDS->GetType()==SMDSAbs_Node && currentEnfVertex->grpName.compare(group->GetName())==0) {
-              SMESHDS_Group* aGroupDS = static_cast<SMESHDS_Group*>( groupDS );
-              aGroupDS->SMDSGroup().Add(nodes[iv]);
-              MESSAGE("Node ID: " << nodes[iv]->GetID());
-              // How can I inform the hypothesis ?
-//                 _hypothesis->AddEnfVertexNodeID(currentEnfVertex->grpName,nodes[iv]->GetID());
-              groupDone = true;
-              MESSAGE("Successfully added enforced vertex to existing group " << currentEnfVertex->grpName);
-              break;
-            }
-          }
-          if (!groupDone)
-          {
-            int groupId;
-            SMESH_Group* aGroup = aMesh.AddGroup(SMDSAbs_Node, currentEnfVertex->grpName.c_str(), groupId);
-            aGroup->SetName( currentEnfVertex->grpName.c_str() );
-            SMESHDS_Group* aGroupDS = static_cast<SMESHDS_Group*>( aGroup->GetGroupDS() );
-            aGroupDS->SMDSGroup().Add(nodes[iv]);
-            MESSAGE("Successfully created enforced vertex group " << currentEnfVertex->grpName);
-            groupDone = true;
-          }
-          if (!groupDone)
-            throw SALOME_Exception(LOCALIZED("An enforced vertex node was not added to a group"));
-        }
+      /*
+        if (GMFFileMode) {
+        if (!binaryFound) {
+        if (asciiFound)
+        GMFFileName.append("b");
         else
-          MESSAGE("Group name is empty: '"<<currentEnfVertex->grpName<<"' => group is not created");
+        GMFFileName.append(".meshb");
+        }
+        }
+        else {
+        if (!asciiFound)
+        GMFFileName.append(".mesh");
+        }
+      */
+      mesh_write_mesh(msh, GMFFileName.c_str());
+    }
+
+    /* retrieve mesh data (see distene/mesh.h) */
+    integer nv, ne, nt, nq, vtx[4], tag;
+    real xyz[3];
+
+    mesh_get_vertex_count(msh, &nv);
+    mesh_get_edge_count(msh, &ne);
+    mesh_get_triangle_count(msh, &nt);
+    mesh_get_quadrangle_count(msh, &nq);
+
+    SMDS_MeshNode** nodes = new SMDS_MeshNode*[nv+1];
+    bool* tags = new bool[nv+1];
+
+    /* enumerated vertices */
+    for(int iv=1;iv<=nv;iv++) {
+      mesh_get_vertex_coordinates(msh, iv, xyz);
+      mesh_get_vertex_tag(msh, iv, &tag);
+      // Issue 0020656. Use vertex coordinates
+      if ( tag > 0 && tag <= pmap.Extent() ) {
+        TopoDS_Vertex v = TopoDS::Vertex(pmap(tag));
+        double tol = BRep_Tool::Tolerance( v );
+        gp_Pnt p = BRep_Tool::Pnt( v );
+        if ( p.IsEqual( gp_Pnt( xyz[0], xyz[1], xyz[2]), 2*tol))
+          xyz[0] = p.X(), xyz[1] = p.Y(), xyz[2] = p.Z();
+        else
+          tag = 0; // enforced or attracted vertex
+      }
+      nodes[iv] = meshDS->AddNode(xyz[0], xyz[1], xyz[2]);
+
+      // Create group of enforced vertices if requested
+      BLSURFPlugin_Hypothesis::TEnfVertexCoords projVertex;
+      projVertex.clear();
+      projVertex.push_back((double)xyz[0]);
+      projVertex.push_back((double)xyz[1]);
+      projVertex.push_back((double)xyz[2]);
+      std::map< BLSURFPlugin_Hypothesis::TEnfVertexCoords, BLSURFPlugin_Hypothesis::TEnfVertexList >::const_iterator enfCoordsIt = EnfVertexCoords2EnfVertexList.find(projVertex);
+      if (enfCoordsIt != EnfVertexCoords2EnfVertexList.end()) {
+        MESSAGE("Found enforced vertex @ " << xyz[0] << ", " << xyz[1] << ", " << xyz[2]);
+        BLSURFPlugin_Hypothesis::TEnfVertexList::const_iterator enfListIt = enfCoordsIt->second.begin();
+        BLSURFPlugin_Hypothesis::TEnfVertex *currentEnfVertex;
+        for (; enfListIt != enfCoordsIt->second.end(); ++enfListIt) {
+          currentEnfVertex = (*enfListIt);
+          if (currentEnfVertex->grpName != "") {
+            bool groupDone = false;
+            SMESH_Mesh::GroupIteratorPtr grIt = aMesh.GetGroups();
+            MESSAGE("currentEnfVertex->grpName: " << currentEnfVertex->grpName);
+            MESSAGE("Parsing the groups of the mesh");
+            while (grIt->more()) {
+              SMESH_Group * group = grIt->next();
+              if ( !group ) continue;
+              MESSAGE("Group: " << group->GetName());
+              SMESHDS_GroupBase* groupDS = group->GetGroupDS();
+              if ( !groupDS ) continue;
+              MESSAGE("group->SMDSGroup().GetType(): " << (groupDS->GetType()));
+              MESSAGE("group->SMDSGroup().GetType()==SMDSAbs_Node: " << (groupDS->GetType()==SMDSAbs_Node));
+              MESSAGE("currentEnfVertex->grpName.compare(group->GetStoreName())==0: " << (currentEnfVertex->grpName.compare(group->GetName())==0));
+              if ( groupDS->GetType()==SMDSAbs_Node && currentEnfVertex->grpName.compare(group->GetName())==0) {
+                SMESHDS_Group* aGroupDS = static_cast<SMESHDS_Group*>( groupDS );
+                aGroupDS->SMDSGroup().Add(nodes[iv]);
+                MESSAGE("Node ID: " << nodes[iv]->GetID());
+                // How can I inform the hypothesis ?
+                //                 _hypothesis->AddEnfVertexNodeID(currentEnfVertex->grpName,nodes[iv]->GetID());
+                groupDone = true;
+                MESSAGE("Successfully added enforced vertex to existing group " << currentEnfVertex->grpName);
+                break;
+              }
+            }
+            if (!groupDone)
+            {
+              int groupId;
+              SMESH_Group* aGroup = aMesh.AddGroup(SMDSAbs_Node, currentEnfVertex->grpName.c_str(), groupId);
+              aGroup->SetName( currentEnfVertex->grpName.c_str() );
+              SMESHDS_Group* aGroupDS = static_cast<SMESHDS_Group*>( aGroup->GetGroupDS() );
+              aGroupDS->SMDSGroup().Add(nodes[iv]);
+              MESSAGE("Successfully created enforced vertex group " << currentEnfVertex->grpName);
+              groupDone = true;
+            }
+            if (!groupDone)
+              throw SALOME_Exception(LOCALIZED("An enforced vertex node was not added to a group"));
+          }
+          else
+            MESSAGE("Group name is empty: '"<<currentEnfVertex->grpName<<"' => group is not created");
+        }
+      }
+
+
+      // internal points are tagged to zero
+      if(tag > 0 && tag <= pmap.Extent() ){
+        meshDS->SetNodeOnVertex(nodes[iv], TopoDS::Vertex(pmap(tag)));
+        tags[iv] = false;
+      } else {
+        tags[iv] = true;
       }
     }
 
+    /* enumerate edges */
+    for(int it=1;it<=ne;it++) {
 
-    // internal point are tagged to zero
-    if(tag > 0 && tag <= pmap.Extent() ){
-      meshDS->SetNodeOnVertex(nodes[iv], TopoDS::Vertex(pmap(tag)));
-      tags[iv] = false;
-    } else {
-      tags[iv] = true;
+      mesh_get_edge_vertices(msh, it, vtx);
+      mesh_get_edge_tag(msh, it, &tag);
+      if (tags[vtx[0]]) {
+        Set_NodeOnEdge(meshDS, nodes[vtx[0]], emap(tag));
+        tags[vtx[0]] = false;
+      };
+      if (tags[vtx[1]]) {
+        Set_NodeOnEdge(meshDS, nodes[vtx[1]], emap(tag));
+        tags[vtx[1]] = false;
+      };
+      SMDS_MeshEdge* edg = helper.AddEdge(nodes[vtx[0]], nodes[vtx[1]]);
+      meshDS->SetMeshElementOnShape(edg, TopoDS::Edge(emap(tag)));
     }
-  }
 
-  /* enumerate edges */
-  for(int it=1;it<=ne;it++) {
+    /* enumerate triangles */
+    for(int it=1;it<=nt;it++) {
+      mesh_get_triangle_vertices(msh, it, vtx);
+      SMDS_MeshFace* tri = helper.AddFace(nodes[vtx[0]], nodes[vtx[1]], nodes[vtx[2]]);
+      mesh_get_triangle_tag(msh, it, &tag);
+      meshDS->SetMeshElementOnShape(tri, TopoDS::Face(fmap(tag)));
+      if (tags[vtx[0]]) {
+        meshDS->SetNodeOnFace(nodes[vtx[0]], TopoDS::Face(fmap(tag)));
+        tags[vtx[0]] = false;
+      };
+      if (tags[vtx[1]]) {
+        meshDS->SetNodeOnFace(nodes[vtx[1]], TopoDS::Face(fmap(tag)));
+        tags[vtx[1]] = false;
+      };
+      if (tags[vtx[2]]) {
+        meshDS->SetNodeOnFace(nodes[vtx[2]], TopoDS::Face(fmap(tag)));
+        tags[vtx[2]] = false;
+      };
+    }
 
-    mesh_get_edge_vertices(msh, it, vtx);
-    mesh_get_edge_tag(msh, it, &tag);
-    if (tags[vtx[0]]) {
-      Set_NodeOnEdge(meshDS, nodes[vtx[0]], emap(tag));
-      tags[vtx[0]] = false;
-    };
-    if (tags[vtx[1]]) {
-      Set_NodeOnEdge(meshDS, nodes[vtx[1]], emap(tag));
-      tags[vtx[1]] = false;
-    };
-    SMDS_MeshEdge* edg = helper.AddEdge(nodes[vtx[0]], nodes[vtx[1]]);
-    meshDS->SetMeshElementOnShape(edg, TopoDS::Edge(emap(tag)));
-  }
+    /* enumerate quadrangles */
+    for(int it=1;it<=nq;it++) {
+      mesh_get_quadrangle_vertices(msh, it, vtx);
+      SMDS_MeshFace* quad = helper.AddFace(nodes[vtx[0]], nodes[vtx[1]], nodes[vtx[2]], nodes[vtx[3]]);
+      mesh_get_quadrangle_tag(msh, it, &tag);
+      meshDS->SetMeshElementOnShape(quad, TopoDS::Face(fmap(tag)));
+      if (tags[vtx[0]]) {
+        meshDS->SetNodeOnFace(nodes[vtx[0]], TopoDS::Face(fmap(tag)));
+        tags[vtx[0]] = false;
+      };
+      if (tags[vtx[1]]) {
+        meshDS->SetNodeOnFace(nodes[vtx[1]], TopoDS::Face(fmap(tag)));
+        tags[vtx[1]] = false;
+      };
+      if (tags[vtx[2]]) {
+        meshDS->SetNodeOnFace(nodes[vtx[2]], TopoDS::Face(fmap(tag)));
+        tags[vtx[2]] = false;
+      };
+      if (tags[vtx[3]]) {
+        meshDS->SetNodeOnFace(nodes[vtx[3]], TopoDS::Face(fmap(tag)));
+        tags[vtx[3]] = false;
+      };
+    }
 
-  /* enumerate triangles */
-  for(int it=1;it<=nt;it++) {
-    mesh_get_triangle_vertices(msh, it, vtx);
-    SMDS_MeshFace* tri = helper.AddFace(nodes[vtx[0]], nodes[vtx[1]], nodes[vtx[2]]);
-    mesh_get_triangle_tag(msh, it, &tag);
-    meshDS->SetMeshElementOnShape(tri, TopoDS::Face(fmap(tag)));
-    if (tags[vtx[0]]) {
-      meshDS->SetNodeOnFace(nodes[vtx[0]], TopoDS::Face(fmap(tag)));
-      tags[vtx[0]] = false;
-    };
-    if (tags[vtx[1]]) {
-      meshDS->SetNodeOnFace(nodes[vtx[1]], TopoDS::Face(fmap(tag)));
-      tags[vtx[1]] = false;
-    };
-    if (tags[vtx[2]]) {
-      meshDS->SetNodeOnFace(nodes[vtx[2]], TopoDS::Face(fmap(tag)));
-      tags[vtx[2]] = false;
-    };
-  }
+    /* release the mesh object, the rest is released by cleaner */
+    blsurf_data_regain_mesh(bls, msh);
 
-  /* enumerate quadrangles */
-  for(int it=1;it<=nq;it++) {
-    mesh_get_quadrangle_vertices(msh, it, vtx);
-    SMDS_MeshFace* quad = helper.AddFace(nodes[vtx[0]], nodes[vtx[1]], nodes[vtx[2]], nodes[vtx[3]]);
-    mesh_get_quadrangle_tag(msh, it, &tag);
-    meshDS->SetMeshElementOnShape(quad, TopoDS::Face(fmap(tag)));
-    if (tags[vtx[0]]) {
-      meshDS->SetNodeOnFace(nodes[vtx[0]], TopoDS::Face(fmap(tag)));
-      tags[vtx[0]] = false;
-    };
-    if (tags[vtx[1]]) {
-      meshDS->SetNodeOnFace(nodes[vtx[1]], TopoDS::Face(fmap(tag)));
-      tags[vtx[1]] = false;
-    };
-    if (tags[vtx[2]]) {
-      meshDS->SetNodeOnFace(nodes[vtx[2]], TopoDS::Face(fmap(tag)));
-      tags[vtx[2]] = false;
-    };
-    if (tags[vtx[3]]) {
-      meshDS->SetNodeOnFace(nodes[vtx[3]], TopoDS::Face(fmap(tag)));
-      tags[vtx[3]] = false;
-    };
-  }
+    delete [] nodes;
+    delete [] tags;
+
+    if ( needMerge ) // sew mesh computed by BLSURF with pre-existing mesh
+    {
+      SMESH_MeshEditor::TListOfListOfNodes nodeGroupsToMerge;
+      TIDSortedElemSet segementsOnEdge;
+
+      mergeSubmeshes.insert( proxySubmeshes.begin(), proxySubmeshes.end() );
+      set< SMESHDS_SubMesh* >::iterator smIt = mergeSubmeshes.begin();
+      for ( ; smIt != mergeSubmeshes.end(); ++smIt )
+      {
+        SMESHDS_SubMesh* smDS = *smIt;
+        if ( !smDS ) continue;
+
+        getNodeGroupsToMerge( smDS, meshDS->IndexToShape((*smIt)->GetID()), nodeGroupsToMerge );
+
+        SMDS_ElemIteratorPtr segIt = smDS->GetElements();
+        while ( segIt->more() )
+          segementsOnEdge.insert( segIt->next() );
+      }
+      // merge nodes
+      SMESH_MeshEditor editor( &aMesh );
+      editor.MergeNodes( nodeGroupsToMerge );
+
+      // merge segments
+      SMESH_MeshEditor::TListOfListOfElementsID equalSegments;
+      editor.FindEqualElements( segementsOnEdge, equalSegments );
+      editor.MergeElements( equalSegments );
+
+      // remove excess segments created on the boundary of viscous layers
+      const SMDS_TypeOfPosition onFace = SMDS_TOP_FACE;
+      for ( int i = 1; i <= emap.Extent(); ++i )
+      {
+        if ( SMESHDS_SubMesh* smDS = meshDS->MeshElements( emap( i )))
+        {
+          SMDS_ElemIteratorPtr segIt = smDS->GetElements();
+          while ( segIt->more() )
+          {
+            const SMDS_MeshElement* seg = segIt->next();
+            if ( seg->GetNode(0)->GetPosition()->GetTypeOfPosition() == onFace ||
+                 seg->GetNode(1)->GetPosition()->GetTypeOfPosition() == onFace )
+              meshDS->RemoveFreeElement( seg, smDS );
+          }
+        }
+      }
+    }
+
+    if ( iLoop == 0 && !_haveViscousLayers)
+      break;
+
+  } // two loops
 
   // SetIsAlwaysComputed( true ) to sub-meshes of EDGEs w/o mesh
   TopLoc_Location loc; double f,l;
@@ -1910,51 +2207,9 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     if ( SMESH_subMesh* sm = aMesh.GetSubMeshContaining( emap( i )))
       sm->SetIsAlwaysComputed( true );
   for (int i = 1; i <= pmap.Extent(); i++)
-      if ( SMESH_subMesh* sm = aMesh.GetSubMeshContaining( pmap( i )))
-        if ( !sm->IsMeshComputed() )
-          sm->SetIsAlwaysComputed( true );
-
-  if ( needMerge )
-  {
-    set< SMESH_subMesh* >::iterator smIt = mergeSubmeshes.begin();
-    for ( ; smIt != mergeSubmeshes.end(); ++smIt )
-    {
-      SMESH_subMesh* sm = *smIt;
-      SMESH_subMeshIteratorPtr subsmIt = sm->getDependsOnIterator( /*includeSelf=*/true,
-                                                                   /*complexFirst=*/false);
-      TIDSortedNodeSet nodesOnEdge;
-      double mergeTolerance = 1e-7, tol;
-      while ( subsmIt->more() )
-      {
-        // get nodes from an edge
-        sm = subsmIt->next();
-        if ( SMESHDS_SubMesh* smDS = sm->GetSubMeshDS() )
-        {
-          SMDS_NodeIteratorPtr nIt = smDS->GetNodes();
-          while ( nIt->more() )
-            nodesOnEdge.insert( nIt->next() );
-        }
-        // get max tolerance
-        TopoDS_Shape subShape = sm->GetSubShape();
-        if ( subShape.ShapeType() == TopAbs_EDGE )
-          tol = BRep_Tool::Tolerance( TopoDS::Edge( subShape ));
-        else
-          tol = BRep_Tool::Tolerance( TopoDS::Vertex( subShape ));
-        mergeTolerance = Max( tol, mergeTolerance );
-      }
-      // find nodes to merge
-      SMESH_MeshEditor::TListOfListOfNodes nodeGroupsToMerge;
-      SMESH_MeshEditor editor( &aMesh );
-      editor.FindCoincidentNodes( nodesOnEdge, mergeTolerance*2, nodeGroupsToMerge );
-      // merge
-      editor.MergeNodes( nodeGroupsToMerge );
-    }
-  }
-
-  delete [] nodes;
-
-  /* release the mesh object */
-  blsurf_data_regain_mesh(bls, msh);
+    if ( SMESH_subMesh* sm = aMesh.GetSubMeshContaining( pmap( i )))
+      if ( !sm->IsMeshComputed() )
+        sm->SetIsAlwaysComputed( true );
 
   // Issue 0019864. On DebianSarge, FE signals do not obey to OSD::SetSignal(false)
 #ifndef WNT
@@ -1964,19 +2219,25 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 #endif
 
   /*
-  std::cout << "FacesWithSizeMap" << std::endl;
-  FacesWithSizeMap.Statistics(std::cout);
-  std::cout << "EdgesWithSizeMap" << std::endl;
-  EdgesWithSizeMap.Statistics(std::cout);
-  std::cout << "VerticesWithSizeMap" << std::endl;
-  VerticesWithSizeMap.Statistics(std::cout);
-  std::cout << "FacesWithEnforcedVertices" << std::endl;
-  FacesWithEnforcedVertices.Statistics(std::cout);
+    std::cout << "FacesWithSizeMap" << std::endl;
+    FacesWithSizeMap.Statistics(std::cout);
+    std::cout << "EdgesWithSizeMap" << std::endl;
+    EdgesWithSizeMap.Statistics(std::cout);
+    std::cout << "VerticesWithSizeMap" << std::endl;
+    VerticesWithSizeMap.Statistics(std::cout);
+    std::cout << "FacesWithEnforcedVertices" << std::endl;
+    FacesWithEnforcedVertices.Statistics(std::cout);
   */
 
   MESSAGE("END OF BLSURFPlugin_BLSURF::Compute()");
-  return true;
+  return ( status == STATUS_OK );
 }
+
+//================================================================================
+/*!
+ * \brief Terminates computation
+ */
+//================================================================================
 
 #ifdef WITH_SMESH_CANCEL_COMPUTE
 void BLSURFPlugin_BLSURF::CancelCompute()
@@ -2010,8 +2271,8 @@ void BLSURFPlugin_BLSURF::Set_NodeOnEdge(SMESHDS_Mesh* meshDS, SMDS_MeshNode* no
     pa = (double)proj.LowerDistanceParameter();
     // Issue 0020656. Move node if it is too far from edge
     gp_Pnt curve_pnt = curve->Value( pa );
-    double dist2 = pnt.SquareDistance( curve_pnt );
-    double tol = BRep_Tool::Tolerance( edge );
+    double dist2     = pnt.SquareDistance( curve_pnt );
+    double tol       = BRep_Tool::Tolerance( edge );
     if ( 1e-14 < dist2 && dist2 <= 1000*tol ) // large enough and within tolerance
     {
       curve_pnt.Transform( loc );
@@ -2023,50 +2284,6 @@ void BLSURFPlugin_BLSURF::Set_NodeOnEdge(SMESHDS_Mesh* meshDS, SMDS_MeshNode* no
 //   double lg = (double)LProps.Mass();
 
   meshDS->SetNodeOnEdge(node, edge, pa);
-}
-
-//=============================================================================
-/*!
- *
- */
-//=============================================================================
-
-ostream & BLSURFPlugin_BLSURF::SaveTo(ostream & save)
-{
-  return save;
-}
-
-//=============================================================================
-/*!
- *
- */
-//=============================================================================
-
-istream & BLSURFPlugin_BLSURF::LoadFrom(istream & load)
-{
-  return load;
-}
-
-//=============================================================================
-/*!
- *
- */
-//=============================================================================
-
-ostream & operator << (ostream & save, BLSURFPlugin_BLSURF & hyp)
-{
-  return hyp.SaveTo( save );
-}
-
-//=============================================================================
-/*!
- *
- */
-//=============================================================================
-
-istream & operator >> (istream & load, BLSURFPlugin_BLSURF & hyp)
-{
-  return hyp.LoadFrom( load );
 }
 
 /* Curve definition function See cad_curv_t in file distene/cad.h for
@@ -2358,11 +2575,6 @@ bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh&         aMesh,
     //_angleMeshS    = hyp->GetAngleMeshS();
     _angleMeshC    = _hypothesis->GetAngleMeshC();
     _quadAllowed   = _hypothesis->GetQuadAllowed();
-  } else {
-    //0020968: EDF1545 SMESH: Problem in the creation of a mesh group on geometry
-    // GetDefaultPhySize() sometimes leads to computation failure
-    _phySize = aMesh.GetShapeDiagonalSize() / _gen->GetBoundaryBoxSegmentation();
-    MESSAGE("BLSURFPlugin_BLSURF::SetParameters using defaults");
   }
 
   bool IsQuadratic = false;

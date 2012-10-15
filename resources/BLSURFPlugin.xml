@@ -66,7 +66,7 @@
     <algorithm type="BLSURF"
                label-id="BLSURF"
                icon-id="mesh_algo_BLSURF.png"
-               opt-hypos="BLSURF_Parameters"
+               opt-hypos="BLSURF_Parameters,ViscousLayers2D"
                output="TRIA,QUAD"
                dim="2"
 	       support-submeshes="true">

@@ -95,13 +95,9 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
     virtual bool Evaluate(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape,
                           MapShapeNbElems& aResMap);
 
-    ostream & SaveTo(ostream & save);
-    istream & LoadFrom(istream & load);
-    friend ostream & operator << (ostream & save, BLSURFPlugin_BLSURF & hyp);
-    friend istream & operator >> (istream & load, BLSURFPlugin_BLSURF & hyp);
-
   protected:
     const BLSURFPlugin_Hypothesis* _hypothesis;
+    bool                           _haveViscousLayers;
 
   private:
     TopoDS_Shape entryToShape(std::string entry);

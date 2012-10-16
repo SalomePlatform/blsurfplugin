@@ -1270,11 +1270,12 @@ namespace
     }
     case TopAbs_EDGE: {
       std::multimap< double, const SMDS_MeshNode* > u2node;
+      const SMDS_EdgePosition* ePos;
       while ( nIt->more() )
       {
         const SMDS_MeshNode* n = nIt->next();
-        double u = static_cast< const SMDS_EdgePosition* >( n->GetPosition() )->GetUParameter();
-        u2node.insert( make_pair( u, n ));
+        if (( ePos = dynamic_cast< const SMDS_EdgePosition* >( n->GetPosition() )))
+          u2node.insert( make_pair( ePos->GetUParameter(), n ));
       }
       if ( u2node.size() < 2 ) return;
 
@@ -1304,6 +1305,17 @@ namespace
     }
     default: ;
     }
+    // SMESH_MeshEditor::TListOfListOfNodes::const_iterator nll = nodeGroupsToMerge.begin();
+    // for ( ; nll != nodeGroupsToMerge.end(); ++nll )
+    // {
+    //   cout << "Merge ";
+    //   const std::list< const SMDS_MeshNode* >& nl = *nll;
+    //   std::list< const SMDS_MeshNode* >::const_iterator nIt = nl.begin();
+    //   for ( ; nIt != nl.end(); ++nIt )
+    //     cout << (*nIt) << " ";
+    //   cout << endl;
+    // }
+    // cout << endl;
   }
 
 } // namespace
@@ -2153,16 +2165,40 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 
     if ( needMerge ) // sew mesh computed by BLSURF with pre-existing mesh
     {
+      SMESH_MeshEditor editor( &aMesh );
       SMESH_MeshEditor::TListOfListOfNodes nodeGroupsToMerge;
       TIDSortedElemSet segementsOnEdge;
+      TIDSortedNodeSet nodesOnEdge;
+      set< SMESHDS_SubMesh* >::iterator smIt;
+      SMESHDS_SubMesh* smDS;
+      typedef SMDS_StdIterator< const SMDS_MeshNode*, SMDS_NodeIteratorPtr > TNodeIterator;
+      double tol;
 
-      mergeSubmeshes.insert( proxySubmeshes.begin(), proxySubmeshes.end() );
-      set< SMESHDS_SubMesh* >::iterator smIt = mergeSubmeshes.begin();
-      for ( ; smIt != mergeSubmeshes.end(); ++smIt )
+      if ( !proxySubmeshes.empty() )
       {
-        SMESHDS_SubMesh* smDS = *smIt;
-        if ( !smDS ) continue;
-
+        // merge proxy nodes with ones computed by BLSURF
+        for ( smIt = proxySubmeshes.begin(); smIt != proxySubmeshes.end(); ++smIt )
+        {
+          if (! (smDS = *smIt) ) continue;
+          nodesOnEdge.clear();
+          nodesOnEdge.insert( TNodeIterator( smDS->GetNodes() ), TNodeIterator() );
+          if (( smDS = meshDS->MeshElements( smDS->GetID() )))
+          {
+            nodesOnEdge.insert( TNodeIterator( smDS->GetNodes() ), TNodeIterator() );
+            if ( nodesOnEdge.size() > 1 )
+            {
+              tol = SMESH_TNodeXYZ( *nodesOnEdge.begin() ).Distance( *nodesOnEdge.rbegin() );
+              tol /= 50. * nodesOnEdge.size();
+              editor.FindCoincidentNodes( nodesOnEdge, tol, nodeGroupsToMerge );
+              editor.MergeNodes( nodeGroupsToMerge );
+            }
+          }
+        }
+      }
+      // merge nodes on EDGE's with ones computed by BLSURF
+      for ( smIt = mergeSubmeshes.begin(); smIt != mergeSubmeshes.end(); ++smIt )
+      {
+        if (! (smDS = *smIt) ) continue;
         getNodeGroupsToMerge( smDS, meshDS->IndexToShape((*smIt)->GetID()), nodeGroupsToMerge );
 
         SMDS_ElemIteratorPtr segIt = smDS->GetElements();
@@ -2170,7 +2206,6 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
           segementsOnEdge.insert( segIt->next() );
       }
       // merge nodes
-      SMESH_MeshEditor editor( &aMesh );
       editor.MergeNodes( nodeGroupsToMerge );
 
       // merge segments

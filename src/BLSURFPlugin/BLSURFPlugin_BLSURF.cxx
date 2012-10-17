@@ -28,9 +28,9 @@
 #include "BLSURFPlugin_Attractor.hxx"
 
 extern "C"{
-#include <distene/api.h>
-#include <distene/blsurf.h>
-#include <distene/precad.h>
+#include <meshgems/meshgems.h>
+#include <meshgems/cadsurf.h>
+#include <meshgems/precad.h>
 }
 
 #include <structmember.h>
@@ -373,10 +373,26 @@ inline std::string to_string(double d)
    return o.str();
 }
 
+inline std::string to_string_rel(double d)
+{
+   std::ostringstream o;
+   o << d;
+   o << 'r';
+   return o.str();
+}
+
 inline std::string to_string(int i)
 {
    std::ostringstream o;
    o << i;
+   return o.str();
+}
+
+inline std::string to_string_rel(int i)
+{
+   std::ostringstream o;
+   o << i;
+   o << 'r';
    return o.str();
 }
 
@@ -390,8 +406,6 @@ double _smp_phy_size;
 status_t size_on_surface(integer face_id, real *uv, real *size, void *user_data);
 status_t size_on_edge(integer edge_id, real t, real *size, void *user_data);
 status_t size_on_vertex(integer vertex_id, real *size, void *user_data);
-
-double my_u_min=1e6,my_v_min=1e6,my_u_max=-1e6,my_v_max=-1e6;
 
 typedef struct {
         gp_XY uv;
@@ -563,7 +577,7 @@ void BLSURFPlugin_BLSURF::createEnforcedVertexOnFace(TopoDS_Shape faceShape, BLS
 }
 
 /////////////////////////////////////////////////////////
-void createAttractorOnFace(TopoDS_Shape GeomShape, std::string AttractorFunction)
+void createAttractorOnFace(TopoDS_Shape GeomShape, std::string AttractorFunction, double defaultSize)
 {
   MESSAGE("Attractor function: "<< AttractorFunction);
   double xa, ya, za; // Coordinates of attractor point
@@ -641,7 +655,7 @@ void createAttractorOnFace(TopoDS_Shape GeomShape, std::string AttractorFunction
   // We construct the python function
   ostringstream attractorFunctionStream;
   attractorFunctionStream << "def f(u,v): return ";
-  attractorFunctionStream << _smp_phy_size << "-(" << _smp_phy_size <<"-" << a << ")";
+  attractorFunctionStream << defaultSize << "-(" << defaultSize <<"-" << a << ")";
   //attractorFunctionStream << "*exp(-((u-("<<u0<<"))*(u-("<<u0<<"))+(v-("<<v0<<"))*(v-("<<v0<<")))/(" << b << "*" << b <<"))";
   // rnc: make possible to keep the size constant until
   // a defined distance. Distance is expressed as the positiv part
@@ -666,7 +680,7 @@ void createAttractorOnFace(TopoDS_Shape GeomShape, std::string AttractorFunction
 //   gp_Pnt myP(xyzPoint);
 //   TopoDS_Vertex myV = BRepBuilderAPI_MakeVertex(myP);
 //   BLSURFPlugin_Attractor myAttractor(TopoDS::Face(GeomShape),myV,200);
-//   myAttractor.SetParameters(a, _smp_phy_size, b, d);
+//   myAttractor.SetParameters(a, defaultSize, b, d);
 //   myAttractor.SetType(1);
 //   FaceId2ClassAttractor[key] = myAttractor;
 //   if(FaceId2ClassAttractor[key].GetFace().IsNull()){
@@ -689,7 +703,7 @@ void BLSURFPlugin_BLSURF::SetParameters(
 //                                         cad_t *                          c,
 // #endif
                                         const BLSURFPlugin_Hypothesis* hyp,
-                                        blsurf_session_t *             bls,
+                                        cadsurf_session_t *            css,
                                         precad_session_t *             pcs,
                                         SMESH_Mesh&                   mesh,
                                         bool *                  use_precad
@@ -699,51 +713,81 @@ void BLSURFPlugin_BLSURF::SetParameters(
   // Clear map so that it is not stored in the algorithm with old enforced vertices in it
   EnfVertexCoords2EnfVertexList.clear();
   
-  int    _topology      = BLSURFPlugin_Hypothesis::GetDefaultTopology();
-  int    _physicalMesh  = BLSURFPlugin_Hypothesis::GetDefaultPhysicalMesh();
-  double _phySize       = BLSURFPlugin_Hypothesis::GetDefaultPhySize();
-  int    _geometricMesh = BLSURFPlugin_Hypothesis::GetDefaultGeometricMesh();
-  double _angleMeshS    = BLSURFPlugin_Hypothesis::GetDefaultAngleMeshS();
-  double _angleMeshC    = BLSURFPlugin_Hypothesis::GetDefaultAngleMeshC();
-  double _gradation     = BLSURFPlugin_Hypothesis::GetDefaultGradation();
-  bool   _quadAllowed   = BLSURFPlugin_Hypothesis::GetDefaultQuadAllowed();
-  bool   _decimesh      = BLSURFPlugin_Hypothesis::GetDefaultDecimesh();
-  int    _verb          = BLSURFPlugin_Hypothesis::GetDefaultVerbosity();
+   double diagonal               = mesh.GetShapeDiagonalSize();
+   double bbSegmentation         = _gen->GetBoundaryBoxSegmentation();
+   int    _physicalMesh          = BLSURFPlugin_Hypothesis::GetDefaultPhysicalMesh();
+   int    _geometricMesh         = BLSURFPlugin_Hypothesis::GetDefaultGeometricMesh();
+   double _phySize               = BLSURFPlugin_Hypothesis::GetDefaultPhySize(diagonal, bbSegmentation);
+   bool   _phySizeRel            = BLSURFPlugin_Hypothesis::GetDefaultPhySizeRel();
+   double _minSize               = BLSURFPlugin_Hypothesis::GetDefaultMinSize(diagonal);
+   bool   _minSizeRel            = BLSURFPlugin_Hypothesis::GetDefaultMinSizeRel();
+   double _maxSize               = BLSURFPlugin_Hypothesis::GetDefaultMaxSize(diagonal);
+   bool   _maxSizeRel            = BLSURFPlugin_Hypothesis::GetDefaultMaxSizeRel();
+   double _gradation             = BLSURFPlugin_Hypothesis::GetDefaultGradation();
+   bool   _quadAllowed           = BLSURFPlugin_Hypothesis::GetDefaultQuadAllowed();
+   double _angleMesh             = BLSURFPlugin_Hypothesis::GetDefaultAngleMesh();
+   double _chordalError          = BLSURFPlugin_Hypothesis::GetDefaultChordalError(diagonal);
+   bool   _anisotropic           = BLSURFPlugin_Hypothesis::GetDefaultAnisotropic();
+   double _anisotropicRatio      = BLSURFPlugin_Hypothesis::GetDefaultAnisotropicRatio();
+   bool   _removeTinyEdges       = BLSURFPlugin_Hypothesis::GetDefaultRemoveTinyEdges();
+   double _tinyEdgeLength        = BLSURFPlugin_Hypothesis::GetDefaultTinyEdgeLength(diagonal);
+   bool   _badElementRemoval     = BLSURFPlugin_Hypothesis::GetDefaultBadElementRemoval();
+   double _badElementAspectRatio = BLSURFPlugin_Hypothesis::GetDefaultBadElementAspectRatio();
+   bool   _optimizeMesh          = BLSURFPlugin_Hypothesis::GetDefaultOptimizeMesh();
+   bool   _quadraticMesh         = BLSURFPlugin_Hypothesis::GetDefaultQuadraticMesh();
+   int    _verb                  = BLSURFPlugin_Hypothesis::GetDefaultVerbosity();
+   int    _topology              = BLSURFPlugin_Hypothesis::GetDefaultTopology();
 
   // PreCAD
-  int _precadMergeEdges      = BLSURFPlugin_Hypothesis::GetDefaultPreCADMergeEdges();
-  int _precadRemoveNanoEdges = BLSURFPlugin_Hypothesis::GetDefaultPreCADRemoveNanoEdges();
-  int _precadDiscardInput    = BLSURFPlugin_Hypothesis::GetDefaultPreCADDiscardInput();
-  double _precadEpsNano      = BLSURFPlugin_Hypothesis::GetDefaultPreCADEpsNano();
+   int _precadMergeEdges         = BLSURFPlugin_Hypothesis::GetDefaultPreCADMergeEdges();
+   int _precadProcess3DTopology  = BLSURFPlugin_Hypothesis::GetDefaultPreCADProcess3DTopology();
+   int _precadDiscardInput       = BLSURFPlugin_Hypothesis::GetDefaultPreCADDiscardInput();
 
 
   if (hyp) {
     MESSAGE("BLSURFPlugin_BLSURF::SetParameters");
-    _topology      = (int) hyp->GetTopology();
     _physicalMesh  = (int) hyp->GetPhysicalMesh();
-    _phySize       = hyp->GetPhySize();
     _geometricMesh = (int) hyp->GetGeometricMesh();
-    _angleMeshS    = hyp->GetAngleMeshS();
-    _angleMeshC    = hyp->GetAngleMeshC();
-    _gradation     = hyp->GetGradation();
+     if (hyp->GetPhySize() > 0)
+       _phySize       = hyp->GetPhySize();
+     _phySizeRel    = hyp->IsPhySizeRel();
+     if (hyp->GetMinSize() > 0)
+       _minSize       = hyp->GetMinSize();
+     _minSizeRel    = hyp->IsMinSizeRel();
+     if (hyp->GetMaxSize() > 0)
+       _maxSize       = hyp->GetMaxSize();
+     _maxSizeRel    = hyp->IsMaxSizeRel();
+     if (hyp->GetGradation() > 0)
+       _gradation     = hyp->GetGradation();
     _quadAllowed   = hyp->GetQuadAllowed();
-    _decimesh      = hyp->GetDecimesh();
+     if (hyp->GetAngleMesh() > 0)
+     _angleMesh     = hyp->GetAngleMesh();
+     if (hyp->GetChordalError() > 0)
+       _chordalError           = hyp->GetChordalError();
+     _anisotropic            = hyp->GetAnisotropic();
+     if (hyp->GetAnisotropicRatio() >= 0)
+       _anisotropicRatio       = hyp->GetAnisotropicRatio();
+     _removeTinyEdges        = hyp->GetRemoveTinyEdges();
+     if (hyp->GetTinyEdgeLength() > 0)
+       _tinyEdgeLength         = hyp->GetTinyEdgeLength();
+     _badElementRemoval      = hyp->GetBadElementRemoval();
+     if (hyp->GetBadElementAspectRatio() >= 0)
+       _badElementAspectRatio  = hyp->GetBadElementAspectRatio();
+     _optimizeMesh  = hyp->GetOptimizeMesh();
+     _quadraticMesh = hyp->GetQuadraticMesh();
     _verb          = hyp->GetVerbosity();
-    if ( hyp->GetPhyMin() != ::BLSURFPlugin_Hypothesis::undefinedDouble() )
-      blsurf_set_param(bls, "hphymin", to_string(hyp->GetPhyMin()).c_str());
-    if ( hyp->GetPhyMax() != ::BLSURFPlugin_Hypothesis::undefinedDouble() )
-      blsurf_set_param(bls, "hphymax", to_string(hyp->GetPhyMax()).c_str());
-    if ( hyp->GetGeoMin() != ::BLSURFPlugin_Hypothesis::undefinedDouble() )
-      blsurf_set_param(bls, "hgeomin", to_string(hyp->GetGeoMin()).c_str());
-    if ( hyp->GetGeoMax() != ::BLSURFPlugin_Hypothesis::undefinedDouble() )
-      blsurf_set_param(bls, "hgeomax", to_string(hyp->GetGeoMax()).c_str());
+     _topology      = (int) hyp->GetTopology();
+     // PreCAD
+     _precadMergeEdges = hyp->GetPreCADMergeEdges();
+     _precadProcess3DTopology = hyp->GetPreCADProcess3DTopology();
+     _precadDiscardInput = hyp->GetPreCADDiscardInput();
 
     const BLSURFPlugin_Hypothesis::TOptionValues & opts = hyp->GetOptionValues();
     BLSURFPlugin_Hypothesis::TOptionValues::const_iterator opIt;
     for ( opIt = opts.begin(); opIt != opts.end(); ++opIt )
       if ( !opIt->second.empty() ) {
-        MESSAGE("blsurf_set_param(): " << opIt->first << " = " << opIt->second);
-        blsurf_set_param(bls, opIt->first.c_str(), opIt->second.c_str());
+        MESSAGE("cadsurf_set_param(): " << opIt->first << " = " << opIt->second);
+        cadsurf_set_param(css, opIt->first.c_str(), opIt->second.c_str());
       }
       
     const BLSURFPlugin_Hypothesis::TOptionValues & preCADopts = hyp->GetPreCADOptionValues();
@@ -751,52 +795,89 @@ void BLSURFPlugin_BLSURF::SetParameters(
       if ( !opIt->second.empty() ) {
         if (_topology == BLSURFPlugin_Hypothesis::PreCAD) {
           MESSAGE("precad_set_param(): " << opIt->first << " = " << opIt->second);
-          blsurf_set_param(bls, opIt->first.c_str(), opIt->second.c_str());
+          precad_set_param(pcs, opIt->first.c_str(), opIt->second.c_str());
         }
       }
-
-    // PreCAD
-    _precadMergeEdges = hyp->GetPreCADMergeEdges();
-    _precadRemoveNanoEdges = hyp->GetPreCADRemoveNanoEdges();
-    _precadDiscardInput = hyp->GetPreCADDiscardInput();
-    _precadEpsNano = hyp->GetPreCADEpsNano();
-
-  } else {
-    //0020968: EDF1545 SMESH: Problem in the creation of a mesh group on geometry
-    // GetDefaultPhySize() sometimes leads to computation failure
-    _phySize = mesh.GetShapeDiagonalSize() / _gen->GetBoundaryBoxSegmentation();
-    MESSAGE("BLSURFPlugin_BLSURF::SetParameters using defaults");
   }
+//   else {
+//     //0020968: EDF1545 SMESH: Problem in the creation of a mesh group on geometry
+//     // GetDefaultPhySize() sometimes leads to computation failure
+//     // GDD 26/07/2012 From Distene documentation, global physical size default value = diag/100
+//     _phySize = BLSURFPlugin_Hypothesis::GetDefaultPhySize(diagonal);
+//     _minSize = BLSURFPlugin_Hypothesis::GetDefaultMinSize(diagonal);
+//     _maxSize = BLSURFPlugin_Hypothesis::GetDefaultMaxSize(diagonal);
+//     _chordalError = BLSURFPlugin_Hypothesis::GetDefaultChordalError(diagonal);
+//     _tinyEdgeLength = BLSURFPlugin_Hypothesis::GetDefaultTinyEdgeLength(diagonal);
+//     MESSAGE("BLSURFPlugin_BLSURF::SetParameters using defaults");
+//   }
 
   // PreCAD
   if (_topology == BLSURFPlugin_Hypothesis::PreCAD) {
     *use_precad = true;
     precad_set_param(pcs, "verbose",                to_string(_verb).c_str());
     precad_set_param(pcs, "merge_edges",            _precadMergeEdges ? "1" : "0");
-    precad_set_param(pcs, "remove_nano_edges",      _precadRemoveNanoEdges ? "1" : "0");
+    precad_set_param(pcs, "process_3d_topology",    _precadProcess3DTopology ? "1" : "0");
     precad_set_param(pcs, "discard_input_topology", _precadDiscardInput ? "1" : "0");
-    if ( _precadEpsNano != ::BLSURFPlugin_Hypothesis::undefinedDouble() )
-      precad_set_param(pcs, "eps_nano",               to_string(_precadEpsNano).c_str());
   }
-
-  _smp_phy_size = _phySize;
-  blsurf_set_param(bls, "topo_points",       _topology == BLSURFPlugin_Hypothesis::Process || _topology == BLSURFPlugin_Hypothesis::Process2 ? "1" : "0");
-  blsurf_set_param(bls, "topo_curves",       _topology == BLSURFPlugin_Hypothesis::Process || _topology == BLSURFPlugin_Hypothesis::Process2 ? "1" : "0");
-  blsurf_set_param(bls, "topo_project",      _topology == BLSURFPlugin_Hypothesis::Process || _topology == BLSURFPlugin_Hypothesis::Process2 ? "1" : "0");
-  blsurf_set_param(bls, "clean_boundary",    _topology == BLSURFPlugin_Hypothesis::Process2 ? "1" : "0");
-  blsurf_set_param(bls, "close_boundary",    _topology == BLSURFPlugin_Hypothesis::Process2 ? "1" : "0");
-  blsurf_set_param(bls, "hphy_flag",         to_string(_physicalMesh).c_str());
-  blsurf_set_param(bls, "hphydef",           to_string(_phySize).c_str());
-  blsurf_set_param(bls, "hgeo_flag",         to_string(_geometricMesh).c_str());
-  blsurf_set_param(bls, "relax_size",        _decimesh ? "0": to_string(_geometricMesh).c_str());
-  blsurf_set_param(bls, "angle_meshs",       to_string(_angleMeshS).c_str());
-  blsurf_set_param(bls, "angle_meshc",       to_string(_angleMeshC).c_str());
-  blsurf_set_param(bls, "gradation",         to_string(_gradation).c_str());
-  blsurf_set_param(bls, "patch_independent", _decimesh ? "1" : "0");
-  blsurf_set_param(bls, "element",           _quadAllowed ? "q1.0" : "p1");
-  blsurf_set_param(bls, "verb",              to_string(_verb).c_str());
   
-  if (_physicalMesh == BLSURFPlugin_Hypothesis::SizeMap){
+   bool useGradation = false;
+   switch (_physicalMesh)
+   {
+     case BLSURFPlugin_Hypothesis::PhysicalGlobalSize:
+       cadsurf_set_param(css, "physical_size_mode", "global");
+       cadsurf_set_param(css, "global_physical_size", _phySizeRel ? to_string_rel(_phySize).c_str() : to_string(_phySize).c_str());
+       break;
+     case BLSURFPlugin_Hypothesis::PhysicalLocalSize:
+       cadsurf_set_param(css, "physical_size_mode", "local");
+       cadsurf_set_param(css, "global_physical_size", _phySizeRel ? to_string_rel(_phySize).c_str() : to_string(_phySize).c_str());
+       useGradation = true;
+       break;
+     default:
+       cadsurf_set_param(css, "physical_size_mode", "none");
+   }
+
+   switch (_geometricMesh)
+   {
+     case BLSURFPlugin_Hypothesis::GeometricalGlobalSize:
+       cadsurf_set_param(css, "geometric_size_mode", "global");
+       cadsurf_set_param(css, "geometric_approximation", to_string(_angleMesh).c_str());
+       cadsurf_set_param(css, "chordal_error", to_string(_chordalError).c_str());
+       useGradation = true;
+       break;
+     case BLSURFPlugin_Hypothesis::GeometricalLocalSize:
+       cadsurf_set_param(css, "geometric_size_mode", "local");
+       cadsurf_set_param(css, "geometric_approximation", to_string(_angleMesh).c_str());
+       cadsurf_set_param(css, "chordal_error", to_string(_chordalError).c_str());
+       useGradation = true;
+       break;
+     default:
+       cadsurf_set_param(css, "geometric_size_mode", "none");
+   }
+
+   cadsurf_set_param(css, "minsize",                           _minSizeRel ? to_string_rel(_minSize).c_str() : to_string(_minSize).c_str());
+   cadsurf_set_param(css, "maxsize",                           _maxSizeRel ? to_string_rel(_maxSize).c_str() : to_string(_maxSize).c_str());
+   if ( useGradation )
+     cadsurf_set_param(css, "gradation",                         to_string(_gradation).c_str());
+   cadsurf_set_param(css, "element_generation",                _quadAllowed ? "quad_dominant" : "triangle");
+
+
+   cadsurf_set_param(css, "metric",                            _anisotropic ? "anisotropic" : "isotropic");
+   if ( _anisotropic )
+     cadsurf_set_param(css, "anisotropic_ratio",                 to_string(_anisotropicRatio).c_str());
+   cadsurf_set_param(css, "remove_tiny_edges",                 _removeTinyEdges ? "1" : "0");
+   if ( _removeTinyEdges )
+     cadsurf_set_param(css, "tiny_edge_length",                  to_string(_tinyEdgeLength).c_str());
+   cadsurf_set_param(css, "force_bad_surface_element_removal", _badElementRemoval ? "1" : "0");
+   if ( _badElementRemoval )
+     cadsurf_set_param(css, "bad_surface_element_aspect_ratio",  to_string(_badElementAspectRatio).c_str());
+   cadsurf_set_param(css, "optimisation",                      _optimizeMesh ? "yes" : "no");
+   cadsurf_set_param(css, "element_order",                     _quadraticMesh ? "quadratic" : "linear");
+   cadsurf_set_param(css, "verbose",                           to_string(_verb).c_str());
+
+   _smp_phy_size = _phySizeRel ? _phySize*diagonal : _phySize;
+   std::cout << "_smp_phy_size = " << _smp_phy_size << std::endl;
+
+   if (_physicalMesh == BLSURFPlugin_Hypothesis::PhysicalLocalSize){
     TopoDS_Shape GeomShape;
     TopoDS_Shape AttShape;
     TopAbs_ShapeEnum GeomType;
@@ -808,7 +889,7 @@ void BLSURFPlugin_BLSURF::SetParameters(
     BLSURFPlugin_Hypothesis::TSizeMap::const_iterator smIt = sizeMaps.begin();
     for ( ; smIt != sizeMaps.end(); ++smIt ) {
       if ( !smIt->second.empty() ) {
-        MESSAGE("blsurf_set_sizeMap(): " << smIt->first << " = " << smIt->second);
+        MESSAGE("cadsurf_set_sizeMap(): " << smIt->first << " = " << smIt->second);
         GeomShape = entryToShape(smIt->first);
         GeomType  = GeomShape.ShapeType();
         MESSAGE("Geomtype is " << GeomType);
@@ -906,42 +987,46 @@ void BLSURFPlugin_BLSURF::SetParameters(
     //
     // TODO appeler le constructeur des attracteurs directement ici
     MESSAGE("Setting Attractors");
-    const BLSURFPlugin_Hypothesis::TSizeMap attractors = BLSURFPlugin_Hypothesis::GetAttractorEntries(hyp);
-    BLSURFPlugin_Hypothesis::TSizeMap::const_iterator atIt = attractors.begin();
-    for ( ; atIt != attractors.end(); ++atIt ) {
-      if ( !atIt->second.empty() ) {
-        MESSAGE("blsurf_set_attractor(): " << atIt->first << " = " << atIt->second);
-        GeomShape = entryToShape(atIt->first);
-        GeomType  = GeomShape.ShapeType();
-        // Group Management
-        if (GeomType == TopAbs_COMPOUND){
-          for (TopoDS_Iterator it (GeomShape); it.More(); it.Next()){
-            if (it.Value().ShapeType() == TopAbs_FACE){
-              HasSizeMapOnFace = true;
-              createAttractorOnFace(it.Value(), atIt->second);
+//     if ( !_phySizeRel ) {
+      const BLSURFPlugin_Hypothesis::TSizeMap attractors = BLSURFPlugin_Hypothesis::GetAttractorEntries(hyp);
+      BLSURFPlugin_Hypothesis::TSizeMap::const_iterator atIt = attractors.begin();
+      for ( ; atIt != attractors.end(); ++atIt ) {
+        if ( !atIt->second.empty() ) {
+          MESSAGE("cadsurf_set_attractor(): " << atIt->first << " = " << atIt->second);
+          GeomShape = entryToShape(atIt->first);
+          GeomType  = GeomShape.ShapeType();
+          // Group Management
+          if (GeomType == TopAbs_COMPOUND){
+            for (TopoDS_Iterator it (GeomShape); it.More(); it.Next()){
+              if (it.Value().ShapeType() == TopAbs_FACE){
+                HasSizeMapOnFace = true;
+                createAttractorOnFace(it.Value(), atIt->second, _phySizeRel ? _phySize*diagonal : _phySize);
+              }
             }
           }
-        }
 
-        if (GeomType == TopAbs_FACE){
-          HasSizeMapOnFace = true;
-          createAttractorOnFace(GeomShape, atIt->second);
+          if (GeomType == TopAbs_FACE){
+            HasSizeMapOnFace = true;
+            createAttractorOnFace(GeomShape, atIt->second, _phySizeRel ? _phySize*diagonal : _phySize);
+          }
+  /*
+          if (GeomType == TopAbs_EDGE){
+            HasSizeMapOnEdge = true;
+            HasSizeMapOnFace = true;
+          EdgeId2SizeMap[TopoDS::Edge(GeomShape).HashCode(IntegerLast())] = atIt->second;
+          }
+          if (GeomType == TopAbs_VERTEX){
+            HasSizeMapOnVertex = true;
+            HasSizeMapOnEdge   = true;
+            HasSizeMapOnFace   = true;
+          VertexId2SizeMap[TopoDS::Vertex(GeomShape).HashCode(IntegerLast())] = atIt->second;
+          }
+  */
         }
-/*
-        if (GeomType == TopAbs_EDGE){
-          HasSizeMapOnEdge = true;
-          HasSizeMapOnFace = true;
-        EdgeId2SizeMap[TopoDS::Edge(GeomShape).HashCode(IntegerLast())] = atIt->second;
-        }
-        if (GeomType == TopAbs_VERTEX){
-          HasSizeMapOnVertex = true;
-          HasSizeMapOnEdge   = true;
-          HasSizeMapOnFace   = true;
-        VertexId2SizeMap[TopoDS::Vertex(GeomShape).HashCode(IntegerLast())] = atIt->second;
-        }
-*/
       }
-    }
+//     }
+//     else
+//       MESSAGE("Impossible to create the attractors when the physical size is relative");
 
     // Class Attractors
     // temporary commented out for testing
@@ -959,7 +1044,7 @@ void BLSURFPlugin_BLSURF::SetParameters(
     BLSURFPlugin_Hypothesis::TAttractorMap::const_iterator AtIt = class_attractors.begin();
     for ( ; AtIt != class_attractors.end(); ++AtIt ) {
       if ( !AtIt->second->Empty() ) {
-       // MESSAGE("blsurf_set_attractor(): " << AtIt->first << " = " << AtIt->second);
+       // MESSAGE("cadsurf_set_attractor(): " << AtIt->first << " = " << AtIt->second);
         GeomShape = entryToShape(AtIt->first);
         AttShape = AtIt->second->GetAttractorShape();
         GeomType  = GeomShape.ShapeType();
@@ -1060,7 +1145,7 @@ void BLSURFPlugin_BLSURF::SetParameters(
 
     MESSAGE("Setting Size Map on FACES ");
 // #if BLSURF_VERSION_LONG < "3.1.1"
-    blsurf_data_set_sizemap_iso_cad_face(bls, size_on_surface, &_smp_phy_size);
+    cadsurf_data_set_sizemap_iso_cad_face(css, size_on_surface, &_smp_phy_size);
 // #else
 //     if (*use_precad)
 //       iso_sizemap_f = sizemap_new(c, distene_sizemap_type_iso_cad_face, (void *)size_on_surface, NULL);
@@ -1071,7 +1156,7 @@ void BLSURFPlugin_BLSURF::SetParameters(
     if (HasSizeMapOnEdge){
       MESSAGE("Setting Size Map on EDGES ");
 // #if BLSURF_VERSION_LONG < "3.1.1"
-      blsurf_data_set_sizemap_iso_cad_edge(bls, size_on_edge, &_smp_phy_size);
+      cadsurf_data_set_sizemap_iso_cad_edge(css, size_on_edge, &_smp_phy_size);
 // #else
 //       if (*use_precad)
 //         iso_sizemap_e = sizemap_new(c, distene_sizemap_type_iso_cad_edge, (void *)size_on_edge, NULL);
@@ -1082,7 +1167,7 @@ void BLSURFPlugin_BLSURF::SetParameters(
     if (HasSizeMapOnVertex){
       MESSAGE("Setting Size Map on VERTICES ");
 // #if BLSURF_VERSION_LONG < "3.1.1"
-      blsurf_data_set_sizemap_iso_cad_point(bls, size_on_vertex, &_smp_phy_size);
+      cadsurf_data_set_sizemap_iso_cad_point(css, size_on_vertex, &_smp_phy_size);
 // #else
 //       if (*use_precad)
 //         iso_sizemap_p = sizemap_new(c, distene_sizemap_type_iso_cad_point, (void *)size_on_vertex, NULL);
@@ -1102,16 +1187,16 @@ namespace
   class BLSURF_Cleaner
   {
     context_t *       _ctx;
-    blsurf_session_t* _bls;
+    cadsurf_session_t* _css;
     cad_t *           _cad;
     dcad_t *          _dcad;
   public:
     BLSURF_Cleaner(context_t *       ctx,
-                   blsurf_session_t* bls,
+                   cadsurf_session_t* css,
                    cad_t *           cad,
                    dcad_t *          dcad)
       : _ctx ( ctx  ),
-        _bls ( bls  ),
+        _css ( css  ),
         _cad ( cad  ),
         _dcad( dcad )
     {
@@ -1122,9 +1207,9 @@ namespace
     }
     void Clean(const bool exceptContext)
     {
-      if ( _bls )
+      if ( _css )
       {
-        blsurf_session_delete(_bls); _bls = 0;
+        cadsurf_session_delete(_css); _css = 0;
 
         // #if BLSURF_VERSION_LONG >= "3.1.1"
         // //     if(geo_sizemap_e)
@@ -1346,8 +1431,8 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   SMESH_MesherHelper helper( aMesh );
   // do not call helper.IsQuadraticSubMesh() because sub-meshes
   // may be cleaned and helper.myTLinkNodeMap gets invalid in such a case
-  const bool haveQudraticSubMesh = SMESH_MesherHelper( aMesh ).IsQuadraticSubMesh( aShape );
-  helper.SetIsQuadratic( haveQudraticSubMesh );
+  bool haveQuadraticSubMesh = SMESH_MesherHelper( aMesh ).IsQuadraticSubMesh( aShape );
+  bool quadraticSubMeshAndViscousLayer = false;
   bool needMerge = false;
   set< SMESHDS_SubMesh* > edgeSubmeshes, proxySubmeshes;
   set< SMESHDS_SubMesh* >& mergeSubmeshes = edgeSubmeshes;
@@ -1402,10 +1487,10 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     precad_session_t *pcs = precad_session_new(ctx);
     precad_data_set_cad(pcs, c);
 
-    blsurf_session_t *bls = blsurf_session_new(ctx);
+    cadsurf_session_t *css = cadsurf_session_new(ctx);
 
-    // an object that correctly deletes all blsurf objects at destruction
-    BLSURF_Cleaner cleaner( ctx,bls,c,dcad );
+    // an object that correctly deletes all cadsurf objects at destruction
+    BLSURF_Cleaner cleaner( ctx,css,c,dcad );
 
     MESSAGE("BEGIN SetParameters");
     bool use_precad = false;
@@ -1413,9 +1498,22 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
                   // #if BLSURF_VERSION_LONG >= "3.1.1"
                   //     c,
                   // #endif
-                  _hypothesis, bls, pcs, aMesh, &use_precad);
+                  _hypothesis, css, pcs, aMesh, &use_precad);
     MESSAGE("END SetParameters");
 
+    haveQuadraticSubMesh = haveQuadraticSubMesh || (_hypothesis != NULL && _hypothesis->GetQuadraticMesh());
+    helper.SetIsQuadratic( haveQuadraticSubMesh );
+
+    // To remove as soon as quadratic mesh is allowed - BEGIN
+    // GDD: Viscous layer is not allowed with quadratic mesh
+    if (_haveViscousLayers && haveQuadraticSubMesh ) {
+      quadraticSubMeshAndViscousLayer = true;
+      _haveViscousLayers = !haveQuadraticSubMesh;
+      _comment += "Warning: Viscous layer is not possible with a quadratic mesh, it is ignored.";
+      error(COMPERR_WARNING, _comment);
+    }
+    // To remove as soon as quadratic mesh is allowed - END
+    
     // needed to prevent the opencascade memory managmement from freeing things
     vector<Handle(Geom2d_Curve)> curves;
     vector<Handle(Geom_Surface)> surfaces;
@@ -1484,10 +1582,10 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 
       surfaces.push_back(BRep_Tool::Surface(f));
 
-      /* create an object representing the face for blsurf */
+      /* create an object representing the face for cadsurf */
       /* where face_id is an integer identifying the face.
        * surf_function is the function that defines the surface
-       * (For this face, it will be called by blsurf with your_face_object_ptr
+       * (For this face, it will be called by cadsurf with your_face_object_ptr
        * as last parameter.
        */
       cad_face_t *fce = cad_face_new(c, iface, surf_fun, surfaces.back());
@@ -1541,9 +1639,10 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
             MESSAGE("Check position of vertex =(" << xyzCoords[0] << "," << xyzCoords[1] << "," << xyzCoords[2] << ")");
             gp_Pnt P(xyzCoords[0],xyzCoords[1],xyzCoords[2]);
             BRepClass_FaceClassifier scl(f,P,1e-7);
-            // scl.Perform() is bugged. The function was rewritten
-            // scl.Perform();
-            BRepClass_FaceClassifierPerform( &scl, f, P, 1e-7 );
+            // OCC 6.3sp6 : scl.Perform() is bugged. The function was rewritten
+            // BRepClass_FaceClassifierPerform(&scl,f,P,1e-7);
+            // OCC 6.5.2: scl.Perform() is not bugged anymore
+            scl.Perform(f, P, 1e-7);
             TopAbs_State result = scl.State();
             MESSAGE("Position of point on face: "<<result);
             if ( result == TopAbs_OUT )
@@ -1719,7 +1818,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
               proxySubmeshes.insert( meshDS->MeshElements( helper.IthVertex( 1, e )));
             }
           nodeData.reset( new StdMeshers_FaceSide( f, e, &aMesh, /*isForwrd = */true,
-                                                   /*ignoreMedium=*/haveQudraticSubMesh,
+                                                   /*ignoreMedium=*/haveQuadraticSubMesh,
                                                    viscousMeshPerFace[ iface ]));
           if ( nodeData->MissVertexNode() )
             return error(COMPERR_BAD_INPUT_MESH,"No node on vertex");
@@ -1744,7 +1843,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
           }
         }
 
-        /* attach the edge to the current blsurf face */
+        /* attach the edge to the current cadsurf face */
         cad_edge_t *edg = cad_edge_new(fce, ic, tmin, tmax, curv_fun, curves.back());
 
         /* by default an edge has no tag (color).
@@ -1879,6 +1978,17 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
         SMDS_NodeIteratorPtr nIt = smDS->GetNodes();
         while ( nIt->more() ) meshDS->RemoveFreeNode( nIt->next(), smDS );
       }
+      if ( proxySubmeshes.count( smDS ))
+      {
+        needMerge = true;
+      }
+      else
+      {
+        SMDS_ElemIteratorPtr eIt = smDS->GetElements();
+        while ( eIt->more() ) meshDS->RemoveFreeElement( eIt->next(), smDS );
+        SMDS_NodeIteratorPtr nIt = smDS->GetNodes();
+        while ( nIt->more() ) meshDS->RemoveFreeNode( nIt->next(), smDS );
+      }
     }
 
     if (use_precad) {
@@ -1917,21 +2027,15 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       precad_session_delete(pcs);
     }
 
-    blsurf_data_set_dcad(bls, dcad);
+    cadsurf_data_set_dcad(css, dcad);
     if (cleanc) {
       // Give the pre-processed CAD object to the current BLSurf session
-      blsurf_data_set_cad(bls, cleanc);
+      cadsurf_data_set_cad(css, cleanc);
     }
     else {
       // Use the original one
-      blsurf_data_set_cad(bls, c);
+      cadsurf_data_set_cad(css, c);
     }
-
-    // #if BLSURF_VERSION_LONG >= "3.1.1"
-    //   blsurf_data_set_sizemap(bls, clean_iso_sizemap_p);
-    //   blsurf_data_set_sizemap(bls, clean_iso_sizemap_e);
-    //   blsurf_data_set_sizemap(bls, clean_iso_sizemap_f);
-    // #endif
 
     std::cout << std::endl;
     std::cout << "Beginning of Surface Mesh generation" << std::endl;
@@ -1940,7 +2044,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     try {
       OCC_CATCH_SIGNALS;
 
-      status = blsurf_compute_mesh(bls);
+      status = cadsurf_compute_mesh(css);
 
     }
     catch ( std::exception& exc ) {
@@ -1955,7 +2059,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     }
     catch (...) {
       if ( _comment.empty() )
-        _comment = "Exception in blsurf_compute_mesh()";
+        _comment = "Exception in cadsurf_compute_mesh()";
     }
     if ( status != STATUS_OK) {
       // There was an error while meshing
@@ -1969,10 +2073,10 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     std::cout << std::endl;
 
     mesh_t *msh = NULL;
-    blsurf_data_get_mesh(bls, &msh);
+    cadsurf_data_get_mesh(css, &msh);
     if(!msh){
       /* release the mesh object */
-      blsurf_data_regain_mesh(bls, msh);
+      cadsurf_data_regain_mesh(css, msh);
       return error(_comment);
     }
 
@@ -1985,31 +2089,22 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       bool binaryFound = (GMFFileName.find(".meshb",GMFFileName.length()-6) != std::string::npos);
       if (!asciiFound && !binaryFound)
         GMFFileName.append(".mesh");
-      /*
-        if (GMFFileMode) {
-        if (!binaryFound) {
-        if (asciiFound)
-        GMFFileName.append("b");
-        else
-        GMFFileName.append(".meshb");
-        }
-        }
-        else {
-        if (!asciiFound)
-        GMFFileName.append(".mesh");
-        }
-      */
       mesh_write_mesh(msh, GMFFileName.c_str());
     }
 
-    /* retrieve mesh data (see distene/mesh.h) */
+    /* retrieve mesh data (see meshgems/mesh.h) */
     integer nv, ne, nt, nq, vtx[4], tag;
+    integer *evedg, *evtri, *evquad, type;
     real xyz[3];
 
     mesh_get_vertex_count(msh, &nv);
     mesh_get_edge_count(msh, &ne);
     mesh_get_triangle_count(msh, &nt);
     mesh_get_quadrangle_count(msh, &nq);
+
+    evedg  = (integer *)mesh_calloc_generic_buffer(msh);
+    evtri  = (integer *)mesh_calloc_generic_buffer(msh);
+    evquad = (integer *)mesh_calloc_generic_buffer(msh);
 
     SMDS_MeshNode** nodes = new SMDS_MeshNode*[nv+1];
     bool* tags = new bool[nv+1];
@@ -2086,7 +2181,6 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
         }
       }
 
-
       // internal points are tagged to zero
       if(tag > 0 && tag <= pmap.Extent() ){
         meshDS->SetNodeOnVertex(nodes[iv], TopoDS::Vertex(pmap(tag)));
@@ -2098,8 +2192,9 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 
     /* enumerate edges */
     for(int it=1;it<=ne;it++) {
-
+      SMDS_MeshEdge* edg;
       mesh_get_edge_vertices(msh, it, vtx);
+      mesh_get_edge_extra_vertices(msh, it, &type, evedg);
       mesh_get_edge_tag(msh, it, &tag);
       if (tags[vtx[0]]) {
         Set_NodeOnEdge(meshDS, nodes[vtx[0]], emap(tag));
@@ -2109,16 +2204,26 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
         Set_NodeOnEdge(meshDS, nodes[vtx[1]], emap(tag));
         tags[vtx[1]] = false;
       };
-      SMDS_MeshEdge* edg = helper.AddEdge(nodes[vtx[0]], nodes[vtx[1]]);
+      if (type == MESHGEMS_MESH_ELEMENT_TYPE_EDGE3) {
+        // QUADRATIC EDGE
+        if (tags[evedg[0]]) {
+          Set_NodeOnEdge(meshDS, nodes[evedg[0]], emap(tag));
+          tags[evedg[0]] = false;
+        }
+        edg = meshDS->AddEdge(nodes[vtx[0]], nodes[vtx[1]], nodes[evedg[0]]);
+      }
+      else {
+        edg = helper.AddEdge(nodes[vtx[0]], nodes[vtx[1]]);
+      }
       meshDS->SetMeshElementOnShape(edg, TopoDS::Edge(emap(tag)));
     }
 
     /* enumerate triangles */
     for(int it=1;it<=nt;it++) {
+      SMDS_MeshFace* tri;
       mesh_get_triangle_vertices(msh, it, vtx);
-      SMDS_MeshFace* tri = helper.AddFace(nodes[vtx[0]], nodes[vtx[1]], nodes[vtx[2]]);
+      mesh_get_triangle_extra_vertices(msh, it, &type, evtri);
       mesh_get_triangle_tag(msh, it, &tag);
-      meshDS->SetMeshElementOnShape(tri, TopoDS::Face(fmap(tag)));
       if (tags[vtx[0]]) {
         meshDS->SetNodeOnFace(nodes[vtx[0]], TopoDS::Face(fmap(tag)));
         tags[vtx[0]] = false;
@@ -2131,14 +2236,35 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
         meshDS->SetNodeOnFace(nodes[vtx[2]], TopoDS::Face(fmap(tag)));
         tags[vtx[2]] = false;
       };
+      if (type == MESHGEMS_MESH_ELEMENT_TYPE_TRIA6) {
+        // QUADRATIC TRIANGLE
+        if (tags[evtri[0]]) {
+          meshDS->SetNodeOnFace(nodes[evtri[0]], TopoDS::Face(fmap(tag)));
+          tags[evtri[0]] = false;
+        }
+        if (tags[evtri[1]]) {
+          meshDS->SetNodeOnFace(nodes[evtri[1]], TopoDS::Face(fmap(tag)));
+          tags[evtri[1]] = false;
+        }
+        if (tags[evtri[2]]) {
+          meshDS->SetNodeOnFace(nodes[evtri[2]], TopoDS::Face(fmap(tag)));
+          tags[evtri[2]] = false;
+        }
+        tri = meshDS->AddFace(nodes[vtx[0]], nodes[vtx[1]], nodes[vtx[2]],
+                              nodes[evtri[0]], nodes[evtri[1]], nodes[evtri[2]]);
+      }
+      else {
+        tri = helper.AddFace(nodes[vtx[0]], nodes[vtx[1]], nodes[vtx[2]]);
+      }
+      meshDS->SetMeshElementOnShape(tri, TopoDS::Face(fmap(tag)));
     }
 
     /* enumerate quadrangles */
     for(int it=1;it<=nq;it++) {
+      SMDS_MeshFace* quad;
       mesh_get_quadrangle_vertices(msh, it, vtx);
-      SMDS_MeshFace* quad = helper.AddFace(nodes[vtx[0]], nodes[vtx[1]], nodes[vtx[2]], nodes[vtx[3]]);
+      mesh_get_quadrangle_extra_vertices(msh, it, &type, evquad);
       mesh_get_quadrangle_tag(msh, it, &tag);
-      meshDS->SetMeshElementOnShape(quad, TopoDS::Face(fmap(tag)));
       if (tags[vtx[0]]) {
         meshDS->SetNodeOnFace(nodes[vtx[0]], TopoDS::Face(fmap(tag)));
         tags[vtx[0]] = false;
@@ -2155,10 +2281,41 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
         meshDS->SetNodeOnFace(nodes[vtx[3]], TopoDS::Face(fmap(tag)));
         tags[vtx[3]] = false;
       };
+      if (type == MESHGEMS_MESH_ELEMENT_TYPE_QUAD9) {
+        // QUADRATIC QUADRANGLE
+        std::cout << "This is a quadratic quadrangle" << std::endl;
+        if (tags[evquad[0]]) {
+          meshDS->SetNodeOnFace(nodes[evquad[0]], TopoDS::Face(fmap(tag)));
+          tags[evquad[0]] = false;
+        }
+        if (tags[evquad[1]]) {
+          meshDS->SetNodeOnFace(nodes[evquad[1]], TopoDS::Face(fmap(tag)));
+          tags[evquad[1]] = false;
+        }
+        if (tags[evquad[2]]) {
+          meshDS->SetNodeOnFace(nodes[evquad[2]], TopoDS::Face(fmap(tag)));
+          tags[evquad[2]] = false;
+        }
+        if (tags[evquad[3]]) {
+          meshDS->SetNodeOnFace(nodes[evquad[3]], TopoDS::Face(fmap(tag)));
+          tags[evquad[3]] = false;
+        }
+        if (tags[evquad[4]]) {
+          meshDS->SetNodeOnFace(nodes[evquad[4]], TopoDS::Face(fmap(tag)));
+          tags[evquad[4]] = false;
+        }
+        quad = meshDS->AddFace(nodes[vtx[0]], nodes[vtx[1]], nodes[vtx[2]], nodes[vtx[3]],
+                              nodes[evquad[0]], nodes[evquad[1]], nodes[evquad[2]], nodes[evquad[3]],
+                              nodes[evquad[4]]);
+      }
+      else {
+        quad = helper.AddFace(nodes[vtx[0]], nodes[vtx[1]], nodes[vtx[2]], nodes[vtx[3]]);
+      }
+      meshDS->SetMeshElementOnShape(quad, TopoDS::Face(fmap(tag)));
     }
 
     /* release the mesh object, the rest is released by cleaner */
-    blsurf_data_regain_mesh(bls, msh);
+    cadsurf_data_regain_mesh(css, msh);
 
     delete [] nodes;
     delete [] tags;
@@ -2265,7 +2422,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   */
 
   MESSAGE("END OF BLSURFPlugin_BLSURF::Compute()");
-  return ( status == STATUS_OK );
+  return ( status == STATUS_OK && !quadraticSubMeshAndViscousLayer );
 }
 
 //================================================================================
@@ -2321,7 +2478,7 @@ void BLSURFPlugin_BLSURF::Set_NodeOnEdge(SMESHDS_Mesh* meshDS, SMDS_MeshNode* no
   meshDS->SetNodeOnEdge(node, edge, pa);
 }
 
-/* Curve definition function See cad_curv_t in file distene/cad.h for
+/* Curve definition function See cad_curv_t in file meshgems/cad.h for
  * more information.
  * NOTE : if when your CAD systems evaluates second
  * order derivatives it also computes first order derivatives and
@@ -2362,7 +2519,7 @@ status_t curv_fun(real t, real *uv, real *dt, real *dtt, void *user_data)
 }
 
 /* Surface definition function.
- * See cad_surf_t in file distene/cad.h for more information.
+ * See cad_surf_t in file meshgems/cad.h for more information.
  * NOTE : if when your CAD systems evaluates second order derivatives it also
  * computes first order derivatives and function evaluation, you can optimize
  * this example by making only one CAD call and filling the necessary xyz, du, dv, etc..
@@ -2411,20 +2568,6 @@ status_t surf_fun(real *uv, real *xyz, real*du, real *dv,
 
 status_t size_on_surface(integer face_id, real *uv, real *size, void *user_data)
 {
-  if (face_id == 1) {
-    if (my_u_min > uv[0]) {
-      my_u_min = uv[0];
-    }
-    if (my_v_min > uv[1]) {
-      my_v_min = uv[1];
-    }
-    if (my_u_max < uv[0]) {
-      my_u_max = uv[0];
-    }
-    if (my_v_max < uv[1]) {
-      my_v_max = uv[1];
-    }
-  }
   //MESSAGE("size_on_surface")
   if (FaceId2PythonSmp.count(face_id) != 0){
     //MESSAGE("A size map is used to calculate size on face : "<<face_id)
@@ -2434,8 +2577,13 @@ status_t size_on_surface(integer face_id, real *uv, real *size, void *user_data)
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
     pyresult = PyObject_CallFunction(FaceId2PythonSmp[face_id],(char*)"(f,f)",uv[0],uv[1]);
-    double result;
-    if ( pyresult == NULL){
+    real result;
+    if ( pyresult != NULL) {
+      result = PyFloat_AsDouble(pyresult);
+      Py_DECREF(pyresult);
+//       *size = result;
+    }
+    else{
       fflush(stderr);
       string err_description="";
       new_stderr = newPyStdOut(err_description);
@@ -2444,13 +2592,8 @@ status_t size_on_surface(integer face_id, real *uv, real *size, void *user_data)
       PySys_SetObject((char*)"stderr", PySys_GetObject((char*)"__stderr__"));
       Py_DECREF(new_stderr);
       MESSAGE("Can't evaluate f(" << uv[0] << "," << uv[1] << ")" << " error is " << err_description);
-      result = *((double*)user_data);
-      }
-    else {
-      result = PyFloat_AsDouble(pyresult);
-      Py_DECREF(pyresult);
+      result = *((real*)user_data);
     }
-   // MESSAGE("f(" << uv[0] << "," << uv[1] << ")" << " = " << result);
     *size = result;
     PyGILState_Release(gstate);
   }
@@ -2458,14 +2601,14 @@ status_t size_on_surface(integer face_id, real *uv, real *size, void *user_data)
 //    MESSAGE("attractor used on face :"<<face_id)
     // MESSAGE("List of attractor is not empty")
     // MESSAGE("Attractor empty : "<< FaceIndex2ClassAttractor[face_id]->Empty())
-    double result = FaceIndex2ClassAttractor[face_id]->GetSize(uv[0],uv[1]);
+    real result = FaceIndex2ClassAttractor[face_id]->GetSize(uv[0],uv[1]);
     *size = result;
-   // MESSAGE("f(" << uv[0] << "," << uv[1] << ")" << " = " << result);
   }
   else {
     // MESSAGE("List of attractor is empty !!!")
-    *size = *((double*)user_data);
+    *size = *((real*)user_data);
   }
+//   std::cout << "Size_on_surface sur la face " << face_id << " donne une size de: " << *size << std::endl;
   return STATUS_OK;
 }
 
@@ -2478,8 +2621,13 @@ status_t size_on_edge(integer edge_id, real t, real *size, void *user_data)
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
     pyresult = PyObject_CallFunction(EdgeId2PythonSmp[edge_id],(char*)"(f)",t);
-    double result;
-    if ( pyresult == NULL){
+    real result;
+    if ( pyresult != NULL) {
+      result = PyFloat_AsDouble(pyresult);
+      Py_DECREF(pyresult);
+//       *size = result;
+    }
+    else{
       fflush(stderr);
       string err_description="";
       new_stderr = newPyStdOut(err_description);
@@ -2488,17 +2636,13 @@ status_t size_on_edge(integer edge_id, real t, real *size, void *user_data)
       PySys_SetObject((char*)"stderr", PySys_GetObject((char*)"__stderr__"));
       Py_DECREF(new_stderr);
       MESSAGE("Can't evaluate f(" << t << ")" << " error is " << err_description);
-      result = *((double*)user_data);
-      }
-    else {
-      result = PyFloat_AsDouble(pyresult);
-      Py_DECREF(pyresult);
+      result = *((real*)user_data);
     }
     *size = result;
     PyGILState_Release(gstate);
   }
   else {
-    *size = *((double*)user_data);
+    *size = *((real*)user_data);
   }
   return STATUS_OK;
 }
@@ -2512,8 +2656,13 @@ status_t size_on_vertex(integer point_id, real *size, void *user_data)
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
     pyresult = PyObject_CallFunction(VertexId2PythonSmp[point_id],(char*)"");
-    double result;
-    if ( pyresult == NULL){
+    real result;
+    if ( pyresult != NULL) {
+      result = PyFloat_AsDouble(pyresult);
+      Py_DECREF(pyresult);
+//       *size = result;
+    }
+    else {
       fflush(stderr);
       string err_description="";
       new_stderr = newPyStdOut(err_description);
@@ -2522,17 +2671,13 @@ status_t size_on_vertex(integer point_id, real *size, void *user_data)
       PySys_SetObject((char*)"stderr", PySys_GetObject((char*)"__stderr__"));
       Py_DECREF(new_stderr);
       MESSAGE("Can't evaluate f()" << " error is " << err_description);
-      result = *((double*)user_data);
-      }
-    else {
-      result = PyFloat_AsDouble(pyresult);
-      Py_DECREF(pyresult);
+      result = *((real*)user_data);
     }
     *size = result;
     PyGILState_Release(gstate);
   }
   else {
-    *size = *((double*)user_data);
+    *size = *((real*)user_data);
   }
  return STATUS_OK;
 }
@@ -2566,7 +2711,7 @@ status_t message_cb(message_t *msg, void *user_data)
 }
 
 /* This is the interrupt callback. PreCAD/BLSurf will call this
- * function regularily. See the file distene/interrupt.h
+ * function regularily. See the file meshgems/interrupt.h
  */
 status_t interrupt_cb(integer *interrupt_status, void *user_data)
 {
@@ -2597,22 +2742,31 @@ bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh&         aMesh,
                                    const TopoDS_Shape& aShape,
                                    MapShapeNbElems&    aResMap)
 {
+  double diagonal       = aMesh.GetShapeDiagonalSize();
+  double bbSegmentation = _gen->GetBoundaryBoxSegmentation();
   int    _physicalMesh  = BLSURFPlugin_Hypothesis::GetDefaultPhysicalMesh();
-  double _phySize       = BLSURFPlugin_Hypothesis::GetDefaultPhySize();
+  double _phySize       = BLSURFPlugin_Hypothesis::GetDefaultPhySize(diagonal, bbSegmentation);
+  bool   _phySizeRel    = BLSURFPlugin_Hypothesis::GetDefaultPhySizeRel();
   //int    _geometricMesh = BLSURFPlugin_Hypothesis::GetDefaultGeometricMesh();
-  //double _angleMeshS    = BLSURFPlugin_Hypothesis::GetDefaultAngleMeshS();
-  double _angleMeshC    = BLSURFPlugin_Hypothesis::GetDefaultAngleMeshC();
+  double _angleMesh     = BLSURFPlugin_Hypothesis::GetDefaultAngleMesh();
   bool   _quadAllowed   = BLSURFPlugin_Hypothesis::GetDefaultQuadAllowed();
   if(_hypothesis) {
     _physicalMesh  = (int) _hypothesis->GetPhysicalMesh();
-    _phySize       = _hypothesis->GetPhySize();
+    _phySizeRel         = _hypothesis->IsPhySizeRel();
+    if ( _hypothesis->GetPhySize() > 0)
+      _phySize          = _phySizeRel ? diagonal*_hypothesis->GetPhySize() : _hypothesis->GetPhySize();
     //_geometricMesh = (int) hyp->GetGeometricMesh();
-    //_angleMeshS    = hyp->GetAngleMeshS();
-    _angleMeshC    = _hypothesis->GetAngleMeshC();
-    _quadAllowed   = _hypothesis->GetQuadAllowed();
+    if (_hypothesis->GetAngleMesh() > 0)
+      _angleMesh        = _hypothesis->GetAngleMesh();
+    _quadAllowed        = _hypothesis->GetQuadAllowed();
+  } else {
+    //0020968: EDF1545 SMESH: Problem in the creation of a mesh group on geometry
+    // GetDefaultPhySize() sometimes leads to computation failure
+    _phySize = aMesh.GetShapeDiagonalSize() / _gen->GetBoundaryBoxSegmentation();
+    MESSAGE("BLSURFPlugin_BLSURF::SetParameters using defaults");
   }
 
-  bool IsQuadratic = false;
+  bool IsQuadratic = _quadraticMesh;
 
   // ----------------
   // evaluate 1D
@@ -2648,7 +2802,7 @@ bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh&         aMesh,
         V1 = V2;
         P2 = P3;
       }
-      nb1d = (int)( fullAng/_angleMeshC + 1 );
+      nb1d = (int)( fullAng/_angleMesh + 1 );
     }
     fullNbSeg += nb1d;
     std::vector<int> aVec(SMDSEntity_Last);
@@ -2737,57 +2891,4 @@ bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh&         aMesh,
   aResMap.insert(std::make_pair(sm,aVec));
 
   return true;
-}
-
-//=============================================================================
-/*!
- *  Rewritting of the BRepClass_FaceClassifier::Perform function which is bugged (CAS 6.3sp6)
- *  Following line was added:
- *        myExtrem.Perform(P);
- */
-//=============================================================================
-void  BLSURFPlugin_BLSURF::BRepClass_FaceClassifierPerform(BRepClass_FaceClassifier* fc,
-                    const TopoDS_Face& face,
-                    const gp_Pnt& P,
-                    const Standard_Real Tol)
-{
-  //-- Voir BRepExtrema_ExtPF.cxx
-  BRepAdaptor_Surface Surf(face);
-  Standard_Real U1, U2, V1, V2;
-  BRepTools::UVBounds(face, U1, U2, V1, V2);
-  Extrema_ExtPS myExtrem;
-  myExtrem.Initialize(Surf, U1, U2, V1, V2, Tol, Tol);
-  myExtrem.Perform(P);
-  //----------------------------------------------------------
-  //-- On cherche le point le plus proche , PUIS
-  //-- On le classifie.
-  Standard_Integer nbv    = 0; // xpu
-  Standard_Real MaxDist   =  RealLast();
-  Standard_Integer indice = 0;
-  if (myExtrem.IsDone()) {
-    nbv = myExtrem.NbExt();
-    for (Standard_Integer i = 1; i <= nbv; i++) {
-#if OCC_VERSION_LARGE > 0x06040000 // Porting to OCCT6.5.1
-      Standard_Real d = myExtrem.SquareDistance(i);
-#else
-      Standard_Real d = myExtrem.Value(i);
-      d = Abs(d);
-#endif
-      if (d <= MaxDist) {
-        MaxDist = d;
-        indice = i;
-      }
-    }
-  }
-  if (indice) {
-    gp_Pnt2d Puv;
-    Standard_Real U1,U2;
-    myExtrem.Point(indice).Parameter(U1, U2);
-    Puv.SetCoord(U1, U2);
-    fc->Perform(face, Puv, Tol);
-  }
-  else {
-    fc->Perform(face, gp_Pnt2d(U1-1.0,V1 - 1.0), Tol); //-- NYI etc BUG PAS BEAU En attendant l acces a rejected
-    //-- le resultat est TopAbs_OUT;
-  }
 }

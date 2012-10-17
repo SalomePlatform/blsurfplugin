@@ -26,6 +26,7 @@ include $(top_srcdir)/adm_local/unix/make_common_starter.am
 
 # header files 
 salomeinclude_HEADERS =	\
+	BLSURFPluginGUI_Dlg.h	\
 	BLSURFPluginGUI_HypothesisCreator.h
 
 # Libraries targets
@@ -33,10 +34,19 @@ lib_LTLIBRARIES = libBLSURFPluginGUI.la
 
 dist_libBLSURFPluginGUI_la_SOURCES = \
 	BLSURFPluginGUI.cxx \
+	BLSURFPluginGUI_StdWidget.cxx \
+	BLSURFPluginGUI_AdvWidget.cxx \
 	BLSURFPluginGUI_HypothesisCreator.cxx
 
 MOC_FILES = \
-	BLSURFPluginGUI_HypothesisCreator_moc.cxx
+	BLSURFPluginGUI_HypothesisCreator_moc.cxx	\
+	BLSURFPluginGUI_Dlg_moc.cxx
+
+UIC_FILES =	\
+	ui_BLSURFPluginGUI_StdWidget_QTD.h	\
+	ui_BLSURFPluginGUI_AdvWidget_QTD.h
+
+BUILT_SOURCES = $(UIC_FILES)
 
 nodist_libBLSURFPluginGUI_la_SOURCES = \
 	$(MOC_FILES)
@@ -56,17 +66,17 @@ libBLSURFPluginGUI_la_CPPFLAGS = 	\
 	$(BOOST_CPPFLAGS)		\
 	$(CORBA_CXXFLAGS)		\
 	$(CORBA_INCLUDES)		\
-	$(BLSURF_INCLUDES)		\
+	$(MESHGEMS_CADSURF_INCLUDES)	\
 	-I$(srcdir)/../BLSURFPlugin	\
 	-I$(top_builddir)/idl
 
 libBLSURFPluginGUI_la_LDFLAGS =			\
-	$(QT_LIBS) \
+	$(QT_LIBS) $(QT_MT_LIBS)\
 	../BLSURFPlugin/libBLSURFEngine.la	\
 	$(GUI_LDFLAGS) -lqtx -lSalomeApp -lsuit -lSalomeObject -lLightApp	\
 	$(GEOM_LDFLAGS) -lGEOM \
 	${SMESH_LDFLAGS} -lSMESH -lGeomSelectionTools -lStdMeshersGUI -lSMESHFiltersSelection \
-	$(CAS_KERNEL) $(BLSURF_LIBS)
+	$(CAS_KERNEL) $(MESHGEMS_CADSURF_LIBS)
 
 # resources files
 nodist_salomeres_DATA =		\

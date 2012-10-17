@@ -4,76 +4,159 @@
 <context>
     <name>@default</name>
     <message>
-        <source>ADD_OPTION</source>
-        <translation>Ajouter l&apos;option</translation>
+        <source>BLSURF_MESH_TYPE</source>
+        <translation>Type de maillage</translation>
     </message>
     <message>
-        <source>BLSURF_ALLOW_QUADRANGLES</source>
-        <translation>Autoriser les quadrangles (Test)</translation>
+        <source>BLSURF_PHY_MESH</source>
+        <translation>Maillage physique</translation>
     </message>
     <message>
-        <source>BLSURF_ANGLE_MESH_C</source>
-        <translation>Angle de maillage C</translation>
-    </message>
-    <message>
-        <source>BLSURF_ANGLE_MESH_S</source>
-        <translation>Angle de maillage S</translation>
-    </message>
-    <message>
-        <source>BLSURF_CUSTOM_GEOM</source>
-        <translation>Personnalisé</translation>
-    </message>
-    <message>
-        <source>BLSURF_CUSTOM_USER</source>
-        <translation>Personnalisé</translation>
-    </message>
-    <message>
-        <source>BLSURF_DECIMESH</source>
-        <translation>S&apos;affranchir des frontières des surfaces</translation>
-    </message>
-    <message>
-        <source>BLSURF_DEFAULT_GEOM</source>
-        <translation>Inactif</translation>
-    </message>
-    <message>
-        <source>BLSURF_DEFAULT_USER</source>
-        <translation>Inactif</translation>
+        <source>BLSURF_PHY_MESH_TOOLTIP</source>
+        <translation>&lt;b&gt;&lt;u&gt;Mode de taille physique&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+- &quot;Taille globale&quot;: la taille physique est globale et le mailleur utilisera la taille physique globale fournie.&lt;br&gt;
+- &quot;Taille locale&quot;: la taille est localement calculée sur les courbes et surfaces en utilisant les fonctions de carte de taille associées.&lt;br&gt;
+- &quot;Inactive&quot;: aucune taille physique ne sera calculée.</translation>
     </message>
     <message>
         <source>BLSURF_GEOM_MESH</source>
         <translation>Maillage géométrique</translation>
     </message>
     <message>
-        <source>BLSURF_GRADATION</source>
-        <translation>Taux d&apos;accroissement</translation>
+        <source>BLSURF_GEOM_MESH_TOOLTIP</source>
+        <translation>&lt;b&gt;&lt;u&gt;Mode de taille géométrique&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+- &quot;Taille globale&quot;: la taille géométrique est globale et le mailleur utilisera l&apos;approximation géométrique fournie par les paramètres géométriques.&lt;br&gt;
+- &quot;Inactive&quot;: aucune taille géométrique ne sera calculée.</translation>
     </message>
     <message>
-        <source>BLSURF_HGEOMAX</source>
-        <translation>Taille géométrique maximale</translation>
+        <source>BLSURF_DEFAULT_USER</source>
+        <translation>Inactif</translation>
     </message>
     <message>
-        <source>BLSURF_HGEOMIN</source>
-        <translation>Taille géométrique minimale</translation>
+        <source>GLOBAL_SIZE</source>
+        <translation>Taille globale</translation>
+    </message>
+    <message>
+        <source>LOCAL_SIZE</source>
+        <translation>Taille locale</translation>
+    </message>
+    <message>
+        <source>BLSURF_MAIN_PARAMETERS</source>
+        <translation>Paramètres principaux</translation>
     </message>
     <message>
         <source>BLSURF_HPHYDEF</source>
         <translation>Taille d&apos;utilisateur</translation>
     </message>
     <message>
-        <source>BLSURF_HPHYMAX</source>
-        <translation>Taille physique maximale</translation>
+        <source>BLSURF_HPHYDEF_TOOLTIP</source>
+        <translation>Défini la taille globale constante pour le maillage physique.&lt;br&gt;
+La valeur par défaut est calculée par &lt;em&gt;diag&lt;/em&gt;/&lt;em&gt;ratio&lt;/em&gt;, où &lt;em&gt;ratio&lt;/em&gt; est défini dans les préférences.</translation>
     </message>
     <message>
-        <source>BLSURF_HPHYMIN</source>
-        <translation>Taille physique minimale</translation>
+        <source>BLSURF_MINSIZE</source>
+        <translation>Taille minimale</translation>
+    </message>
+    <message>
+        <source>BLSURF_MINSIZE_TOOLTIP</source>
+        <translation>Défini la taille globale minimum de cellule désirée.&lt;br&gt;
+La valeur par défaut est calculée par &lt;em&gt;diag&lt;/em&gt;/1000.</translation>
+    </message>
+    <message>
+        <source>BLSURF_MAXSIZE</source>
+        <translation>Taille maximale</translation>
+    </message>
+    <message>
+        <source>BLSURF_MAXSIZE_TOOLTIP</source>
+        <translation>Défini la taille globale maximum de cellule désirée.&lt;br&gt;
+La valeur par défaut est calculée par &lt;em&gt;diag&lt;/em&gt;/5.</translation>
+    </message>
+    <message>
+        <source>BLSURF_SIZE_REL</source>
+        <translation>Valeur relative</translation>
+    </message>
+    <message>
+        <source>BLSURF_SIZE_REL_TOOLTIP</source>
+        <translation>La valeur est relative à &lt;em&gt;diag&lt;/em&gt;</translation>
+    </message>
+    <message>
+        <source>BLSURF_GRADATION</source>
+        <translation>Taux d&apos;accroissement</translation>
+    </message>
+    <message>
+        <source>BLSURF_GRADATION_TOOLTIP</source>
+        <translation>Ratio maximum entre les longueurs de deux segments adjacents.</translation>
+    </message>
+    <message>
+        <source>BLSURF_ALLOW_QUADRANGLES</source>
+        <translation>Autoriser les quadrangles</translation>
+    </message>
+    <message>
+        <source>BLSURF_GEOMETRICAL_PARAMETERS</source>
+        <translation>Paramètres géometriques</translation>
+    </message>
+    <message>
+        <source>BLSURF_ANGLE_MESH</source>
+        <translation>Angle de maillage</translation>
+    </message>
+    <message>
+        <source>BLSURF_ANGLE_MESH_TOOLTIP</source>
+        <translation>Limite d&apos;angle entre le plan d&apos;un triangle du maillage et chacun des plans tangents aux sommets.&lt;br&gt;
+Plus l&apos;angle est petit, plus le maillage sera dense et proche de la géométrie.</translation>
+    </message>
+    <message>
+        <source>BLSURF_CHORDAL_ERROR</source>
+        <translation>Distance du maillage</translation>
+    </message>
+    <message>
+        <source>BLSURF_CHORDAL_TOOLTIP</source>
+        <translation>Distance maximum désirée entre un triangle et sa surface CAO.&lt;br&gt;
+Plus la distance est petite, plus le maillage sera proche de la surface (disponible en mode isotrope seulement).</translation>
+    </message>
+    <message>
+        <source>BLSURF_OTHER_PARAMETERS</source>
+        <translation>Autres paramètres</translation>
+    </message>
+    <message>
+        <source>BLSURF_ANISOTROPIC</source>
+        <translation>Anisotropie</translation>
+    </message>
+    <message>
+        <source>BLSURF_ANISOTROPIC_TOOLTIP</source>
+        <translation>Si activé, ce paramètre défini le ratio d'anisotropie maximum de la métrique pilotant de processus de maillage anisotropique.&lt;br&gt;
+          La valeur par défaut de 0 signifie que la métrique (et donc les éléments générés) peut être étirée arbitrairement.</translation>
+    </message>
+    <message>
+        <source>BLSURF_REMOVE_TINY_EDGES</source>
+        <translation>Enlever les petites arêtes</translation>
+    </message>
+    <message>
+        <source>BLSURF_REMOVE_TINY_EDGES_TOOLTIP</source>
+        <translation>Si activé, ce paramètre défini la longueur minimale sous laquelle une arête est considérée comme toute petite.</translation>
+    </message>
+    <message>
+        <source>BLSURF_REMOVE_SLIVERS</source>
+        <translation>Enlever les mauvais éléments</translation>
+    </message>
+    <message>
+        <source>BLSURF_REMOVE_SLIVERS_TOOLTIP</source>
+        <translation>Si activé, ce paramètre défini les proportions déclenchants la classification des "mauvais éléments”.</translation>
+    </message>
+    <message>
+        <source>BLSURF_OPTIMISATION</source>
+        <translation>Optimisation du maillage</translation>
+    </message>
+    <message>
+        <source>BLSURF_OPTIMISATION_TOOLTIP</source>
+        <translation>Si activé, MeshGems-CADSurf optimisera le maillage pour obtenir des éléments de meilleurs qualité.</translation>
+    </message>
+    <message>
+        <source>BLSURF_ELEMENT_ORDER</source>
+        <translation>Maillage quadratique</translation>
     </message>
     <message>
         <source>BLSURF_HYPOTHESIS</source>
         <translation>BLSURF 2D</translation>
-    </message>
-    <message>
-        <source>BLSURF_PHY_MESH</source>
-        <translation>Maillage physique</translation>
     </message>
     <message>
         <source>BLSURF_ADV_ARGS</source>
@@ -132,7 +215,11 @@
         <translation>PreCAD</translation>
     </message>
     <message>
-        <source>REMOVE_OPTION</source>
+        <source>BLSURF_ADD_OPTION</source>
+        <translation>Ajouter l&apos;option</translation>
+    </message>
+    <message>
+        <source>BLSURF_REMOVE_OPTION</source>
         <translation>Effacer l&apos;option</translation>
     </message>
     <message>
@@ -160,20 +247,12 @@
         <translation>Fusionner des arêtes</translation>
     </message>
     <message>
-        <source>BLSURF_PRECAD_REMOVE_NANO_EDGES</source>
-        <translation>Supprimer les petites arêtes</translation>
+        <source>BLSURF_PRECAD_PROCESS_3D_TOPOLOGY</source>
+        <translation>Nettoyer la CAO</translation>
     </message>
     <message>
         <source>BLSURF_PRECAD_DISCARD_INPUT</source>
         <translation>Ignorer la topologie</translation>
-    </message>
-    <message>
-        <source>BLSURF_PRECAD_EPS_NANO</source>
-        <translation>Longueur max des petites arêtes</translation>
-    </message>
-    <message>
-        <source>BLSURF_SIZE_MAP</source>
-        <translation>Tailles locales</translation>
     </message>
     <message>
         <source>SMP_ENTRY_COLUMN</source>

@@ -7,7 +7,7 @@ used within the SALOME Mesh module for generation of 2D mesh.
 
 \note BLSURFPLUGIN plugin uses DISTENE BLSurf commercial meshing
 software and requires a license at the run time (to work within the
-Mesh module).
+Mesh module). To obtain a licence, visit http://www.distene.com/en/corp/eval-distene.html
 
 \b BLSURFPLUGIN plugin is destined for:
 - Meshing of the 2D geometric entities.

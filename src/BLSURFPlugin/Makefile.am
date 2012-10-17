@@ -43,20 +43,20 @@ dist_libBLSURFEngine_la_SOURCES =	\
 	BLSURFPlugin_i.cxx              \
 	BLSURFPlugin_Attractor.cxx
 
-libBLSURFEngine_la_CPPFLAGS =	\
-	$(QT_INCLUDES)          \
-	$(PYTHON_INCLUDES)      \
-	$(KERNEL_CXXFLAGS)	\
-	$(GUI_CXXFLAGS)		\
-	$(MED_CXXFLAGS)		\
-	$(GEOM_CXXFLAGS)	\
-	$(CAS_CPPFLAGS)		\
-	$(VTK_INCLUDES)	\
-	$(BLSURF_INCLUDES)	\
-	$(SMESH_CXXFLAGS)	\
-	$(CORBA_CXXFLAGS)	\
-	$(CORBA_INCLUDES)	\
-	$(BOOST_CPPFLAGS)	\
+libBLSURFEngine_la_CPPFLAGS =		\
+	$(QT_INCLUDES)          	\
+	$(PYTHON_INCLUDES)      	\
+	$(KERNEL_CXXFLAGS)		\
+	$(GUI_CXXFLAGS)			\
+	$(MED_CXXFLAGS)			\
+	$(GEOM_CXXFLAGS)		\
+	$(CAS_CPPFLAGS)			\
+	$(VTK_INCLUDES)			\
+	$(MESHGEMS_CADSURF_INCLUDES)	\
+	$(SMESH_CXXFLAGS)		\
+	$(CORBA_CXXFLAGS)		\
+	$(CORBA_INCLUDES)		\
+	$(BOOST_CPPFLAGS)		\
 	-I$(top_builddir)/idl
 
 #Qt uniquement necessaire pour le getActiveStudyDocument de SMeshGuiUtils.h
@@ -65,7 +65,7 @@ libBLSURFEngine_la_LDFLAGS  =			\
 	../../idl/libSalomeIDLBLSURFPLUGIN.la	\
 	$(PYTHON_LIBS) \
 	$(CAS_KERNEL) -lTKBRep -lTKGeomBase -lTKGeomAlgo -lTKTopAlgo -lTKLCAF -lTKXSBase -lTKG2d -lTKG3d -lTKShHealing \
-	$(BLSURF_LIBS) \
+	$(MESHGEMS_CADSURF_LIBS) \
 	$(SMESH_LDFLAGS) -lSMESHimpl -lSMESHEngine -lStdMeshers -lStdMeshersEngine -lSMDS -lSMESHDS \
 	$(GEOM_LDFLAGS) -lGEOMbasic \
 	$(MED_LDFLAGS) -lSalomeIDLMED \

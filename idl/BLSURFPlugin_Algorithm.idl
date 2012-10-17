@@ -122,14 +122,6 @@ module BLSURFPlugin
    */
   interface BLSURFPlugin_Hypothesis : SMESH::SMESH_Hypothesis
   {
-    /*!
-     * Sets topology usage way defining how mesh conformity is assured
-     * value=0 - mesh conformity is assured by conformity of a shape
-     * value=1,2 - mesh conformity is assured by pre-processing a CAD model
-     * value=3 - mesh conformity is assured by pre-processing a CAD model with Pre-CAD
-     */
-    void SetTopology(in long way);
-    long GetTopology();
 
     /*!
      * Sets a way to define size of mesh elements to generate
@@ -141,54 +133,37 @@ module BLSURFPlugin
     long GetPhysicalMesh();
 
     /*!
-     * Sets size of mesh elements to generate
-     */
-    void SetPhySize(in double size);
-    double GetPhySize();
-
-    /*!
-     * Sets lower boundary of mesh element size (PhySize)
-     */
-    void SetPhyMin(in double theMinSize);
-    double GetPhyMin();
-
-    /*!
-     * Sets upper boundary of mesh element size (PhySize)
-     */
-    void SetPhyMax(in double theMaxSize);
-    double GetPhyMax();
-
-    /*!
      * Sets a way to define maximum angular deflection of mesh from CAD model
      * 0 - deflection is defined automatically
-     * 1 - deflection is set by SetAngleMeshS() and SetAngleMeshC() methods
+     * 1 - deflection is set by SetAngleMesh() method
+     * 2 - deflection is set by SetAngleMesh() method. A sizemap is defined (TODO).
      */
     void SetGeometricMesh(in long isCustom);
     long GetGeometricMesh();
 
     /*!
-     * Sets angular deflection (in degrees) of a mesh face from CAD surface
+     * Sets size of mesh elements to generate
      */
-    void SetAngleMeshS(in double angle);
-    double GetAngleMeshS();
+    void SetPhySize(in double size);
+    void SetPhySizeRel(in double size);
+    double GetPhySize();
+    boolean IsPhySizeRel();
 
     /*!
-     * Sets angular deflection (in degrees) of a mesh edge from CAD curve
+     * Sets lower boundary of mesh element size
      */
-    void SetAngleMeshC(in double angle);
-    double GetAngleMeshC();
+    void SetMinSize(in double theMinSize);
+    void SetMinSizeRel(in double theMinSize);
+    double GetMinSize();
+    boolean IsMinSizeRel();
 
     /*!
-     * Sets lower boundary of mesh element size computed to respect angular deflection
+     * Sets upper boundary of mesh element size
      */
-    void SetGeoMin(in double theMinSize);
-    double GetGeoMin();
-
-    /*!
-     * Sets upper boundary of mesh element size computed to respect angular deflection
-     */
-    void SetGeoMax(in double theMaxSize);
-    double GetGeoMax();
+    void SetMaxSize(in double theMaxSize);
+    void SetMaxSizeRel(in double theMaxSize);
+    double GetMaxSize();
+    boolean IsMaxSizeRel();
 
     /*!
      * Sets maximal allowed ratio between the lengths of two adjacent edges
@@ -203,10 +178,82 @@ module BLSURFPlugin
     boolean GetQuadAllowed();
 
     /*!
-     * To respect geometrical edges or not
+     * Sets angular deflection (in degrees) of a mesh face and edge from CAD surface
      */
-    void SetDecimesh(in boolean toIgnoreEdges);
-    boolean GetDecimesh();
+    void SetAngleMesh(in double angle);
+    double GetAngleMesh();
+
+    /*!
+     * Sets the maximum desired distance between a triangle and its supporting CAD surface
+     */
+    void SetChordalError(in double distance);
+    double GetChordalError();
+
+    /*!
+     * Determines whether the generated mesh will be isotropic or anisotropic
+     */
+    void SetAnisotropic(in boolean anisotropic);
+    boolean GetAnisotropic();
+
+    /*!
+     * Defines the maximum anisotropic ratio of the metric governing the anisotropic process.
+     * The default value of 0 means that the metric (and thus the generated elements) 
+     * can be arbitrarily stretched.
+     */
+    void SetAnisotropicRatio(in double ratio);
+    double GetAnisotropicRatio();
+
+    /*!
+     * This patch-independent correction option can be activated to remove the tiny
+     * (nano) edges from the generated mesh, without taking into account the tags 
+     * (attributes) specifications.
+     */
+    void SetRemoveTinyEdges(in boolean remove);
+    boolean GetRemoveTinyEdges();
+
+    /*!
+     * Defines the minimal length under which an edge is considered to be a tiny one
+     */
+    void SetTinyEdgeLength(in double length);
+    double GetTinyEdgeLength();
+
+    /*!
+     * This patch independent correction option can be activated to remove the bad 
+     * elements (often called slivers) from the generated mesh, without taking into account
+     * the tags (attributes) specification.
+     */
+    void SetBadElementRemoval(in boolean remove);
+    boolean GetBadElementRemoval();
+
+    /*!
+     * This parameter defines the aspect ratio triggering the "bad element"
+     * classification for the force bad surface element removal option. 
+     */
+    void SetBadElementAspectRatio(in double ratio);
+    double GetBadElementAspectRatio();
+
+    /*!
+     * If this option is activated, MeshGems-CADSurf will optimize the mesh in order to
+     * get better shaped elements, during a process which respects the patch independent options.
+     * This optimisation cannot be fully performed when correct_surface_intersections = 1.
+     */
+    void SetOptimizeMesh(in boolean optimize);
+    boolean GetOptimizeMesh();
+
+    /*!
+     * Determines the order of mesh elements to be generated (linear or quadratic)
+     */
+    void SetQuadraticMesh(in boolean quadratic);
+    boolean GetQuadraticMesh();
+
+    /*!
+     * Sets topology usage way defining how mesh conformity is assured
+     * value=0 - mesh conformity is assured by conformity of a shape
+     * value=1,2 - mesh conformity is assured by pre-processing a CAD model (OBSOLETE)
+     * value=3 - mesh conformity is assured by pre-processing a CAD model with Pre-CAD
+     */
+    void SetTopology(in long way);
+    long GetTopology();
 
     /*!
      * Sets verbosity level in the range 0 to 100.
@@ -221,10 +268,16 @@ module BLSURFPlugin
     boolean GetPreCADMergeEdges();
 
     /*!
-     * To remove nano edges.
+     * To process 3D topology.
      */
-    void SetPreCADRemoveNanoEdges(in boolean toRemoveNanoEdges);
-    boolean GetPreCADRemoveNanoEdges();
+    void SetPreCADProcess3DTopology(in boolean toProcess);
+    boolean GetPreCADProcess3DTopology();
+
+//     /*!
+//      * To remove nano edges.
+//      */
+//     void SetPreCADRemoveNanoEdges(in boolean toRemoveNanoEdges);
+//     boolean GetPreCADRemoveNanoEdges();
 
     /*!
      * To compute topology from scratch
@@ -232,12 +285,12 @@ module BLSURFPlugin
     void SetPreCADDiscardInput(in boolean toDiscardInput);
     boolean GetPreCADDiscardInput();
 
-    /*!
-     * Sets the length below which an edge is considered as nano 
-     * for the topology processing.
-     */
-    void SetPreCADEpsNano(in double epsNano);
-    double GetPreCADEpsNano();
+//     /*!
+//      * Sets the length below which an edge is considered as nano 
+//      * for the topology processing.
+//      */
+//     void SetPreCADEpsNano(in double epsNano);
+//     double GetPreCADEpsNano();
 
     /*!
      * Sets advanced option value
@@ -282,12 +335,14 @@ module BLSURFPlugin
      * Set/unset a SizeMap on geom object
      */
     void         SetSizeMap(in GEOM::GEOM_Object GeomObj, in string sizeMap);
+    void         SetConstantSizeMap(in GEOM::GEOM_Object GeomObj, in double sizeMap);
     void         UnsetSizeMap(in GEOM::GEOM_Object GeomObj);
     
     /*!
      * Set a SizeMap on geom object given by entry
      */
     void         SetSizeMapEntry(in string entry, in string sizeMap);
+    void         SetConstantSizeMapEntry(in string entry, in GEOM::shape_type shapeType, in double sizeMap);
     string       GetSizeMapEntry(in string entry);
     string_array GetSizeMapEntries();
 

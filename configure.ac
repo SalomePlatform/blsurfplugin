@@ -317,13 +317,21 @@ echo
 
 CHECK_HTML_GENERATORS
 
+dnl echo
+dnl echo ---------------------------------------------
+dnl echo Testing BLSURF
+dnl echo ---------------------------------------------
+dnl echo
+dnl 
+dnl CHECK_BLSURF
+
 echo
 echo ---------------------------------------------
-echo Testing BLSURF
+echo Testing MeshGems-CADSurf
 echo ---------------------------------------------
 echo
 
-CHECK_BLSURF
+CHECK_MESHGEMS_CADSURF
 
 echo
 echo ---------------------------------------------
@@ -368,11 +376,11 @@ echo
 echo Configure
 
 if test "${gui_ok}" = "yes"; then
-  variables="cc_ok boost_ok lex_yacc_ok python_ok swig_ok threads_ok OpenGL_ok qt_ok vtk_ok hdf5_ok omniORB_ok occ_ok doxygen_ok graphviz_ok Kernel_ok Geom_ok Med_ok SMesh_ok gui_ok BLSURF_ok"
+  variables="cc_ok boost_ok lex_yacc_ok python_ok swig_ok threads_ok OpenGL_ok qt_ok vtk_ok hdf5_ok omniORB_ok occ_ok doxygen_ok graphviz_ok Kernel_ok Geom_ok Med_ok SMesh_ok gui_ok CADSURF_ok"
 elif test "${SalomeGUI_need}" != "no"; then
-  variables="cc_ok boost_ok lex_yacc_ok python_ok swig_ok threads_ok vtk_ok hdf5_ok omniORB_ok occ_ok doxygen_ok graphviz_ok Kernel_ok Geom_ok Med_ok SMesh_ok gui_ok BLSURF_ok"
+  variables="cc_ok boost_ok lex_yacc_ok python_ok swig_ok threads_ok vtk_ok hdf5_ok omniORB_ok occ_ok doxygen_ok graphviz_ok Kernel_ok Geom_ok Med_ok SMesh_ok gui_ok CADSURF_ok"
 else
-  variables="cc_ok boost_ok lex_yacc_ok python_ok swig_ok threads_ok vtk_ok hdf5_ok omniORB_ok occ_ok doxygen_ok graphviz_ok Kernel_ok Geom_ok Med_ok SMesh_ok BLSURF_ok"
+  variables="cc_ok boost_ok lex_yacc_ok python_ok swig_ok threads_ok vtk_ok hdf5_ok omniORB_ok occ_ok doxygen_ok graphviz_ok Kernel_ok Geom_ok Med_ok SMesh_ok CADSURF_ok"
 fi
 
 for var in $variables

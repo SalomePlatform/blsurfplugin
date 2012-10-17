@@ -59,9 +59,9 @@
 #include "Utils_SALOME_Exception.hxx"
 
 extern "C"{
-#include "distene/blsurf.h"
-#include "distene/api.h"
-#include "distene/precad.h"
+#include <meshgems/meshgems.h>
+#include <meshgems/cadsurf.h>
+#include <meshgems/precad.h>
 }
 
 #include <BRepClass_FaceClassifier.hxx>

@@ -2660,3 +2660,75 @@ char* BLSURFPlugin_Hypothesis_i::GetGMFFile() {
 CORBA::Boolean BLSURFPlugin_Hypothesis_i::IsDimSupported(SMESH::Dimension type) {
   return type == SMESH::DIM_2D;
 }
+
+//
+// Obsolete methods - To be removed in V7
+//
+
+void BLSURFPlugin_Hypothesis_i::SetPhyMin(CORBA::Double theMinSize) {
+  this->SetMinSize(theMinSize);
+}
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetPhyMin() {
+  return this->GetMinSize();
+}
+void BLSURFPlugin_Hypothesis_i::SetPhyMax(CORBA::Double theMaxSize) {
+  this->SetMaxSize(theMaxSize);
+}
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetPhyMax() {
+  return this->GetMaxSize();
+}
+void BLSURFPlugin_Hypothesis_i::SetGeoMin(CORBA::Double theMinSize) {
+  this->SetMinSize(theMinSize);
+}
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetGeoMin() {
+  return this->GetMinSize();
+}
+void BLSURFPlugin_Hypothesis_i::SetGeoMax(CORBA::Double theMaxSize) {
+  this->SetMaxSize(theMaxSize);
+}
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetGeoMax() {
+  return this->GetMaxSize();
+}
+void BLSURFPlugin_Hypothesis_i::SetAngleMeshS(CORBA::Double theValue) {
+  this->SetAngleMesh(theValue);
+}
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetAngleMeshS() {
+  return this->GetAngleMesh();
+}
+void BLSURFPlugin_Hypothesis_i::SetAngleMeshC(CORBA::Double theValue) {
+  this->SetAngleMesh(theValue);
+}
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetAngleMeshC() {
+  return this->GetAngleMesh();
+}
+void BLSURFPlugin_Hypothesis_i::SetDecimesh(CORBA::Boolean theValue) {
+  std::string theValueStr = theValue ? "1" : "0";
+  this->SetOptionValue("respect_geometry",theValueStr.c_str());
+}
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetDecimesh() {
+  std::string theValueStr = this->GetOptionValue("respect_geometry");
+  if (theValueStr.empty() || theValueStr == "respect")
+      return true;
+  return false;
+}
+void BLSURFPlugin_Hypothesis_i::SetPreCADRemoveNanoEdges(CORBA::Boolean theValue) {
+  std::string theValueStr = theValue ? "1" : "0";
+  this->SetPreCADOptionValue("remove_tiny_edges",theValueStr.c_str());
+}
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADRemoveNanoEdges() {
+  std::string theValueStr = this->GetPreCADOptionValue("remove_tiny_edges");
+  if (theValueStr == "1")
+      return true;
+  return false;
+}
+void BLSURFPlugin_Hypothesis_i::SetPreCADEpsNano(CORBA::Double theValue) {
+  std::ostringstream theValueStr;
+  theValueStr << theValue;
+  this->SetPreCADOptionValue("tiny_edge_length",theValueStr.str().c_str());
+}
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetPreCADEpsNano() {
+  std::istringstream theValueStr(this->GetPreCADOptionValue("tiny_edge_length"));
+  double result;
+  theValueStr >> result;
+  return result;
+}

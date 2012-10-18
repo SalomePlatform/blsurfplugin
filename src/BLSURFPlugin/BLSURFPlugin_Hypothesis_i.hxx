@@ -269,6 +269,29 @@ public:
 
   // Verify whether hypothesis supports given entity type 
   CORBA::Boolean IsDimSupported(SMESH::Dimension type);
+
+
+  //
+  // Obsolete methods - To be removed in V7
+  //
+  void SetPhyMin(CORBA::Double theMinSize);
+  CORBA::Double GetPhyMin();
+  void SetPhyMax(CORBA::Double theMaxSize);
+  CORBA::Double GetPhyMax();
+  void SetGeoMin(CORBA::Double theMinSize);
+  CORBA::Double GetGeoMin();
+  void SetGeoMax(CORBA::Double theMaxSize);
+  CORBA::Double GetGeoMax();
+  void SetAngleMeshS(CORBA::Double angle);
+  CORBA::Double GetAngleMeshS();
+  void SetAngleMeshC(CORBA::Double angle);
+  CORBA::Double GetAngleMeshC();
+  void SetDecimesh(CORBA::Boolean toIgnoreEdges);
+  CORBA::Boolean GetDecimesh();
+  void SetPreCADRemoveNanoEdges(CORBA::Boolean toRemoveNanoEdges);
+  CORBA::Boolean GetPreCADRemoveNanoEdges();
+  void SetPreCADEpsNano(CORBA::Double epsNano);
+  CORBA::Double GetPreCADEpsNano();
 };
 
 #endif

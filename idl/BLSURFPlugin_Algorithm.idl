@@ -273,24 +273,12 @@ module BLSURFPlugin
     void SetPreCADProcess3DTopology(in boolean toProcess);
     boolean GetPreCADProcess3DTopology();
 
-//     /*!
-//      * To remove nano edges.
-//      */
-//     void SetPreCADRemoveNanoEdges(in boolean toRemoveNanoEdges);
-//     boolean GetPreCADRemoveNanoEdges();
 
     /*!
      * To compute topology from scratch
      */
     void SetPreCADDiscardInput(in boolean toDiscardInput);
     boolean GetPreCADDiscardInput();
-
-//     /*!
-//      * Sets the length below which an edge is considered as nano 
-//      * for the topology processing.
-//      */
-//     void SetPreCADEpsNano(in double epsNano);
-//     double GetPreCADEpsNano();
 
     /*!
      * Sets advanced option value
@@ -445,6 +433,28 @@ module BLSURFPlugin
     void SetGMFFile(in string theFileName);
     string GetGMFFile();
 //     boolean GetGMFFileMode();
+
+    //
+    // Obsolete methods - To be removed in V7
+    //
+    void SetPhyMin(in double theMinSize);
+    double GetPhyMin();
+    void SetPhyMax(in double theMaxSize);
+    double GetPhyMax();
+    void SetGeoMin(in double theMinSize);
+    double GetGeoMin();
+    void SetGeoMax(in double theMaxSize);
+    double GetGeoMax();
+    void SetAngleMeshS(in double angle);
+    double GetAngleMeshS();
+    void SetAngleMeshC(in double angle);
+    double GetAngleMeshC();
+    void SetDecimesh(in boolean toIgnoreEdges);
+    boolean GetDecimesh();
+    void SetPreCADRemoveNanoEdges(in boolean toRemoveNanoEdges);
+    boolean GetPreCADRemoveNanoEdges();
+    void SetPreCADEpsNano(in double epsNano);
+    double GetPreCADEpsNano();
   };
 };
 

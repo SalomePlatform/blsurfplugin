@@ -47,12 +47,13 @@
 #endif
 
 #include <Python.h>
-#include "SMESH_Algo.hxx"
-#include "SMESH_Mesh.hxx"
+#include <SMESH_Algo.hxx>
+#include <SMESH_Mesh.hxx>
 #include <SMESHDS_Mesh.hxx>
 #include <SMDS_MeshElement.hxx>
 #include <SMDS_MeshNode.hxx>
 #include <SMESH_Gen_i.hxx>
+#include <StdMeshers_ViscousLayers2D.hxx>
 #include <SALOMEconfig.h>
 #include CORBA_CLIENT_HEADER(SALOMEDS)
 #include CORBA_CLIENT_HEADER(GEOM_Gen)
@@ -89,7 +90,7 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
 
 #ifdef WITH_SMESH_CANCEL_COMPUTE
     virtual void CancelCompute();
-    bool computeCanceled() { return _compute_canceled;};
+    bool computeCanceled() { return _compute_canceled; }
 #endif
 
     virtual bool Evaluate(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape,
@@ -100,6 +101,10 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
     bool                           _haveViscousLayers;
 
   private:
+    bool compute(SMESH_Mesh&          aMesh,
+                 const TopoDS_Shape&  aShape,
+                 SMESH_ProxyMesh::Ptr viscousMesh=SMESH_ProxyMesh::Ptr());
+
     TopoDS_Shape entryToShape(std::string entry);
     void createEnforcedVertexOnFace(TopoDS_Shape FaceShape, BLSURFPlugin_Hypothesis::TEnfVertexList enfVertexList);
     void Set_NodeOnEdge(SMESHDS_Mesh* meshDS, SMDS_MeshNode* node, const TopoDS_Shape& ed);

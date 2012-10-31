@@ -1261,15 +1261,15 @@ namespace
       double normU =
         ( U - _noDataVec[0].param ) / ( _noDataVec.back().param - _noDataVec[0].param );
       int i = int( normU * ( _noDataVec.size() - 1 ));
-      while ( _noDataVec[ i ].normParam > normU + eps && i != 0 )
+      while ( _noDataVec[ i ].param > U + eps && i != 0 )
         --i;
-      while ( i+1 < _noDataVec.size() && _noDataVec[ i+1 ].normParam < normU - eps )
+      while ( i+1 < _noDataVec.size() && _noDataVec[ i+1 ].param < U - eps )
         ++i;
       //cout << "U " << U << " normU " << normU << " i " << i << " _noDataVec.size() " << _noDataVec.size() << endl;
       r = 0;
       if ( normU > eps && normU < 1.- eps && i+1 < _noDataVec.size() )
-        r = ( normU - _noDataVec[i].normParam ) /
-          ( _noDataVec[i+1].normParam - _noDataVec[i].normParam );
+        r = ( U - _noDataVec[i].param ) /
+          ( _noDataVec[i+1].param - _noDataVec[i].param );
       return i;
     }
   public:
@@ -1286,7 +1286,7 @@ namespace
       P.SetCoord( _noDataVec[i].u, _noDataVec[i].v );
       if ( r > 0 )
         P = ( 1-r ) * P.XY() + r * gp_XY( _noDataVec[i+1].u, _noDataVec[i+1].v );
-      //cout << "U " << U << " i,r = ( "<< i << ", "<< r << " )\t P ( " << P.X() << ", " << P.Y() <<" )" << endl;
+      // cout << "U " << U << " \ti,r = ( "<< i << ", "<< r << " )\t P ( " << P.X() << ", " << P.Y() <<" )" << endl;
     }
     gp_Vec2d DN(const Standard_Real U,const Standard_Integer N) const
     {
@@ -1331,7 +1331,7 @@ namespace
       if ( pos1 < pos2 || pos1 == SMDS_TOP_3DSPACE ) return 1;
       return -1;
     }
-    // sort sub-meshes inorder: EDGE, VERTEX
+    // sort sub-meshes in order: EDGE, VERTEX
     bool operator()( const SMESHDS_SubMesh* s1, const SMESHDS_SubMesh* s2 ) const
     {
       int isVertex1 = ( s1 && s1->NbElements() == 0 );
@@ -1904,7 +1904,9 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&          aMesh,
           double t                = nData.param;
           real uv[2]              = { nData.u, nData.v };
           SMESH_TNodeXYZ nXYZ( nData.node );
-          //cout << "\tt = " << t << " uv = ( " << uv[0] << ","<< uv[1] << " ) ID " << nData.node->GetID() << endl;
+          // cout << "\tt = " << t << " uv = ( " << uv[0] << ","<< uv[1] << " ) ID " << nData.node->GetID()
+          //      << " Curve UV: " << curves.back()->Value( t ).X()
+          //      << ", "          << curves.back()->Value( t ).Y() << endl;
           dcad_edge_discretization_set_vertex_coordinates( dedge, iN+1, t, uv, nXYZ._xyz );
         }
         dcad_edge_discretization_set_property(dedge, DISTENE_DCAD_PROPERTY_REQUIRED);

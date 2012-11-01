@@ -23,16 +23,6 @@
 #ifndef BLSURFPLUGINGUI_H
 #define BLSURFPLUGINGUI_H
 
-#ifdef WIN32
-  #if defined BLSURFPLUGIN_GUI_DLG_EXPORTS || defined BLSURFPluginGUI_Dlg_EXPORTS
-    #define BLSURFPLUGIN_GUI_DLG_EXPORT __declspec( dllexport )
-  #else
-    #define BLSURFPLUGIN_GUI_DLG_EXPORT __declspec( dllimport )
-  #endif
-#else
-  #define BLSURFPLUGIN_GUI_DLG_EXPORT
-#endif
-
 enum PhysicalMesh
   {
     DefaultSize = 0,
@@ -67,8 +57,9 @@ enum {
 //////////////////////////////////////////
 
 #include "ui_BLSURFPluginGUI_StdWidget_QTD.h"
+#include "BLSURFPluginGUI_HypothesisCreator.h"
 
-class BLSURFPLUGIN_GUI_DLG_EXPORT BLSURFPluginGUI_StdWidget : public QWidget, 
+class BLSURFPLUGIN_GUI_EXPORT BLSURFPluginGUI_StdWidget : public QWidget, 
                                             public Ui::BLSURFPluginGUI_StdWidget_QTD
 {
   Q_OBJECT
@@ -90,7 +81,7 @@ public slots:
 
 #include "ui_BLSURFPluginGUI_AdvWidget_QTD.h"
 
-class BLSURFPLUGIN_GUI_DLG_EXPORT BLSURFPluginGUI_AdvWidget : public QWidget, 
+class BLSURFPLUGIN_GUI_EXPORT BLSURFPluginGUI_AdvWidget : public QWidget, 
                                             public Ui::BLSURFPluginGUI_AdvWidget_QTD
 {
   Q_OBJECT

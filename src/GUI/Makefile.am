@@ -73,9 +73,10 @@ libBLSURFPluginGUI_la_CPPFLAGS = 	\
 libBLSURFPluginGUI_la_LDFLAGS =			\
 	$(QT_LIBS) $(QT_MT_LIBS)\
 	../BLSURFPlugin/libBLSURFEngine.la	\
+	../../idl/libSalomeIDLBLSURFPLUGIN.la \
 	$(GUI_LDFLAGS) -lqtx -lSalomeApp -lsuit -lSalomeObject -lLightApp	\
 	$(GEOM_LDFLAGS) -lGEOM \
-	${SMESH_LDFLAGS} -lSMESH -lGeomSelectionTools -lStdMeshersGUI -lSMESHFiltersSelection \
+	${SMESH_LDFLAGS} -lSMESH  -lSMESHEngine -lGeomSelectionTools -lStdMeshersGUI -lSMESHFiltersSelection \
 	$(CAS_KERNEL) $(MESHGEMS_CADSURF_LIBS)
 
 # resources files

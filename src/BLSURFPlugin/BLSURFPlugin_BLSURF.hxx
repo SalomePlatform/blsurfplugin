@@ -102,8 +102,7 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
 
   private:
     bool compute(SMESH_Mesh&          aMesh,
-                 const TopoDS_Shape&  aShape,
-                 SMESH_ProxyMesh::Ptr viscousMesh=SMESH_ProxyMesh::Ptr());
+                 const TopoDS_Shape&  aShape);
 
     TopoDS_Shape entryToShape(std::string entry);
     void createEnforcedVertexOnFace(TopoDS_Shape FaceShape, BLSURFPlugin_Hypothesis::TEnfVertexList enfVertexList);

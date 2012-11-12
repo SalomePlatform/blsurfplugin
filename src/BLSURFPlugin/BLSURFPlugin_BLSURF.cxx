@@ -58,46 +58,41 @@ extern "C"{
 #include <cstdlib>
 
 // OPENCASCADE includes
+#include <BRepBuilderAPI_MakeFace.hxx>
+#include <BRepBuilderAPI_MakePolygon.hxx>
+//#include <BRepBuilderAPI_MakeVertex.hxx>
+#include <BRepGProp.hxx>
+#include <BRepTools.hxx>
+#include <BRep_Builder.hxx>
 #include <BRep_Tool.hxx>
+#include <GProp_GProps.hxx>
+#include <Geom2d_Curve.hxx>
+#include <GeomAPI_ProjectPointOnCurve.hxx>
+#include <GeomAPI_ProjectPointOnSurf.hxx>
+#include <Geom_Curve.hxx>
+#include <Geom_Surface.hxx>
+#include <NCollection_Map.hxx>
+#include <Standard_ErrorHandler.hxx>
 #include <TopExp.hxx>
 #include <TopExp_Explorer.hxx>
-#include <TopoDS.hxx>
-#include <NCollection_Map.hxx>
-
-#include <Geom_Surface.hxx>
-#include <Handle_Geom_Surface.hxx>
-#include <Geom2d_Curve.hxx>
-#include <Handle_Geom2d_Curve.hxx>
-#include <Geom_Curve.hxx>
-#include <Handle_Geom_Curve.hxx>
-#include <Handle_AIS_InteractiveObject.hxx>
-#include <TopoDS_Vertex.hxx>
-#include <TopoDS_Edge.hxx>
-#include <TopoDS_Wire.hxx>
-#include <TopoDS_Face.hxx>
-
-#include <gp_Pnt2d.hxx>
-#include <gp_Pnt.hxx>
-#include <TopTools_IndexedMapOfShape.hxx>
-#include <TopoDS_Shape.hxx>
-#include <BRep_Builder.hxx>
-#include <BRepBuilderAPI_MakeVertex.hxx>
-#include <BRepTools.hxx>
-
 #include <TopTools_DataMapOfShapeInteger.hxx>
-#include <GProp_GProps.hxx>
-#include <BRepGProp.hxx>
+#include <TopTools_IndexedMapOfShape.hxx>
+#include <TopTools_MapOfShape.hxx>
+#include <TopoDS.hxx>
+#include <TopoDS_Compound.hxx>
+#include <TopoDS_Edge.hxx>
+#include <TopoDS_Face.hxx>
+#include <TopoDS_Shape.hxx>
+#include <TopoDS_Vertex.hxx>
+#include <TopoDS_Wire.hxx>
+#include <gp_Pnt.hxx>
+#include <gp_Pnt2d.hxx>
+#include <gp_XY.hxx>
+#include <gp_XYZ.hxx>
 
 #ifndef WNT
 #include <fenv.h>
 #endif
-
-#include <Standard_ErrorHandler.hxx>
-#include <GeomAPI_ProjectPointOnCurve.hxx>
-#include <GeomAPI_ProjectPointOnSurf.hxx>
-#include <gp_XY.hxx>
-#include <gp_XYZ.hxx>
-#include <TopTools_MapOfShape.hxx>
 
 /* ==================================
  * ===========  PYTHON ==============
@@ -1246,78 +1241,6 @@ namespace
   };
 
   // --------------------------------------------------------------------------
-  /*!
-   * \brief A curve of internal boundary of viscous layer
-   */
-  class TProxyPCurve : public Geom2d_Curve
-  {
-    const UVPtStructVec& _noDataVec;
-    Handle(Geom2d_Curve) _pcurve;
-    double               _sign;
-
-    int locateU( const double U, double& r ) const
-    {
-      const double eps = 1e-10;
-      double normU =
-        ( U - _noDataVec[0].param ) / ( _noDataVec.back().param - _noDataVec[0].param );
-      int i = int( normU * ( _noDataVec.size() - 1 ));
-      while ( _noDataVec[ i ].param > U + eps && i != 0 )
-        --i;
-      while ( i+1 < _noDataVec.size() && _noDataVec[ i+1 ].param < U - eps )
-        ++i;
-      //cout << "U " << U << " normU " << normU << " i " << i << " _noDataVec.size() " << _noDataVec.size() << endl;
-      r = 0;
-      if ( normU > eps && normU < 1.- eps && i+1 < _noDataVec.size() )
-        r = ( U - _noDataVec[i].param ) /
-          ( _noDataVec[i+1].param - _noDataVec[i].param );
-      return i;
-    }
-  public:
-    TProxyPCurve( const SMESH_ProxyMesh::SubMesh* edgeSM,
-                  Handle(Geom2d_Curve)            pcurve)
-      : _noDataVec( edgeSM->GetUVPtStructVec() ), _pcurve( pcurve )
-    {
-      _sign = ( _noDataVec.back().param > _noDataVec[0].param ? +1 : -1 );
-    }
-    void D0(const Standard_Real U, gp_Pnt2d& P) const
-    {
-      double r;
-      int i = locateU( U, r );
-      P.SetCoord( _noDataVec[i].u, _noDataVec[i].v );
-      if ( r > 0 )
-        P = ( 1-r ) * P.XY() + r * gp_XY( _noDataVec[i+1].u, _noDataVec[i+1].v );
-      // cout << "U " << U << " \ti,r = ( "<< i << ", "<< r << " )\t P ( " << P.X() << ", " << P.Y() <<" )" << endl;
-    }
-    gp_Vec2d DN(const Standard_Real U,const Standard_Integer N) const
-    {
-      double r;
-      int i    = locateU( U, r );
-      double u = _noDataVec[i].param;
-      if ( r > 0 )
-        u = ( 1-r ) * u + r * _noDataVec[i+1].param;
-      gp_Vec2d dn = _pcurve->DN( u, N );
-      //cout << "U " << U << " D" << N << " " << dn.X() << ", " << dn.Y() << end;
-      return dn;
-    }
-    // virtual methods not used by BLSURF plug-in
-    void Reverse()                                         {}
-    Standard_Real ReversedParameter(const double U ) const { return 1 - U; }
-    Standard_Real FirstParameter() const                   { return 0;}
-    Standard_Real LastParameter() const                    { return 1;}
-    Standard_Boolean IsClosed() const                      { return false; }
-    Standard_Boolean IsPeriodic() const                    { return false; }
-    GeomAbs_Shape Continuity() const                       { return GeomAbs_G2; }
-    Standard_Boolean IsCN(const int N) const               { return false; }
-    void Transform(const gp_Trsf2d&)                       {}
-    Handle_Geom2d_Geometry Copy() const                    {return Handle_Geom2d_Geometry();}
-    void D1(const Standard_Real U,gp_Pnt2d& P,gp_Vec2d& V1) const {}
-    void D2(const Standard_Real U,gp_Pnt2d& P,gp_Vec2d& V1,gp_Vec2d& V2) const {}
-    void D3(const Standard_Real U,gp_Pnt2d& P,gp_Vec2d& V1,gp_Vec2d& V2,gp_Vec2d& V3) const {}
-
-    //DEFINE_STANDARD_RTTI(TProxyPCurve);
-  };
-  DEFINE_STANDARD_HANDLE(TProxyPCurve,Geom2d_Curve);
-  // --------------------------------------------------------------------------
   // comparator to sort nodes and sub-meshes
   struct ShapeTypeCompare
   {
@@ -1413,6 +1336,161 @@ namespace
     // cout << endl;
   }
 
+  //================================================================================
+  /*!
+   * \brief A temporary mesh used to compute mesh on a proxy FACE
+   */
+  //================================================================================
+
+  struct TmpMesh: public SMESH_Mesh
+  {
+    typedef std::map<const SMDS_MeshNode*, const SMDS_MeshNode*, TIDCompare > TN2NMap;
+    TN2NMap     _tmp2origNN;
+    TopoDS_Face _proxyFace;
+
+    TmpMesh()
+    {
+      _myMeshDS = new SMESHDS_Mesh( _id, true );
+    }
+    //--------------------------------------------------------------------------------
+    /*!
+     * \brief Creates a FACE bound by viscous layers and mesh each its EDGE with 1 segment
+     */
+    //--------------------------------------------------------------------------------
+
+    const TopoDS_Face& makeProxyFace( SMESH_ProxyMesh::Ptr& viscousMesh,
+                                      const TopoDS_Face&    origFace)
+    {
+      // get data of nodes on inner boundary of viscous layers
+      SMESH_Mesh* origMesh = viscousMesh->GetMesh();
+      TError err;
+      TSideVector wireVec = StdMeshers_FaceSide::GetFaceWires(origFace, *origMesh,
+                                                              /*skipMediumNodes = */true,
+                                                              err, viscousMesh );
+      if ( err && err->IsKO() )
+        throw *err.get(); // it should be caught at SMESH_subMesh
+
+      // proxy nodes and corresponding tmp VERTEXes
+      std::vector<const SMDS_MeshNode*> origNodes;
+      std::vector<TopoDS_Vertex>        tmpVertex;
+
+      // create a proxy FACE
+      BRepBuilderAPI_MakeFace newFace( BRep_Tool::Surface( origFace ), 1e-7 );
+      for ( size_t iW = 0; iW != wireVec.size(); ++iW )
+      {
+        StdMeshers_FaceSidePtr& wireData = wireVec[iW];
+        const UVPtStructVec& wirePoints = wireData->GetUVPtStruct();
+        if ( wirePoints.size() < 3 )
+          continue;
+
+        BRepBuilderAPI_MakePolygon wire;
+        for ( size_t iN = 1; iN < wirePoints.size(); ++iN )
+        {
+          wire.Add( SMESH_TNodeXYZ( wirePoints[ iN ].node ));
+          origNodes.push_back( wirePoints[ iN ].node );
+          tmpVertex.push_back( wire.LastVertex() );
+        }
+        tmpVertex[0] = wire.FirstVertex();
+        wire.Close();
+        if ( !wire.IsDone() )
+          throw SALOME_Exception("BLSURFPlugin_BLSURF: BRepBuilderAPI_MakePolygon failed");
+        newFace.Add( wire );
+      }
+      _proxyFace = newFace;
+
+      // set a new shape to mesh
+      TopoDS_Compound auxCompoundToMesh;
+      BRep_Builder shapeBuilder;
+      shapeBuilder.MakeCompound( auxCompoundToMesh );
+      shapeBuilder.Add( auxCompoundToMesh, _proxyFace );
+      shapeBuilder.Add( auxCompoundToMesh, origMesh->GetShapeToMesh() );
+
+      ShapeToMesh( auxCompoundToMesh );
+
+      TopExp_Explorer fExp( auxCompoundToMesh, TopAbs_FACE );
+      _proxyFace = TopoDS::Face( fExp.Current() );
+
+
+      // Make input mesh for BLSURF: segments on EDGE's of newFace
+
+      // make nodes and fill in _tmp2origNN
+      //
+      SMESHDS_Mesh* tmpMeshDS = GetMeshDS();
+      for ( size_t i = 0; i < origNodes.size(); ++i )
+      {
+        GetSubMesh( tmpVertex[i] )->ComputeStateEngine( SMESH_subMesh::COMPUTE );
+        if ( const SMDS_MeshNode* tmpN = SMESH_Algo::VertexNode( tmpVertex[i], tmpMeshDS ))
+          _tmp2origNN.insert( _tmp2origNN.end(), make_pair( tmpN, origNodes[i] ));
+        else
+          throw SALOME_Exception("BLSURFPlugin_BLSURF: a proxy vertex not meshed");
+      }
+
+      // make segments
+      TopoDS_Vertex v1, v2;
+      for ( TopExp_Explorer edge( _proxyFace, TopAbs_EDGE ); edge.More(); edge.Next() )
+      {
+        const TopoDS_Edge& E = TopoDS::Edge( edge.Current() );
+        TopExp::Vertices( E, v1, v2 );
+        const SMDS_MeshNode* n1 = SMESH_Algo::VertexNode( v1, tmpMeshDS );
+        const SMDS_MeshNode* n2 = SMESH_Algo::VertexNode( v2, tmpMeshDS );
+
+        if ( SMDS_MeshElement* seg = tmpMeshDS->AddEdge( n1, n2 ))
+          tmpMeshDS->SetMeshElementOnShape( seg, E );
+      }
+
+      return _proxyFace;
+    }
+
+    //--------------------------------------------------------------------------------
+    /*!
+     * \brief Fill in the origMesh with faces computed by BLSURF in this tmp mesh
+     */
+    //--------------------------------------------------------------------------------
+
+    void FillInOrigMesh( SMESH_Mesh&        origMesh,
+                         const TopoDS_Face& origFace )
+    {
+      SMESH_MesherHelper helper( origMesh );
+      helper.SetSubShape( origFace );
+      helper.SetElementsOnShape( true );
+
+      // iterate over tmp faces and copy them in origMesh
+      const SMDS_MeshNode* nodes[27];
+      const SMDS_MeshNode* nullNode = 0;
+      double xyz[3];
+      SMDS_FaceIteratorPtr fIt = GetMeshDS()->facesIterator(/*idInceasingOrder=*/true);
+      while ( fIt->more() )
+      {
+        const SMDS_MeshElement* f = fIt->next();
+        SMDS_ElemIteratorPtr nIt = f->nodesIterator();
+        int nbN = 0;
+        for ( ; nIt->more(); ++nbN )
+        {
+          const SMDS_MeshNode* n = static_cast<const SMDS_MeshNode*>( nIt->next() );
+          TN2NMap::iterator n2nIt = 
+            _tmp2origNN.insert( _tmp2origNN.end(), make_pair( n, nullNode ));
+          if ( !n2nIt->second ) {
+            n->GetXYZ( xyz );
+            gp_XY uv = helper.GetNodeUV( _proxyFace, n );
+            n2nIt->second = helper.AddNode( xyz[0], xyz[1], xyz[2], uv.X(), uv.Y() );
+          }
+          nodes[ nbN ] = n2nIt->second;
+        }
+        switch( nbN ) {
+        case 3: helper.AddFace( nodes[0], nodes[1], nodes[2] ); break;
+        // case 6: helper.AddFace( nodes[0], nodes[1], nodes[2],
+        //                         nodes[3], nodes[4], nodes[5]); break;
+        case 4: helper.AddFace( nodes[0], nodes[1], nodes[2], nodes[3] ); break;
+        // case 9: helper.AddFace( nodes[0], nodes[1], nodes[2], nodes[3],
+        //                         nodes[4], nodes[5], nodes[6], nodes[7], nodes[8]); break;
+        // case 8: helper.AddFace( nodes[0], nodes[1], nodes[2], nodes[3],
+        //                         nodes[4], nodes[5], nodes[6], nodes[7]); break;
+        }
+      }
+    }
+  };
+
+
 } // namespace
 
 status_t curv_fun(real t, real *uv, real *dt, real *dtt, void *user_data);
@@ -1444,25 +1522,30 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
     TopTools_MapOfShape map;
     for (TopExp_Explorer face_iter(aShape,TopAbs_FACE);face_iter.More();face_iter.Next())
     {
-      const TopoDS_Face& f = TopoDS::Face(face_iter.Current());
-      if ( !map.Add( f )) continue;
-      SMESH_ProxyMesh::Ptr viscousMesh = StdMeshers_ViscousLayers2D::Compute( aMesh, f );
+      const TopoDS_Face& F = TopoDS::Face(face_iter.Current());
+      if ( !map.Add( F )) continue;
+      SMESH_ProxyMesh::Ptr viscousMesh = StdMeshers_ViscousLayers2D::Compute( aMesh, F );
       if ( !viscousMesh )
         return false; // error in StdMeshers_ViscousLayers2D::Compute()
 
       // Compute BLSURF mesh on viscous layers
 
       if ( viscousMesh->NbProxySubMeshes() > 0 )
-        if ( !compute( aMesh, f, viscousMesh ))
+      {
+        TmpMesh tmpMesh;
+        const TopoDS_Face& proxyFace = tmpMesh.makeProxyFace( viscousMesh, F );
+        if ( !compute( tmpMesh, proxyFace ))
           return false;
+        tmpMesh.FillInOrigMesh( aMesh, F );
+      }
     }
 
     // Re-compute BLSURF mesh on the rest faces if the mesh was cleared
 
     for (TopExp_Explorer face_iter(aShape,TopAbs_FACE);face_iter.More();face_iter.Next())
     {
-      const TopoDS_Face& f = TopoDS::Face(face_iter.Current());
-      SMESH_subMesh* fSM = aMesh.GetSubMesh( f );
+      const TopoDS_Face& F = TopoDS::Face(face_iter.Current());
+      SMESH_subMesh* fSM = aMesh.GetSubMesh( F );
       if ( fSM->IsMeshComputed() ) continue;
 
       if ( !compute( aMesh, aShape ))
@@ -1479,9 +1562,8 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
  */
 //=============================================================================
 
-bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&          aMesh,
-                                  const TopoDS_Shape&  aShape,
-                                  SMESH_ProxyMesh::Ptr viscousMesh)
+bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
+                                  const TopoDS_Shape& aShape)
 {
   /* create a distene context (generic object) */
   status_t status = STATUS_ERROR;
@@ -1494,7 +1576,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&          aMesh,
   bool quadraticSubMeshAndViscousLayer = false;
   bool needMerge = false;
   typedef set< SMESHDS_SubMesh*, ShapeTypeCompare > TSubMeshSet;
-  TSubMeshSet edgeSubmeshes, proxySubmeshes;
+  TSubMeshSet edgeSubmeshes;
   TSubMeshSet& mergeSubmeshes = edgeSubmeshes;
 
   TopTools_IndexedMapOfShape fmap;
@@ -1603,10 +1685,6 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&          aMesh,
     // make INTERNAL face oriented FORWARD (issue 0020993)
     if (f.Orientation() != TopAbs_FORWARD && f.Orientation() != TopAbs_REVERSED )
       f.Orientation(TopAbs_FORWARD);
-
-    SMESH_subMesh* fSM = aMesh.GetSubMesh( f );
-    if ( !viscousMesh && fSM->IsMeshComputed() )
-      continue; // mesh on f already computed
 
     if (fmap.FindIndex(f) > 0)
       continue;
@@ -1802,14 +1880,8 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&          aMesh,
       if (ic <= 0)
         ic = emap.Add(e);
 
-      const SMESH_ProxyMesh::SubMesh* proxySubMesh = 0;
-      if ( viscousMesh )
-        proxySubMesh = viscousMesh->GetProxySubMesh( e );
-
       double tmin,tmax;
       curves.push_back(BRep_Tool::CurveOnSurface(e, f, tmin, tmax));
-      if ( proxySubMesh )
-        curves.back() = new TProxyPCurve( proxySubMesh, curves.back() );
 
       if (HasSizeMapOnEdge){
         edgeKey = EdgesWithSizeMap.FindIndex(e);
@@ -1835,36 +1907,16 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&          aMesh,
       {
         SMESH_subMeshIteratorPtr subsmIt = sm->getDependsOnIterator( /*includeSelf=*/true,
                                                                      /*complexFirst=*/false);
-        while ( subsmIt->more() ) 
+        while ( subsmIt->more() )
           edgeSubmeshes.insert( subsmIt->next()->GetSubMeshDS() );
 
-        if ( proxySubMesh )
-        { // protect proxySubmeshes from clearing
-          proxySubmeshes.insert( (SMESHDS_SubMesh*) proxySubMesh );
-          proxySubmeshes.insert( meshDS->MeshElements( e ));
-          proxySubmeshes.insert( meshDS->MeshElements( helper.IthVertex( 0, e )));
-          proxySubmeshes.insert( meshDS->MeshElements( helper.IthVertex( 1, e )));
-        }
         nodeData.reset( new StdMeshers_FaceSide( f, e, &aMesh, /*isForwrd = */true,
-                                                 /*ignoreMedium=*/haveQuadraticSubMesh,
-                                                 viscousMesh));
+                                                 /*ignoreMedium=*/haveQuadraticSubMesh));
         if ( nodeData->MissVertexNode() )
           return error(COMPERR_BAD_INPUT_MESH,"No node on vertex");
 
         const std::vector<UVPtStruct>& nodeDataVec = nodeData->GetUVPtStruct();
-        if ( !nodeDataVec.empty() )
-        {
-          if ( Abs( nodeDataVec[0].param - tmin ) > Abs( nodeDataVec.back().param - tmin ))
-          {
-            nodeData->Reverse();
-            nodeData->GetUVPtStruct(); // nodeData recomputes nodeDataVec
-          }
-          // tmin and tmax can change in case of viscous layer on an adjacent edge
-          tmin = nodeDataVec.front().param;
-          tmax = nodeDataVec.back().param;
-        }
-        else
-        {
+        if ( nodeDataVec.empty() ) {
           cout << "---------------- Invalid nodeData" << endl;
           nodeData.reset();
         }
@@ -1997,11 +2049,6 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&          aMesh,
         continue;
       }
     }
-    if ( proxySubmeshes.count( smDS ))
-    {
-      needMerge = true;
-    }
-    else
     {
       SMDS_ElemIteratorPtr eIt = smDS->GetElements();
       while ( eIt->more() ) meshDS->RemoveFreeElement( eIt->next(), smDS );
@@ -2351,27 +2398,6 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&          aMesh,
     typedef SMDS_StdIterator< const SMDS_MeshNode*, SMDS_NodeIteratorPtr > TNodeIterator;
     double tol;
 
-    if ( !proxySubmeshes.empty() )
-    {
-      // merge proxy nodes with ones computed by BLSURF
-      for ( smIt = proxySubmeshes.begin(); smIt != proxySubmeshes.end(); ++smIt )
-      {
-        if (! (smDS = *smIt) ) continue;
-        nodesOnEdge.clear();
-        nodesOnEdge.insert( TNodeIterator( smDS->GetNodes() ), TNodeIterator() );
-        if (( smDS = meshDS->MeshElements( smDS->GetID() )))
-        {
-          nodesOnEdge.insert( TNodeIterator( smDS->GetNodes() ), TNodeIterator() );
-          if ( nodesOnEdge.size() > 1 )
-          {
-            tol = SMESH_TNodeXYZ( *nodesOnEdge.begin() ).Distance( *nodesOnEdge.rbegin() );
-            tol /= 50. * nodesOnEdge.size();
-            editor.FindCoincidentNodes( nodesOnEdge, tol, nodeGroupsToMerge );
-            editor.MergeNodes( nodeGroupsToMerge );
-          }
-        }
-      }
-    }
     // merge nodes on EDGE's with ones computed by BLSURF
     for ( smIt = mergeSubmeshes.begin(); smIt != mergeSubmeshes.end(); ++smIt )
     {

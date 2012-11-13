@@ -73,6 +73,7 @@
       <python-wrap>
         <algo>BLSURF=Triangle(algo=smesh.BLSURF)</algo>
         <hypo>BLSURF_Parameters=Parameters()</hypo>
+        <hypo>ViscousLayers2D=ViscousLayers2D(SetTotalThickness(),SetNumberLayers(),SetStretchFactor(),SetIgnoreEdges())</hypo>
       </python-wrap>
     </algorithm>
 

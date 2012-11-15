@@ -1375,7 +1375,8 @@ namespace
       std::vector<TopoDS_Vertex>        tmpVertex;
 
       // create a proxy FACE
-      BRepBuilderAPI_MakeFace newFace( BRep_Tool::Surface( origFace ), 1e-7 );
+      TopoDS_Shape origFaceCopy = origFace.EmptyCopied();
+      BRepBuilderAPI_MakeFace newFace( TopoDS::Face( origFaceCopy ));
       for ( size_t iW = 0; iW != wireVec.size(); ++iW )
       {
         StdMeshers_FaceSidePtr& wireData = wireVec[iW];
@@ -1407,8 +1408,8 @@ namespace
 
       ShapeToMesh( auxCompoundToMesh );
 
-      TopExp_Explorer fExp( auxCompoundToMesh, TopAbs_FACE );
-      _proxyFace = TopoDS::Face( fExp.Current() );
+      //TopExp_Explorer fExp( auxCompoundToMesh, TopAbs_FACE );
+      //_proxyFace = TopoDS::Face( fExp.Current() );
 
 
       // Make input mesh for BLSURF: segments on EDGE's of newFace
@@ -1956,9 +1957,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
           double t                = nData.param;
           real uv[2]              = { nData.u, nData.v };
           SMESH_TNodeXYZ nXYZ( nData.node );
-          // cout << "\tt = " << t << " uv = ( " << uv[0] << ","<< uv[1] << " ) ID " << nData.node->GetID()
-          //      << " Curve UV: " << curves.back()->Value( t ).X()
-          //      << ", "          << curves.back()->Value( t ).Y() << endl;
+          //cout << "\tt = " << t << " uv = ( " << uv[0] << ","<< uv[1] << " ) ID " << nData.node->GetID() << endl;
           dcad_edge_discretization_set_vertex_coordinates( dedge, iN+1, t, uv, nXYZ._xyz );
         }
         dcad_edge_discretization_set_property(dedge, DISTENE_DCAD_PROPERTY_REQUIRED);

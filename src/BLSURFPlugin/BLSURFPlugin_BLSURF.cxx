@@ -1917,7 +1917,19 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
           return error(COMPERR_BAD_INPUT_MESH,"No node on vertex");
 
         const std::vector<UVPtStruct>& nodeDataVec = nodeData->GetUVPtStruct();
-        if ( nodeDataVec.empty() ) {
+        if ( !nodeDataVec.empty() )
+        {
+          if ( Abs( nodeDataVec[0].param - tmin ) > Abs( nodeDataVec.back().param - tmin ))
+          {
+            nodeData->Reverse();
+            nodeData->GetUVPtStruct(); // nodeData recomputes nodeDataVec
+          }
+          // tmin and tmax can change in case of viscous layer on an adjacent edge
+          tmin = nodeDataVec.front().param;
+          tmax = nodeDataVec.back().param;
+        }
+        else
+        {
           cout << "---------------- Invalid nodeData" << endl;
           nodeData.reset();
         }
@@ -1949,15 +1961,18 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
         dcad_get_edge_discretization(dcad, edg, &dedge);
         dcad_edge_discretization_set_vertex_count( dedge, nbNodes );
 
-        //cout << endl << " EDGE " << ic << endl;
-        //cout << "tmin = "<<tmin << ", tmax = "<< tmax << endl;
+        // cout << endl << " EDGE " << ic << endl;
+        // cout << "tmin = "<<tmin << ", tmax = "<< tmax << endl;
         for ( int iN = 0; iN < nbNodes; ++iN )
         {
           const UVPtStruct& nData = nodeDataVec[ iN ];
           double t                = nData.param;
           real uv[2]              = { nData.u, nData.v };
           SMESH_TNodeXYZ nXYZ( nData.node );
-          //cout << "\tt = " << t << " uv = ( " << uv[0] << ","<< uv[1] << " ) ID " << nData.node->GetID() << endl;
+          // cout << "\tt = " << t
+          //      << "\t uv = ( " << uv[0] << ","<< uv[1] << " ) "
+          //      << "\t u = " << nData.param
+          //      << "\t ID = " << nData.node->GetID() << endl;
           dcad_edge_discretization_set_vertex_coordinates( dedge, iN+1, t, uv, nXYZ._xyz );
         }
         dcad_edge_discretization_set_property(dedge, DISTENE_DCAD_PROPERTY_REQUIRED);
@@ -2442,6 +2457,15 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     if ( SMESH_subMesh* sm = aMesh.GetSubMeshContaining( pmap( i )))
       if ( !sm->IsMeshComputed() )
         sm->SetIsAlwaysComputed( true );
+
+  // Set error to FACE's w/o elements
+  for ( int i = 1; i <= fmap.Extent(); ++i )
+  {
+    SMESH_subMesh* sm = aMesh.GetSubMesh( fmap(i) );
+    if ( !sm->GetSubMeshDS() || sm->GetSubMeshDS()->NbElements() == 0 )
+      sm->GetComputeError().reset
+        ( new SMESH_ComputeError( COMPERR_ALGO_FAILED, _comment, this ));
+  }
 
   // Issue 0019864. On DebianSarge, FE signals do not obey to OSD::SetSignal(false)
 #ifndef WNT

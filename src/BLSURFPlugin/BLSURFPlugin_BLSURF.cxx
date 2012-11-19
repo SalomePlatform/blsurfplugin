@@ -2000,9 +2000,12 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
           d2 = ee0.SquareDistance(BRep_Tool::Pnt(v));
         }
         *ip = pmap.FindIndex(v);
-        if(*ip <= 0)
+        if(*ip <= 0) {
           *ip = pmap.Add(v);
-
+          SMESH_subMesh* sm = aMesh.GetSubMesh(v);
+          if ( sm->IsMeshComputed() )
+            edgeSubmeshes.insert( sm->GetSubMeshDS() );
+        }
         if (HasSizeMapOnVertex){
           vertexKey = VerticesWithSizeMap.FindIndex(v);
           if (VertexId2SizeMap.find(vertexKey)!=VertexId2SizeMap.end()){

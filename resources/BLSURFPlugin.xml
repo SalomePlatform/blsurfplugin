@@ -66,13 +66,14 @@
     <algorithm type="BLSURF"
                label-id="BLSURF"
                icon-id="mesh_algo_BLSURF.png"
-               opt-hypos="BLSURF_Parameters"
+               opt-hypos="BLSURF_Parameters,ViscousLayers2D"
                output="TRIA,QUAD"
                dim="2"
 	       support-submeshes="true">
       <python-wrap>
         <algo>BLSURF=Triangle(algo=smesh.BLSURF)</algo>
         <hypo>BLSURF_Parameters=Parameters()</hypo>
+        <hypo>ViscousLayers2D=ViscousLayers2D(SetTotalThickness(),SetNumberLayers(),SetStretchFactor(),SetIgnoreEdges())</hypo>
       </python-wrap>
     </algorithm>
 

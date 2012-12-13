@@ -45,35 +45,26 @@ public:
   // Destructor
   virtual ~BLSURFPlugin_Hypothesis_i();
 
-  void SetTopology(CORBA::Long theValue);
-  CORBA::Long GetTopology();
-
   void SetPhysicalMesh(CORBA::Long theValue);
   CORBA::Long GetPhysicalMesh();
-
-  void SetPhySize(CORBA::Double theValue);
-  CORBA::Double GetPhySize();
-
-  void SetPhyMin(CORBA::Double theMinSize);
-  CORBA::Double GetPhyMin();
-
-  void SetPhyMax(CORBA::Double theMaxSize);
-  CORBA::Double GetPhyMax();
 
   void SetGeometricMesh(CORBA::Long theValue);
   CORBA::Long GetGeometricMesh();
 
-  void SetAngleMeshS(CORBA::Double theValue);
-  CORBA::Double GetAngleMeshS();
+  void SetPhySize(CORBA::Double theValue);
+  void SetPhySizeRel(CORBA::Double theValue);
+  CORBA::Double GetPhySize();
+  CORBA::Boolean IsPhySizeRel();
 
-  void SetAngleMeshC(CORBA::Double angle);
-  CORBA::Double GetAngleMeshC();
+  void SetMinSize(CORBA::Double theMinSize);
+  void SetMinSizeRel(CORBA::Double theMinSize);
+  CORBA::Double GetMinSize();
+  CORBA::Boolean IsMinSizeRel();
 
-  void SetGeoMin(CORBA::Double theMinSize);
-  CORBA::Double GetGeoMin();
-
-  void SetGeoMax(CORBA::Double theMaxSize);
-  CORBA::Double GetGeoMax();
+  void SetMaxSize(CORBA::Double theMaxSize);
+  void SetMaxSizeRel(CORBA::Double theMaxSize);
+  CORBA::Double GetMaxSize();
+  CORBA::Boolean IsMaxSizeRel();
 
   void SetGradation(CORBA::Double theValue);
   CORBA::Double GetGradation();
@@ -81,8 +72,38 @@ public:
   void SetQuadAllowed(CORBA::Boolean theValue);
   CORBA::Boolean GetQuadAllowed();
 
-  void SetDecimesh(CORBA::Boolean theValue);
-  CORBA::Boolean GetDecimesh();
+  void SetAngleMesh(CORBA::Double theValue);
+  CORBA::Double GetAngleMesh();
+  
+  void SetChordalError(CORBA::Double distance);
+  CORBA::Double GetChordalError();
+  
+  void SetAnisotropic(CORBA::Boolean anisotropic);
+  CORBA::Boolean GetAnisotropic();
+  
+  void SetAnisotropicRatio(CORBA::Double ratio);
+  CORBA::Double GetAnisotropicRatio();
+  
+  void SetRemoveTinyEdges(CORBA::Boolean remove);
+  CORBA::Boolean GetRemoveTinyEdges();
+  
+  void SetTinyEdgeLength(CORBA::Double length);
+  CORBA::Double GetTinyEdgeLength();
+  
+  void SetBadElementRemoval(CORBA::Boolean remove);
+  CORBA::Boolean GetBadElementRemoval();
+  
+  void SetBadElementAspectRatio(CORBA::Double ratio);
+  CORBA::Double GetBadElementAspectRatio();
+  
+  void SetOptimizeMesh(CORBA::Boolean optimize);
+  CORBA::Boolean GetOptimizeMesh();
+  
+  void SetQuadraticMesh(CORBA::Boolean quadratic);
+  CORBA::Boolean GetQuadraticMesh();
+
+  void SetTopology(CORBA::Long theValue);
+  CORBA::Long GetTopology();
 
   void SetVerbosity(CORBA::Short theVal) throw (SALOME::SALOME_Exception);
   CORBA::Short GetVerbosity();
@@ -90,14 +111,11 @@ public:
   void SetPreCADMergeEdges(CORBA::Boolean theValue);
   CORBA::Boolean GetPreCADMergeEdges();
 
-  void SetPreCADRemoveNanoEdges(CORBA::Boolean theValue);
-  CORBA::Boolean GetPreCADRemoveNanoEdges();
+  void SetPreCADProcess3DTopology(CORBA::Boolean theValue);
+  CORBA::Boolean GetPreCADProcess3DTopology();
 
   void SetPreCADDiscardInput(CORBA::Boolean theValue);
   CORBA::Boolean GetPreCADDiscardInput();
-
-  void SetPreCADEpsNano(CORBA::Double theValue);
-  CORBA::Double GetPreCADEpsNano();
 
   void SetOptionValue(const char* optionName, const char* optionValue) throw (SALOME::SALOME_Exception);
   void SetPreCADOptionValue(const char* optionName, const char* optionValue) throw (SALOME::SALOME_Exception);
@@ -115,6 +133,8 @@ public:
 
   void SetSizeMapEntry(const char* entry, const char* sizeMap) throw (SALOME::SALOME_Exception);
 
+  void SetConstantSizeMapEntry(const char* entry, GEOM::shape_type shapeType, CORBA::Double sizeMap) throw (SALOME::SALOME_Exception);
+
   char* GetSizeMapEntry(const char* entry) throw (SALOME::SALOME_Exception);
 
   void UnsetEntry(const char* entry);
@@ -124,6 +144,8 @@ public:
   void SetSizeMapEntries(const BLSURFPlugin::string_array& sizeMaps) throw (SALOME::SALOME_Exception);
 
   void SetSizeMap(GEOM::GEOM_Object_ptr GeomObj, const char* sizeMap);
+
+  void SetConstantSizeMap(GEOM::GEOM_Object_ptr GeomObj, CORBA::Double sizeMap);
 
   void UnsetSizeMap(GEOM::GEOM_Object_ptr GeomObj);
 
@@ -144,11 +166,11 @@ public:
     * Set/get/unset an attractor on a face 
     */
   
-  void SetAttractorGeom(GEOM::GEOM_Object_ptr GeomObj, GEOM::GEOM_Object_ptr Attractor, double StartSize, double EndSize, double ActionRadius, double ConstantRadius );
+  void SetAttractorGeom(GEOM::GEOM_Object_ptr GeomObj, GEOM::GEOM_Object_ptr Attractor, CORBA::Double StartSize, CORBA::Double EndSize, CORBA::Double ActionRadius, CORBA::Double ConstantRadius );
 
   void UnsetAttractorGeom(GEOM::GEOM_Object_ptr GeomObj);
 
-  void SetClassAttractorEntry(const char* entry, const char* att_entry, double StartSize, double EndSize, double ActionRadius, double ConstantRadius)  throw (SALOME::SALOME_Exception);
+  void SetClassAttractorEntry(const char* entry, const char* att_entry, CORBA::Double StartSize, CORBA::Double EndSize, CORBA::Double ActionRadius, CORBA::Double ConstantRadius)  throw (SALOME::SALOME_Exception);
 
   BLSURFPlugin::TAttParamsMap* GetAttractorParams();
   
@@ -247,6 +269,29 @@ public:
 
   // Verify whether hypothesis supports given entity type 
   CORBA::Boolean IsDimSupported(SMESH::Dimension type);
+
+
+  //
+  // Obsolete methods - To be removed in V7
+  //
+  void SetPhyMin(CORBA::Double theMinSize);
+  CORBA::Double GetPhyMin();
+  void SetPhyMax(CORBA::Double theMaxSize);
+  CORBA::Double GetPhyMax();
+  void SetGeoMin(CORBA::Double theMinSize);
+  CORBA::Double GetGeoMin();
+  void SetGeoMax(CORBA::Double theMaxSize);
+  CORBA::Double GetGeoMax();
+  void SetAngleMeshS(CORBA::Double angle);
+  CORBA::Double GetAngleMeshS();
+  void SetAngleMeshC(CORBA::Double angle);
+  CORBA::Double GetAngleMeshC();
+  void SetDecimesh(CORBA::Boolean toIgnoreEdges);
+  CORBA::Boolean GetDecimesh();
+  void SetPreCADRemoveNanoEdges(CORBA::Boolean toRemoveNanoEdges);
+  CORBA::Boolean GetPreCADRemoveNanoEdges();
+  void SetPreCADEpsNano(CORBA::Double epsNano);
+  CORBA::Double GetPreCADEpsNano();
 };
 
 #endif

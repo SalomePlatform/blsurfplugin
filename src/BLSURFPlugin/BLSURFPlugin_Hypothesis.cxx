@@ -41,24 +41,32 @@
 
 //=============================================================================
 BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_Gen * gen) :
-  SMESH_Hypothesis(hypId, studyId, gen), _topology(GetDefaultTopology()),
+  SMESH_Hypothesis(hypId, studyId, gen), 
   _physicalMesh(GetDefaultPhysicalMesh()),
-  _phySize(GetDefaultPhySize()),
-  _phyMax(GetDefaultMaxSize()),
-  _phyMin(GetDefaultMinSize()),
-  _hgeoMax(GetDefaultMaxSize()),
-  _hgeoMin(GetDefaultMinSize()), 
   _geometricMesh(GetDefaultGeometricMesh()),
-  _angleMeshS(GetDefaultAngleMeshS()),
-  _angleMeshC(GetDefaultAngleMeshC()),
+  _phySize(GetDefaultPhySize()),
+  _phySizeRel(GetDefaultPhySizeRel()),
+  _minSize(GetDefaultMinSize()),
+  _minSizeRel(GetDefaultMinSizeRel()),
+  _maxSize(GetDefaultMaxSize()),
+  _maxSizeRel(GetDefaultMaxSizeRel()),
   _gradation(GetDefaultGradation()),
   _quadAllowed(GetDefaultQuadAllowed()),
-  _decimesh(GetDefaultDecimesh()),
+  _angleMesh(GetDefaultAngleMesh()),
+  _chordalError(GetDefaultChordalError()), 
+  _anisotropic(GetDefaultAnisotropic()),
+  _anisotropicRatio(GetDefaultAnisotropicRatio()),
+  _removeTinyEdges(GetDefaultRemoveTinyEdges()),
+  _tinyEdgeLength(GetDefaultTinyEdgeLength()),
+  _badElementRemoval(GetDefaultBadElementRemoval()),
+  _badElementAspectRatio(GetDefaultBadElementAspectRatio()),
+  _optimizeMesh(GetDefaultOptimizeMesh()),
+  _quadraticMesh(GetDefaultQuadraticMesh()),
   _verb(GetDefaultVerbosity()),
+  _topology(GetDefaultTopology()),
   _preCADMergeEdges(GetDefaultPreCADMergeEdges()),
-  _preCADRemoveNanoEdges(GetDefaultPreCADRemoveNanoEdges()),
+  _preCADProcess3DTopology(GetDefaultPreCADProcess3DTopology()),
   _preCADDiscardInput(GetDefaultPreCADDiscardInput()),
-  _preCADEpsNano(GetDefaultPreCADEpsNano()),
   _sizeMap(GetDefaultSizeMap()),
   _attractors(GetDefaultSizeMap()),
   _classAttractors(GetDefaultAttractorMap()),
@@ -76,33 +84,64 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   _param_algo_dim = 2;
   
 //   _GMFFileMode = false; // GMF ascii mode
-  
-  // to disable writing boundaries
-  //_phyMin = _phyMax = _hgeoMin = _hgeoMax = undefinedDouble();
 
+  const char* boolOptionNames[] = {         "correct_surface_intersections",            // default = 1
+                                            "create_tag_on_collision",                  // default = 1
+                                            "debug",                                    // default = 0
+                                            "enforce_cad_edge_sizes",                   // default = 0
+                                            "frontal",                                  // ok default = 1
+                                            "jacobian_rectification_respect_geometry",  // default = 1
+                                            "proximity",                                // default = 0
+                                            "rectify_jacobian",                         // default = 1
+                                            "respect_geometry",                         // default = 1
+                                            "" // mark of end
+      };
 
-  const char* intOptionNames[] = { "addsurf_ivertex", "anisotropic", "background", "CheckAdjacentEdges", "CheckCloseEdges",
-      "CheckWellDefined", "coiter", "communication", "debug", "decim", "export_flag", "file_h", "frontal", "gridnu", "gridnv",
-      "hinterpol_flag", "hmean_flag", "intermedfile", "memory", "normals", "optim", "pardom_flag", "pinch", "refs",
-      "rigid", "surforient", "tconf", "topo_collapse",
-      "proximity", "prox_nb_layer", "prox_ratio", // detects the volumic proximity of surfaces
-      "" // mark of end
+  const char* intOptionNames[] = {          "hinterpol_flag",                           // ok default = 0
+                                            "hmean_flag",                               // ok default = 0
+                                            "max_number_of_points_per_patch",           // default = 100000
+                                            "prox_nb_layer",                            // detects the volumic proximity of surfaces
+                                            "" // mark of end
       };
-  const char* doubleOptionNames[] = { "addsurf_angle", "addsurf_R", "addsurf_H", "addsurf_FG", "addsurf_r",
-      "addsurf_PA", "angle_compcurv", "angle_ridge", "anisotropic_ratio", "CoefRectangle", "eps_collapse", "eps_ends", "eps_pardom", "LSS",
-      "topo_eps1", "topo_eps2", "" // mark of end
+  const char* doubleOptionNames[] = {       "surface_intersections_processing_max_cost",// default = 15
+                                            "periodic_tolerance",                       // default = diag/100
+                                            "prox_ratio",
+                                            "" // mark of end
       };
-  const char* charOptionNames[] = { "export_format", "export_option", "import_option", "prefix", "" // mark of end
+  const char* charOptionNames[] = {         "required_entities",                        // default = "respect"
+                                            "tags",                                     // default = "respect"
+                                            "" // mark of end
       };
 
   // PreCAD advanced options
-  const char* preCADintOptionNames[] = { "closed_geometry", "debug", "manifold_geometry", "create_tag_on_collision","" // mark of end
+  const char* preCADboolOptionNames[] = {   "closed_geometry",                          // default = 0
+                                            "create_tag_on_collision",                  // default = 1
+                                            "debug",                                    // default = 0 
+                                            "remove_tiny_edges",                        // default = 0
+                                            "" // mark of end
       };
-  const char* preCADdoubleOptionNames[] = { "eps_nano_relative", "eps_sewing", "eps_sewing_relative", "periodic_tolerance",
-      "periodic_tolerance_relative", "periodic_split_tolerance", "periodic_split_tolerance_relative", "" // mark of end
+  const char* preCADintOptionNames[] = {    "manifold_geometry",                        // default = 0
+                                            "" // mark of end
+      };
+  const char* preCADdoubleOptionNames[] = { "periodic_tolerance",                       // default = diag * 1e-5
+                                            "sewing_tolerance",                         // default = diag * 5e-4
+                                            "tiny_edge_length",                         // default = diag * 1e-5
+                                            "" // mark of end
+      };
+  const char* preCADcharOptionNames[] = {   "required_entities",                        // default = "respect"
+                                            "tags",                                     // default = "respect"
+                                            "" // mark of end
       };
   
   int i = 0;
+  while (boolOptionNames[i][0])
+    _option2value[boolOptionNames[i++]].clear();
+  
+  i = 0;
+  while (preCADboolOptionNames[i][0])
+    _preCADoption2value[preCADboolOptionNames[i++]].clear();
+  
+  i = 0;
   while (intOptionNames[i][0])
     _option2value[intOptionNames[i++]].clear();
   
@@ -124,6 +163,11 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   while (charOptionNames[i][0]) {
     _charOptions.insert(charOptionNames[i]);
     _option2value[charOptionNames[i++]].clear();
+  }
+  i = 0;
+  while (preCADcharOptionNames[i][0]) {
+    _preCADdoubleOptions.insert(preCADcharOptionNames[i]);
+    _preCADoption2value[preCADdoubleOptionNames[i++]].clear();
   }
   
 
@@ -167,14 +211,6 @@ TopoDS_Shape BLSURFPlugin_Hypothesis::entryToShape(std::string entry)
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetTopology(Topology theTopology) {
-  if (theTopology != _topology) {
-    _topology = theTopology;
-    NotifySubMeshesHypothesisModification();
-  }
-}
-
-//=============================================================================
 void BLSURFPlugin_Hypothesis::SetPhysicalMesh(PhysicalMesh thePhysicalMesh) {
   if (thePhysicalMesh != _physicalMesh) {
     _physicalMesh = thePhysicalMesh;
@@ -183,10 +219,26 @@ void BLSURFPlugin_Hypothesis::SetPhysicalMesh(PhysicalMesh thePhysicalMesh) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetPhySize(double theVal) {
-  if (theVal != _phySize) {
+void BLSURFPlugin_Hypothesis::SetGeometricMesh(GeometricMesh theGeometricMesh) {
+  if (theGeometricMesh != _geometricMesh) {
+    _geometricMesh = theGeometricMesh;
+//     switch (_geometricMesh) {
+//       case DefaultGeom:
+//       default:
+//         _angleMesh = GetDefaultAngleMesh();
+//         _gradation = GetDefaultGradation();
+//         break;
+//     }
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetPhySize(double theVal, bool isRelative) {
+  if ((theVal != _phySize) || (isRelative != _phySizeRel)) {
+    _phySizeRel = isRelative;
     if (theVal == 0) {
-      _phySize = GetPhyMax();
+      _phySize = GetMaxSize();
       MESSAGE("Warning: nul physical size is not allowed");
     }
     else
@@ -196,64 +248,19 @@ void BLSURFPlugin_Hypothesis::SetPhySize(double theVal) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetPhyMin(double theMinSize) {
-  if (theMinSize != _phyMin) {
-    _phyMin = theMinSize;
+void BLSURFPlugin_Hypothesis::SetMinSize(double theMinSize, bool isRelative) {
+  if ((theMinSize != _minSize) || (isRelative != _minSizeRel)) {
+    _minSizeRel = isRelative;
+    _minSize = theMinSize;
     NotifySubMeshesHypothesisModification();
   }
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetPhyMax(double theMaxSize) {
-  if (theMaxSize != _phyMax) {
-    _phyMax = theMaxSize;
-    NotifySubMeshesHypothesisModification();
-  }
-}
-
-//=============================================================================
-void BLSURFPlugin_Hypothesis::SetGeoMin(double theMinSize) {
-  if (theMinSize != _hgeoMin) {
-    _hgeoMin = theMinSize;
-    NotifySubMeshesHypothesisModification();
-  }
-}
-
-//=============================================================================
-void BLSURFPlugin_Hypothesis::SetGeoMax(double theMaxSize) {
-  if (theMaxSize != _hgeoMax) {
-    _hgeoMax = theMaxSize;
-    NotifySubMeshesHypothesisModification();
-  }
-}
-
-//=============================================================================
-void BLSURFPlugin_Hypothesis::SetGeometricMesh(GeometricMesh theGeometricMesh) {
-  if (theGeometricMesh != _geometricMesh) {
-    _geometricMesh = theGeometricMesh;
-    switch (_geometricMesh) {
-      case DefaultGeom:
-      default:
-        _angleMeshS = GetDefaultAngleMeshS();
-        _gradation = GetDefaultGradation();
-        break;
-    }
-    NotifySubMeshesHypothesisModification();
-  }
-}
-
-//=============================================================================
-void BLSURFPlugin_Hypothesis::SetAngleMeshS(double theVal) {
-  if (theVal != _angleMeshS) {
-    _angleMeshS = theVal;
-    NotifySubMeshesHypothesisModification();
-  }
-}
-
-//=============================================================================
-void BLSURFPlugin_Hypothesis::SetAngleMeshC(double theVal) {
-  if (theVal != _angleMeshC) {
-    _angleMeshC = theVal;
+void BLSURFPlugin_Hypothesis::SetMaxSize(double theMaxSize, bool isRelative) {
+  if ((theMaxSize != _maxSize) || (isRelative != _maxSizeRel)) {
+    _maxSizeRel = isRelative;
+    _maxSize = theMaxSize;
     NotifySubMeshesHypothesisModification();
   }
 }
@@ -275,9 +282,89 @@ void BLSURFPlugin_Hypothesis::SetQuadAllowed(bool theVal) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetDecimesh(bool theVal) {
-  if (theVal != _decimesh) {
-    _decimesh = theVal;
+void BLSURFPlugin_Hypothesis::SetAngleMesh(double theVal) {
+  if (theVal != _angleMesh) {
+    _angleMesh = theVal;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetChordalError(double theDistance) {
+  if (theDistance != _chordalError) {
+    _chordalError = theDistance;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetAnisotropic(bool theVal) {
+  if (theVal != _anisotropic) {
+    _anisotropic = theVal;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetAnisotropicRatio(double theVal) {
+  if (theVal != _anisotropicRatio) {
+    _anisotropicRatio = theVal;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetRemoveTinyEdges(bool theVal) {
+  if (theVal != _removeTinyEdges) {
+    _removeTinyEdges = theVal;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetTinyEdgeLength(double theVal) {
+  if (theVal != _tinyEdgeLength) {
+    _tinyEdgeLength = theVal;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetBadElementRemoval(bool theVal) {
+  if (theVal != _badElementRemoval) {
+    _badElementRemoval = theVal;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetBadElementAspectRatio(double theVal) {
+  if (theVal != _badElementAspectRatio) {
+    _badElementAspectRatio = theVal;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetOptimizeMesh(bool theVal) {
+  if (theVal != _optimizeMesh) {
+    _optimizeMesh = theVal;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetQuadraticMesh(bool theVal) {
+  if (theVal != _quadraticMesh) {
+    _quadraticMesh = theVal;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetTopology(Topology theTopology) {
+  if (theTopology != _topology) {
+    _topology = theTopology;
     NotifySubMeshesHypothesisModification();
   }
 }
@@ -293,17 +380,17 @@ void BLSURFPlugin_Hypothesis::SetVerbosity(int theVal) {
 //=============================================================================
 void BLSURFPlugin_Hypothesis::SetPreCADMergeEdges(bool theVal) {
   if (theVal != _preCADMergeEdges) {
-    SetTopology(PreCAD);
+//     SetTopology(PreCAD);
     _preCADMergeEdges = theVal;
     NotifySubMeshesHypothesisModification();
   }
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetPreCADRemoveNanoEdges(bool theVal) {
-  if (theVal != _preCADRemoveNanoEdges) {
-    SetTopology(PreCAD);
-    _preCADRemoveNanoEdges = theVal;
+void BLSURFPlugin_Hypothesis::SetPreCADProcess3DTopology(bool theVal) {
+  if (theVal != _preCADProcess3DTopology) {
+//     SetTopology(PreCAD);
+    _preCADProcess3DTopology = theVal;
     NotifySubMeshesHypothesisModification();
   }
 }
@@ -311,17 +398,8 @@ void BLSURFPlugin_Hypothesis::SetPreCADRemoveNanoEdges(bool theVal) {
 //=============================================================================
 void BLSURFPlugin_Hypothesis::SetPreCADDiscardInput(bool theVal) {
   if (theVal != _preCADDiscardInput) {
-    SetTopology(PreCAD);
+//     SetTopology(PreCAD);
     _preCADDiscardInput = theVal;
-    NotifySubMeshesHypothesisModification();
-  }
-}
-
-//=============================================================================
-void BLSURFPlugin_Hypothesis::SetPreCADEpsNano(double theVal) {
-  if (theVal != _preCADEpsNano) {
-    SetTopology(PreCAD);
-    _preCADEpsNano = theVal;
     NotifySubMeshesHypothesisModification();
   }
 }
@@ -464,7 +542,7 @@ void BLSURFPlugin_Hypothesis::ClearPreCADOption(const std::string& optionName) {
 //=======================================================================
 void BLSURFPlugin_Hypothesis::SetSizeMapEntry(const std::string& entry, const std::string& sizeMap) {
   if (_sizeMap[entry].compare(sizeMap) != 0) {
-    SetPhysicalMesh(SizeMap);
+    SetPhysicalMesh(PhysicalLocalSize);
     _sizeMap[entry] = sizeMap;
     NotifySubMeshesHypothesisModification();
   }
@@ -493,7 +571,7 @@ BLSURFPlugin_Hypothesis::TSizeMap BLSURFPlugin_Hypothesis::GetSizeMapEntries(con
 //=======================================================================
 void BLSURFPlugin_Hypothesis::SetAttractorEntry(const std::string& entry, const std::string& attractor) {
   if (_attractors[entry].compare(attractor) != 0) {
-    SetPhysicalMesh(SizeMap);
+    SetPhysicalMesh(PhysicalLocalSize);
     _attractors[entry] = attractor;
     NotifySubMeshesHypothesisModification();
   }
@@ -522,7 +600,7 @@ BLSURFPlugin_Hypothesis::TSizeMap BLSURFPlugin_Hypothesis::GetAttractorEntries(c
 //=======================================================================
 void BLSURFPlugin_Hypothesis::SetClassAttractorEntry(const std::string& entry, const std::string& attEntry, double StartSize, double EndSize, double ActionRadius, double ConstantRadius)
 {
-  SetPhysicalMesh(SizeMap);
+  SetPhysicalMesh(PhysicalLocalSize);
 
   // The new attractor can't be defined on the same face as another sizemap
   TSizeMap::iterator it  = _sizeMap.find( entry );
@@ -676,7 +754,7 @@ bool BLSURFPlugin_Hypothesis::SetEnforcedVertex(TEntry theFaceEntry, TEnfName th
   MESSAGE("BLSURFPlugin_Hypothesis::SetEnforcedVertex("<< theFaceEntry << ", "
       << x << ", " << y << ", " << z << ", " << theVertexName << ", " << theVertexEntry << ", " << theGroupName << ")");
 
-  SetPhysicalMesh(SizeMap);
+  SetPhysicalMesh(PhysicalLocalSize);
 
   //  TEnfVertexList::iterator it;
   bool toNotify = false;
@@ -1114,7 +1192,7 @@ void BLSURFPlugin_Hypothesis::SetInternalEnforcedVertexAllFaces(bool toEnforceIn
   if (toEnforceInternalVertices != _enforcedInternalVerticesAllFaces) {
     _enforcedInternalVerticesAllFaces = toEnforceInternalVertices;
     if (toEnforceInternalVertices)
-      SetPhysicalMesh(SizeMap);
+      SetPhysicalMesh(PhysicalLocalSize);
     NotifySubMeshesHypothesisModification();
   }
 }
@@ -1130,13 +1208,45 @@ void BLSURFPlugin_Hypothesis::SetInternalEnforcedVertexAllFacesGroup(BLSURFPlugi
 
 //=============================================================================
 std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save) {
-  save << " " << (int) _topology << " " << (int) _physicalMesh << " " << (int) _geometricMesh << " " << _phySize << " "
-      << _angleMeshS << " " << _gradation << " " << (int) _quadAllowed << " " << (int) _decimesh;
-  save << " " << _phyMin << " " << _phyMax << " " << _angleMeshC << " " << _hgeoMin << " " << _hgeoMax << " " << _verb;
-  save << " " << (int) _preCADMergeEdges << " " << (int) _preCADRemoveNanoEdges << " " << (int) _preCADDiscardInput << " " << _preCADEpsNano ;
-  save << " " << (int) _enforcedInternalVerticesAllFaces;
+   // We must keep at least the same number of arguments when increasing the SALOME version
+   // When BLSURF becomes CADMESH, some parameters were fused into a single one. Thus the same
+   // parameter can be written several times to keep the old global number of parameters.
 
-  TOptionValues::iterator op_val = _option2value.begin();
+   // Treat old options which are now in the advanced options
+   TOptionValues::iterator op_val;
+   int _decimesh = -1;
+   int _preCADRemoveNanoEdges = -1;
+   double _preCADEpsNano = -1.0;
+   op_val = _option2value.find("respect_geometry");
+   if (op_val != _option2value.end()) {
+     std::string value = op_val->second;
+     if (!value.empty())
+       _decimesh = value.compare("1") == 0 ? 1 : 0;
+   }
+   op_val = _preCADoption2value.find("remove_tiny_edges");
+   if (op_val != _preCADoption2value.end()) {
+     std::string value = op_val->second;
+     if (!value.empty())
+       _preCADRemoveNanoEdges = value.compare("1") == 0 ? 1 : 0;
+   }
+   op_val = _preCADoption2value.find("tiny_edge_length");
+   if (op_val != _preCADoption2value.end()) {
+     std::string value = op_val->second;
+     if (!value.empty())
+       _preCADEpsNano = strtod(value.c_str(), NULL);
+   }
+   
+  save << " " << (int) _topology << " " << (int) _physicalMesh << " " << (int) _geometricMesh << " " << _phySize << " "
+      << _angleMesh << " " << _gradation << " " << (int) _quadAllowed << " " << _decimesh;
+  save << " " << _minSize << " " << _maxSize << " " << _angleMesh << " " << _minSize << " " << _maxSize << " " << _verb;
+  save << " " << (int) _preCADMergeEdges << " " << _preCADRemoveNanoEdges << " " << (int) _preCADDiscardInput << " " << _preCADEpsNano ;
+  save << " " << (int) _enforcedInternalVerticesAllFaces;
+  save << " " << (int) _phySizeRel << " " << (int) _minSizeRel << " " << (int) _maxSizeRel << " " << _chordalError ;
+  save << " " << (int) _anisotropic << " " << _anisotropicRatio << " " << (int) _removeTinyEdges << " " << _tinyEdgeLength ;
+  save << " " << (int) _badElementRemoval << " " << _badElementAspectRatio << " " << (int) _optimizeMesh << " " << (int) _quadraticMesh ;
+  save << " " << (int) _preCADProcess3DTopology;
+
+  op_val = _option2value.begin();
   if (op_val != _option2value.end()) {
     save << " " << "__OPTIONS_BEGIN__";
     for (; op_val != _option2value.end(); ++op_val) {
@@ -1247,6 +1357,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   bool isOK = true;
   int i;
   double val;
+  std::string option_or_sm;
 
   isOK = (load >> i);
   if (isOK)
@@ -1274,7 +1385,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
 
   isOK = (load >> val);
   if (isOK)
-    _angleMeshS = val;
+    _angleMesh = val;
   else
     load.clear(std::ios::badbit | load.rdstate());
 
@@ -1291,38 +1402,46 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
     load.clear(std::ios::badbit | load.rdstate());
 
   isOK = (load >> i);
-  if (isOK)
-    _decimesh = (bool) i;
+  if (isOK) {
+    if ( i != -1) { // if value is -1, then this is no longer a standard option
+      std::string & value = _option2value["respect_geometry"];
+      bool _decimesh = (bool) i;
+      value = _decimesh ? "1" : "0";
+    }
+  }
   else
     load.clear(std::ios::badbit | load.rdstate());
 
   isOK = (load >> val);
   if (isOK)
-    _phyMin = val;
+    _minSize = val;
   else
     load.clear(std::ios::badbit | load.rdstate());
 
   isOK = (load >> val);
   if (isOK)
-    _phyMax = val;
+    _maxSize = val;
   else
     load.clear(std::ios::badbit | load.rdstate());
 
   isOK = (load >> val);
   if (isOK)
-    _angleMeshC = val;
+    // former parameter: get min value
+    _angleMesh = min(val,_angleMesh);
   else
     load.clear(std::ios::badbit | load.rdstate());
 
   isOK = (load >> val);
   if (isOK)
-    _hgeoMin = val;
+    // former parameter: get min value
+    _minSize = min(val,_minSize);
   else
     load.clear(std::ios::badbit | load.rdstate());
 
   isOK = (load >> val);
   if (isOK)
-    _hgeoMax = val;
+    // former parameter: get max value
+    _maxSize = max(val,_maxSize);
   else
     load.clear(std::ios::badbit | load.rdstate());
 
@@ -1339,8 +1458,13 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
     load.clear(std::ios::badbit | load.rdstate());
 
   isOK = (load >> i);
-  if (isOK)
-    _preCADRemoveNanoEdges = (bool) i;
+  if (isOK) {
+    if ( i != -1) { // if value is -1, then this is no longer a standard option
+      std::string & value = _preCADoption2value["remove_tiny_edges"];
+      bool _preCADRemoveNanoEdges = (bool) i;
+      value = _preCADRemoveNanoEdges ? "1" : "0";
+    }
+  }
   else
     load.clear(std::ios::badbit | load.rdstate());
 
@@ -1351,8 +1475,14 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
     load.clear(std::ios::badbit | load.rdstate());
 
   isOK = (load >> val);
-  if (isOK)
-    _preCADEpsNano = val;
+  if (isOK) { // _preCADEpsNano
+    if ( (i + 1.0) < 1e-6 ) { // if value is -1, then this is no longer a standard option: get optional value "tiny_edge_length" instead
+      std::string & value = _preCADoption2value["tiny_edge_length"];
+      std::ostringstream oss;
+      oss << i;
+      value = oss.str();
+    }
+  }
   else
     load.clear(std::ios::badbit | load.rdstate());
 
@@ -1362,7 +1492,9 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   else
     load.clear(std::ios::badbit | load.rdstate());
 
-  std::string option_or_sm;
+  // New options with MeshGems-CADSurf
+
+  bool hasCADSurfOptions = false;
   bool hasOptions = false;
   bool hasPreCADOptions = false;
   bool hasSizeMap = false;
@@ -1372,6 +1504,11 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
 
   isOK = (load >> option_or_sm);
   if (isOK)
+    if ( (option_or_sm == "1")||(option_or_sm == "0") ) {
+      i = atoi(option_or_sm.c_str());
+      hasCADSurfOptions = true;
+      _phySizeRel = (bool) i;
+    }
     if (option_or_sm == "__OPTIONS_BEGIN__")
       hasOptions = true;
     else if (option_or_sm == "__PRECAD_OPTIONS_BEGIN__")
@@ -1385,6 +1522,99 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
     else if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
       hasEnforcedVertex = true;
 
+  if (isOK && hasCADSurfOptions) {
+    isOK = (load >> i);
+    if (isOK)
+      _minSizeRel = (bool) i;
+    else
+      load.clear(std::ios::badbit | load.rdstate());
+
+    isOK = (load >> i);
+    if (isOK)
+      _maxSizeRel = (bool) i;
+    else
+      load.clear(std::ios::badbit | load.rdstate());
+
+    isOK = (load >> val);
+    if (isOK)
+      _chordalError = val;
+    else
+      load.clear(std::ios::badbit | load.rdstate());
+
+    isOK = (load >> i);
+    if (isOK)
+      _anisotropic = (bool) i;
+    else
+      load.clear(std::ios::badbit | load.rdstate());
+
+    isOK = (load >> val);
+    if (isOK)
+      _anisotropicRatio = val;
+    else
+      load.clear(std::ios::badbit | load.rdstate());
+
+    isOK = (load >> i);
+    if (isOK)
+      _removeTinyEdges = (bool) i;
+    else
+      load.clear(std::ios::badbit | load.rdstate());
+
+    isOK = (load >> val);
+    if (isOK)
+      _tinyEdgeLength = val;
+    else
+      load.clear(std::ios::badbit | load.rdstate());
+
+    isOK = (load >> i);
+    if (isOK)
+      _badElementRemoval = (bool) i;
+    else
+      load.clear(std::ios::badbit | load.rdstate());
+
+    isOK = (load >> val);
+    if (isOK)
+      _badElementAspectRatio = val;
+    else
+      load.clear(std::ios::badbit | load.rdstate());
+
+    isOK = (load >> i);
+    if (isOK)
+      _optimizeMesh = (bool) i;
+    else
+      load.clear(std::ios::badbit | load.rdstate());
+
+    isOK = (load >> i);
+    if (isOK)
+      _quadraticMesh = (bool) i;
+    else
+      load.clear(std::ios::badbit | load.rdstate());
+
+    isOK = (load >> i);
+    if (isOK)
+      _preCADProcess3DTopology = (bool) i;
+    else
+      load.clear(std::ios::badbit | load.rdstate());
+
+  }
+  
+
+  if (hasCADSurfOptions) {
+    isOK = (load >> option_or_sm);
+    if (isOK)
+      if (option_or_sm == "__OPTIONS_BEGIN__")
+        hasOptions = true;
+      else if (option_or_sm == "__PRECAD_OPTIONS_BEGIN__")
+        hasPreCADOptions = true;
+      else if (option_or_sm == "__SIZEMAP_BEGIN__")
+        hasSizeMap = true;
+      else if (option_or_sm == "__ATTRACTORS_BEGIN__")
+        hasAttractor = true;
+      else if (option_or_sm == "__NEW_ATTRACTORS_BEGIN__")
+        hasNewAttractor = true;
+      else if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
+        hasEnforcedVertex = true;
+  }
+  
   std::string optName, optValue;
   while (isOK && hasOptions) {
     isOK = (load >> optName);
@@ -1731,6 +1961,66 @@ bool BLSURFPlugin_Hypothesis::SetParametersByMesh(const SMESH_Mesh* theMesh, con
   return false;
 }
 
+//================================================================================
+/*!
+ * \brief Returns default global constant physical size given a default value of element length ratio
+ */
+//================================================================================
+
+double BLSURFPlugin_Hypothesis::GetDefaultPhySize(double diagonal, double bbSegmentation) {
+  if (bbSegmentation != 0 && diagonal != 0)
+    return diagonal / bbSegmentation ;
+  return 10;
+}
+
+//================================================================================
+/*!
+ * \brief Returns default min size given a default value of element length ratio
+ */
+//================================================================================
+
+double BLSURFPlugin_Hypothesis::GetDefaultMinSize(double diagonal) {
+  if (diagonal != 0)
+    return diagonal / 1000.0 ;
+  return undefinedDouble();
+}
+
+//================================================================================
+/*!
+ * \brief Returns default max size given a default value of element length ratio
+ */
+//================================================================================
+
+double BLSURFPlugin_Hypothesis::GetDefaultMaxSize(double diagonal) {
+  if (diagonal != 0)
+    return diagonal / 5.0 ;
+  return undefinedDouble();
+}
+
+//================================================================================
+/*!
+ * \brief Returns default chordal error given a default value of element length ratio
+ */
+//================================================================================
+
+double BLSURFPlugin_Hypothesis::GetDefaultChordalError(double diagonal) {
+  if (diagonal != 0)
+    return diagonal;
+  return undefinedDouble();
+}
+
+//================================================================================
+/*!
+ * \brief Returns default tiny edge length given a default value of element length ratio
+ */
+//================================================================================
+
+double BLSURFPlugin_Hypothesis::GetDefaultTinyEdgeLength(double diagonal) {
+  if (diagonal != 0)
+    return diagonal * 1e-6 ;
+  return undefinedDouble();
+}
+
 //=============================================================================
 /*!
  * \brief Initialize my parameter values by default parameters.
@@ -1739,71 +2029,13 @@ bool BLSURFPlugin_Hypothesis::SetParametersByMesh(const SMESH_Mesh* theMesh, con
 //=============================================================================
 
 bool BLSURFPlugin_Hypothesis::SetParametersByDefaults(const TDefaults& dflts, const SMESH_Mesh* theMesh) {
-  return bool(_phySize = dflts._elemLength);
-}
+  double diagonal = dflts._elemLength*_gen->GetBoundaryBoxSegmentation();
+  _phySize = GetDefaultPhySize(diagonal, _gen->GetBoundaryBoxSegmentation());
+  _minSize = GetDefaultMinSize(diagonal);
+  _maxSize = GetDefaultMaxSize(diagonal);
+  _chordalError = GetDefaultChordalError(diagonal);
+  _tinyEdgeLength = GetDefaultTinyEdgeLength(diagonal);
 
-//=============================================================================
-BLSURFPlugin_Hypothesis::Topology BLSURFPlugin_Hypothesis::GetDefaultTopology() {
-  return FromCAD;
+  return true;
+//   return bool(_phySize = dflts._elemLength);
 }
-
-//=============================================================================
-BLSURFPlugin_Hypothesis::PhysicalMesh BLSURFPlugin_Hypothesis::GetDefaultPhysicalMesh() {
-  return PhysicalUserDefined;
-}
-
-//=============================================================================
-double BLSURFPlugin_Hypothesis::GetDefaultPhySize() {
-  return 10;
-}
-
-//======================================================================
-double BLSURFPlugin_Hypothesis::GetDefaultMaxSize() {
-  return undefinedDouble(); // 1e+4;
-}
-
-//======================================================================
-double BLSURFPlugin_Hypothesis::GetDefaultMinSize() {
-  return undefinedDouble(); //1e-4;
-}
-
-//======================================================================
-BLSURFPlugin_Hypothesis::GeometricMesh BLSURFPlugin_Hypothesis::GetDefaultGeometricMesh() {
-  return DefaultGeom;
-}
-
-//=============================================================================
-double BLSURFPlugin_Hypothesis::GetDefaultAngleMeshS() {
-  return 8;
-}
-
-//=============================================================================
-double BLSURFPlugin_Hypothesis::GetDefaultGradation() {
-  return 1.1;
-}
-
-//=============================================================================
-bool BLSURFPlugin_Hypothesis::GetDefaultQuadAllowed() {
-  return false;
-}
-
-//=============================================================================
-bool BLSURFPlugin_Hypothesis::GetDefaultDecimesh() {
-  return false;
-}
-
-//======================================================================
-double BLSURFPlugin_Hypothesis::GetDefaultPreCADEpsNano() {
-  return undefinedDouble(); //1e-4;
-}
-
-//======================================================================
-std::string BLSURFPlugin_Hypothesis::GetDefaultGMFFile() {
-  return "";
-}
-
-//=============================================================================
-bool BLSURFPlugin_Hypothesis::GetDefaultInternalEnforcedVertex() {
-  return false;
-}
-

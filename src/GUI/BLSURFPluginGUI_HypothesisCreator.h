@@ -65,6 +65,7 @@ class QGroupBox;
 class QComboBox;
 class QCheckBox;
 class QLineEdit;
+class QRadioButton;
 class QTableWidget;
 class QTreeWidget;
 class QModelIndex;
@@ -78,6 +79,8 @@ class QObject;
 
 class SMESHGUI_SpinBox;
 class LightApp_SelectionMgr;
+class BLSURFPluginGUI_StdWidget;
+class BLSURFPluginGUI_AdvWidget;
 // class DlgBlSurfHyp_Enforced;
 
 // Name
@@ -125,11 +128,15 @@ typedef struct
 {
   int     myTopology, myVerbosity;
   int     myPhysicalMesh, myGeometricMesh;
-  double  myAngleMeshS, myAngleMeshC, myGradation;
-  double  myPhySize, myGeoMin, myGeoMax, myPhyMin,myPhyMax;
-  bool    myAllowQuadrangles, myDecimesh,mySmpsurface,mySmpedge,mySmppoint,myEnforcedVertex,myInternalEnforcedVerticesAllFaces;
-  bool    myPreCADMergeEdges, myPreCADRemoveNanoEdges, myPreCADDiscardInput;
-  double  myPreCADEpsNano;
+  double  myPhySize, myMinSize, myMaxSize;
+  bool    myPhySizeRel, myMinSizeRel, myMaxSizeRel;
+  bool    myUseMinSize, myUseMaxSize;
+  double  myGradation, myAngleMesh, myChordalError;
+  bool    myAnisotropic, myRemoveTinyEdges, myForceBadElementRemoval;
+  double  myAnisotropicRatio, myTinyEdgeLength, myBadElementAspectRatio;
+  bool    myOptimizeMesh, myQuadraticMesh;
+  bool    myAllowQuadrangles, mySmpsurface,mySmpedge,mySmppoint,myEnforcedVertex,myInternalEnforcedVerticesAllFaces;
+  bool    myPreCADMergeEdges, myPreCADProcess3DTopology, myPreCADDiscardInput;
 //   bool    myGMFFileMode;
   std::string myGMFFileName, myInternalEnforcedVerticesAllFacesGroup;
   TEnfVertexList enfVertexList;
@@ -140,28 +147,6 @@ typedef struct
   QString myName;
 } BlsurfHypothesisData;
 
-
-
-// class BLSURFPluginGUI_ObjectReferenceParamWdg: public StdMeshersGUI_ObjectReferenceParamWdg
-// {
-//   Q_OBJECT
-// public:
-//   BLSURFPluginGUI_ObjectReferenceParamWdg( SUIT_SelectionFilter* filter, 
-//                                          QWidget*              parent,
-//                                          bool                  multiSelection=false);
-//   BLSURFPluginGUI_ObjectReferenceParamWdg( MeshObjectType objType,
-//                                          QWidget*       parent,
-//                                          bool           multiSelection=false);
-//   ~BLSURFPluginGUI_ObjectReferenceParamWdg();
-// 
-// private:
-//   void init();
-//   
-// public slots:
-//   void activateSelectionOnly();
-//   void deactivateSelectionOnly();
-//   void setActivationStatus(bool status);
-// };
 
 /*!
  * \brief Class for creation of BLSURF hypotheses
@@ -187,13 +172,11 @@ protected:
   virtual QString     type() const;
 
 protected slots:
-  void                onPhysicalMeshChanged();
-  void                onGeometricMeshChanged();
+  // Advanced tab
   void                onAddOption();
   void                onDeleteOption();
-  void                onChooseGMFFile();
   void                onOptionChosenInPopup( QAction* );
-  void                onTopologyChanged( int );
+  // Sizemap tab
   void                onMapGeomContentModified();
   void                onSmpItemClicked( QTreeWidgetItem *, int );
   void                onSmpTabChanged(int);
@@ -203,12 +186,10 @@ protected slots:
   void                onRemoveMap();
   void                onModifyMap();
   void                onSetSizeMap(QTreeWidgetItem *, int);
-
+  // Enforced vertices tab
   QTreeWidgetItem*    addEnforcedFace(std::string theFaceEntry, std::string theFaceName);
-
   void                addEnforcedVertex(QTreeWidgetItem * theFaceItem, double x=0, double y=0, double z=0, 
                                         std::string vertexName = "", std::string geomEntry = "", std::string groupName = "");
-  
   void                onAddEnforcedVertices();
   void                onRemoveEnforcedVertex();
   void                synchronizeCoords();
@@ -235,54 +216,35 @@ private:
   static LightApp_SelectionMgr* selectionMgr();
 
 private:
-  QWidget*            myStdGroup;
-  QLineEdit*          myName;
-  QComboBox*          myPhysicalMesh;
-  SMESHGUI_SpinBox*   myPhySize;
-  SMESHGUI_SpinBox*   myPhyMin;
-  SMESHGUI_SpinBox*   myPhyMax;
-  QComboBox*          myGeometricMesh;
-  SMESHGUI_SpinBox*   myAngleMeshS;
-  SMESHGUI_SpinBox*   myAngleMeshC;
-  SMESHGUI_SpinBox*   myGeoMin;
-  SMESHGUI_SpinBox*   myGeoMax;
-  SMESHGUI_SpinBox*   myGradation;
-  QCheckBox*          myAllowQuadrangles;
-  QCheckBox*          myDecimesh;
+  
+  QWidget*                myStdGroup;
+  BLSURFPluginGUI_StdWidget* myStdWidget;
+  QLineEdit*              myName;
 
-  QWidget*            myAdvGroup;
-  QComboBox*          myTopology;
-  QGroupBox*          myPreCADGroupBox;
-  QCheckBox*          myPreCADMergeEdges;
-  QCheckBox*          myPreCADRemoveNanoEdges;
-  QCheckBox*          myPreCADDiscardInput;
-  SMESHGUI_SpinBox*   myPreCADEpsNano;
-  QSpinBox*           myVerbosity;
-  QTableWidget*       myOptionTable;
-  QLineEdit*          myGMFFileName;
-//   QCheckBox*          myGMFFileMode;
+  QWidget*                myAdvGroup;
+  BLSURFPluginGUI_AdvWidget* myAdvWidget;
 
   // Sizemap widgets
-  QWidget             *mySmpGroup;
-  QTreeWidget         *mySizeMapTable;
-  QPushButton         *addMapButton;
-  QPushButton         *removeMapButton;
-  QPushButton         *modifyMapButton;
-  QTabWidget          *smpTab; 
-  QWidget             *myAttractorGroup;
-  QWidget             *mySmpStdGroup;
-  QCheckBox           *myAttractorCheck;
-  QCheckBox           *myConstSizeCheck;
-  QGroupBox           *myDistanceGroup;
-//   QGroupBox           *myParamsGroup;
-//   QWidget             *myParamsGroup;
-  SMESHGUI_SpinBox    *myAttSizeSpin;
-  SMESHGUI_SpinBox    *myAttDistSpin;
-  SMESHGUI_SpinBox    *myAttDistSpin2;
-  SMESHGUI_SpinBox    *mySmpSizeSpin;
-  QLabel              *myAttDistLabel;
-  QLabel              *myAttDistLabel2;
-  QLabel              *myAttSizeLabel;
+  QWidget                 *mySmpGroup;
+  QTreeWidget             *mySizeMapTable;
+  QPushButton             *addMapButton;
+  QPushButton             *removeMapButton;
+  QPushButton             *modifyMapButton;
+  QTabWidget              *smpTab; 
+  QWidget                 *myAttractorGroup;
+  QWidget                 *mySmpStdGroup;
+  QCheckBox               *myAttractorCheck;
+  QCheckBox               *myConstSizeCheck;
+  QGroupBox               *myDistanceGroup;
+//   QGroupBox               *myParamsGroup;
+//   QWidget                 *myParamsGroup;
+  SMESHGUI_SpinBox        *myAttSizeSpin;
+  SMESHGUI_SpinBox        *myAttDistSpin;
+  SMESHGUI_SpinBox        *myAttDistSpin2;
+  SMESHGUI_SpinBox        *mySmpSizeSpin;
+  QLabel                  *myAttDistLabel;
+  QLabel                  *myAttDistLabel2;
+  QLabel                  *myAttSizeLabel;
   // Selection widgets for size maps
   StdMeshersGUI_ObjectReferenceParamWdg *myGeomSelWdg1;
   StdMeshersGUI_ObjectReferenceParamWdg *myGeomSelWdg2;

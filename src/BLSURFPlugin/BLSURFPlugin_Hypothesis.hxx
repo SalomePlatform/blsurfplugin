@@ -54,48 +54,37 @@ public:
 
   enum PhysicalMesh {
     DefaultSize,
-    PhysicalUserDefined,
-    SizeMap
+    PhysicalGlobalSize,
+    PhysicalLocalSize
   };
 
   enum GeometricMesh {
     DefaultGeom,
-    UserDefined
+    GeometricalGlobalSize,
+    GeometricalLocalSize
   };
 
   static const char* GetHypType() { return "BLSURF_Parameters"; }
   
   TopoDS_Shape entryToShape(std::string entry);
 
-  void SetTopology(Topology theTopology);
-  Topology GetTopology() const { return _topology; }
-
   void SetPhysicalMesh(PhysicalMesh thePhysicalMesh);
   PhysicalMesh GetPhysicalMesh() const { return _physicalMesh; }
-
-  void SetPhySize(double thePhySize);
-  double GetPhySize() const { return _phySize; }
-
-  void SetPhyMin(double theMinSize);
-  double GetPhyMin() const { return _phyMin; }
-
-  void SetPhyMax(double theMaxSize);
-  double GetPhyMax() const { return _phyMax; }
 
   void SetGeometricMesh(GeometricMesh theGeometricMesh);
   GeometricMesh GetGeometricMesh() const { return _geometricMesh; }
 
-  void SetAngleMeshS(double theAngle);
-  double GetAngleMeshS() const { return _angleMeshS; }
+  void SetPhySize(double thePhySize, bool isRelative = false);
+  double GetPhySize() const { return _phySize; }
+  bool IsPhySizeRel() const { return _phySizeRel; }
 
-  void SetAngleMeshC(double theAngle);
-  double GetAngleMeshC() const { return _angleMeshC; }
+  void SetMinSize(double theMinSize, bool isRelative = false);
+  double GetMinSize() const { return _minSize; }
+  bool IsMinSizeRel() const { return _minSizeRel; }
 
-  void SetGeoMin(double theMinSize);
-  double GetGeoMin() const { return _hgeoMin; }
-
-  void SetGeoMax(double theMaxSize);
-  double GetGeoMax() const { return _hgeoMax; }
+  void SetMaxSize(double theMaxSize, bool isRelative = false);
+  double GetMaxSize() const { return _maxSize; }
+  bool IsMaxSizeRel() const { return _maxSizeRel; }
 
   void SetGradation(double theGradation);
   double GetGradation() const { return _gradation; }
@@ -103,8 +92,38 @@ public:
   void SetQuadAllowed(bool theVal);
   bool GetQuadAllowed() const { return _quadAllowed; }
 
-  void SetDecimesh(bool theVal);
-  bool GetDecimesh() const { return _decimesh; }
+  void SetAngleMesh(double theAngle);
+  double GetAngleMesh() const { return _angleMesh; }
+
+  void SetChordalError(double theDistance);
+  double GetChordalError() const { return _chordalError; }
+
+  void SetAnisotropic(bool theVal);
+  bool GetAnisotropic() const { return _anisotropic; }
+
+  void SetAnisotropicRatio(double theVal);
+  double GetAnisotropicRatio() const { return _anisotropicRatio; }
+
+  void SetRemoveTinyEdges(bool theVal);
+  bool GetRemoveTinyEdges() const { return _removeTinyEdges; }
+
+  void SetTinyEdgeLength(double theVal);
+  double GetTinyEdgeLength() const { return _tinyEdgeLength; }
+
+  void SetBadElementRemoval(bool theVal);
+  bool GetBadElementRemoval() const { return _badElementRemoval; }
+
+  void SetBadElementAspectRatio(double theVal);
+  double GetBadElementAspectRatio() const { return _badElementAspectRatio; }
+
+  void SetOptimizeMesh(bool theVal);
+  bool GetOptimizeMesh() const { return _optimizeMesh; }
+
+  void SetQuadraticMesh(bool theVal);
+  bool GetQuadraticMesh() const { return _quadraticMesh; }
+
+  void SetTopology(Topology theTopology);
+  Topology GetTopology() const { return _topology; }
 
   void SetVerbosity(int theVal);
   int GetVerbosity() const { return _verb; }
@@ -115,14 +134,11 @@ public:
   void SetPreCADMergeEdges(bool theVal);
   bool GetPreCADMergeEdges() const { return _preCADMergeEdges; }
 
-  void SetPreCADRemoveNanoEdges(bool theVal);
-  bool GetPreCADRemoveNanoEdges() const { return _preCADRemoveNanoEdges; }
+  void SetPreCADProcess3DTopology(bool theVal);
+  bool GetPreCADProcess3DTopology() const { return _preCADProcess3DTopology; }
 
   void SetPreCADDiscardInput(bool theVal);
   bool GetPreCADDiscardInput() const { return _preCADDiscardInput; }
-
-  void SetPreCADEpsNano(double theVal);
-  double GetPreCADEpsNano() const { return _preCADEpsNano; }
     
   typedef std::map<std::string,std::string> TSizeMap;
 
@@ -286,23 +302,39 @@ public:
 //  void SetInternalEnforcedVertex(TEntry theFaceEntry, bool toEnforceInternalVertices, TEnfGroupName theGroupName);
 //  bool GetInternalEnforcedVertex(const TEntry& theFaceEntry);
 
-  static Topology        GetDefaultTopology();
-  static PhysicalMesh    GetDefaultPhysicalMesh();
-  static double          GetDefaultPhySize();
-  static double          GetDefaultMaxSize();
-  static double          GetDefaultMinSize();
-  static GeometricMesh   GetDefaultGeometricMesh();
-  static double          GetDefaultAngleMeshS();
-  static double          GetDefaultAngleMeshC() { return GetDefaultAngleMeshS(); }
-  static double          GetDefaultGradation();
-  static bool            GetDefaultQuadAllowed();
-  static bool            GetDefaultDecimesh();
-  static int             GetDefaultVerbosity() { return 10; }
+  static PhysicalMesh    GetDefaultPhysicalMesh() { return PhysicalGlobalSize; }
+  static GeometricMesh   GetDefaultGeometricMesh() { return DefaultGeom; }
+  static double          GetDefaultPhySize(double diagonal, double bbSegmentation);
+  static double          GetDefaultPhySize() { return undefinedDouble(); }
+  static bool            GetDefaultPhySizeRel() { return false; }
+  static double          GetDefaultMinSize(double diagonal);
+  static double          GetDefaultMinSize() { return undefinedDouble(); }
+  static bool            GetDefaultMinSizeRel() { return false; }
+  static double          GetDefaultMaxSize(double diagonal);
+  static double          GetDefaultMaxSize() { return undefinedDouble(); }
+  static bool            GetDefaultMaxSizeRel() { return false; }
+  static double          GetDefaultGradation() { return 1.3; }
+  static bool            GetDefaultQuadAllowed() { return false; }
+  static double          GetDefaultAngleMesh() { return 22.0; }
+  
+  static double          GetDefaultChordalError(double diagonal);
+  static double          GetDefaultChordalError() { return undefinedDouble(); }
+  static bool            GetDefaultAnisotropic() { return false; }
+  static double          GetDefaultAnisotropicRatio() { return 0.0; }
+  static bool            GetDefaultRemoveTinyEdges() { return false; }
+  static double          GetDefaultTinyEdgeLength(double diagonal);
+  static double          GetDefaultTinyEdgeLength() { return undefinedDouble(); }
+  static bool            GetDefaultBadElementRemoval() { return false; }
+  static double          GetDefaultBadElementAspectRatio() {return 1000.0; } 
+  static bool            GetDefaultOptimizeMesh() { return true; }
+  static bool            GetDefaultQuadraticMesh() { return false; }
+  
+  static int             GetDefaultVerbosity() { return 3; }
+  static Topology        GetDefaultTopology() { return FromCAD; }
   // PreCAD
-  static bool            GetDefaultPreCADMergeEdges() { return false; }
-  static bool            GetDefaultPreCADRemoveNanoEdges() { return false; }
+  static bool            GetDefaultPreCADMergeEdges() { return true; }
+  static bool            GetDefaultPreCADProcess3DTopology() { return true; }
   static bool            GetDefaultPreCADDiscardInput() { return false; }
-  static double          GetDefaultPreCADEpsNano();
   
   static TSizeMap        GetDefaultSizeMap() { return TSizeMap();}
   static TAttractorMap   GetDefaultAttractorMap() { return TAttractorMap(); }
@@ -315,7 +347,7 @@ public:
   static TEnfVertexEntryEnfVertexMap      GetDefaultEnfVertexEntryEnfVertexMap() { return TEnfVertexEntryEnfVertexMap(); }
   static TGroupNameNodeIDMap              GetDefaultGroupNameNodeIDMap() { return TGroupNameNodeIDMap(); }
 
-  static bool            GetDefaultInternalEnforcedVertex();
+  static bool            GetDefaultInternalEnforcedVertex() { return false; }
 
   /* TODO GROUPS
   static TGroupNameEnfVertexListMap GetDefaultGroupNameEnfVertexListMap() { return TGroupNameEnfVertexListMap(); }
@@ -344,7 +376,7 @@ public:
 //   void SetGMFFile(const std::string& theFileName, bool isBinary);
   void SetGMFFile(const std::string& theFileName);
   std::string GetGMFFile() const { return _GMFFileName; }
-  static std::string GetDefaultGMFFile();
+  static std::string GetDefaultGMFFile() { return "";}
 //   bool GetGMFFileMode() const { return _GMFFileMode; }
   
   // Persistence
@@ -369,23 +401,35 @@ public:
 
 
 private:
-  Topology        _topology;
   PhysicalMesh    _physicalMesh;
-  double          _phySize, _phyMin, _phyMax;
   GeometricMesh   _geometricMesh;
-  double          _angleMeshS, _angleMeshC, _hgeoMin, _hgeoMax;
+  double          _phySize;
+  bool            _phySizeRel;
+  double          _minSize, _maxSize;
+  bool            _minSizeRel, _maxSizeRel;
   double          _gradation;
   bool            _quadAllowed;
-  bool            _decimesh;
+  double          _angleMesh;
+  double          _chordalError;
+  bool            _anisotropic;
+  double          _anisotropicRatio;
+  bool            _removeTinyEdges;
+  double          _tinyEdgeLength;
+  bool            _badElementRemoval;
+  double          _badElementAspectRatio;
+  bool            _optimizeMesh;
+  bool            _quadraticMesh;
   int             _verb;
+  Topology        _topology;
   
   bool            _preCADMergeEdges;
-  bool            _preCADRemoveNanoEdges;
+  bool            _preCADProcess3DTopology;
   bool            _preCADDiscardInput;
   double          _preCADEpsNano;
   
   TOptionValues   _option2value, _preCADoption2value;
-  TOptionNames    _doubleOptions, _charOptions, _preCADdoubleOptions, _preCADcharOptions;
+  TOptionNames    _doubleOptions, _charOptions;
+  TOptionNames    _preCADdoubleOptions, _preCADcharOptions;
   TSizeMap        _sizeMap;
   TSizeMap        _attractors;
   TAttractorMap   _classAttractors;

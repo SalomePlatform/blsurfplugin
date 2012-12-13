@@ -4,76 +4,159 @@
 <context>
     <name>@default</name>
     <message>
-        <source>ADD_OPTION</source>
-        <translation>Add option</translation>
+        <source>BLSURF_MESH_TYPE</source>
+        <translation>Type of mesh</translation>
     </message>
     <message>
-        <source>BLSURF_ALLOW_QUADRANGLES</source>
-        <translation>Allow Quadrangles (Test)</translation>
+        <source>BLSURF_PHY_MESH</source>
+        <translation>Physical Mesh</translation>
     </message>
     <message>
-        <source>BLSURF_ANGLE_MESH_C</source>
-        <translation>Angle Mesh C</translation>
-    </message>
-    <message>
-        <source>BLSURF_ANGLE_MESH_S</source>
-        <translation>Angle Mesh S</translation>
-    </message>
-    <message>
-        <source>BLSURF_CUSTOM_GEOM</source>
-        <translation>Custom</translation>
-    </message>
-    <message>
-        <source>BLSURF_CUSTOM_USER</source>
-        <translation>Custom</translation>
-    </message>
-    <message>
-        <source>BLSURF_DECIMESH</source>
-        <translation>Patch independent</translation>
-    </message>
-    <message>
-        <source>BLSURF_DEFAULT_GEOM</source>
-        <translation>None</translation>
-    </message>
-    <message>
-        <source>BLSURF_DEFAULT_USER</source>
-        <translation>None</translation>
+        <source>BLSURF_PHY_MESH_TOOLTIP</source>
+        <translation>&lt;b&gt;&lt;u&gt;Physical size mode&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+- &quot;Global size&quot;: the physical size is global and the mesher will use the global physical size provided.&lt;br&gt;
+- &quot;Local size&quot;: the size is locally computed, on curves and surfaces, using the associated physical sizemap functions.&lt;br&gt;
+- &quot;None&quot;: no physical size will be computed.</translation>
     </message>
     <message>
         <source>BLSURF_GEOM_MESH</source>
         <translation>Geometrical Mesh</translation>
     </message>
     <message>
-        <source>BLSURF_GRADATION</source>
-        <translation>Gradation</translation>
+        <source>BLSURF_GEOM_MESH_TOOLTIP</source>
+        <translation>&lt;b&gt;&lt;u&gt;Geometric size mode&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+- &quot;Global size&quot;: the geometrical size is global and the mesher will use the geometrical approximation provided by the geometrical parameters..&lt;br&gt;
+- &quot;None&quot;: no geometrical sizes will be computed.</translation>
     </message>
     <message>
-        <source>BLSURF_HGEOMAX</source>
-        <translation>Max Geometrical Size</translation>
+        <source>BLSURF_DEFAULT_USER</source>
+        <translation>None</translation>
     </message>
     <message>
-        <source>BLSURF_HGEOMIN</source>
-        <translation>Min Geometrical Size</translation>
+        <source>GLOBAL_SIZE</source>
+        <translation>Global size</translation>
+    </message>
+    <message>
+        <source>LOCAL_SIZE</source>
+        <translation>Local size</translation>
+    </message>
+    <message>
+        <source>BLSURF_MAIN_PARAMETERS</source>
+        <translation>Main parameters</translation>
     </message>
     <message>
         <source>BLSURF_HPHYDEF</source>
         <translation>User Size</translation>
     </message>
     <message>
-        <source>BLSURF_HPHYMAX</source>
-        <translation>Max Physical Size</translation>
+        <source>BLSURF_HPHYDEF_TOOLTIP</source>
+        <translation>Defines the constant global size.&lt;br&gt;
+The default computed value is &lt;em&gt;diag&lt;/em&gt;/&lt;em&gt;ratio&lt;/em&gt;, where &lt;em&gt;ratio&lt;/em&gt; is defined in the preferences.</translation>
     </message>
     <message>
-        <source>BLSURF_HPHYMIN</source>
-        <translation>Min Physical Size</translation>
+        <source>BLSURF_MINSIZE</source>
+        <translation>Min Size</translation>
+    </message>
+    <message>
+        <source>BLSURF_MINSIZE_TOOLTIP</source>
+        <translation>Defines the global minimum cell size desired.&lt;br&gt;
+The default computed value is &lt;em&gt;diag&lt;/em&gt;/1000.</translation>
+    </message>
+    <message>
+        <source>BLSURF_MAXSIZE</source>
+        <translation>Max Size</translation>
+    </message>
+    <message>
+        <source>BLSURF_MAXSIZE_TOOLTIP</source>
+        <translation>Defines the global maximum cell size desired.&lt;br&gt;
+The default computed value is &lt;em&gt;diag&lt;/em&gt;/5.</translation>
+    </message>
+    <message>
+        <source>BLSURF_SIZE_REL</source>
+        <translation>Relative value</translation>
+    </message>
+    <message>
+        <source>BLSURF_SIZE_REL_TOOLTIP</source>
+        <translation>The value is relative to &lt;em&gt;diag&lt;/em&gt;</translation>
+    </message>
+    <message>
+        <source>BLSURF_GRADATION</source>
+        <translation>Gradation</translation>
+    </message>
+    <message>
+        <source>BLSURF_GRADATION_TOOLTIP</source>
+        <translation>Maximum ratio between the lengths of two adjacent edges.</translation>
+    </message>
+    <message>
+        <source>BLSURF_ALLOW_QUADRANGLES</source>
+        <translation>Allow Quadrangles</translation>
+    </message>
+    <message>
+        <source>BLSURF_GEOMETRICAL_PARAMETERS</source>
+        <translation>Geometrical parameters</translation>
+    </message>
+    <message>
+        <source>BLSURF_ANGLE_MESH</source>
+        <translation>Mesh angle</translation>
+    </message>
+    <message>
+        <source>BLSURF_ANGLE_MESH_TOOLTIP</source>
+        <translation>Limiting angle between the plane of a triangle of the mesh and each of the tangent planes at the three vertices.&lt;br&gt;
+The smaller this angle is, the closer the mesh is to the exact surface, and the denser the resulting mesh is.</translation>
+    </message>
+    <message>
+        <source>BLSURF_CHORDAL_ERROR</source>
+        <translation>Mesh distance</translation>
+    </message>
+    <message>
+        <source>BLSURF_CHORDAL_TOOLTIP</source>
+        <translation>Maximum desired distance between a triangle and its supporting CAD surface.&lt;br&gt;
+The smaller this distance is, the closer the mesh is to the exact surface (only available in isotropic meshing).</translation>
+    </message>
+    <message>
+        <source>BLSURF_OTHER_PARAMETERS</source>
+        <translation>Other parameters</translation>
+    </message>
+    <message>
+        <source>BLSURF_ANISOTROPIC</source>
+        <translation>Anisotropic</translation>
+    </message>
+    <message>
+        <source>BLSURF_ANISOTROPIC_TOOLTIP</source>
+        <translation>If checked, this parameter defines the maximum anisotropic ratio of the metric governing the anisotropic meshing process.&lt;br&gt;
+          The default value of 0 means that the metric (and thus the generated elements) can be arbitrarily stretched.</translation>
+    </message>
+    <message>
+        <source>BLSURF_REMOVE_TINY_EDGES</source>
+        <translation>Remove tiny edges</translation>
+    </message>
+    <message>
+        <source>BLSURF_REMOVE_TINY_EDGES_TOOLTIP</source>
+        <translation>If checked, this parameter defines the minimal length under which an edge is considered to be a tiny one.</translation>
+    </message>
+    <message>
+        <source>BLSURF_REMOVE_SLIVERS</source>
+        <translation>Remove bad elements</translation>
+    </message>
+    <message>
+        <source>BLSURF_REMOVE_SLIVERS_TOOLTIP</source>
+        <translation>If checked, this parameter defines the aspect ratio triggering the "bad element” classification.</translation>
+    </message>
+    <message>
+        <source>BLSURF_OPTIMISATION</source>
+        <translation>Mesh optimisation</translation>
+    </message>
+    <message>
+        <source>BLSURF_OPTIMISATION_TOOLTIP</source>
+        <translation>If checked, MeshGems-CADSurf will optimize the mesh in order to get better shaped elements.</translation>
+    </message>
+    <message>
+        <source>BLSURF_ELEMENT_ORDER</source>
+        <translation>Quadratic mesh</translation>
     </message>
     <message>
         <source>BLSURF_HYPOTHESIS</source>
         <translation>BLSURF 2D</translation>
-    </message>
-    <message>
-        <source>BLSURF_PHY_MESH</source>
-        <translation>Physical Mesh</translation>
     </message>
     <message>
         <source>BLSURF_ADV_ARGS</source>
@@ -109,7 +192,7 @@
     </message>
     <message>
         <source>OBLIGATORY_VALUE</source>
-        <translation>(Obligatory value)</translation>
+        <translation>(Mandatory value)</translation>
     </message>
     <message>
         <source>OPTION_TYPE_COLUMN</source>
@@ -132,7 +215,11 @@
         <translation>PreCAD</translation>
     </message>
     <message>
-        <source>REMOVE_OPTION</source>
+        <source>BLSURF_ADD_OPTION</source>
+        <translation>Add option</translation>
+    </message>
+    <message>
+        <source>BLSURF_REMOVE_OPTION</source>
         <translation>Clear option</translation>
     </message>
     <message>
@@ -160,20 +247,12 @@
         <translation>Merge edges</translation>
     </message>
     <message>
-        <source>BLSURF_PRECAD_REMOVE_NANO_EDGES</source>
-        <translation>Remove nano edges</translation>
+        <source>BLSURF_PRECAD_PROCESS_3D_TOPOLOGY</source>
+        <translation>Process 3D topology</translation>
     </message>
     <message>
         <source>BLSURF_PRECAD_DISCARD_INPUT</source>
         <translation>Discard input topology</translation>
-    </message>
-    <message>
-        <source>BLSURF_PRECAD_EPS_NANO</source>
-        <translation>Nano edge length</translation>
-    </message>
-    <message>
-        <source>BLSURF_SIZE_MAP</source>
-        <translation>Local Size</translation>
     </message>
     <message>
         <source>SMP_ENTRY_COLUMN</source>

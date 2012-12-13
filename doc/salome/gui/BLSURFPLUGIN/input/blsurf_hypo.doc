@@ -3,11 +3,8 @@
 \page blsurf_hypo_page BLSURF Parameters hypothesis
 
 \anchor blsurf_top
-BLSURF Parameters hypothesis works only with \b DISTENE \b BLSurf 2d
-algorithm. This algorithm is a commercial software. To obtain a
-licence, visit http://www.distene.com/en/corp/eval-distene.html 
 
-\tableofcontents					     
+\tableofcontents
 
 \section blsurf_general_parameters General parameters
 
@@ -16,96 +13,88 @@ licence, visit http://www.distene.com/en/corp/eval-distene.html
 - <b>Name</b> - allows defining the name of the hypothesis (BLSURF
 Parameters_n by default).
 
-- <b>Physical Mesh</b> - can be set to <em>None</em>, <em>Custom</em>
-  or <em>Size Map</em>
+- <b>Physical Mesh</b> - can be set to <em>None</em>, <em>Global size</em>
+  or <em>Local size</em>
 
-  - if set to <em>Custom</em>, allows user input in the in <b>User size</b>,
-  <b>Max Physical Size</b> and <b>Min Physical  Size</b> fields.
+  - if set to <em>Global size</em>, only the <b>User size</b>,
+  <b>Max Size</b> and <b>Min Size</b> fields are taken into account.
 
-  - if set to <em>Size Map</em>, behaves like <em>Custom</em> mode and takes into
-  account the custom elements sizes given in the Size Map tab.
+  - if set to <em>Local size</em>, behaves like <em>Custom</em> mode and takes into
+  account the "Gradation" parameter and the custom elements sizes given in the
+  "Local size" tab.
 
-- <b>User size</b> - defines the size of the generated mesh elements.
+- <b>Geometrical mesh</b> - can be set to <em>None</em>, <em>Global size</em>
 
-- <b>Max Physical Size</b> - defines the upper limit of mesh element size.
+  - if set to <em>Global size</em>, allows user input in <b>Mesh angle</b>,
+  <b>Mesh distance</b> and <b>Gradation</b> fields. These fields control
+  computation of the element size, so called <i>geometrical size</i>, conform
+  to the surface geometry considering local curvatures. If both the <b>User size</b>
+  and the <i>geometrical parameters</i> are defined, the  eventual element size
+  corresponds to the least of the two.
 
-- <b>Min Physical Size</b> - defines the lower limit of mesh element size.
+- <b>User size</b> - defines the size of the generated mesh elements. If "Relative value"
+is checked, the value is relative to the diagonal of the shape.
 
-- <b>Geometrical mesh</b> - if set to <em>Custom</em>, allows user input in
-<b>Angle Mesh S</b>, <b>Angle Mesh C</b> and <b>Gradation</b>
-fields. These fields control computation of the element size, so
-called <i>geometrical size</i>, conform to the surface geometry
-considering local curvatures. If both the <b>User size</b> and the
-<i>geometrical size</i> are defined, the  eventual element size
-corresponds to the least of the two.
+- <b>Max Size</b> - defines the upper limit of mesh element size. If "Relative value"
+is checked, the value is relative to the diagonal of the shape.
 
-- <b>Angle Mesh S</b> - maximum angle between the mesh face and the
-tangent to the geometrical surface at each mesh node, in degrees.
+- <b>Min Size</b> - defines the lower limit of mesh element size. If "Relative value"
+is checked, the value is relative to the diagonal of the shape.
 
-- <b>Angle Mesh C</b> - maximum angle between the mesh edge and the
-tangent to the geometrical curve at each mesh node, in degrees.
+- <b>Gradation</b> - maximum ratio between the lengths of two adjacent edges.
 
-- <b>Max Geometrical Size</b> - defines the upper limit of the
-  <i>geometrical size</i>.
+- <b>Quadratic mesh</b> - if checked, quadratic elements will be generated.
 
-- <b>Min Geometrical Size</b> - defines the lower limit of the
-  <i>geometrical size</i>.
+- <b>Mesh angle</b> - Limiting angle (in degree) between the plane of a triangle of the mesh and each of the tangent planes at the three vertices.
+The smaller this angle is, the closer the mesh is to the exact surface, and the denser the resulting mesh is.
 
-- <b>Gradation</b> - maximum ratio between the lengths of two adjacent
-  edges.
+- <b>Mesh distance</b> - Maximum desired distance between a triangle and its supporting CAD surface.
+The smaller this distance is, the closer the mesh is to the exact surface (only available in isotropic meshing).
 
-- <b>Allow Quadrangles</b> - if checked, allows the creation of
-  quadrilateral elements.
+- <b>Anisotropic</b> - if checked, this parameter defines the maximum anisotropic ratio of the metric governing the anisotropic meshing process.
+The default value (0) means that the metric (and thus the generated elements) can be arbitrarily stretched.
 
-- <b>Patch independent</b> - if checked, geometrical edges are not
-respected and all geometrical faces are meshed as one hyper-face.
+- <b>Remove tiny edges</b> - if checked, the tiny (nano) edges are removed from the generated mesh.
+The tiny edge value defines the minimal length under which an edge is considered to be a tiny one.
+
+- <b>Remove bad elements</b> - if checked, the bad elements (slivers) are removed from the generated mesh.
+The bad element value defines the aspect ratio triggering the "bad element” classification.
+
+- <b>Mesh optimisation</b> - if checked, the mesh will be optimized in order to get better shaped elements.
+
+- <b>Allow Quadrangles</b> - if checked, allows the creation of quadrilateral elements.
 
 \ref blsurf_top "Back to top"
 
 \section blsurf_advanced_parameters Advanced parameters
 
-The notion of <i>diag</i> used in the descriptions means the diagonal
-of the bounding box of the geometrical object to mesh.
+The notion of <i>diag</i> used in the descriptions means the diagonal of the bounding box of the geometrical object to mesh.
 
 \image html blsurf_parameters_advanced.png
 
-- <b>Verbosity level</b> - defines the percentage of "verbosity" of
-BLSURF [0-100].
+- <b>PreCAD options</b> -if checked, the PreCAD module will be used. This module has
+two main goals:
 
-- <b>Topology</b> - allows creation of a conform mesh on a shell of
-not sewed faces. The following choices are allowed:
+  - Complete missing or inadequate CAD descriptions.
 
-  - <em>"From CAD"</em> means that mesh conformity is assured by conformity
-  of a shape.
+  - Perform topology reconstruction and specific geometry
+  enhancement for mesh generation.
 
-  - <em>"Pre-process"</em> and <em>"Pre-process++"</em> allow the BLSURF software to
-  pre-process the geometrical model to eventually produce a conform
-  mesh.
-
-  - <em>"PreCAD"</em> is an auxiliary CAD pre-processing module which has 
-  two main goals:
-
-    - Complete missing or inadequate CAD descriptions.
-
-    - Perform topology reconstruction and specific geometry 
-    enhancement for mesh generation.
-
-    \n This module requires a specific licence. The following PreCAD
-    options are the most significant and important ones:
+  \n This module requires a specific licence. The following PreCAD
+  options are the most significant and important ones:
 
     - <b>Merge Edges</b> - allows PreCAD to optimize the geometry by merging some
-    edges. This option is 0 by default.
+    edges. This option is checked by default.
 
-    - <b>Remove nano edges</b> - allows PreCAD to optimize the geometry by removing 
-    the nano edges whenever possible. This option is 0 by default.
-
-    - <b>Nano edge length</b> - gives the length below which an edge is considered as nano 
-    for the topology processing. See also the \b remove_nano_edges option. If unset, PreCAD
-    default value is \f$\mathrm{diag} \times 10^{-5}\f$.
+    - <b>Process 3D topology</b> - allows PreCAD to perform the cleanup processing.
+    This option is checked by default.
 
     - <b>Discard input topology</b> - computes the CAD topology from scratch, 
     without considering the topological information contained in the original CAD
-    (useful for iges files). This option is 0 by default.
+    (useful for iges files). This option is unchecked by default.
+
+- <b>Verbosity level</b> - defines the percentage of "verbosity" of
+MeshGems-CADSurf and MeshGems-PreCAD [0-100].
 
 - <b>ExportGMF</b> - saves the computed mesh into a GMF file (.mesh or .meshb).
 
@@ -117,27 +106,14 @@ possible to input the value of the option and edit it later.
 
 The following BLSURF options are commonly usable:
 
-- \b topo_eps1 (real) - is the tolerance level inside a CAD
-patch. By default is equal to \f$\mathrm{diag} \times 10^{-4}\f$. This tolerance is used to
-identify nodes to merge within one geometrical face when \b Topology
-option is to pre-process.
-
-- \b topo_eps2 (real) - is the tolerance level between two CAD
-patches. By default is equal to \f$\mathrm{diag} \times 10^{-4}\f$. This tolerance is used to
-identify nodes to merge over different geometrical faces when
-\b Topology option is to pre-process.
-
-- \b LSS (real) - is an abbreviation for "length of sub-segment". It is
-a maximal allowed length of a mesh edge. Default is \f$0.5\f$.
-
 - \b frontal (integer)
 
   - 1 - the mesh generator inserts points with an advancing front method.
 
-  -  0 - it inserts them with an algebraic method (on internal edges). This method is
+  - 0 - it inserts them with an algebraic method (on internal edges). This method is
   slightly faster but generates less regular meshes.
 
-  \n Default is 0.
+  \n Default is 1.
 
 - \anchor blsurf_hinterpol_flag \b hinterpol_flag (integer) - determines the computation of an
 interpolated value <i>v</i> between two points <i>P1</i> and <i>P2</i> on a
@@ -164,115 +140,57 @@ values:
 
   \n Default is 0.
 
-- \b CheckAdjacentEdges, \b CheckCloseEdges and \b CheckWellDefined
-(integers) - give the number of calls of equally named subroutines the
-purpose of which is to improve the mesh of domains having narrow
-parts. At each iteration,\b CheckCloseEdges decreases the sizes of the
-edges when two boundary curves are neighboring,\b CheckAdjacentEdges
-balances the sizes of adjacent edges, and \b CheckWellDefined checks if
-the parametric domain is well defined. Default values are 0.
-
-- \b CoefRectangle (real)- defines the relative thickness of the rectangles
-used by subroutine \b CheckCloseEdges (see above). Default is 0.25.
-
-- \b eps_collapse (real) - if more than 0.0, BLSURF removes
-curves whose lengths are less than \b eps_collapse. To obtain an
-approximate value of the length of a curve, it is arbitrarily
-split into 20 edges. Default is 0.0.
-
-- \b eps_ends (real) - is used to detect the curves whose lengths are very
-small, that sometimes constitutes an error. A message is printed
-if \f$\left|P2-P1\right| < eps\_ends\f$, where <i>P1</i> and <i>P2</i> are the
-extremities of a curve. Default is \f$\frac{\mathrm{diag}}{500.0}\f$.
-
-- \b prefix (char) - is a prefix of the files generated by
-BLSURF. Default is "x".
-
-- \b refs (integer) - reference of a surface, used when exporting
-files. Default is 1.
-
 The following PreCAD options are commonly usable. 
 
-- \b closed_geometry (int) - describes whether the working geometry 
+- \b closed_geometry (boolean) - describes whether the working geometry
 should be closed or not. When activated, this option helps PreCAD to process 
 the dirtiest geometries. By default this option is 0.
 
-- \b debug (int) - If debug = 1 PreCAD will be very verbose and will output 
+- \b create_tag_collision (boolean) - creates new tags from original ones in case
+of collision (entity merge or association for example). By default
+this option is 1.
+
+- \b debug (bool) - If debug = 1 PreCAD will be very verbose and will output
 some intermediate files in the working directory. By default this
 option is 0.
-
-- \b eps_nano_relative (real) -  the same as \b eps_nano, but relatively to 
-the diagonal of the box bounding the geometry. By default this option is \f$10^{-5}\f$.
-
-- \b eps_sewing (real) - tolerance of the assembly. It rarely requires to be tuned. 
-By default this option is \f$\mathrm{diag} \times 5 \cdot 10^{-4}\f$.
-
-- \b eps_sewing_relative (real) -  the same as \b eps_nano but relatively to 
-the diagonal of the box bounding the geometry. By default this option
-is \f$5 \cdot 10^{-4}\f$.
 
 - \b manifold_geometry (int) - describes whether the working geometry should be manifold or not.
 When activated, this option helps PreCAD to process the dirtiest
 geometries. By default this option is 0.
 
-- \b create_tag_collision (int) - creates new tags from original ones in case 
-of collision (entity merge or association for example). By default
-this option is 0.
-
-- \b periodic_tolerance (real) - defines the maximum distance error accepted between 
+- \b periodic_tolerance (real) - defines the maximum distance error accepted between
 two sets of periodic entities. By default this option is \f$\mathrm{diag} \times 10^{-5}\f$.
 
-- \b periodic_tolerance_relative (real) -  the same as \b periodic_tolerance but in a relative unit.
+- \b remove_tiny_edges (boolean) -optimize the geometry by removing the nano edges whenever possible.
+By default this option is 0.
+
+- \b required_entities (char) -controls the correction operations. Possible values are:
+
+  - "respect" - PreCAD is not allowed to correct or optimize a required edge.
+
+  - "ignore" - PreCAD is allowed to correct a required edge.
+
+  - "clear" - PreCAD will erase "required" status of each required entities, and will thus
+  be allowed to correct a required edge.
+
+  \n By default this option is "respect".
+
+- \b sewing_tolerance (real) - tolerance of the assembly. It rarely requires to be tuned.
+By default this option is \f$\mathrm{diag} \times 5 \cdot 10^{-4}\f$.
+
+- \b tags (char) -controls the optimisation process. Possible values are:
+
+  - "respect" - PreCAD is not allowed to cross the CAD attributes boundaries for optimisation purpose.
+
+  - "ignore" - PreCAD is allowed to cross the CAD attributes boundaries for optimisation.
+
+  - "clear" - PreCAD will erase each tgas of each entities, and will thus
+  be allowed to cross the CAD attributes boundaries in its optimisation purpose.
+
+  \n By default this option is "respect".
+
+- \b tiny_edge_length (real) -  the length below which en edge is considered as nano for the topology processing.
 By default this option is \f$10^{-5}\f$.
-
-- \b periodic_split_tolerance (real) - This periodicity processing related option defines 
-the minimum distance between a CAD point and an imprinted point. It allows to indirectly 
-control the number of created points and small edges. By default this
-option is \f$\mathrm{diag} \times 10^{-4}\f$.
-
-- \b periodic_split_tolerance_relative (real -  the same as \b
-periodic_split_tolerance but in a relative unit. By default this
-option is \f$10^{-4}\f$.
-
-The following advanced options are not documented and you can use them
-at your own risk.
-
-- Integer variables:
-  - addsurf_ivertex
-  - anisotropic
-  - background
-  - coiter
-  - communication
-  - decim
-  - export_flag
-  - file_h
-  - gridnu
-  - gridnv
-  - intermedfile
-  - memory
-  - normals
-  - optim
-  - pardom_flag
-  - pinch
-  - rigid
-  - surforient
-  - tconf
-  - topo_collapse
-- Real variables:
-  - addsurf_angle
-  - addsurf_R
-  - addsurf_H
-  - addsurf_FG
-  - addsurf_r
-  - addsurf_PA
-  - angle_compcurv
-  - angle_ridge
-  - anisotropic_ratio
-  - eps_pardom
-- String variables:
-  - export_format
-  - export_option
-  - import_option
 
 \ref blsurf_top "Back to top"
 
@@ -431,6 +349,9 @@ The enforced vertex is the projection of a point defined by its
 - If the projected point is on the boundary or outside of the face, it will be ignored.
 
 - If a group name is specified : If the group exists, the enforced nodes will be added in the existing group, if the group does not exist it will be created.
+
+All the internal vertices of the faces can be considered as enforced vertices if the corresponding checkbox is checked.
+A group can optionnaly be defined on those enforced vertices.
 
 \sa Sample TUI Script of the \ref tui_blsurf "creation of a BLSurf hypothesis", including enforced vertices.
 

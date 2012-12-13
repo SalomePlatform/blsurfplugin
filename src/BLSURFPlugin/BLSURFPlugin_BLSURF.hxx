@@ -47,21 +47,22 @@
 #endif
 
 #include <Python.h>
-#include "SMESH_Algo.hxx"
-#include "SMESH_Mesh.hxx"
+#include <SMESH_Algo.hxx>
+#include <SMESH_Mesh.hxx>
 #include <SMESHDS_Mesh.hxx>
 #include <SMDS_MeshElement.hxx>
 #include <SMDS_MeshNode.hxx>
 #include <SMESH_Gen_i.hxx>
+#include <StdMeshers_ViscousLayers2D.hxx>
 #include <SALOMEconfig.h>
 #include CORBA_CLIENT_HEADER(SALOMEDS)
 #include CORBA_CLIENT_HEADER(GEOM_Gen)
 #include "Utils_SALOME_Exception.hxx"
 
 extern "C"{
-#include "distene/blsurf.h"
-#include "distene/api.h"
-#include "distene/precad.h"
+#include <meshgems/meshgems.h>
+#include <meshgems/cadsurf.h>
+#include <meshgems/precad.h>
 }
 
 #include <BRepClass_FaceClassifier.hxx>
@@ -89,21 +90,20 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
 
 #ifdef WITH_SMESH_CANCEL_COMPUTE
     virtual void CancelCompute();
-    bool computeCanceled() { return _compute_canceled;};
+    bool computeCanceled() { return _compute_canceled; }
 #endif
 
     virtual bool Evaluate(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape,
                           MapShapeNbElems& aResMap);
 
-    ostream & SaveTo(ostream & save);
-    istream & LoadFrom(istream & load);
-    friend ostream & operator << (ostream & save, BLSURFPlugin_BLSURF & hyp);
-    friend istream & operator >> (istream & load, BLSURFPlugin_BLSURF & hyp);
-
   protected:
     const BLSURFPlugin_Hypothesis* _hypothesis;
+    bool                           _haveViscousLayers;
 
   private:
+    bool compute(SMESH_Mesh&          aMesh,
+                 const TopoDS_Shape&  aShape);
+
     TopoDS_Shape entryToShape(std::string entry);
     void createEnforcedVertexOnFace(TopoDS_Shape FaceShape, BLSURFPlugin_Hypothesis::TEnfVertexList enfVertexList);
     void Set_NodeOnEdge(SMESHDS_Mesh* meshDS, SMDS_MeshNode* node, const TopoDS_Shape& ed);

@@ -28,16 +28,18 @@ from smesh import AssureGeomPublished
 FromCAD, PreProcess, PreProcessPlus, PreCAD = 0,1,2,3
 
 # Element size flag of BLSURF
-DefaultSize, DefaultGeom, BLSURF_Custom, SizeMap = 0,0,1,2
+DefaultSize, DefaultGeom, BLSURF_GlobalSize, BLSURF_LocalSize = 0,0,1,2
+# Retrocompatibility
+BLSURF_Custom, SizeMap = BLSURF_GlobalSize, BLSURF_LocalSize
 
 
 # import BLSURFPlugin module if possible
 noBLSURFPlugin = 0
 try:
-    import BLSURFPlugin
+  import BLSURFPlugin
 except ImportError:
-    noBLSURFPlugin = 1
-    pass
+  noBLSURFPlugin = 1
+  pass
 
 #----------------------------
 # Mesh algo type identifiers
@@ -56,333 +58,432 @@ BLSURF = "BLSURF"
 #
 class BLSURF_Algorithm(Mesh_Algorithm):
 
-    ## name of the dynamic method in smesh.Mesh class
-    #  @internal
-    meshMethod = "Triangle"
-    ## type of algorithm used with helper function in smesh.Mesh class
-    #  @internal
-    algoType   = BLSURF
-    ## doc string of the method
-    #  @internal
-    docHelper  = "Creates triangle 2D algorithm for faces"
+  ## name of the dynamic method in smesh.Mesh class
+  #  @internal
+  meshMethod = "Triangle"
+  ## type of algorithm used with helper function in smesh.Mesh class
+  #  @internal
+  algoType   = BLSURF
+  ## doc string of the method
+  #  @internal
+  docHelper  = "Creates triangle 2D algorithm for faces"
 
-    _angleMeshS = 8
-    _gradation  = 1.1
+  _anisotropic_ratio = 0
+  _bad_surface_element_aspect_ratio = 1000
+  _geometric_approximation = 22
+  _gradation  = 1.3
+  _metric = "isotropic"
+  _remove_tiny_edges = 0
 
-    ## Private constructor.
-    #  @param mesh parent mesh object algorithm is assigned to
-    #  @param geom geometry (shape/sub-shape) algorithm is assigned to;
-    #              if it is @c 0 (default), the algorithm is assigned to the main shape
-    def __init__(self, mesh, geom=0):
-        Mesh_Algorithm.__init__(self)
-        if noBLSURFPlugin:
-            print "Warning: BLSURFPlugin module unavailable"            
-        self.Create(mesh, geom, BLSURF, "libBLSURFEngine.so")
-        self.params=None
-        #self.SetPhysicalMesh() - PAL19680
-        pass
+  ## Private constructor.
+  #  @param mesh parent mesh object algorithm is assigned to
+  #  @param geom geometry (shape/sub-shape) algorithm is assigned to;
+  #              if it is @c 0 (default), the algorithm is assigned to the main shape
+  def __init__(self, mesh, geom=0):
+    Mesh_Algorithm.__init__(self)
+    if noBLSURFPlugin:
+      print "Warning: BLSURFPlugin module unavailable"
+    self.Create(mesh, geom, BLSURF, "libBLSURFEngine.so")
+    self.params=None
+    #self.SetPhysicalMesh() - PAL19680
+    pass
 
-    ## Sets a way to define size of mesh elements to generate.
-    #  @param thePhysicalMesh is: DefaultSize, BLSURF_Custom or SizeMap.
-    def SetPhysicalMesh(self, thePhysicalMesh=DefaultSize):
-        self.Parameters().SetPhysicalMesh(thePhysicalMesh)
-        pass
+  ## Sets a way to define size of mesh elements to generate.
+  #  @param thePhysicalMesh is: DefaultSize, BLSURF_Custom or SizeMap.
+  def SetPhysicalMesh(self, thePhysicalMesh=DefaultSize):
+    physical_size_mode = thePhysicalMesh
+    if self.Parameters().GetGeometricMesh() == DefaultGeom:
+      if physical_size_mode == DefaultSize:
+        physical_size_mode = BLSURF_GlobalSize
+    self.Parameters().SetPhysicalMesh(physical_size_mode)
+    pass
 
-    ## Sets size of mesh elements to generate.
-    #  @param theVal value of mesh element size
-    def SetPhySize(self, theVal):
-        self.Parameters().SetPhySize(theVal)
-        pass
+  ## Sets a way to define maximum angular deflection of mesh from CAD model.
+  #  @param theGeometricMesh is: DefaultGeom (0)) or BLSURF_GlobalSize (1))
+  def SetGeometricMesh(self, theGeometricMesh=DefaultGeom):
+    geometric_size_mode = theGeometricMesh
+    if self.Parameters().GetPhysicalMesh() == DefaultSize:
+      if geometric_size_mode == DefaultGeom:
+        geometric_size_mode = BLSURF_GlobalSize
+    self.Parameters().SetGeometricMesh(geometric_size_mode)
+    pass
 
-    ## Sets lower boundary of mesh element size (PhySize).
-    #  @param theVal value of mesh element minimal size
-    def SetPhyMin(self, theVal=-1):
-        self.Parameters().SetPhyMin(theVal)
-        pass
+  ## Sets size of mesh elements to generate.
+  #  @param theVal : constant global size when using a global physical size.
+  #  @param isRelative : if True, the value is relative to the length of the diagonal of the bounding box
+  def SetPhySize(self, theVal, isRelative = False):
+    if self.Parameters().GetPhysicalMesh() == DefaultSize:
+      self.SetPhysicalMesh(BLSURF_GlobalSize)
+    if isRelative:
+      self.Parameters().SetPhySizeRel(theVal)
+    else:
+      self.Parameters().SetPhySize(theVal)
+    pass
 
-    ## Sets upper boundary of mesh element size (PhySize).
-    #  @param theVal value of mesh element maximal size
-    def SetPhyMax(self, theVal=-1):
-        self.Parameters().SetPhyMax(theVal)
-        pass
+  ## Sets lower boundary of mesh element size.
+  #  @param theVal : global minimal cell size desired.
+  #  @param isRelative : if True, the value is relative to the length of the diagonal of the bounding box
+  def SetMinSize(self, theVal=-1, isRelative = False):
+    if isRelative:
+      self.Parameters().SetMinSizeRel(theVal)
+    else:
+      self.Parameters().SetMinSize(theVal)
+    pass
 
-    ## Sets a way to define maximum angular deflection of mesh from CAD model.
-    #  @param theGeometricMesh is: 0 (None) or 1 (Custom)
-    def SetGeometricMesh(self, theGeometricMesh=0):
-        if self.Parameters().GetPhysicalMesh() == 0: theGeometricMesh = 1
-        self.Parameters().SetGeometricMesh(theGeometricMesh)
-        pass
+  ## Sets upper boundary of mesh element size.
+  #  @param theVal : global maximal cell size desired.
+  #  @param isRelative : if True, the value is relative to the length of the diagonal of the bounding box
+  def SetMaxSize(self, theVal=-1):
+    if isRelative:
+      self.Parameters().SetMaxSizeRel(theVal)
+    else:
+      self.Parameters().SetMaxSize(theVal)
+    pass
 
-    ## Sets angular deflection (in degrees) of a mesh face from CAD surface.
-    #  @param theVal value of angular deflection for mesh face
-    def SetAngleMeshS(self, theVal=_angleMeshS):
-        if self.Parameters().GetGeometricMesh() == 0: theVal = self._angleMeshS
-        self.Parameters().SetAngleMeshS(theVal)
-        pass
+  ## Sets angular deflection (in degrees) from CAD surface.
+  #  @param theVal value of angular deflection
+  def SetAngleMesh(self, theVal=_geometric_approximation):
+    if self.Parameters().GetGeometricMesh() == DefaultGeom:
+      self.SetGeometricMesh(BLSURF_GlobalSize)
+    self.Parameters().SetAngleMesh(theVal)
+    pass
 
-    ## Sets angular deflection (in degrees) of a mesh edge from CAD curve.
-    #  @param theVal value of angular deflection for mesh edge
-    def SetAngleMeshC(self, theVal=_angleMeshS):
-        if self.Parameters().GetGeometricMesh() == 0: theVal = self._angleMeshS
-        self.Parameters().SetAngleMeshC(theVal)
-        pass
+  ## Sets maximal allowed ratio between the lengths of two adjacent edges.
+  #  @param theVal value of maximal length ratio
+  def SetGradation(self, theVal=_gradation):
+    if self.Parameters().GetGeometricMesh() == 0: theVal = self._gradation
+    self.Parameters().SetGradation(theVal)
+    pass
 
-    ## Sets lower boundary of mesh element size computed to respect angular deflection.
-    #  @param theVal value of mesh element minimal size
-    def SetGeoMin(self, theVal=-1):
-        self.Parameters().SetGeoMin(theVal)
-        pass
+  ## Sets topology usage way.
+  # @param way defines how mesh conformity is assured <ul>
+  # <li>FromCAD - mesh conformity is assured by conformity of a shape</li>
+  # <li>PreProcess or PreProcessPlus - by pre-processing a CAD model (OBSOLETE: FromCAD will be used)</li>
+  # <li>PreCAD - by pre-processing with PreCAD a CAD model</li></ul>
+  def SetTopology(self, way):
+    if way != PreCAD:
+      print "Warning: topology mode %d is no longer supported. Mode FromCAD is used."%way
+      way = FromCAD
+    self.Parameters().SetTopology(way)
+    pass
 
-    ## Sets upper boundary of mesh element size computed to respect angular deflection.
-    #  @param theVal value of mesh element maximal size
-    def SetGeoMax(self, theVal=-1):
-        self.Parameters().SetGeoMax(theVal)
-        pass
+  ## To respect geometrical edges or not.
+  #  @param toIgnoreEdges "ignore edges" flag value
+  def SetDecimesh(self, toIgnoreEdges=False):
+    if toIgnoreEdges:
+      self.SetOptionValue("respect_geometry","0")
+    else:
+      self.SetOptionValue("respect_geometry","1")
+    pass
 
-    ## Sets maximal allowed ratio between the lengths of two adjacent edges.
-    #  @param theVal value of maximal length ratio
-    def SetGradation(self, theVal=_gradation):
-        if self.Parameters().GetGeometricMesh() == 0: theVal = self._gradation
-        self.Parameters().SetGradation(theVal)
-        pass
+  ## Sets verbosity level in the range 0 to 100.
+  #  @param level verbosity level
+  def SetVerbosity(self, level):
+    self.Parameters().SetVerbosity(level)
+    pass
 
-    ## Sets topology usage way.
-    # @param way defines how mesh conformity is assured
-    # - FromCAD - mesh conformity is assured by conformity of a shape
-    # - PreProcess or PreProcessPlus - by pre-processing a CAD model
-    # - PreCAD - by pre-processing with PreCAD a CAD model
-    def SetTopology(self, way):
-        self.Parameters().SetTopology(way)
-        pass
+  ## To optimize merges edges.
+  #  @param toMergeEdges "merge edges" flag value
+  def SetPreCADMergeEdges(self, toMergeEdges=False):
+    if self.Parameters().GetTopology() != PreCAD:
+      self.SetTopology(PreCAD)
+    self.Parameters().SetPreCADMergeEdges(toMergeEdges)
+    pass
 
-    ## To respect geometrical edges or not.
-    #  @param toIgnoreEdges "ignore edges" flag value
-    def SetDecimesh(self, toIgnoreEdges=False):
-        self.Parameters().SetDecimesh(toIgnoreEdges)
-        pass
+  ## To process 3D topology.
+  #  @param toProcess "PreCAD process 3D" flag value
+  def SetPreCADProcess3DTopology(self, toProcess=False):
+    if self.Parameters().GetTopology() != PreCAD:
+      self.SetTopology(PreCAD)
+    self.Parameters().SetPreCADProcess3DTopology(toProcess)
+    pass
 
-    ## Sets verbosity level in the range 0 to 100.
-    #  @param level verbosity level
-    def SetVerbosity(self, level):
-        self.Parameters().SetVerbosity(level)
-        pass
+  ## To remove nano edges.
+  #  @param toRemoveNanoEdges "remove nano edges" flag value
+  def SetPreCADRemoveNanoEdges(self, toRemoveNanoEdges=False):
+    if toRemoveNanoEdges:
+      self.SetPreCADOptionValue("remove_tiny_edges","1")
+    else:
+      self.SetPreCADOptionValue("remove_tiny_edges","0")
+    pass
 
-    ## To optimize merges edges.
-    #  @param toMergeEdges "merge edges" flag value
-    def SetPreCADMergeEdges(self, toMergeEdges=False):
-        self.Parameters().SetPreCADMergeEdges(toMergeEdges)
-        pass
+  ## To compute topology from scratch
+  #  @param toDiscardInput "discard input" flag value
+  def SetPreCADDiscardInput(self, toDiscardInput=False):
+    if self.Parameters().GetTopology() != PreCAD:
+      self.SetTopology(PreCAD)
+    self.Parameters().SetPreCADDiscardInput(toDiscardInput)
+    pass
 
-    ## To remove nano edges.
-    #  @param toRemoveNanoEdges "remove nano edges" flag value
-    def SetPreCADRemoveNanoEdges(self, toRemoveNanoEdges=False):
-        self.Parameters().SetPreCADRemoveNanoEdges(toRemoveNanoEdges)
-        pass
+  ## Sets the length below which an edge is considered as nano
+  #  for the topology processing.
+  #  @param epsNano nano edge length threshold value
+  def SetPreCADEpsNano(self, epsNano):
+    self.SetPreCADOptionValue("tiny_edge_length","%f"%epsNano)
+    pass
 
-    ## To compute topology from scratch
-    #  @param toDiscardInput "discard input" flag value
-    def SetPreCADDiscardInput(self, toDiscardInput=False):
-        self.Parameters().SetPreCADDiscardInput(toDiscardInput)
-        pass
+  ## Sets advanced option value.
+  #  @param optionName advanced option name
+  #  @param level advanced option value
+  def SetOptionValue(self, optionName, level):
+    self.Parameters().SetOptionValue(optionName,level)
+    pass
 
-    ## Sets the length below which an edge is considered as nano 
-    #  for the topology processing.
-    #  @param epsNano nano edge length threshold value
-    def SetPreCADEpsNano(self, epsNano):
-        self.Parameters().SetPreCADEpsNano(epsNano)
-        pass
+  ## Sets advanced PreCAD option value.
+  #  @param optionName name of the option
+  #  @param optionValue value of the option
+  def SetPreCADOptionValue(self, optionName, optionValue):
+    if self.Parameters().GetTopology() != PreCAD:
+      self.SetTopology(PreCAD)
+    self.Parameters().SetPreCADOptionValue(optionName,optionValue)
+    pass
 
-    ## Sets advanced option value.
-    #  @param optionName advanced option name
-    #  @param level advanced option value
-    def SetOptionValue(self, optionName, level):
-        self.Parameters().SetOptionValue(optionName,level)
-        pass
+  ## Sets GMF file for export at computation
+  #  @param fileName GMF file name
+  def SetGMFFile(self, fileName):
+    self.Parameters().SetGMFFile(fileName)
+    pass
 
-    ## Sets advanced PreCAD option value.
-    #  @param optionName name of the option
-    #  @param optionValue value of the option
-    def SetPreCADOptionValue(self, optionName, optionValue):
-        self.Parameters().SetPreCADOptionValue(optionName,optionValue)
-        pass
+  #-----------------------------------------
+  # Enforced vertices (BLSURF)
+  #-----------------------------------------
 
-    ## Sets GMF file for export at computation
-    #  @param fileName GMF file name
-    def SetGMFFile(self, fileName):
-        self.Parameters().SetGMFFile(fileName)
-        pass
+  ## To get all the enforced vertices
+  def GetAllEnforcedVertices(self):
+    return self.Parameters().GetAllEnforcedVertices()
 
-    #-----------------------------------------
-    # Enforced vertices (BLSURF)
-    #-----------------------------------------
+  ## To get all the enforced vertices sorted by face (or group, compound)
+  def GetAllEnforcedVerticesByFace(self):
+    return self.Parameters().GetAllEnforcedVerticesByFace()
 
-    ## To get all the enforced vertices
-    def GetAllEnforcedVertices(self):
-        return self.Parameters().GetAllEnforcedVertices()
+  ## To get all the enforced vertices sorted by coords of input vertices
+  def GetAllEnforcedVerticesByCoords(self):
+    return self.Parameters().GetAllEnforcedVerticesByCoords()
 
-    ## To get all the enforced vertices sorted by face (or group, compound)
-    def GetAllEnforcedVerticesByFace(self):
-        return self.Parameters().GetAllEnforcedVerticesByFace()
+  ## To get all the coords of input vertices sorted by face (or group, compound)
+  def GetAllCoordsByFace(self):
+    return self.Parameters().GetAllCoordsByFace()
 
-    ## To get all the enforced vertices sorted by coords of input vertices
-    def GetAllEnforcedVerticesByCoords(self):
-        return self.Parameters().GetAllEnforcedVerticesByCoords()
+  ## To get all the enforced vertices on a face (or group, compound)
+  #  @param theFace : GEOM face (or group, compound) on which to define an enforced vertex
+  def GetEnforcedVertices(self, theFace):
+    AssureGeomPublished( self.mesh, theFace )
+    return self.Parameters().GetEnforcedVertices(theFace)
 
-    ## To get all the coords of input vertices sorted by face (or group, compound)
-    def GetAllCoordsByFace(self):
-        return self.Parameters().GetAllCoordsByFace()
+  ## To clear all the enforced vertices
+  def ClearAllEnforcedVertices(self):
+    return self.Parameters().ClearAllEnforcedVertices()
 
-    ## To get all the enforced vertices on a face (or group, compound)
-    #  @param theFace : GEOM face (or group, compound) on which to define an enforced vertex
-    def GetEnforcedVertices(self, theFace):
-        AssureGeomPublished( self.mesh, theFace )
-        return self.Parameters().GetEnforcedVertices(theFace)
+  ## To set an enforced vertex on a face (or group, compound) given the coordinates of a point. If the point is not on the face, it will projected on it. If there is no projection, no enforced vertex is created.
+  #  @param theFace      : GEOM face (or group, compound) on which to define an enforced vertex
+  #  @param x            : x coordinate
+  #  @param y            : y coordinate
+  #  @param z            : z coordinate
+  #  @param vertexName   : name of the enforced vertex
+  #  @param groupName    : name of the group
+  def SetEnforcedVertex(self, theFace, x, y, z, vertexName = "", groupName = ""):
+    AssureGeomPublished( self.mesh, theFace )
+    if vertexName == "":
+      if groupName == "":
+        return self.Parameters().SetEnforcedVertex(theFace, x, y, z)
+      else:
+        return self.Parameters().SetEnforcedVertexWithGroup(theFace, x, y, z, groupName)
+      pass
+    else:
+      if groupName == "":
+        return self.Parameters().SetEnforcedVertexNamed(theFace, x, y, z, vertexName)
+      else:
+        return self.Parameters().SetEnforcedVertexNamedWithGroup(theFace, x, y, z, vertexName, groupName)
+      pass
+    pass
 
-    ## To clear all the enforced vertices
-    def ClearAllEnforcedVertices(self):
-        return self.Parameters().ClearAllEnforcedVertices()
+  ## To set an enforced vertex on a face (or group, compound) given a GEOM vertex, group or compound.
+  #  @param theFace      : GEOM face (or group, compound) on which to define an enforced vertex
+  #  @param theVertex    : GEOM vertex (or group, compound) to be projected on theFace.
+  #  @param groupName    : name of the group
+  def SetEnforcedVertexGeom(self, theFace, theVertex, groupName = ""):
+    AssureGeomPublished( self.mesh, theFace )
+    AssureGeomPublished( self.mesh, theVertex )
+    if groupName == "":
+      return self.Parameters().SetEnforcedVertexGeom(theFace, theVertex)
+    else:
+      return self.Parameters().SetEnforcedVertexGeomWithGroup(theFace, theVertex,groupName)
+    pass
 
-    ## To set an enforced vertex on a face (or group, compound) given the coordinates of a point. If the point is not on the face, it will projected on it. If there is no projection, no enforced vertex is created.
-    #  @param theFace      : GEOM face (or group, compound) on which to define an enforced vertex
-    #  @param x            : x coordinate
-    #  @param y            : y coordinate
-    #  @param z            : z coordinate
-    #  @param vertexName   : name of the enforced vertex
-    #  @param groupName    : name of the group
-    def SetEnforcedVertex(self, theFace, x, y, z, vertexName = "", groupName = ""):
-        AssureGeomPublished( self.mesh, theFace )
-        if vertexName == "":
-            if groupName == "":
-                return self.Parameters().SetEnforcedVertex(theFace, x, y, z)
-            else:
-                return self.Parameters().SetEnforcedVertexWithGroup(theFace, x, y, z, groupName)
-            pass
-        else:
-            if groupName == "":
-                return self.Parameters().SetEnforcedVertexNamed(theFace, x, y, z, vertexName)
-            else:
-                return self.Parameters().SetEnforcedVertexNamedWithGroup(theFace, x, y, z, vertexName, groupName)
-            pass
-        pass
+  ## To remove an enforced vertex on a given GEOM face (or group, compound) given the coordinates.
+  #  @param theFace      : GEOM face (or group, compound) on which to remove the enforced vertex
+  #  @param x            : x coordinate
+  #  @param y            : y coordinate
+  #  @param z            : z coordinate
+  def UnsetEnforcedVertex(self, theFace, x, y, z):
+    AssureGeomPublished( self.mesh, theFace )
+    return self.Parameters().UnsetEnforcedVertex(theFace, x, y, z)
 
-    ## To set an enforced vertex on a face (or group, compound) given a GEOM vertex, group or compound.
-    #  @param theFace      : GEOM face (or group, compound) on which to define an enforced vertex
-    #  @param theVertex    : GEOM vertex (or group, compound) to be projected on theFace.
-    #  @param groupName    : name of the group
-    def SetEnforcedVertexGeom(self, theFace, theVertex, groupName = ""):
-        AssureGeomPublished( self.mesh, theFace )
-        AssureGeomPublished( self.mesh, theVertex )
-        if groupName == "":
-            return self.Parameters().SetEnforcedVertexGeom(theFace, theVertex)
-        else:
-            return self.Parameters().SetEnforcedVertexGeomWithGroup(theFace, theVertex,groupName)
-        pass
+  ## To remove an enforced vertex on a given GEOM face (or group, compound) given a GEOM vertex, group or compound.
+  #  @param theFace      : GEOM face (or group, compound) on which to remove the enforced vertex
+  #  @param theVertex    : GEOM vertex (or group, compound) to remove.
+  def UnsetEnforcedVertexGeom(self, theFace, theVertex):
+    AssureGeomPublished( self.mesh, theFace )
+    AssureGeomPublished( self.mesh, theVertex )
+    return self.Parameters().UnsetEnforcedVertexGeom(theFace, theVertex)
 
-    ## To remove an enforced vertex on a given GEOM face (or group, compound) given the coordinates.
-    #  @param theFace      : GEOM face (or group, compound) on which to remove the enforced vertex
-    #  @param x            : x coordinate
-    #  @param y            : y coordinate
-    #  @param z            : z coordinate
-    def UnsetEnforcedVertex(self, theFace, x, y, z):
-        AssureGeomPublished( self.mesh, theFace )
-        return self.Parameters().UnsetEnforcedVertex(theFace, x, y, z)
+  ## To remove all enforced vertices on a given face.
+  #  @param theFace      : face (or group/compound of faces) on which to remove all enforced vertices
+  def UnsetEnforcedVertices(self, theFace):
+    AssureGeomPublished( self.mesh, theFace )
+    return self.Parameters().UnsetEnforcedVertices(theFace)
 
-    ## To remove an enforced vertex on a given GEOM face (or group, compound) given a GEOM vertex, group or compound.
-    #  @param theFace      : GEOM face (or group, compound) on which to remove the enforced vertex
-    #  @param theVertex    : GEOM vertex (or group, compound) to remove.
-    def UnsetEnforcedVertexGeom(self, theFace, theVertex):
-        AssureGeomPublished( self.mesh, theFace )
-        AssureGeomPublished( self.mesh, theVertex )
-        return self.Parameters().UnsetEnforcedVertexGeom(theFace, theVertex)
+  ## To tell BLSURF to add a node on internal vertices
+  #  @param toEnforceInternalVertices : boolean; if True the internal vertices are added as enforced vertices
+  def SetInternalEnforcedVertexAllFaces(self, toEnforceInternalVertices):
+    return self.Parameters().SetInternalEnforcedVertexAllFaces(toEnforceInternalVertices)
 
-    ## To remove all enforced vertices on a given face.
-    #  @param theFace      : face (or group/compound of faces) on which to remove all enforced vertices
-    def UnsetEnforcedVertices(self, theFace):
-        AssureGeomPublished( self.mesh, theFace )
-        return self.Parameters().UnsetEnforcedVertices(theFace)
+  ## To know if BLSURF will add a node on internal vertices
+  def GetInternalEnforcedVertexAllFaces(self):
+    return self.Parameters().GetInternalEnforcedVertexAllFaces()
 
-    ## To tell BLSURF to add a node on internal vertices
-    #  @param toEnforceInternalVertices : boolean; if True the internal vertices are added as enforced vertices
-    def SetInternalEnforcedVertexAllFaces(self, toEnforceInternalVertices):
-        return self.Parameters().SetInternalEnforcedVertexAllFaces(toEnforceInternalVertices)
+  ## To define a group for the nodes of internal vertices
+  #  @param groupName : string; name of the group
+  def SetInternalEnforcedVertexAllFacesGroup(self, groupName):
+    return self.Parameters().SetInternalEnforcedVertexAllFacesGroup(groupName)
 
-    ## To know if BLSURF will add a node on internal vertices
-    def GetInternalEnforcedVertexAllFaces(self):
-        return self.Parameters().GetInternalEnforcedVertexAllFaces()
+  ## To get the group name of the nodes of internal vertices
+  def GetInternalEnforcedVertexAllFacesGroup(self):
+    return self.Parameters().GetInternalEnforcedVertexAllFacesGroup()
 
-    ## To define a group for the nodes of internal vertices
-    #  @param groupName : string; name of the group
-    def SetInternalEnforcedVertexAllFacesGroup(self, groupName):
-        return self.Parameters().SetInternalEnforcedVertexAllFacesGroup(groupName)
+  #-----------------------------------------
+  #  Attractors
+  #-----------------------------------------
 
-    ## To get the group name of the nodes of internal vertices
-    def GetInternalEnforcedVertexAllFacesGroup(self):
-        return self.Parameters().GetInternalEnforcedVertexAllFacesGroup()
+  ## Sets an attractor on the chosen face. The mesh size will decrease exponentially with the distance from theAttractor, following the rule h(d) = theEndSize - (theEndSize - theStartSize) * exp [ - ( d / theInfluenceDistance ) ^ 2 ]
+  #  @param theFace      : face on which the attractor will be defined
+  #  @param theAttractor : geometrical object from which the mesh size "h" decreases exponentially
+  #  @param theStartSize : mesh size on theAttractor
+  #  @param theEndSize   : maximum size that will be reached on theFace
+  #  @param theInfluenceDistance : influence of the attractor ( the size grow slower on theFace if it's high)
+  #  @param theConstantSizeDistance : distance until which the mesh size will be kept constant on theFace
+  def SetAttractorGeom(self, theFace, theAttractor, theStartSize, theEndSize, theInfluenceDistance, theConstantSizeDistance):
+    AssureGeomPublished( self.mesh, theFace )
+    AssureGeomPublished( self.mesh, theAttractor )
+    self.Parameters().SetAttractorGeom(theFace, theAttractor, theStartSize, theEndSize, theInfluenceDistance, theConstantSizeDistance)
+    pass
 
-    #-----------------------------------------
-    #  Attractors
-    #-----------------------------------------
+  ## Unsets an attractor on the chosen face.
+  #  @param theFace      : face on which the attractor has to be removed
+  def UnsetAttractorGeom(self, theFace):
+    AssureGeomPublished( self.mesh, theFace )
+    self.Parameters().SetAttractorGeom(theFace)
+    pass
 
-    ## Sets an attractor on the chosen face. The mesh size will decrease exponentially with the distance from theAttractor, following the rule h(d) = theEndSize - (theEndSize - theStartSize) * exp [ - ( d / theInfluenceDistance ) ^ 2 ] 
-    #  @param theFace      : face on which the attractor will be defined
-    #  @param theAttractor : geometrical object from which the mesh size "h" decreases exponentially   
-    #  @param theStartSize : mesh size on theAttractor      
-    #  @param theEndSize   : maximum size that will be reached on theFace                                                     
-    #  @param theInfluenceDistance : influence of the attractor ( the size grow slower on theFace if it's high)                                                      
-    #  @param theConstantSizeDistance : distance until which the mesh size will be kept constant on theFace                                                      
-    def SetAttractorGeom(self, theFace, theAttractor, theStartSize, theEndSize, theInfluenceDistance, theConstantSizeDistance):
-        AssureGeomPublished( self.mesh, theFace )
-        AssureGeomPublished( self.mesh, theAttractor )
-        self.Parameters().SetAttractorGeom(theFace, theAttractor, theStartSize, theEndSize, theInfluenceDistance, theConstantSizeDistance)
-        pass
+  #-----------------------------------------
+  # Size maps (BLSURF)
+  #-----------------------------------------
 
-    ## Unsets an attractor on the chosen face. 
-    #  @param theFace      : face on which the attractor has to be removed                               
-    def UnsetAttractorGeom(self, theFace):
-        AssureGeomPublished( self.mesh, theFace )
-        self.Parameters().SetAttractorGeom(theFace)
-        pass
+  ## To set a size map on a face, edge or vertex (or group, compound) given Python function.
+  #  If theObject is a face, the function can be: def f(u,v): return u+v
+  #  If theObject is an edge, the function can be: def f(t): return t/2
+  #  If theObject is a vertex, the function can be: def f(): return 10
+  #  @param theObject   : GEOM face, edge or vertex (or group, compound) on which to define a size map
+  #  @param theSizeMap  : Size map defined as a string
+  def SetSizeMap(self, theObject, theSizeMap):
+    AssureGeomPublished( self.mesh, theObject )
+    self.Parameters().SetSizeMap(theObject, theSizeMap)
+    pass
 
-    #-----------------------------------------
-    # Size maps (BLSURF)
-    #-----------------------------------------
+  ## To set a constant size map on a face, edge or vertex (or group, compound).
+  #  @param theObject   : GEOM face, edge or vertex (or group, compound) on which to define a size map
+  #  @param theSizeMap  : Size map defined as a double
+  def SetConstantSizeMap(self, theObject, theSizeMap):
+    AssureGeomPublished( self.mesh, theObject )
+    self.Parameters().SetConstantSizeMap(theObject, theSizeMap)
 
-    ## To set a size map on a face, edge or vertex (or group, compound) given Python function.
-    #  If theObject is a face, the function can be: def f(u,v): return u+v
-    #  If theObject is an edge, the function can be: def f(t): return t/2
-    #  If theObject is a vertex, the function can be: def f(): return 10
-    #  @param theObject   : GEOM face, edge or vertex (or group, compound) on which to define a size map
-    #  @param theSizeMap  : Size map defined as a string
-    def SetSizeMap(self, theObject, theSizeMap):
-        AssureGeomPublished( self.mesh, theObject )
-        self.Parameters().SetSizeMap(theObject, theSizeMap)
-        pass
+  ## To remove a size map defined on a face, edge or vertex (or group, compound)
+  #  @param theObject   : GEOM face, edge or vertex (or group, compound) on which to define a size map
+  def UnsetSizeMap(self, theObject):
+    AssureGeomPublished( self.mesh, theObject )
+    self.Parameters().UnsetSizeMap(theObject)
+    pass
 
-    ## To remove a size map defined on a face, edge or vertex (or group, compound)
-    #  @param theObject   : GEOM face, edge or vertex (or group, compound) on which to define a size map
-    def UnsetSizeMap(self, theObject):
-        AssureGeomPublished( self.mesh, theObject )
-        self.Parameters().UnsetSizeMap(theObject)
-        pass
+  ## To remove all the size maps
+  def ClearSizeMaps(self):
+    self.Parameters().ClearSizeMaps()
+    pass
 
-    ## To remove all the size maps
-    def ClearSizeMaps(self):
-        self.Parameters().ClearSizeMaps()
-        pass
+  ## Sets QuadAllowed flag.
+  #  @param toAllow "allow quadrangles" flag value
+  def SetQuadAllowed(self, toAllow=True):
+    self.Parameters().SetQuadAllowed(toAllow)
+    pass
 
-    ## Sets QuadAllowed flag.
-    #  @param toAllow "allow quadrangles" flag value
-    def SetQuadAllowed(self, toAllow=True):
-        self.Parameters().SetQuadAllowed(toAllow)
-        pass
+  ## Defines hypothesis having several parameters
+  #  @return hypothesis object
+  def Parameters(self):
+    if not self.params:
+      self.params = self.Hypothesis("BLSURF_Parameters", [],
+                                    "libBLSURFEngine.so", UseExisting=0)
+      pass
+    return self.params
 
-    ## Defines hypothesis having several parameters
-    #  @return hypothesis object
-    def Parameters(self):
-        if not self.params:
-            self.params = self.Hypothesis("BLSURF_Parameters", [],
-                                          "libBLSURFEngine.so", UseExisting=0)
-            pass
-        return self.params
+  #=====================
+  # Obsolete methods
+  #=====================
+  #
+  # SALOME 6.6.0
+  #
 
-    pass # end of BLSURF_Algorithm class
+  ## Sets lower boundary of mesh element size (PhySize).
+  def SetPhyMin(self, theVal=-1):
+    """
+    Obsolete function. Use SetMinSize.
+    """
+    print "Warning: SetPhyMin is obsolete. Please use SetMinSize"
+    self.SetMinSize(theVal)
+    pass
+
+  ## Sets upper boundary of mesh element size (PhySize).
+  def SetPhyMax(self, theVal=-1):
+    """
+    Obsolete function. Use SetMaxSize.
+    """
+    print "Warning: SetPhyMax is obsolete. Please use SetMaxSize"
+    self.SetMaxSize(theVal)
+    pass
+
+  ## Sets angular deflection (in degrees) of a mesh face from CAD surface.
+  def SetAngleMeshS(self, theVal=_geometric_approximation):
+    """
+    Obsolete function. Use SetAngleMesh.
+    """
+    print "Warning: SetAngleMeshS is obsolete. Please use SetAngleMesh"
+    self.SetAngleMesh(theVal)
+    pass
+
+  ## Sets angular deflection (in degrees) of a mesh edge from CAD curve.
+  def SetAngleMeshC(self, theVal=_geometric_approximation):
+    """
+    Obsolete function. Use SetAngleMesh.
+    """
+    print "Warning: SetAngleMeshC is obsolete. Please use SetAngleMesh"
+    self.SetAngleMesh(theVal)
+    pass
+
+  ## Sets lower boundary of mesh element size computed to respect angular deflection.
+  def SetGeoMin(self, theVal=-1):
+    """
+    Obsolete function. Use SetMinSize.
+    """
+    print "Warning: SetGeoMin is obsolete. Please use SetMinSize"
+    self.SetMinSize(theVal)
+    pass
+
+  ## Sets upper boundary of mesh element size computed to respect angular deflection.
+  def SetGeoMax(self, theVal=-1):
+    """
+    Obsolete function. Use SetMaxSize.
+    """
+    print "Warning: SetGeoMax is obsolete. Please use SetMaxSize"
+    self.SetMaxSize(theVal)
+    pass
+
+
+  pass # end of BLSURF_Algorithm class

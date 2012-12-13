@@ -61,33 +61,6 @@ BLSURFPlugin_Hypothesis_i::~BLSURFPlugin_Hypothesis_i() {
   MESSAGE( "BLSURFPlugin_Hypothesis_i::~BLSURFPlugin_Hypothesis_i" );
 }
 
-/*!
- *  BLSURFPlugin_Hypothesis_i::SetTopology
- *
- *  Set topology
- */
-
-//=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetTopology(CORBA::Long theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetTopology");
-  ASSERT(myBaseImpl);
-  this->GetImpl()->SetTopology((::BLSURFPlugin_Hypothesis::Topology) theValue);
-  SMESH::TPythonDump() << _this() << ".SetTopology( " << theValue << " )";
-}
-
-//=============================================================================
-/*!
- *  BLSURFPlugin_Hypothesis_i::GetTopology
- *
- *  Get Topology
- */
-//=============================================================================
-CORBA::Long BLSURFPlugin_Hypothesis_i::GetTopology() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetTopology");
-  ASSERT(myBaseImpl);
-  return this->GetImpl()->GetTopology();
-}
-
 //=============================================================================
 
 //=============================================================================
@@ -120,63 +93,6 @@ CORBA::Long BLSURFPlugin_Hypothesis_i::GetPhysicalMesh() {
 
 //=============================================================================
 /*!
- *  BLSURFPlugin_Hypothesis_i::SetPhySize
- *
- *  Set PhySize
- */
-//=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetPhySize(CORBA::Double theValue) {
-//   MESSAGE("BLSURFPlugin_Hypothesis_i::SetPhySize");
-  ASSERT(myBaseImpl);
-  this->GetImpl()->SetPhySize(theValue);
-  SMESH::TPythonDump() << _this() << ".SetPhySize( " << theValue << " )";
-}
-
-//=============================================================================
-/*!
- *  BLSURFPlugin_Hypothesis_i::GetPhySize
- *
- *  Get PhySize
- */
-//=============================================================================
-CORBA::Double BLSURFPlugin_Hypothesis_i::GetPhySize() {
-//   MESSAGE("BLSURFPlugin_Hypothesis_i::GetPhySize");
-  ASSERT(myBaseImpl);
-  return this->GetImpl()->GetPhySize();
-}
-
-//=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetPhyMin(CORBA::Double theMinSize) {
-  ASSERT(myBaseImpl);
-  if (GetPhyMin() != theMinSize) {
-    this->GetImpl()->SetPhyMin(theMinSize);
-    SMESH::TPythonDump() << _this() << ".SetPhyMin( " << theMinSize << " )";
-  }
-}
-
-//=============================================================================
-CORBA::Double BLSURFPlugin_Hypothesis_i::GetPhyMin() {
-  ASSERT(myBaseImpl);
-  return this->GetImpl()->GetPhyMin();
-}
-
-//=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetPhyMax(CORBA::Double theMaxSize) {
-  ASSERT(myBaseImpl);
-  if (GetPhyMax() != theMaxSize) {
-    this->GetImpl()->SetPhyMax(theMaxSize);
-    SMESH::TPythonDump() << _this() << ".SetPhyMax( " << theMaxSize << " )";
-  }
-}
-
-//=============================================================================
-CORBA::Double BLSURFPlugin_Hypothesis_i::GetPhyMax() {
-  ASSERT(myBaseImpl);
-  return this->GetImpl()->GetPhyMax();
-}
-
-//=============================================================================
-/*!
  *  BLSURFPlugin_Hypothesis_i::SetGeometricMesh
  *
  *  Set GeometricMesh
@@ -205,72 +121,118 @@ CORBA::Long BLSURFPlugin_Hypothesis_i::GetGeometricMesh() {
 
 //=============================================================================
 /*!
- *  BLSURFPlugin_Hypothesis_i::SetAngleMeshS
+ *  BLSURFPlugin_Hypothesis_i::SetPhySize
  *
- *  Set AngleMeshS
+ *  Set PhySize
  */
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetAngleMeshS(CORBA::Double theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetAngleMeshS");
+void BLSURFPlugin_Hypothesis_i::SetPhySize(CORBA::Double theValue) {
+//   MESSAGE("BLSURFPlugin_Hypothesis_i::SetPhySize");
   ASSERT(myBaseImpl);
-  this->GetImpl()->SetAngleMeshS(theValue);
-  SMESH::TPythonDump() << _this() << ".SetAngleMeshS( " << theValue << " )";
+  this->GetImpl()->SetPhySize(theValue, false);
+  SMESH::TPythonDump() << _this() << ".SetPhySize( " << theValue << " )";
 }
 
 //=============================================================================
 /*!
- *  BLSURFPlugin_Hypothesis_i::GetAngleMeshS
+ *  BLSURFPlugin_Hypothesis_i::SetPhySizeRel
  *
- *  Get AngleMeshS
+ *  Set Relative PhySize
  */
 //=============================================================================
-CORBA::Double BLSURFPlugin_Hypothesis_i::GetAngleMeshS() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetAngleMeshS");
+void BLSURFPlugin_Hypothesis_i::SetPhySizeRel(CORBA::Double theValue) {
+//   MESSAGE("BLSURFPlugin_Hypothesis_i::SetPhySizeRel");
   ASSERT(myBaseImpl);
-  return this->GetImpl()->GetAngleMeshS();
+  this->GetImpl()->SetPhySize(theValue, true);
+  SMESH::TPythonDump() << _this() << ".SetPhySize( " << theValue << ", isRelative = True )";
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetAngleMeshC(CORBA::Double angle) {
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetPhySize
+ *
+ *  Get PhySize
+ */
+//=============================================================================
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetPhySize() {
+//   MESSAGE("BLSURFPlugin_Hypothesis_i::GetPhySize");
   ASSERT(myBaseImpl);
-  this->GetImpl()->SetAngleMeshC(angle);
-  SMESH::TPythonDump() << _this() << ".SetAngleMeshC( " << angle << " )";
+  return this->GetImpl()->GetPhySize();
 }
 
 //=============================================================================
-CORBA::Double BLSURFPlugin_Hypothesis_i::GetAngleMeshC() {
+/*!
+ *  BLSURFPlugin_Hypothesis_i::IsPhySizeRel
+ *
+ *  Returns True if PhySize is relative
+ */
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::IsPhySizeRel() {
+//   MESSAGE("BLSURFPlugin_Hypothesis_i::IsPhySizeRel");
   ASSERT(myBaseImpl);
-  return this->GetImpl()->GetAngleMeshC();
+  return this->GetImpl()->IsPhySizeRel();
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetGeoMin(CORBA::Double theMinSize) {
+void BLSURFPlugin_Hypothesis_i::SetMinSize(CORBA::Double theMinSize) {
   ASSERT(myBaseImpl);
-  if (GetGeoMin() != theMinSize) {
-    this->GetImpl()->SetGeoMin(theMinSize);
-    SMESH::TPythonDump() << _this() << ".SetGeoMin( " << theMinSize << " )";
+  if (GetMinSize() != theMinSize) {
+    this->GetImpl()->SetMinSize(theMinSize, false);
+    SMESH::TPythonDump() << _this() << ".SetMinSize( " << theMinSize << " )";
   }
 }
 
 //=============================================================================
-CORBA::Double BLSURFPlugin_Hypothesis_i::GetGeoMin() {
+void BLSURFPlugin_Hypothesis_i::SetMinSizeRel(CORBA::Double theMinSize) {
   ASSERT(myBaseImpl);
-  return this->GetImpl()->GetGeoMin();
-}
-
-//=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetGeoMax(CORBA::Double theMaxSize) {
-  ASSERT(myBaseImpl);
-  if (GetGeoMax() != theMaxSize) {
-    this->GetImpl()->SetGeoMax(theMaxSize);
-    SMESH::TPythonDump() << _this() << ".SetGeoMax( " << theMaxSize << " )";
+  if ( IsMinSizeRel() && (GetMinSize() != theMinSize) ) {
+    this->GetImpl()->SetMinSize(theMinSize, true);
+    SMESH::TPythonDump() << _this() << ".SetMinSize( " << theMinSize << ", isRelative = True )";
   }
 }
 
 //=============================================================================
-CORBA::Double BLSURFPlugin_Hypothesis_i::GetGeoMax() {
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetMinSize() {
   ASSERT(myBaseImpl);
-  return this->GetImpl()->GetGeoMax();
+  return this->GetImpl()->GetMinSize();
+}
+
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::IsMinSizeRel() {
+//   MESSAGE("BLSURFPlugin_Hypothesis_i::IsMinSizeRel");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->IsMinSizeRel();
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetMaxSize(CORBA::Double theMaxSize) {
+  ASSERT(myBaseImpl);
+  if (GetMaxSize() != theMaxSize) {
+    this->GetImpl()->SetMaxSize(theMaxSize, false);
+    SMESH::TPythonDump() << _this() << ".SetMaxSize( " << theMaxSize << " )";
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetMaxSizeRel(CORBA::Double theMaxSize) {
+  ASSERT(myBaseImpl);
+  if ( IsMaxSizeRel() && (GetMaxSize() != theMaxSize) ) {
+    this->GetImpl()->SetMaxSize(theMaxSize, true);
+    SMESH::TPythonDump() << _this() << ".SetMaxSize( " << theMaxSize << ", isRelative = True )";
+  }
+}
+
+//=============================================================================
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetMaxSize() {
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetMaxSize();
+}
+
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::IsMaxSizeRel() {
+//   MESSAGE("BLSURFPlugin_Hypothesis_i::IsMaxSizeRel");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->IsMaxSizeRel();
 }
 
 //=============================================================================
@@ -330,30 +292,309 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetQuadAllowed() {
 
 //=============================================================================
 /*!
- *  BLSURFPlugin_Hypothesis_i::SetDecimesh
+ *  BLSURFPlugin_Hypothesis_i::SetAngleMesh
  *
- *  Set true or false
+ *  Set AngleMesh
  */
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetDecimesh(CORBA::Boolean theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetDecimesh");
+void BLSURFPlugin_Hypothesis_i::SetAngleMesh(CORBA::Double theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetAngleMesh");
   ASSERT(myBaseImpl);
-  this->GetImpl()->SetDecimesh(theValue);
-  std::string theValueStr = theValue ? "True" : "False";
-  SMESH::TPythonDump() << _this() << ".SetDecimesh( " << theValueStr.c_str() << " )";
+  this->GetImpl()->SetAngleMesh(theValue);
+  SMESH::TPythonDump() << _this() << ".SetAngleMesh( " << theValue << " )";
 }
 
 //=============================================================================
 /*!
- *  BLSURFPlugin_Hypothesis_i::GetDecimesh
+ *  BLSURFPlugin_Hypothesis_i::GetAngleMesh
+ *
+ *  Get AngleMesh
+ */
+//=============================================================================
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetAngleMesh() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetAngleMesh");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetAngleMesh();
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::SetChordalError
+ *
+ *  Set Chordal Error
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetChordalError(CORBA::Double theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetChordalError");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetChordalError(theValue);
+  SMESH::TPythonDump() << _this() << ".SetChordalError( " << theValue << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetChordalError
+ *
+ *  Get Chordal Error
+ */
+//=============================================================================
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetChordalError() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetChordalError");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetChordalError();
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::SetAnisotropic
+ *
+ *  Set true or false
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetAnisotropic(CORBA::Boolean theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetAnisotropic");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetAnisotropic(theValue);
+  std::string theValueStr = theValue ? "True" : "False";
+  SMESH::TPythonDump() << _this() << ".SetAnisotropic( " << theValueStr.c_str() << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetAnisotropic
  *
  *  Get true or false
  */
 //=============================================================================
-CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetDecimesh() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetDecimesh");
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetAnisotropic() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetAnisotropic");
   ASSERT(myBaseImpl);
-  return this->GetImpl()->GetDecimesh();
+  return this->GetImpl()->GetAnisotropic();
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::SetAnisotropicRatio
+ *
+ *  Set Anisotropic Ratio
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetAnisotropicRatio(CORBA::Double theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetAnisotropicRatio");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetAnisotropicRatio(theValue);
+  SMESH::TPythonDump() << _this() << ".SetAnisotropicRatio( " << theValue << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetAnisotropicRatio
+ *
+ *  Get Anisotropic Ratio
+ */
+//=============================================================================
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetAnisotropicRatio() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetAnisotropicRatio");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetAnisotropicRatio();
+}
+
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::SetRemoveTinyEdges
+ *
+ *  Set true or false
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetRemoveTinyEdges(CORBA::Boolean theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetRemoveTinyEdges");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetRemoveTinyEdges(theValue);
+  std::string theValueStr = theValue ? "True" : "False";
+  SMESH::TPythonDump() << _this() << ".SetRemoveTinyEdges( " << theValueStr.c_str() << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetRemoveTinyEdges
+ *
+ *  Get true or false
+ */
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetRemoveTinyEdges() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetRemoveTinyEdges");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetRemoveTinyEdges();
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::SetTinyEdgeLength
+ *
+ *  Set Tiny Edge Length
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetTinyEdgeLength(CORBA::Double theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetTinyEdgeLength");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetTinyEdgeLength(theValue);
+  SMESH::TPythonDump() << _this() << ".SetTinyEdgeLength( " << theValue << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetTinyEdgeLength
+ *
+ *  Get Tiny Edge Length
+ */
+//=============================================================================
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetTinyEdgeLength() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetTinyEdgeLength");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetTinyEdgeLength();
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::SetBadElementRemoval
+ *
+ *  Set true or false
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetBadElementRemoval(CORBA::Boolean theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetBadElementRemoval");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetBadElementRemoval(theValue);
+  std::string theValueStr = theValue ? "True" : "False";
+  SMESH::TPythonDump() << _this() << ".SetBadElementRemoval( " << theValueStr.c_str() << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetBadElementRemoval
+ *
+ *  Get true or false
+ */
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetBadElementRemoval() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetBadElementRemoval");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetBadElementRemoval();
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::SetBadElementAspectRatio
+ *
+ *  Set Bad Surface Element Aspect Ratio
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetBadElementAspectRatio(CORBA::Double theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetBadElementAspectRatio");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetBadElementAspectRatio(theValue);
+  SMESH::TPythonDump() << _this() << ".SetBadElementAspectRatio( " << theValue << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetBadElementAspectRatio
+ *
+ *  Get Bad Surface Element Aspect Ratio
+ */
+//=============================================================================
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetBadElementAspectRatio() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetBadElementAspectRatio");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetBadElementAspectRatio();
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::SetOptimizeMesh
+ *
+ *  Set true or false
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetOptimizeMesh(CORBA::Boolean theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetOptimizeMesh");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetOptimizeMesh(theValue);
+  std::string theValueStr = theValue ? "True" : "False";
+  SMESH::TPythonDump() << _this() << ".SetOptimizeMesh( " << theValueStr.c_str() << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetOptimizeMesh
+ *
+ *  Get true or false
+ */
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetOptimizeMesh() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetOptimizeMesh");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetOptimizeMesh();
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::SetQuadraticMesh
+ *
+ *  Set true or false
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetQuadraticMesh(CORBA::Boolean theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetQuadraticMesh");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetQuadraticMesh(theValue);
+  std::string theValueStr = theValue ? "True" : "False";
+  SMESH::TPythonDump() << _this() << ".SetQuadraticMesh( " << theValueStr.c_str() << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetQuadraticMesh
+ *
+ *  Get true or false
+ */
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetQuadraticMesh() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetQuadraticMesh");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetQuadraticMesh();
+}
+
+
+
+
+
+/*!
+ *  BLSURFPlugin_Hypothesis_i::SetTopology
+ *
+ *  Set topology
+ */
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetTopology(CORBA::Long theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetTopology");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetTopology((::BLSURFPlugin_Hypothesis::Topology) theValue);
+  SMESH::TPythonDump() << _this() << ".SetTopology( " << theValue << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetTopology
+ *
+ *  Get Topology
+ */
+//=============================================================================
+CORBA::Long BLSURFPlugin_Hypothesis_i::GetTopology() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetTopology");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetTopology();
 }
 
 //=============================================================================
@@ -402,30 +643,30 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADMergeEdges() {
 
 //=============================================================================
 /*!
- *  BLSURFPlugin_Hypothesis_i::SetPreCADRemoveNanoEdges
+ *  BLSURFPlugin_Hypothesis_i::SetPreCADProcess3DTopology
  *
  *  Set true or false
  */
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetPreCADRemoveNanoEdges(CORBA::Boolean theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetPreCADRemoveNanoEdges");
+void BLSURFPlugin_Hypothesis_i::SetPreCADProcess3DTopology(CORBA::Boolean theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetPreCADProcess3DTopology");
   ASSERT(myBaseImpl);
-  this->GetImpl()->SetPreCADRemoveNanoEdges(theValue);
+  this->GetImpl()->SetPreCADProcess3DTopology(theValue);
   std::string theValueStr = theValue ? "True" : "False";
-  SMESH::TPythonDump() << _this() << ".SetPreCADRemoveNanoEdges( " << theValueStr.c_str() << " )";
+  SMESH::TPythonDump() << _this() << ".SetPreCADProcess3DTopology( " << theValueStr.c_str() << " )";
 }
 
 //=============================================================================
 /*!
- *  BLSURFPlugin_Hypothesis_i::GetPreCADRemoveNanoEdges
+ *  BLSURFPlugin_Hypothesis_i::GetPreCADProcess3DTopology
  *
  *  Get true or false
  */
 //=============================================================================
-CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADRemoveNanoEdges() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCADRemoveNanoEdges");
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADProcess3DTopology() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCADProcess3DTopology");
   ASSERT(myBaseImpl);
-  return this->GetImpl()->GetPreCADRemoveNanoEdges();
+  return this->GetImpl()->GetPreCADProcess3DTopology();
 }
 
 //=============================================================================
@@ -456,32 +697,6 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADDiscardInput() {
   return this->GetImpl()->GetPreCADDiscardInput();
 }
 
-//=============================================================================
-/*!
- *  BLSURFPlugin_Hypothesis_i::SetPreCADEpsNano
- *
- *  Set length for nano edges
- */
-//=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetPreCADEpsNano(CORBA::Double theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetPreCADEpsNano");
-  ASSERT(myBaseImpl);
-  this->GetImpl()->SetPreCADEpsNano(theValue);
-  SMESH::TPythonDump() << _this() << ".SetPreCADEpsNano( " << theValue << " )";
-}
-
-//=============================================================================
-/*!
- *  BLSURFPlugin_Hypothesis_i::GetPreCADEpsNano
- *
- *  Get length of nano edges
- */
-//=============================================================================
-CORBA::Double BLSURFPlugin_Hypothesis_i::GetPreCADEpsNano() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCADEpsNano");
-  ASSERT(myBaseImpl);
-  return this->GetImpl()->GetPreCADEpsNano();
-}
 
 //=============================================================================
 
@@ -695,6 +910,38 @@ void BLSURFPlugin_Hypothesis_i::SetSizeMapEntry(const char* entry, const char* s
 
 //=============================================================================
 
+void BLSURFPlugin_Hypothesis_i::SetConstantSizeMapEntry(const char* entry, GEOM::shape_type shapeType, CORBA::Double sizeMap)
+    throw (SALOME::SALOME_Exception) {
+  ASSERT(myBaseImpl);
+  MESSAGE("ENGINE : SETSIZEMAP START ENTRY : " << entry);
+  bool valueChanged = false;
+  std::ostringstream sizeMapFunction;
+  switch (shapeType) {
+    case GEOM::FACE:   sizeMapFunction << "def f(u,v): return " << sizeMap ; break;
+    case GEOM::EDGE:   sizeMapFunction << "def f(t): return " << sizeMap ; break;
+    case GEOM::VERTEX: sizeMapFunction << "def f(): return " << sizeMap ; break;
+  }
+  try {
+    valueChanged = (this->GetImpl()->GetSizeMapEntry(entry) != sizeMapFunction.str());
+    if (valueChanged)
+      this->GetImpl()->SetSizeMapEntry(entry, sizeMapFunction.str());
+  } catch (const std::invalid_argument& ex) {
+    SALOME::ExceptionStruct ExDescription;
+    ExDescription.text = ex.what();
+    ExDescription.type = SALOME::BAD_PARAM;
+    ExDescription.sourceFile = "BLSURFPlugin_Hypothesis::SetSizeMapEntry(entry,sizemap)";
+    ExDescription.lineNumber = 0;
+    throw SALOME::SALOME_Exception(ExDescription);
+  } catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+  MESSAGE("ENGINE : SETSIZEMAP END ENTRY : " << entry);
+  if (valueChanged)
+    SMESH::TPythonDump() << _this() << ".SetConstantSizeMap(" << entry << ", '" << sizeMap << "' )";
+}
+
+//=============================================================================
+
 void BLSURFPlugin_Hypothesis_i::SetAttractorEntry(const char* entry, const char* attractor)
     throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
@@ -725,7 +972,7 @@ void BLSURFPlugin_Hypothesis_i::SetAttractorEntry(const char* entry, const char*
 
 //=============================================================================
 
-void BLSURFPlugin_Hypothesis_i::SetClassAttractorEntry(const char* entry, const char* att_entry, double StartSize, double EndSize, double ActionRadius, double ConstantRadius) //TODO à finir
+void BLSURFPlugin_Hypothesis_i::SetClassAttractorEntry(const char* entry, const char* att_entry, CORBA::Double StartSize, CORBA::Double EndSize, CORBA::Double ActionRadius, CORBA::Double ConstantRadius) //TODO à finir
   throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
@@ -938,6 +1185,19 @@ void BLSURFPlugin_Hypothesis_i::SetSizeMap(const GEOM::GEOM_Object_ptr GeomObj, 
 }
 
 //=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::SetConstantSizeMap(const GEOM::GEOM_Object_ptr GeomObj, CORBA::Double sizeMap) {
+  ASSERT(myBaseImpl);
+  string entry = GeomObj->GetStudyEntry();
+  GEOM::shape_type shapeType = GeomObj->GetShapeType();
+  if (shapeType == GEOM::COMPOUND)
+    shapeType = GeomObj->GetMaxShapeType();
+  MESSAGE("IDL : GetName : " << GeomObj->GetName());
+  MESSAGE("IDL : SETSIZEMAP ( "<< entry << " , " << sizeMap << ")");
+  SetConstantSizeMapEntry(entry.c_str(), shapeType, sizeMap);
+}
+
+//=============================================================================
 void BLSURFPlugin_Hypothesis_i::UnsetSizeMap(const GEOM::GEOM_Object_ptr GeomObj) {
   ASSERT(myBaseImpl);
   string entry;
@@ -967,7 +1227,7 @@ void BLSURFPlugin_Hypothesis_i::UnsetAttractor(GEOM::GEOM_Object_ptr GeomObj) {
   SMESH::TPythonDump() << _this() << ".UnsetAttractor( " << entry.c_str() << " )";
 }
 
-void BLSURFPlugin_Hypothesis_i::SetAttractorGeom(GEOM::GEOM_Object_ptr theFace, GEOM::GEOM_Object_ptr theAttractor, double StartSize, double EndSize, double ActionRadius, double ConstantRadius)
+void BLSURFPlugin_Hypothesis_i::SetAttractorGeom(GEOM::GEOM_Object_ptr theFace, GEOM::GEOM_Object_ptr theAttractor, CORBA::Double StartSize, CORBA::Double EndSize, CORBA::Double ActionRadius, CORBA::Double ConstantRadius)
 {
   ASSERT(myBaseImpl);
   string theFaceEntry;
@@ -2399,4 +2659,76 @@ char* BLSURFPlugin_Hypothesis_i::GetGMFFile() {
 //================================================================================  
 CORBA::Boolean BLSURFPlugin_Hypothesis_i::IsDimSupported(SMESH::Dimension type) {
   return type == SMESH::DIM_2D;
+}
+
+//
+// Obsolete methods - To be removed in V7
+//
+
+void BLSURFPlugin_Hypothesis_i::SetPhyMin(CORBA::Double theMinSize) {
+  this->SetMinSize(theMinSize);
+}
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetPhyMin() {
+  return this->GetMinSize();
+}
+void BLSURFPlugin_Hypothesis_i::SetPhyMax(CORBA::Double theMaxSize) {
+  this->SetMaxSize(theMaxSize);
+}
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetPhyMax() {
+  return this->GetMaxSize();
+}
+void BLSURFPlugin_Hypothesis_i::SetGeoMin(CORBA::Double theMinSize) {
+  this->SetMinSize(theMinSize);
+}
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetGeoMin() {
+  return this->GetMinSize();
+}
+void BLSURFPlugin_Hypothesis_i::SetGeoMax(CORBA::Double theMaxSize) {
+  this->SetMaxSize(theMaxSize);
+}
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetGeoMax() {
+  return this->GetMaxSize();
+}
+void BLSURFPlugin_Hypothesis_i::SetAngleMeshS(CORBA::Double theValue) {
+  this->SetAngleMesh(theValue);
+}
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetAngleMeshS() {
+  return this->GetAngleMesh();
+}
+void BLSURFPlugin_Hypothesis_i::SetAngleMeshC(CORBA::Double theValue) {
+  this->SetAngleMesh(theValue);
+}
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetAngleMeshC() {
+  return this->GetAngleMesh();
+}
+void BLSURFPlugin_Hypothesis_i::SetDecimesh(CORBA::Boolean theValue) {
+  std::string theValueStr = theValue ? "1" : "0";
+  this->SetOptionValue("respect_geometry",theValueStr.c_str());
+}
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetDecimesh() {
+  std::string theValueStr = this->GetOptionValue("respect_geometry");
+  if (theValueStr.empty() || theValueStr == "respect")
+      return true;
+  return false;
+}
+void BLSURFPlugin_Hypothesis_i::SetPreCADRemoveNanoEdges(CORBA::Boolean theValue) {
+  std::string theValueStr = theValue ? "1" : "0";
+  this->SetPreCADOptionValue("remove_tiny_edges",theValueStr.c_str());
+}
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADRemoveNanoEdges() {
+  std::string theValueStr = this->GetPreCADOptionValue("remove_tiny_edges");
+  if (theValueStr == "1")
+      return true;
+  return false;
+}
+void BLSURFPlugin_Hypothesis_i::SetPreCADEpsNano(CORBA::Double theValue) {
+  std::ostringstream theValueStr;
+  theValueStr << theValue;
+  this->SetPreCADOptionValue("tiny_edge_length",theValueStr.str().c_str());
+}
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetPreCADEpsNano() {
+  std::istringstream theValueStr(this->GetPreCADOptionValue("tiny_edge_length"));
+  double result;
+  theValueStr >> result;
+  return result;
 }

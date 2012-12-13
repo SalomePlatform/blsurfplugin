@@ -25,7 +25,7 @@
 // ---
 //
 #include "BLSURFPluginGUI_HypothesisCreator.h"
-// #include <DlgBlSurfHyp_Enforced.h>
+#include "BLSURFPluginGUI_Dlg.h"
 
 #include "GeometryGUI.h"
 
@@ -40,25 +40,24 @@
 #include <SUIT_ResourceMgr.h>
 #include <SalomeApp_Tools.h>
 
-#include <QObject>
-#include <QComboBox>
-#include <QLabel>
-#include <QGroupBox>
-#include <QFrame>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QGridLayout>
-#include <QLineEdit>
-#include <QCheckBox>
-#include <QTabWidget>
-#include <QSpinBox>
-#include <QPushButton>
-#include <QMenu>
-#include <QTableWidget>
-#include <QHeaderView>
 #include <QApplication>
+#include <QCheckBox>
+#include <QComboBox>
+#include <QFrame>
+#include <QHBoxLayout>
+#include <QHeaderView>
+#include <QGridLayout>
+#include <QGroupBox>
+#include <QLabel>
+#include <QLineEdit>
+#include <QMenu>
+#include <QObject>
+#include <QPushButton>
 #include <QRadioButton>
-#include <QFileDialog>
+#include <QSpinBox>
+#include <QTableWidget>
+#include <QTabWidget>
+#include <QVBoxLayout>
 
 #include <QStandardItemModel>
 #include <QStandardItem>
@@ -81,38 +80,12 @@
 #include <stdexcept>
 #include <algorithm>
 
-#define WITH_SIZE_BOUNDARIES
-
-enum Topology {
-    FromCAD,
-    Process,
-    Process2,
-    PreCAD
-  } ;
-
-enum PhysicalMesh
-  {
-    DefaultSize = 0,
-    PhysicalUserDefined,
-    SizeMap
-  };
-
-enum GeometricMesh
-  {
-    DefaultGeom = 0,
-    UserDefined
-  };
 
 enum {
   STD_TAB = 0,
   ADV_TAB,
   SMP_TAB,
   ENF_TAB,
-  OPTION_ID_COLUMN = 0,
-  OPTION_TYPE_COLUMN,
-  OPTION_NAME_COLUMN,
-  OPTION_VALUE_COLUMN,
-  NB_COLUMNS,
   SMP_NAME_COLUMN =0,
   SMP_SIZEMAP_COLUMN,
   SMP_ENTRY_COLUMN,
@@ -426,75 +399,6 @@ bool EnforcedTreeWidgetDelegate::vertexExists(QAbstractItemModel *model,
 // END EnforcedTreeWidgetDelegate
 //
 
-//
-// BEGIN BLSURFPluginGUI_ObjectReferenceParamWdg
-//
-//================================================================================
-
-// BLSURFPluginGUI_ObjectReferenceParamWdg::BLSURFPluginGUI_ObjectReferenceParamWdg
-// ( SUIT_SelectionFilter* f, QWidget* parent, bool multiSelection)
-//   : StdMeshersGUI_ObjectReferenceParamWdg(f, parent, multiSelection)
-// {
-//   init();
-// }
-// 
-// 
-// BLSURFPluginGUI_ObjectReferenceParamWdg::BLSURFPluginGUI_ObjectReferenceParamWdg
-// ( MeshObjectType objType, QWidget* parent, bool multiSelection )
-//   : StdMeshersGUI_ObjectReferenceParamWdg( objType, parent, multiSelection )
-// {
-//   init();
-// }
-// 
-// BLSURFPluginGUI_ObjectReferenceParamWdg::~BLSURFPluginGUI_ObjectReferenceParamWdg()
-// {
-//   if ( myFilter )
-//   {
-//     mySelectionMgr->removeFilter( myFilter );
-//     delete myFilter;
-//   }
-// }
-// 
-// void BLSURFPluginGUI_ObjectReferenceParamWdg::init()
-// {
-//   StdMeshersGUI_ObjectReferenceParamWdg::init();
-//   disconnect( mySelButton, SIGNAL(clicked()), SLOT(activateSelection()));
-//   connect( mySelButton, SIGNAL(toggled(bool)), SLOT(setActivationStatus(bool)));
-// }
-// 
-// void BLSURFPluginGUI_ObjectReferenceParamWdg::setActivationStatus(bool status)
-// {
-//   if (status)
-//     activateSelection();
-//   else
-//     deactivateSelection();
-// }
-// 
-// void BLSURFPluginGUI_ObjectReferenceParamWdg::activateSelectionOnly()
-// {
-//   if ( !mySelectionActivated && mySelectionMgr )
-//   {
-//     mySelectionActivated = true;
-//     mySelectionMgr->clearFilters();
-//     if ( SVTK_ViewWindow* aViewWindow = SMESH::GetViewWindow( mySMESHGUI ))
-//       aViewWindow->SetSelectionMode(ActorSelection);
-//     if ( myFilter )
-//       mySelectionMgr->installFilter( myFilter );
-//     connect(mySelectionMgr, SIGNAL(currentSelectionChanged()), SLOT(onSelectionDone()));
-//   }
-//   emit selectionActivated();
-// }
-// 
-// void BLSURFPluginGUI_ObjectReferenceParamWdg::deactivateSelectionOnly()
-// {
-//   mySelectionActivated = false;
-//   disconnect(mySelectionMgr, 0, this, 0 );
-//   mySelectionMgr->removeFilter( myFilter );
-// }
-// 
-//
-// END BLSURFPluginGUI_ObjectReferenceParamWdg
-//
 
 /**
  * \brief {BLSURFPluginGUI_HypothesisCreator constructor}
@@ -562,17 +466,17 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams(QString& msg) const
 
   if ( ok )
   {
-    myOptionTable->setFocus();
+    myAdvWidget->myOptionTable->setFocus();
     QApplication::instance()->processEvents();
 
-    int row = 0, nbRows = myOptionTable->rowCount();
+    int row = 0, nbRows = myAdvWidget->myOptionTable->rowCount();
     for ( ; row < nbRows; ++row )
     {
-      QString name  = myOptionTable->item( row, OPTION_NAME_COLUMN )->text();
-      QString value = myOptionTable->item( row, OPTION_VALUE_COLUMN )->text().trimmed();
+      QString name  = myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->text();
+      QString value = myAdvWidget->myOptionTable->item( row, OPTION_VALUE_COLUMN )->text().trimmed();
       if ( !value.isEmpty() ) {
         try {
-          QString optionType = myOptionTable->item( row, OPTION_TYPE_COLUMN )->text().trimmed();
+          QString optionType = myAdvWidget->myOptionTable->item( row, OPTION_TYPE_COLUMN )->text().trimmed();
           if (optionType == "PRECAD")
             h->SetPreCADOptionValue( name.toLatin1().constData(), value.toLatin1().constData() );
           else if (optionType == "BLSURF")
@@ -656,169 +560,43 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   tab->setTabPosition( QTabWidget::North );
   lay->addWidget( tab );
 
+  myName = 0;
+  
   // basic parameters
   myStdGroup = new QWidget();
   QGridLayout* aStdLayout = new QGridLayout( myStdGroup );
   aStdLayout->setSpacing( 6 );
   aStdLayout->setMargin( 11 );
-
-  myName = 0;
+  
   if( isCreation() )
     myName = new QLineEdit( myStdGroup );
-
-  myGradation = new SMESHGUI_SpinBox( myStdGroup );
-  myGradation->RangeStepAndValidator(1.1, 2.5, 0.1, "length_precision");
-
-  myPhysicalMesh = new QComboBox( myStdGroup );
-  QStringList physicalTypes;
-  physicalTypes << tr( "BLSURF_DEFAULT_USER" ) << tr( "BLSURF_CUSTOM_USER" ) << tr( "BLSURF_SIZE_MAP");
-  myPhysicalMesh->addItems( physicalTypes );
-
-  myPhySize = new SMESHGUI_SpinBox( myStdGroup );
-  myPhySize->RangeStepAndValidator(0, COORD_MAX, 10.0, "length_precision");
-
-#ifdef WITH_SIZE_BOUNDARIES
-  myPhyMin = new SMESHGUI_SpinBox( myStdGroup );
-  myPhyMin->RangeStepAndValidator(0, COORD_MAX, 10.0, "length_precision");
-  myPhyMin->setText("");
-  myPhyMax = new SMESHGUI_SpinBox( myStdGroup );
-  myPhyMax->RangeStepAndValidator(0, COORD_MAX, 10.0, "length_precision");
-  myPhyMax->setText("");
-#endif
-
-  myGeometricMesh = new QComboBox( myStdGroup );
-  QStringList types;
-  types << tr( "BLSURF_DEFAULT_GEOM" ) << tr( "BLSURF_CUSTOM_GEOM" );
-  myGeometricMesh->addItems( types );
-
-  myAngleMeshS = new SMESHGUI_SpinBox( myStdGroup );
-  myAngleMeshS->RangeStepAndValidator(0, 16, 0.5, "angular_precision");
-
-  myAngleMeshC = new SMESHGUI_SpinBox( myStdGroup );
-  myAngleMeshC->RangeStepAndValidator(0, 16, 0.5, "angular_precision");
-
-#ifdef WITH_SIZE_BOUNDARIES
-  myGeoMin = new SMESHGUI_SpinBox( myStdGroup );
-  myGeoMin->RangeStepAndValidator(0, COORD_MAX, 10.0, "length_precision");
-  myGeoMin->setText("");
-  myGeoMax = new SMESHGUI_SpinBox( myStdGroup );
-  myGeoMax->RangeStepAndValidator(0, COORD_MAX, 10.0, "length_precision");
-  myGeoMax->setText("");
-#endif
-  myAllowQuadrangles = new QCheckBox( tr( "BLSURF_ALLOW_QUADRANGLES" ), myStdGroup );
-  myDecimesh = new QCheckBox( tr( "BLSURF_DECIMESH" ), myStdGroup );
-
-  // ADD WIDGETS (STANDARD TAB)
+  myStdWidget = new BLSURFPluginGUI_StdWidget(myStdGroup);
+  
   int row = 0;
   if( isCreation() ) {
-    aStdLayout->addWidget( new QLabel( tr( "SMESH_NAME" ), myStdGroup ),        row, 0, 1, 1 );
-    aStdLayout->addWidget( myName,                                              row++, 1, 1, 3 );
+    aStdLayout->addWidget( new QLabel( tr( "SMESH_NAME" ), myStdGroup ),    0, 0, 1, 1 );
+    aStdLayout->addWidget( myName,                                      row++, 1, 1, 3 );
   }
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_PHY_MESH" ), myStdGroup ),     row, 0, 1, 1 );
-  aStdLayout->addWidget( myPhysicalMesh,                                        row++, 1, 1, 1 );
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_HPHYDEF" ), myStdGroup),       row, 0, 1, 1 );
-  aStdLayout->addWidget( myPhySize,                                             row++, 1, 1, 1 );
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_GRADATION" ), myStdGroup ),    row, 0, 1, 1 );
-  aStdLayout->addWidget( myGradation,                                           row++, 1, 1, 1 );
-#ifdef WITH_SIZE_BOUNDARIES
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_HPHYMIN" ), myStdGroup ),      row, 0, 1, 1 );
-  aStdLayout->addWidget( myPhyMin,                                              row++, 1, 1, 1 );
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_HPHYMAX" ), myStdGroup ),      row, 0, 1, 1 );
-  aStdLayout->addWidget( myPhyMax,                                              row++, 1, 1, 1 );
-#endif
+  aStdLayout->addWidget( myStdWidget,                                   row++, 0, 1, 4 );
+  
   int maxrow = row;
+  row = 0;
   if( isCreation() )
     row = 1;
-  else
-    row = 0;
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_GEOM_MESH" ), myStdGroup ),    row, 2, 1, 1 );
-  aStdLayout->addWidget( myGeometricMesh,                                       row++, 3, 1, 1 );
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_ANGLE_MESH_S" ), myStdGroup ), row, 2, 1, 1 );
-  aStdLayout->addWidget( myAngleMeshS,                                          row++, 3, 1, 1 );
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_ANGLE_MESH_C" ), myStdGroup ), row, 2, 1, 1 );
-  aStdLayout->addWidget( myAngleMeshC,                                          row++, 3, 1, 1 );
-#ifdef WITH_SIZE_BOUNDARIES
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_HGEOMIN" ), myStdGroup ),      row, 2, 1, 1 );
-  aStdLayout->addWidget( myGeoMin,                                              row++, 3, 1, 1 );
-  aStdLayout->addWidget( new QLabel( tr( "BLSURF_HGEOMAX" ), myStdGroup ),      row, 2, 1, 1 );
-  aStdLayout->addWidget( myGeoMax,                                              row++, 3, 1, 1 );
-#endif
-  row = max(row,maxrow)+1;
-  aStdLayout->addWidget( myAllowQuadrangles,                                    row, 0, 1, 2 );
-  aStdLayout->addWidget( myDecimesh,                                            row++, 2, 1, 2 );
+//   row = max(row,maxrow)+1;
   aStdLayout->setRowStretch(row,1);
+  aStdLayout->setColumnStretch(1,1);
   maxrow = row;
 
+  
   // advanced parameters
   myAdvGroup = new QWidget();
   QGridLayout* anAdvLayout = new QGridLayout( myAdvGroup );
   anAdvLayout->setSpacing( 6 );
-  anAdvLayout->setMargin( 11 );
-  anAdvLayout->setRowStretch( 4, 5 );
-  anAdvLayout->setColumnStretch( 1, 5 );
-
-  myTopology = new QComboBox( myAdvGroup );
-  QStringList topologyTypes;
-  topologyTypes << tr( "BLSURF_TOPOLOGY_CAD" ) 
-                << tr( "BLSURF_TOPOLOGY_PROCESS" ) 
-                << tr( "BLSURF_TOPOLOGY_PROCESS2" ) 
-                << tr( "BLSURF_TOPOLOGY_PRECAD" );
-  myTopology->addItems( topologyTypes );
-
-  myVerbosity = new QSpinBox( myAdvGroup );
-  myVerbosity->setMinimum( 0 );
-  myVerbosity->setMaximum( 100 );
-  myVerbosity->setSingleStep( 5 );
-
-  myOptionTable = new QTableWidget( 0, NB_COLUMNS, myAdvGroup );
-  QStringList headers;
-  headers << tr( "OPTION_ID_COLUMN" )<< tr( "OPTION_TYPE_COLUMN" )  << tr( "OPTION_NAME_COLUMN" ) << tr( "OPTION_VALUE_COLUMN" );
-  myOptionTable->setHorizontalHeaderLabels( headers );
-  myOptionTable->horizontalHeader()->hideSection( OPTION_ID_COLUMN );
-//   myOptionTable->horizontalHeader()->hideSection( OPTION_TYPE_COLUMN );
-  myOptionTable->horizontalHeader()->setStretchLastSection(true);
-  myOptionTable->horizontalHeader()->setDefaultAlignment(Qt::AlignLeft);
-  //myOptionTable->setColumnReadOnly( OPTION_NAME_COLUMN, TRUE );//////
-  //myOptionTable->setColumnReadOnly( OPTION_VALUE_COLUMN, FALSE );/////
-  myOptionTable->verticalHeader()->hide();
-  //myOptionTable->setSelectionBehavior( QAbstractItemView::SelectRows );
-
-  QPushButton* addBtn = new QPushButton( tr( "ADD_OPTION"),  myAdvGroup );
-  addBtn->setMenu( new QMenu() );
-  QPushButton* rmBtn = new QPushButton( tr( "REMOVE_OPTION"), myAdvGroup );
-
-  myPreCADGroupBox = new QGroupBox(tr("BLSURF_PRECAD_GROUP"),  myAdvGroup );
-  myPreCADGroupBox->setEnabled(false);
-  QGridLayout* aPreCADGroupLayout = new QGridLayout(myPreCADGroupBox);
-  myPreCADMergeEdges = new QCheckBox(tr("BLSURF_PRECAD_MERGE_EDGES"),myPreCADGroupBox);
-  aPreCADGroupLayout->addWidget(myPreCADMergeEdges,0,0,1,2);
-  myPreCADRemoveNanoEdges = new QCheckBox(tr("BLSURF_PRECAD_REMOVE_NANO_EDGES"),myPreCADGroupBox);
-  aPreCADGroupLayout->addWidget(myPreCADRemoveNanoEdges,1,0,1,2);
-  myPreCADEpsNano = new SMESHGUI_SpinBox(myPreCADGroupBox);
-  myPreCADEpsNano->RangeStepAndValidator(0, COORD_MAX, 10.0, "length_precision");
-  myPreCADEpsNano->setText("");
-  aPreCADGroupLayout->addWidget( new QLabel( tr( "BLSURF_PRECAD_EPS_NANO" ), myPreCADGroupBox ), 2, 0, 1, 1 );
-  aPreCADGroupLayout->addWidget(myPreCADEpsNano, 2, 1, 1, 1 );
-  myPreCADDiscardInput = new QCheckBox(tr("BLSURF_PRECAD_DISCARD_INPUT"),myPreCADGroupBox);
-  aPreCADGroupLayout->addWidget(myPreCADDiscardInput, 3, 0, 1, 2);
-  
-  QPushButton* chooseGMFBtn = new QPushButton( tr( "BLSURF_GMF_FILE" ),  myAdvGroup );
-  myGMFFileName = new QLineEdit(myAdvGroup);
-//   myGMFFileMode = new QCheckBox(tr("BLSURF_GMF_MODE"),myAdvGroup);
-
-  // ADD WIDGETS (ADVANCED TAB)
-  anAdvLayout->addWidget( new QLabel( tr( "BLSURF_VERBOSITY" ), myAdvGroup ), 0, 0, 1, 1 );
-  anAdvLayout->addWidget( myVerbosity,                                        0, 1, 1, 1 );
-  anAdvLayout->addWidget( new QLabel( tr( "BLSURF_TOPOLOGY" ), myAdvGroup ),  1, 0, 1, 1 );
-  anAdvLayout->addWidget( myTopology,                                         1, 1, 1, 1 );
-  anAdvLayout->addWidget( myPreCADGroupBox ,                                  2, 0, 1, 2 );
-  anAdvLayout->addWidget( addBtn,                                             0, 2, 1, 1 );
-  anAdvLayout->addWidget( rmBtn,                                              0, 3, 1, 1 );
-  anAdvLayout->addWidget( myOptionTable,                                      1, 2, 3, 2 );
-  anAdvLayout->addWidget( chooseGMFBtn,                                       3, 0, 1, 1 );
-  anAdvLayout->addWidget( myGMFFileName,                                      3, 1, 1, 1 );
-//   anAdvLayout->addWidget( myGMFFileMode,                                      4, 0, 1, 2 );
-  anAdvLayout->setRowStretch(4,1);
+  anAdvLayout->setMargin( 11 );  
+  myAdvWidget = new BLSURFPluginGUI_AdvWidget(myAdvGroup);
+  myAdvWidget->addBtn->setMenu( new QMenu() );
+  anAdvLayout->addWidget( myAdvWidget);
 
 
   // Size Maps parameters
@@ -1057,19 +835,14 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   // ---
   tab->insertTab( STD_TAB, myStdGroup, tr( "SMESH_ARGUMENTS" ) );
   tab->insertTab( ADV_TAB, myAdvGroup, tr( "BLSURF_ADV_ARGS" ) );
-  tab->insertTab( SMP_TAB, mySmpGroup, tr( "BLSURF_SIZE_MAP" ) );
+  tab->insertTab( SMP_TAB, mySmpGroup, tr( "LOCAL_SIZE" ) );
   tab->insertTab( ENF_TAB, myEnfGroup, tr( "BLSURF_ENF_VER" ) );
 
   tab->setCurrentIndex( STD_TAB );
 
-  // ---
-  connect( myGeometricMesh,     SIGNAL( activated( int ) ),            this,         SLOT( onGeometricMeshChanged() ) );
-  connect( myPhysicalMesh,      SIGNAL( activated( int ) ),            this,         SLOT( onPhysicalMeshChanged() ) );
-  connect( myTopology,          SIGNAL( activated( int ) ),            this,         SLOT( onTopologyChanged( int ) ) );
-  connect( addBtn->menu(),      SIGNAL( aboutToShow() ),               this,         SLOT( onAddOption() ) );
-  connect( addBtn->menu(),      SIGNAL( triggered( QAction* ) ),       this,         SLOT( onOptionChosenInPopup( QAction* ) ) );
-  connect( rmBtn,               SIGNAL( clicked()),                    this,         SLOT( onDeleteOption() ) );
-  connect( chooseGMFBtn,        SIGNAL( clicked()),                    this,         SLOT( onChooseGMFFile() ) );
+  connect( myAdvWidget->addBtn->menu(), SIGNAL( aboutToShow() ),         this, SLOT( onAddOption() ) );
+  connect( myAdvWidget->addBtn->menu(), SIGNAL( triggered( QAction* ) ), this, SLOT( onOptionChosenInPopup( QAction* ) ) );
+  connect( myAdvWidget->rmBtn,          SIGNAL( clicked()),              this, SLOT( onDeleteOption() ) );
 
   // Size Maps
   connect( addMapButton,        SIGNAL( clicked()),                    this,         SLOT( onAddMap() ) );
@@ -1430,9 +1203,9 @@ void BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices() {
   for (int column = 0; column < myEnforcedTreeWidget->columnCount(); ++column)
     myEnforcedTreeWidget->resizeColumnToContents(column);
 
-  if ( myPhysicalMesh->currentIndex() != SizeMap ) {
-    myPhysicalMesh->setCurrentIndex( SizeMap );
-    onPhysicalMeshChanged();
+  if ( myStdWidget->myPhysicalMesh->currentIndex() != PhysicalLocalSize ) {
+    myStdWidget->myPhysicalMesh->setCurrentIndex( PhysicalLocalSize );
+    myStdWidget->onPhysicalMeshChanged();
   }
 }
 
@@ -1482,12 +1255,7 @@ void BLSURFPluginGUI_HypothesisCreator::onRemoveEnforcedVertex() {
 
 void BLSURFPluginGUI_HypothesisCreator::onInternalVerticesClicked(int state)
 {
-  if (state == Qt::Checked) {
-    myInternalEnforcedVerticesAllFacesGroup->setEnabled(true);
-  }
-  if (state == Qt::Unchecked) {
-    myInternalEnforcedVerticesAllFacesGroup->setEnabled(false);
-  }
+  myInternalEnforcedVerticesAllFacesGroup->setEnabled(state == Qt::Checked);
 }
 
 /** BLSURFPluginGUI_HypothesisCreator::retrieveParams()
@@ -1506,47 +1274,62 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
     QFontMetrics metrics( myName->font() );
     myName->setMinimumWidth( metrics.width( data.myName )+5 );
   }
-  myTopology->setCurrentIndex( data.myTopology );
-  myPreCADGroupBox->setEnabled(data.myTopology == PreCAD);
-  myPreCADMergeEdges->setChecked( data.myPreCADMergeEdges );
-  myPreCADRemoveNanoEdges->setChecked( data.myPreCADRemoveNanoEdges );
-  myPreCADDiscardInput->setChecked( data.myPreCADDiscardInput );
-  MESSAGE("data.myPreCADEpsNano: "<<data.myPreCADEpsNano)
-  if (data.myPreCADEpsNano < 0)
-    myPreCADEpsNano->setText("");
+  myStdWidget->myPhysicalMesh->setCurrentIndex( data.myPhysicalMesh );
+  myStdWidget->myGeometricMesh->setCurrentIndex( data.myGeometricMesh );
+  if (data.myPhySize <= 0)
+    myStdWidget->myPhySize->setText("");
   else
-    myPreCADEpsNano->SetValue( data.myPreCADEpsNano );
-  myPhysicalMesh->setCurrentIndex( data.myPhysicalMesh );
-  myPhySize->SetValue( data.myPhySize );
-#ifdef WITH_SIZE_BOUNDARIES
-  MESSAGE("data.myPhyMin: "<<data.myPhyMin)
-  if (data.myPhyMin < 0)
-    myPhyMin->setText("");
+    myStdWidget->myPhySize->SetValue( data.myPhySize );
+  myStdWidget->myPhySizeRel->setChecked( data.myPhySizeRel );
+  if (data.myMinSize < 0)
+    myStdWidget->myMinSize->setText("");
   else
-    myPhyMin->SetValue( data.myPhyMin );
-  MESSAGE("data.myPhyMax: "<<data.myPhyMax)
-  if (data.myPhyMax < 0)
-    myPhyMax->setText("");
+    myStdWidget->myMinSize->SetValue( data.myMinSize );
+  myStdWidget->myMinSizeRel->setChecked( data.myMinSizeRel );
+  if (data.myMaxSize < 0)
+    myStdWidget->myMaxSize->setText("");
   else
-    myPhyMax->SetValue( data.myPhyMax );
-  MESSAGE("data.myGeoMin: "<<data.myGeoMin)
-  if (data.myGeoMin < 0)
-    myGeoMin->setText("");
+    myStdWidget->myMaxSize->SetValue( data.myMaxSize );
+  myStdWidget->myMaxSizeRel->setChecked( data.myMaxSizeRel );
+  if (data.myGradation <= 0)
+    myStdWidget->myGradation->setText("");
   else
-    myGeoMin->SetValue( data.myGeoMin );
-  MESSAGE("data.myGeoMax: "<<data.myGeoMax)
-  if (data.myGeoMax < 0)
-    myGeoMax->setText("");
+    myStdWidget->myGradation->SetValue( data.myGradation );
+  myStdWidget->myAllowQuadrangles->setChecked( data.myAllowQuadrangles );
+  
+  if (data.myAngleMesh < 0)
+    myStdWidget->myAngleMesh->setText("");
   else
-    myGeoMax->SetValue( data.myGeoMax );
-#endif
-  myGeometricMesh->setCurrentIndex( data.myGeometricMesh );
-  myAngleMeshS->SetValue( data.myAngleMeshS );
-  myAngleMeshC->SetValue( data.myAngleMeshC );
-  myGradation->SetValue( data.myGradation );
-  myAllowQuadrangles->setChecked( data.myAllowQuadrangles );
-  myDecimesh->setChecked( data.myDecimesh );
-  myVerbosity->setValue( data.myVerbosity );
+    myStdWidget->myAngleMesh->SetValue( data.myAngleMesh );
+  if (data.myChordalError <= 0)
+    myStdWidget->myChordalError->setText("");
+  else
+    myStdWidget->myChordalError->SetValue( data.myChordalError );
+  myStdWidget->myAnisotropic->setChecked( data.myAnisotropic );
+  if (data.myAnisotropicRatio <= 0)
+    myStdWidget->myAnisotropicRatio->setText("");
+  else
+    myStdWidget->myAnisotropicRatio->SetValue( data.myAnisotropicRatio );
+  myStdWidget->myRemoveTinyEdges->setChecked( data.myRemoveTinyEdges );
+  if (data.myTinyEdgeLength <= 0)
+    myStdWidget->myTinyEdgeLength->setText("");
+  else
+    myStdWidget->myTinyEdgeLength->SetValue( data.myTinyEdgeLength );
+  myStdWidget->myForceBadElementRemoval->setChecked( data.myForceBadElementRemoval );
+  if (data.myBadElementAspectRatio <= 0)
+    myStdWidget->myBadElementAspectRatio->setText("");
+  else
+    myStdWidget->myBadElementAspectRatio->SetValue( data.myBadElementAspectRatio );
+  myStdWidget->myOptimizeMesh->setChecked( data.myOptimizeMesh );
+  myStdWidget->myQuadraticMesh->setChecked( data.myQuadraticMesh );
+  
+  myStdWidget->resizeWidgets();  
+  
+  myAdvWidget->myVerbosity->setValue( data.myVerbosity );
+  myAdvWidget->myPreCADGroupBox->setChecked(data.myTopology == PreCAD);
+  myAdvWidget->myPreCADMergeEdges->setChecked( data.myPreCADMergeEdges );
+  myAdvWidget->myPreCADProcess3DTopology->setChecked( data.myPreCADProcess3DTopology );
+  myAdvWidget->myPreCADDiscardInput->setChecked( data.myPreCADDiscardInput );
 
   if ( myOptions.operator->() ) {
 //     MESSAGE("retrieveParams():myOptions->length() = " << myOptions->length());
@@ -1555,18 +1338,18 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
       QStringList name_value = option.split( ":", QString::KeepEmptyParts );
       if ( name_value.count() > 1 ) {
         QString idStr = QString("%1").arg( i );
-        int row = myOptionTable->rowCount();
-        myOptionTable->setRowCount( row+1 );
-        myOptionTable->setItem( row, OPTION_ID_COLUMN, new QTableWidgetItem( idStr ) );
-        myOptionTable->item( row, OPTION_ID_COLUMN )->setFlags( 0 );
-        myOptionTable->setItem( row, OPTION_TYPE_COLUMN, new QTableWidgetItem( "BLSURF" ) );
-        myOptionTable->item( row, OPTION_TYPE_COLUMN )->setFlags( 0 );
-        myOptionTable->setItem( row, OPTION_NAME_COLUMN, new QTableWidgetItem( name_value[0] ) );
-        myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( 0 );
-        myOptionTable->setItem( row, OPTION_VALUE_COLUMN, new QTableWidgetItem( name_value[1] ) );
-        myOptionTable->item( row, OPTION_VALUE_COLUMN )->setFlags( Qt::ItemIsSelectable |
-                                      Qt::ItemIsEditable   |
-                                      Qt::ItemIsEnabled );
+        int row = myAdvWidget->myOptionTable->rowCount();
+        myAdvWidget->myOptionTable->setRowCount( row+1 );
+        myAdvWidget->myOptionTable->setItem( row, OPTION_ID_COLUMN, new QTableWidgetItem( idStr ) );
+        myAdvWidget->myOptionTable->item( row, OPTION_ID_COLUMN )->setFlags( 0 );
+        myAdvWidget->myOptionTable->setItem( row, OPTION_TYPE_COLUMN, new QTableWidgetItem( "BLSURF" ) );
+        myAdvWidget->myOptionTable->item( row, OPTION_TYPE_COLUMN )->setFlags( 0 );
+        myAdvWidget->myOptionTable->setItem( row, OPTION_NAME_COLUMN, new QTableWidgetItem( name_value[0] ) );
+        myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( 0 );
+        myAdvWidget->myOptionTable->setItem( row, OPTION_VALUE_COLUMN, new QTableWidgetItem( name_value[1] ) );
+        myAdvWidget->myOptionTable->item( row, OPTION_VALUE_COLUMN )->setFlags( Qt::ItemIsSelectable |
+                                                                                Qt::ItemIsEditable   |
+                                                                                Qt::ItemIsEnabled );
       }
     }
   }
@@ -1577,23 +1360,23 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
       QStringList name_value = option.split( ":", QString::KeepEmptyParts );
       if ( name_value.count() > 1 ) {
         QString idStr = QString("%1").arg( i );
-        int row = myOptionTable->rowCount();
-        myOptionTable->setRowCount( row+1 );
-        myOptionTable->setItem( row, OPTION_ID_COLUMN, new QTableWidgetItem( idStr ) );
-        myOptionTable->item( row, OPTION_ID_COLUMN )->setFlags( 0 );
-        myOptionTable->setItem( row, OPTION_TYPE_COLUMN, new QTableWidgetItem( "PRECAD" ) );
-        myOptionTable->item( row, OPTION_TYPE_COLUMN )->setFlags( 0 );
-        myOptionTable->setItem( row, OPTION_NAME_COLUMN, new QTableWidgetItem( name_value[0] ) );
-        myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( 0 );
-        myOptionTable->setItem( row, OPTION_VALUE_COLUMN, new QTableWidgetItem( name_value[1] ) );
-        myOptionTable->item( row, OPTION_VALUE_COLUMN )->setFlags( Qt::ItemIsSelectable |
-                                      Qt::ItemIsEditable   |
-                                      Qt::ItemIsEnabled );
+        int row = myAdvWidget->myOptionTable->rowCount();
+        myAdvWidget->myOptionTable->setRowCount( row+1 );
+        myAdvWidget->myOptionTable->setItem( row, OPTION_ID_COLUMN, new QTableWidgetItem( idStr ) );
+        myAdvWidget->myOptionTable->item( row, OPTION_ID_COLUMN )->setFlags( 0 );
+        myAdvWidget->myOptionTable->setItem( row, OPTION_TYPE_COLUMN, new QTableWidgetItem( "PRECAD" ) );
+        myAdvWidget->myOptionTable->item( row, OPTION_TYPE_COLUMN )->setFlags( 0 );
+        myAdvWidget->myOptionTable->setItem( row, OPTION_NAME_COLUMN, new QTableWidgetItem( name_value[0] ) );
+        myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( 0 );
+        myAdvWidget->myOptionTable->setItem( row, OPTION_VALUE_COLUMN, new QTableWidgetItem( name_value[1] ) );
+        myAdvWidget->myOptionTable->item( row, OPTION_VALUE_COLUMN )->setFlags( Qt::ItemIsSelectable |
+                                                                                Qt::ItemIsEditable   |
+                                                                                Qt::ItemIsEnabled );
       }
     }
   }
-  myOptionTable->resizeColumnToContents( OPTION_NAME_COLUMN );
-  myGMFFileName->setText(QString(data.myGMFFileName.c_str()));
+  myAdvWidget->myOptionTable->resizeColumnToContents( OPTION_NAME_COLUMN );
+  myAdvWidget->myGMFFileName->setText(QString(data.myGMFFileName.c_str()));
 //   myGMFFileMode->setChecked(data.myGMFFileMode);
   
   // Sizemaps
@@ -1674,8 +1457,8 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
   myInternalEnforcedVerticesAllFacesGroup->setEnabled(data.myInternalEnforcedVerticesAllFaces);
 
   // update widgets
-  that->onPhysicalMeshChanged();
-  that->onGeometricMeshChanged();
+  that->myStdWidget->onPhysicalMeshChanged();
+  that->myStdWidget->onGeometricMeshChanged();
 }
 
 /** BLSURFPluginGUI_HypothesisCreator::storeParams()
@@ -1704,37 +1487,39 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   HypothesisData* data = SMESH::GetHypothesisData( hypType() );
   h_data.myName = isCreation() && data ? hypName() : "";
 
-  h_data.myTopology           = (int) h->GetTopology();
-  h_data.myPhysicalMesh       = (int) h->GetPhysicalMesh();
-  h_data.myPhySize            = h->GetPhySize();
-  h_data.myGeometricMesh      = (int) h->GetGeometricMesh();
-  h_data.myAngleMeshS         = h->GetAngleMeshS();
-  h_data.myAngleMeshC         = h->GetAngleMeshC();
-  h_data.myGradation          = h->GetGradation();
-  h_data.myAllowQuadrangles   = h->GetQuadAllowed();
-  h_data.myDecimesh           = h->GetDecimesh();
-  h_data.myVerbosity          = h->GetVerbosity();
-  h_data.myPreCADMergeEdges   = h->GetPreCADMergeEdges();
-  h_data.myPreCADRemoveNanoEdges = h->GetPreCADRemoveNanoEdges();
-  h_data.myPreCADDiscardInput = h->GetPreCADDiscardInput();
-  double EpsNano = h->GetPreCADEpsNano();
-  h_data.myPreCADEpsNano      = EpsNano > 0 ? EpsNano : -1.0;
+  h_data.myPhysicalMesh           = (int) h->GetPhysicalMesh();
+  h_data.myGeometricMesh          = (int) h->GetGeometricMesh();
+  h_data.myPhySize                = h->GetPhySize();
+  h_data.myPhySizeRel             = h->IsPhySizeRel();
+  double minSize                  = h->GetMinSize();
+  double maxSize                  = h->GetMaxSize();
+  h_data.myMinSize                = minSize > 0 ? minSize : -1.0;
+  h_data.myMinSizeRel             = h->IsMinSizeRel();
+  h_data.myMaxSize                = maxSize > 0 ? maxSize : -1.0;
+  h_data.myMaxSizeRel             = h->IsMaxSizeRel();
+  h_data.myGradation              = h->GetGradation();
+  h_data.myAllowQuadrangles       = h->GetQuadAllowed();
+  double angle                    = h->GetAngleMesh();
+  h_data.myAngleMesh              = angle > 0 ? angle : -1.0;
+  double chordalError             = h->GetChordalError();
+  h_data.myChordalError           = chordalError > 0 ? chordalError : -1.0;
+  h_data.myAnisotropic            = h->GetAnisotropic();
+  double myAnisotropicRatio       = h->GetAnisotropicRatio();
+  h_data.myAnisotropicRatio       = myAnisotropicRatio > 0 ? myAnisotropicRatio : -1.0;
+  h_data.myRemoveTinyEdges        = h->GetRemoveTinyEdges();
+  double myTinyEdgeLength         = h->GetTinyEdgeLength();
+  h_data.myTinyEdgeLength         = myTinyEdgeLength > 0 ? myTinyEdgeLength : -1.0;
+  h_data.myForceBadElementRemoval = h->GetBadElementRemoval();
+  double myBadElementAspectRatio  = h->GetBadElementAspectRatio();
+  h_data.myBadElementAspectRatio  = myBadElementAspectRatio > 0 ? myBadElementAspectRatio : -1.0;
+  h_data.myOptimizeMesh           = h->GetOptimizeMesh();
+  h_data.myQuadraticMesh          = h->GetQuadraticMesh();
+  h_data.myVerbosity              = h->GetVerbosity();
+  h_data.myTopology               = (int) h->GetTopology();
+  h_data.myPreCADMergeEdges       = h->GetPreCADMergeEdges();
+  h_data.myPreCADProcess3DTopology  = h->GetPreCADProcess3DTopology();
+  h_data.myPreCADDiscardInput     = h->GetPreCADDiscardInput();
 
-#ifdef WITH_SIZE_BOUNDARIES
-  double PhyMin = h->GetPhyMin();
-  double PhyMax = h->GetPhyMax();
-  double GeoMin = h->GetGeoMin();
-  double GeoMax = h->GetGeoMax();
-//   if ( PhyMin > 0 )
-//   h_data.myPhyMin = PhyMin > 0 ? QString::number( h->GetPhyMin() ) : QString("");
-//   h_data.myPhyMax = PhyMax > 0 ? QString::number( h->GetPhyMax() ) : QString("");
-//   h_data.myGeoMin = GeoMin > 0 ? QString::number( h->GetGeoMin() ) : QString("");
-//   h_data.myGeoMax = GeoMax > 0 ? QString::number( h->GetGeoMax() ) : QString("");
-  h_data.myPhyMin = PhyMin > 0 ? PhyMin : -1.0;
-  h_data.myPhyMax = PhyMax > 0 ? PhyMax : -1.0;
-  h_data.myGeoMin = GeoMin > 0 ? GeoMin : -1.0;
-  h_data.myGeoMax = GeoMax > 0 ? GeoMax : -1.0;
-#endif
 
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
   that->myOptions = h->GetOptionValues();
@@ -1886,52 +1671,77 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
   bool ok = true;
   try
   {
-    if( isCreation() )
+    if ( isCreation() )
       SMESH::SetName( SMESH::FindSObject( h ), h_data.myName.toLatin1().constData() );
 
-    if ( h->GetTopology() != h_data.myTopology ) // avoid duplication of DumpPython commands
-      h->SetTopology( (int) h_data.myTopology );
-    if ( h->GetPhysicalMesh() != h_data.myPhysicalMesh )
+    if ( h->GetPhysicalMesh() != h_data.myPhysicalMesh ) // avoid duplication of DumpPython commands
       h->SetPhysicalMesh( (int) h_data.myPhysicalMesh );
     if ( h->GetGeometricMesh() != (int) h_data.myGeometricMesh )
       h->SetGeometricMesh( (int) h_data.myGeometricMesh );
+
+    if ( ((int) h_data.myPhysicalMesh == PhysicalGlobalSize)||((int) h_data.myPhysicalMesh == PhysicalLocalSize) ) {
+      if ( h->GetPhySize() != h_data.myPhySize ) {
+        if ( h_data.myPhySizeRel )
+          h->SetPhySizeRel( h_data.myPhySize );
+        else
+          h->SetPhySize( h_data.myPhySize );
+      }
+    }
+    if (h->GetMinSize() != h_data.myMinSize) {
+      if ( h_data.myMinSizeRel )
+        h->SetMinSizeRel( h_data.myMinSize <= 0 ? -1 : h_data.myMinSize );
+      else
+        h->SetMinSize( h_data.myMinSize <= 0 ? -1 : h_data.myMinSize );
+    }
+    if (h->GetMaxSize() != h_data.myMaxSize) {
+      if ( h_data.myMaxSizeRel )
+        h->SetMaxSizeRel( h_data.myMaxSize <= 0 ? -1 : h_data.myMaxSize );
+      else
+        h->SetMaxSize( h_data.myMaxSize <= 0 ? -1 : h_data.myMaxSize );
+    }
     if ( h->GetGradation() !=  h_data.myGradation )
-      h->SetGradation( h_data.myGradation );
+      h->SetGradation( h_data.myGradation <= 0 ? -1 : h_data.myGradation );
     if ( h->GetQuadAllowed() != h_data.myAllowQuadrangles )
       h->SetQuadAllowed( h_data.myAllowQuadrangles );
-    if ( h->GetDecimesh() != h_data.myDecimesh )
-      h->SetDecimesh( h_data.myDecimesh );
+    
+    if ( (int) h_data.myGeometricMesh != DefaultGeom ) {
+      if ( h->GetAngleMesh() != h_data.myAngleMesh )
+        h->SetAngleMesh( h_data.myAngleMesh <= 0 ? -1 :h_data.myAngleMesh );
+      if ( h->GetChordalError() != h_data.myChordalError )
+        h->SetChordalError( h_data.myChordalError <= 0 ? -1 :h_data.myChordalError );
+    }
+    
+    if ( h->GetAnisotropic() != h_data.myAnisotropic )
+      h->SetAnisotropic( h_data.myAnisotropic );
+    if ( h_data.myAnisotropic && ( h->GetAnisotropicRatio() != h_data.myAnisotropicRatio ) )
+      h->SetAnisotropicRatio( h_data.myAnisotropicRatio <= 0 ? -1 :h_data.myAnisotropicRatio );
+    
+    if ( h->GetRemoveTinyEdges() != h_data.myRemoveTinyEdges )
+      h->SetRemoveTinyEdges( h_data.myRemoveTinyEdges );
+    if ( h_data.myRemoveTinyEdges && ( h->GetTinyEdgeLength() != h_data.myTinyEdgeLength ) )
+      h->SetTinyEdgeLength( h_data.myTinyEdgeLength <= 0 ? -1 :h_data.myTinyEdgeLength );
+    
+    if ( h->GetBadElementRemoval() != h_data.myForceBadElementRemoval )
+      h->SetBadElementRemoval( h_data.myForceBadElementRemoval );
+    if ( h_data.myForceBadElementRemoval && ( h->GetBadElementAspectRatio() != h_data.myBadElementAspectRatio ) )
+      h->SetBadElementAspectRatio( h_data.myBadElementAspectRatio <= 0 ? -1 :h_data.myBadElementAspectRatio );
+    
+    if ( h->GetOptimizeMesh() != h_data.myOptimizeMesh )
+      h->SetOptimizeMesh( h_data.myOptimizeMesh );    
+    
+    if ( h->GetQuadraticMesh() != h_data.myQuadraticMesh )
+      h->SetQuadraticMesh( h_data.myQuadraticMesh );    
+
     if ( h->GetVerbosity() != h_data.myVerbosity )
       h->SetVerbosity( h_data.myVerbosity );
+    if ( h->GetTopology() != h_data.myTopology )
+      h->SetTopology( (int) h_data.myTopology );
     if ( h->GetPreCADMergeEdges() != h_data.myPreCADMergeEdges )
       h->SetPreCADMergeEdges( h_data.myPreCADMergeEdges );
-    if ( h->GetPreCADRemoveNanoEdges() != h_data.myPreCADRemoveNanoEdges )
-      h->SetPreCADRemoveNanoEdges( h_data.myPreCADRemoveNanoEdges );
+    if ( h->GetPreCADProcess3DTopology() != h_data.myPreCADProcess3DTopology )
+      h->SetPreCADProcess3DTopology( h_data.myPreCADProcess3DTopology );
     if ( h->GetPreCADDiscardInput() != h_data.myPreCADDiscardInput )
       h->SetPreCADDiscardInput( h_data.myPreCADDiscardInput );
-    if ( h->GetPreCADEpsNano() != h_data.myPreCADEpsNano && h_data.myPreCADEpsNano > 0)
-      h->SetPreCADEpsNano( h_data.myPreCADEpsNano );
-
-    if( ((int) h_data.myPhysicalMesh == PhysicalUserDefined)||((int) h_data.myPhysicalMesh == SizeMap) ) {
-      if ( h->GetPhySize() != h_data.myPhySize )
-        h->SetPhySize( h_data.myPhySize );
-    }
-    if( (int) h_data.myGeometricMesh == UserDefined ) {
-      if ( h->GetAngleMeshS() != h_data.myAngleMeshS )
-        h->SetAngleMeshS( h_data.myAngleMeshS );
-      if ( h->GetAngleMeshC() != h_data.myAngleMeshC )
-        h->SetAngleMeshC( h_data.myAngleMeshC );
-    }
-#ifdef WITH_SIZE_BOUNDARIES
-    if (h->GetPhyMin() != h_data.myPhyMin && h_data.myPhyMin > 0)
-      h->SetPhyMin( h_data.myPhyMin );
-    if (h->GetPhyMax() != h_data.myPhyMax && h_data.myPhyMax > 0)
-      h->SetPhyMax( h_data.myPhyMax );
-    if (h->GetGeoMin() != h_data.myGeoMin && h_data.myGeoMin > 0)
-      h->SetGeoMin( h_data.myGeoMin );
-    if (h->GetGeoMax() != h_data.myGeoMax && h_data.myGeoMax > 0)
-      h->SetGeoMax( h_data.myGeoMax );
-#endif
 
     h->SetOptionValues( myOptions ); // is set in checkParams()
     h->SetPreCADOptionValues( myPreCADOptions ); // is set in checkParams()
@@ -2046,57 +1856,72 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
 {
   MESSAGE("BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets");
   h_data.myName                  = myName ? myName->text() : "";
-  h_data.myTopology              = myTopology->currentIndex();
-  h_data.myPhysicalMesh          = myPhysicalMesh->currentIndex();
-  h_data.myPhySize               = myPhySize->GetValue();
-#ifdef WITH_SIZE_BOUNDARIES
-  h_data.myPhyMin                = myPhyMin->GetValue();
-  h_data.myPhyMax                = myPhyMax->GetValue();
-  h_data.myGeoMin                = myGeoMin->GetValue();
-  h_data.myGeoMax                = myGeoMax->GetValue();
-#endif
-  h_data.myGeometricMesh         = myGeometricMesh->currentIndex();
-  h_data.myAngleMeshS            = myAngleMeshS->GetValue();
-  h_data.myAngleMeshC            = myAngleMeshC->GetValue();
-  h_data.myGradation             = myGradation->GetValue();
-  h_data.myAllowQuadrangles      = myAllowQuadrangles->isChecked();
-  h_data.myDecimesh              = myDecimesh->isChecked();
-  h_data.myVerbosity             = myVerbosity->value();
-  h_data.myPreCADMergeEdges      = myPreCADMergeEdges->isChecked();
-  h_data.myPreCADRemoveNanoEdges = myPreCADRemoveNanoEdges->isChecked();
-  h_data.myPreCADDiscardInput    = myPreCADDiscardInput->isChecked();
-  h_data.myPreCADEpsNano         = myPreCADEpsNano->GetValue();
+  h_data.myPhysicalMesh          = myStdWidget->myPhysicalMesh->currentIndex();
+  h_data.myGeometricMesh         = myStdWidget->myGeometricMesh->currentIndex();
+  h_data.myPhySize               = myStdWidget->myPhySize->text().isEmpty() ? -1.0 : myStdWidget->myPhySize->GetValue();
+  h_data.myPhySizeRel            = myStdWidget->myPhySizeRel->isChecked();
+  h_data.myMinSize               = myStdWidget->myMinSize->text().isEmpty() ? -1.0 : myStdWidget->myMinSize->GetValue();
+  h_data.myMinSizeRel            = myStdWidget->myMinSizeRel->isChecked();
+  h_data.myMaxSize               = myStdWidget->myMaxSize->text().isEmpty() ? -1.0 : myStdWidget->myMaxSize->GetValue();
+  h_data.myMaxSizeRel            = myStdWidget->myMaxSizeRel->isChecked();
+  h_data.myGradation             = myStdWidget->myGradation->text().isEmpty() ? -1.0 : myStdWidget->myGradation->GetValue();
+  h_data.myAllowQuadrangles      = myStdWidget->myAllowQuadrangles->isChecked();
+  h_data.myAngleMesh             = myStdWidget->myAngleMesh->text().isEmpty() ? -1.0 : myStdWidget->myAngleMesh->GetValue();
+  h_data.myChordalError          = myStdWidget->myChordalError->text().isEmpty() ? -1.0 : myStdWidget->myChordalError->GetValue();
+  h_data.myAnisotropic           = myStdWidget->myAnisotropic->isChecked();
+  h_data.myAnisotropicRatio      = myStdWidget->myAnisotropicRatio->text().isEmpty() ? -1.0 : myStdWidget->myAnisotropicRatio->GetValue();
+  h_data.myRemoveTinyEdges       = myStdWidget->myRemoveTinyEdges->isChecked();
+  h_data.myTinyEdgeLength        = myStdWidget->myTinyEdgeLength->text().isEmpty() ? -1.0 : myStdWidget->myTinyEdgeLength->GetValue();
+  h_data.myForceBadElementRemoval= myStdWidget->myForceBadElementRemoval->isChecked();
+  h_data.myBadElementAspectRatio = myStdWidget->myBadElementAspectRatio->text().isEmpty() ? -1.0 : myStdWidget->myBadElementAspectRatio->GetValue();
+  h_data.myOptimizeMesh          = myStdWidget->myOptimizeMesh->isChecked();
+  h_data.myQuadraticMesh         = myStdWidget->myQuadraticMesh->isChecked();
+  h_data.myVerbosity             = myAdvWidget->myVerbosity->value();
+  h_data.myTopology              = myAdvWidget->myPreCADGroupBox->isChecked() ? PreCAD : FromCAD;
+  h_data.myPreCADMergeEdges      = myAdvWidget->myPreCADMergeEdges->isChecked();
+  h_data.myPreCADProcess3DTopology = myAdvWidget->myPreCADProcess3DTopology->isChecked();
+  h_data.myPreCADDiscardInput    = myAdvWidget->myPreCADDiscardInput->isChecked();
 
   QString guiHyp;
-  guiHyp += tr("BLSURF_TOPOLOGY") + " = " + QString::number( h_data.myTopology ) + "; ";
   guiHyp += tr("BLSURF_PHY_MESH") + " = " + QString::number( h_data.myPhysicalMesh ) + "; ";
-  guiHyp += tr("BLSURF_HPHYDEF") + " = " + QString::number( h_data.myPhySize ) + "; ";
   guiHyp += tr("BLSURF_GEOM_MESH") + " = " + QString::number( h_data.myGeometricMesh ) + "; ";
-  guiHyp += tr("BLSURF_ANGLE_MESH_S") + " = " + QString::number( h_data.myAngleMeshS ) + "; ";
+  guiHyp += tr("BLSURF_HPHYDEF") + " = " + QString::number( h_data.myPhySize ) + "; ";
+  guiHyp += tr("BLSURF_HPHYDEF") + " " + tr("BLSURF_SIZE_REL") +" = " + QString(h_data.myPhySizeRel ? "yes" : "no") + "; ";
+  guiHyp += tr("BLSURF_MINSIZE") + " = "+ QString::number( h_data.myMinSize ) + "; ";
+  guiHyp += tr("BLSURF_MINSIZE") + " " + tr("BLSURF_SIZE_REL") + " = " + QString(h_data.myMinSizeRel ? "yes" : "no") + "; ";
+  guiHyp += tr("BLSURF_MAXSIZE") + " = "+ QString::number( h_data.myMaxSize ) + "; ";
+  guiHyp += tr("BLSURF_MAXSIZE") + " " + tr("BLSURF_SIZE_REL") + " = " + QString(h_data.myMaxSizeRel ? "yes" : "no") + "; ";
   guiHyp += tr("BLSURF_GRADATION") + " = " + QString::number( h_data.myGradation ) + "; ";
   guiHyp += tr("BLSURF_ALLOW_QUADRANGLES") + " = " + QString(h_data.myAllowQuadrangles ? "yes" : "no") + "; ";
-  guiHyp += tr("BLSURF_DECIMESH") + " = " + QString(h_data.myDecimesh ? "yes" : "no") + "; ";
-#ifdef WITH_SIZE_BOUNDARIES
-  guiHyp += "hphymin = " + QString::number( h_data.myPhyMin ) + "; ";
-  guiHyp += "hphymax = " + QString::number( h_data.myPhyMax ) + "; ";
-  guiHyp += "hgeomin = " + QString::number( h_data.myGeoMin ) + "; ";
-  guiHyp += "hgeomax = " + QString::number( h_data.myGeoMax ) + "; ";
-#endif
+  guiHyp += tr("BLSURF_ANGLE_MESH") + " = " + QString::number( h_data.myAngleMesh ) + "; ";
+  guiHyp += tr("BLSURF_CHORDAL_ERROR") + " = " + QString::number( h_data.myChordalError ) + "; ";
+  guiHyp += tr("BLSURF_ANISOTROPIC") + " = " + QString(h_data.myAnisotropic ? "yes" : "no") + "; ";
+  guiHyp += tr("BLSURF_ANISOTROPIC_RATIO") + " = " + QString::number( h_data.myAnisotropicRatio ) + "; ";
+  
+  
+  guiHyp += tr("BLSURF_REMOVE_TINY_EDGES") + " = " + QString(h_data.myRemoveTinyEdges ? "yes" : "no") + "; ";
+  guiHyp += tr("BLSURF_TINY_EDGES_LENGTH") + " = " + QString::number( h_data.myTinyEdgeLength ) + "; ";
+  guiHyp += tr("BLSURF_REMOVE_SLIVERS") + " = " + QString(h_data.myForceBadElementRemoval ? "yes" : "no") + "; ";
+  guiHyp += tr("BLSURF_BAD_SURFACE_ELEMENT_ASPECT_RATIO") + " = " + QString::number( h_data.myBadElementAspectRatio ) + "; ";
+  guiHyp += tr("BLSURF_OPTIMISATION") + " = " + QString(h_data.myOptimizeMesh ? "yes" : "no") + "; ";
+  guiHyp += tr("BLSURF_ELEMENT_ORDER") + " = " + QString(h_data.myQuadraticMesh ? "yes" : "no") + "; ";
+  
+  
+  guiHyp += tr("BLSURF_TOPOLOGY") + " = " + QString::number( h_data.myTopology ) + "; ";
   guiHyp += tr("BLSURF_PRECAD_MERGE_EDGES") + " = " + QString(h_data.myPreCADMergeEdges ? "yes" : "no") + "; ";
-  guiHyp += tr("BLSURF_PRECAD_REMOVE_NANO_EDGES") + " = " + QString(h_data.myPreCADRemoveNanoEdges ? "yes" : "no") + "; ";
+  guiHyp += tr("BLSURF_PRECAD_REMOVE_NANO_EDGES") + " = " + QString(h_data.myPreCADProcess3DTopology ? "yes" : "no") + "; ";
   guiHyp += tr("BLSURF_PRECAD_DISCARD_INPUT") + " = " + QString(h_data.myPreCADDiscardInput ? "yes" : "no") + "; ";
-  guiHyp += tr("BLSURF_PRECAD_EPS_NANO") + " = " + QString::number( h_data.myPreCADEpsNano ) + "; ";
 
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
-  int row = 0, nbRows = myOptionTable->rowCount();
+  int row = 0, nbRows = myAdvWidget->myOptionTable->rowCount();
   for ( ; row < nbRows; ++row )
   {
-    int id = myOptionTable->item( row, OPTION_ID_COLUMN )->text().toInt();
-    std::string optionType = myOptionTable->item( row, OPTION_TYPE_COLUMN )->text().toStdString();
+    int id = myAdvWidget->myOptionTable->item( row, OPTION_ID_COLUMN )->text().toInt();
+    std::string optionType = myAdvWidget->myOptionTable->item( row, OPTION_TYPE_COLUMN )->text().toStdString();
     if ( id >= 0 && ( ( optionType == "BLSURF" && id < myOptions->length() ) || ( optionType == "PRECAD" && id < myPreCADOptions->length() ) ) )
     {
-      QString name  = myOptionTable->item( row, OPTION_NAME_COLUMN )->text();
-      QString value = myOptionTable->item( row, OPTION_VALUE_COLUMN )->text().trimmed();
+      QString name  = myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->text();
+      QString value = myAdvWidget->myOptionTable->item( row, OPTION_VALUE_COLUMN )->text().trimmed();
       if ( value.isNull() )
         value = "";
       if (optionType == "PRECAD")
@@ -2112,7 +1937,7 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
     }
   }
   
-  h_data.myGMFFileName = myGMFFileName->text().toStdString();
+  h_data.myGMFFileName = myAdvWidget->myGMFFileName->text().toStdString();
 //   h_data.myGMFFileMode = myGMFFileMode->isChecked();
 
   // SizeMap
@@ -2186,58 +2011,6 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
   return guiHyp;
 }
 
-
-void BLSURFPluginGUI_HypothesisCreator::onTopologyChanged(int index) {
-  MESSAGE("BLSURFPluginGUI_HypothesisCreator::onTopologyChanged");
-  myPreCADGroupBox->setEnabled(index == PreCAD);
-}
-
-void BLSURFPluginGUI_HypothesisCreator::onPhysicalMeshChanged() {
-  MESSAGE("BLSURFPluginGUI_HypothesisCreator::onPhysicalMeshChanged");
-  bool isPhysicalUserDefined = (myPhysicalMesh->currentIndex() == PhysicalUserDefined);
-  bool isSizeMap = (myPhysicalMesh->currentIndex() == SizeMap);
-  bool isCustom = (isPhysicalUserDefined || isSizeMap) ;
-  bool geomIsCustom = (myGeometricMesh->currentIndex() == UserDefined);
-
-  myGradation->setEnabled(!isPhysicalUserDefined || geomIsCustom);
-  myPhySize->setEnabled(isCustom);
-  myPhyMax->setEnabled(isCustom);
-  myPhyMin->setEnabled(isCustom);
-
-  if ( !myGradation->isEnabled())
-    myGradation->SetValue( 1.1 );
-
-  if ( !isCustom ) {
-    if ( myGeometricMesh->currentIndex() == DefaultGeom ) {
-      myGeometricMesh->setCurrentIndex( UserDefined );
-      onGeometricMeshChanged();
-    }
-  }
-}
-
-void BLSURFPluginGUI_HypothesisCreator::onGeometricMeshChanged() {
-  MESSAGE("BLSURFPluginGUI_HypothesisCreator::onGeometricMeshChanged");
-  bool isCustom = (myGeometricMesh->currentIndex() == UserDefined);
-  bool phyIsSizemap = (myPhysicalMesh->currentIndex() == SizeMap);
-
-  myAngleMeshS->setEnabled(isCustom);
-  myAngleMeshC->setEnabled(isCustom);
-  myGradation->setEnabled(isCustom || phyIsSizemap);
-  myGeoMax->setEnabled(isCustom);
-  myGeoMin->setEnabled(isCustom);
-
-  if ( !myGradation->isEnabled())
-    myGradation->SetValue( 1.1 );
-
-  if ( ! isCustom ) {
-    //  hphy_flag = 0 and hgeo_flag = 0 is not allowed (spec)
-    if ( myPhysicalMesh->currentIndex() == DefaultSize ) {
-      myPhysicalMesh->setCurrentIndex( PhysicalUserDefined );
-      onPhysicalMeshChanged();
-    }
-  }
-}
-
 void BLSURFPluginGUI_HypothesisCreator::onAddOption()
 {
   QMenu* menu = (QMenu*)sender();
@@ -2264,7 +2037,7 @@ void BLSURFPluginGUI_HypothesisCreator::onAddOption()
 
 void BLSURFPluginGUI_HypothesisCreator::onOptionChosenInPopup( QAction* a )
 {
-  myOptionTable->setFocus();
+  myAdvWidget->myOptionTable->setFocus();
   QMenu* menu = (QMenu*)( a->parent() );
 
   int idx = menu->actions().indexOf( a );
@@ -2281,68 +2054,58 @@ void BLSURFPluginGUI_HypothesisCreator::onOptionChosenInPopup( QAction* a )
   QString optionName = option.split( ":", QString::KeepEmptyParts )[0];
 
   // look for a row with optionName
-  int row = 0, nbRows = myOptionTable->rowCount();
+  int row = 0, nbRows = myAdvWidget->myOptionTable->rowCount();
   for ( ; row < nbRows; ++row )
-    if ( myOptionTable->item( row, OPTION_ID_COLUMN )->text() == idStr )
-      if ( myOptionTable->item( row, OPTION_TYPE_COLUMN )->text() == optionType )
+    if ( myAdvWidget->myOptionTable->item( row, OPTION_ID_COLUMN )->text() == idStr )
+      if ( myAdvWidget->myOptionTable->item( row, OPTION_TYPE_COLUMN )->text() == optionType )
         break;
   // add a row if not found
   if ( row == nbRows ) {
-    myOptionTable->setRowCount( row+1 );
-    myOptionTable->setItem( row, OPTION_ID_COLUMN, new QTableWidgetItem( idStr ) );
-    myOptionTable->item( row, OPTION_ID_COLUMN )->setFlags( 0 );
-    myOptionTable->setItem( row, OPTION_TYPE_COLUMN, new QTableWidgetItem( optionType ) );
-    myOptionTable->item( row, OPTION_TYPE_COLUMN )->setFlags( 0 );
-    myOptionTable->setItem( row, OPTION_NAME_COLUMN, new QTableWidgetItem( optionName ) );
-    myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( 0 );
-    myOptionTable->setItem( row, OPTION_VALUE_COLUMN, new QTableWidgetItem( "" ) );
-    myOptionTable->item( row, OPTION_VALUE_COLUMN )->setFlags( Qt::ItemIsSelectable |
-                                                               Qt::ItemIsEditable   |
-                                                               Qt::ItemIsEnabled );
-    myOptionTable->resizeColumnToContents( OPTION_NAME_COLUMN );
+    myAdvWidget->myOptionTable->setRowCount( row+1 );
+    myAdvWidget->myOptionTable->setItem( row, OPTION_ID_COLUMN, new QTableWidgetItem( idStr ) );
+    myAdvWidget->myOptionTable->item( row, OPTION_ID_COLUMN )->setFlags( 0 );
+    myAdvWidget->myOptionTable->setItem( row, OPTION_TYPE_COLUMN, new QTableWidgetItem( optionType ) );
+    myAdvWidget->myOptionTable->item( row, OPTION_TYPE_COLUMN )->setFlags( 0 );
+    myAdvWidget->myOptionTable->setItem( row, OPTION_NAME_COLUMN, new QTableWidgetItem( optionName ) );
+    myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( 0 );
+    myAdvWidget->myOptionTable->setItem( row, OPTION_VALUE_COLUMN, new QTableWidgetItem( "" ) );
+    myAdvWidget->myOptionTable->item( row, OPTION_VALUE_COLUMN )->setFlags( Qt::ItemIsSelectable |
+                                                                            Qt::ItemIsEditable   |
+                                                                            Qt::ItemIsEnabled );
+    myAdvWidget->myOptionTable->resizeColumnToContents( OPTION_NAME_COLUMN );
   }
-  myOptionTable->clearSelection();
-  myOptionTable->scrollToItem( myOptionTable->item( row, OPTION_VALUE_COLUMN ) );
-  //myOptionTable->item( row, OPTION_VALUE_COLUMN )->setSelected( true );
-  myOptionTable->setCurrentCell( row, OPTION_VALUE_COLUMN );
-  //myOptionTable->openPersistentEditor( myOptionTable->item( row, OPTION_VALUE_COLUMN ) );
+  myAdvWidget->myOptionTable->clearSelection();
+  myAdvWidget->myOptionTable->scrollToItem( myAdvWidget->myOptionTable->item( row, OPTION_VALUE_COLUMN ) );
+  //myAdvWidget->myOptionTable->item( row, OPTION_VALUE_COLUMN )->setSelected( true );
+  myAdvWidget->myOptionTable->setCurrentCell( row, OPTION_VALUE_COLUMN );
+  //myAdvWidget->myOptionTable->openPersistentEditor( myOptionTable->item( row, OPTION_VALUE_COLUMN ) );
 }
 
 void BLSURFPluginGUI_HypothesisCreator::onDeleteOption()
 {
   // clear option values and remember selected row
   QList<int> selectedRows;
-  QList<QTableWidgetItem*> selected = myOptionTable->selectedItems();
+  QList<QTableWidgetItem*> selected = myAdvWidget->myOptionTable->selectedItems();
   QTableWidgetItem* item;
   foreach( item, selected ) {
     int row = item->row();
     if ( !selectedRows.contains( row ) ) {
       selectedRows.append( row );
-      int id = myOptionTable->item( row, OPTION_ID_COLUMN )->text().toInt();
-      std::string optionType = myOptionTable->item( row, OPTION_TYPE_COLUMN )->text().toStdString();
+      int id = myAdvWidget->myOptionTable->item( row, OPTION_ID_COLUMN )->text().toInt();
+      QString optionType = myAdvWidget->myOptionTable->item( row, OPTION_TYPE_COLUMN )->text();
       if ( id >= 0 )
         if (optionType == "BLSURF" && id < myOptions->length() )
-          myOptions[ id ] = myOptionTable->item( row, OPTION_NAME_COLUMN )->text().toLatin1().constData();
+          myOptions[ id ] = myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->text().toLatin1().constData();
         else if (optionType == "PRECAD" && id < myPreCADOptions->length() )
-          myPreCADOptions[ id ] = myOptionTable->item( row, OPTION_NAME_COLUMN )->text().toLatin1().constData();
+          myPreCADOptions[ id ] = myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->text().toLatin1().constData();
     }
   }
   qSort( selectedRows );
   QListIterator<int> it( selectedRows );
   it.toBack();
   while ( it.hasPrevious() )
-    myOptionTable->removeRow( it.previous() );
+    myAdvWidget->myOptionTable->removeRow( it.previous() );
 }
-
-void BLSURFPluginGUI_HypothesisCreator::onChooseGMFFile()
-{
-//   QFileDialog dlg(0);
-//   dlg.selectFile(myGMFFileName->text());
-//   dlg.setNameFilter(tr("BLSURF_GMF_FILE_FORMAT"));
-//   dlg.setDefaultSuffix(QString("mesh"));
-  myGMFFileName->setText(QFileDialog::getSaveFileName(0, tr("BLSURF_GMF_FILE_DIALOG"), myGMFFileName->text(), tr("BLSURF_GMF_FILE_FORMAT")));
-}
-
 
 // **********************
 // *** BEGIN SIZE MAP ***
@@ -2677,9 +2440,9 @@ void BLSURFPluginGUI_HypothesisCreator::insertElement(GEOM::GEOM_Object_var anOb
   mySizeMapTable->resizeColumnToContents( SMP_ENTRY_COLUMN );
   mySizeMapTable->clearSelection();
 
-  if ( myPhysicalMesh->currentIndex() != SizeMap ) {
-    myPhysicalMesh->setCurrentIndex( SizeMap );
-    onPhysicalMeshChanged();
+  if ( myStdWidget->myPhysicalMesh->currentIndex() != PhysicalLocalSize ) {
+    myStdWidget->myPhysicalMesh->setCurrentIndex( PhysicalLocalSize );
+    myStdWidget->onPhysicalMeshChanged();
   }
 }
 
@@ -2765,9 +2528,9 @@ void BLSURFPluginGUI_HypothesisCreator::insertAttractor(GEOM::GEOM_Object_var aF
   mySizeMapTable->resizeColumnToContents( SMP_NAME_COLUMN );
   mySizeMapTable->resizeColumnToContents( SMP_SIZEMAP_COLUMN );
 
-  if ( myPhysicalMesh->currentIndex() != SizeMap ) {
-    myPhysicalMesh->setCurrentIndex( SizeMap );
-    onPhysicalMeshChanged();
+  if ( myStdWidget->myPhysicalMesh->currentIndex() != PhysicalLocalSize ) {
+    myStdWidget->myPhysicalMesh->setCurrentIndex( PhysicalLocalSize );
+    myStdWidget->onPhysicalMeshChanged();
   }
   MESSAGE("mySMPMap.size() = "<<mySMPMap.size());
 }

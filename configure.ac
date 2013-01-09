@@ -317,14 +317,6 @@ echo
 
 CHECK_HTML_GENERATORS
 
-dnl echo
-dnl echo ---------------------------------------------
-dnl echo Testing BLSURF
-dnl echo ---------------------------------------------
-dnl echo
-dnl 
-dnl CHECK_BLSURF
-
 echo
 echo ---------------------------------------------
 echo Testing MeshGems-CADSurf

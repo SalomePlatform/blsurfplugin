@@ -34,12 +34,12 @@ MESHGEMS_CADSURF_INCLUDES=""
 MESHGEMS_CADSURF_LIBS=""
 
 AC_ARG_WITH([meshgems],
-	    [  --with_meshgems=DIR       root directory path of MeshGems-CADSurf installation])
+	    [  --with-meshgems=DIR       root directory path of MeshGems-CADSurf installation])
 
 CADSURF_ok=no
 
-if test "$with_meshgems" != "no" ; then
-  if test "$with_meshgems" == "yes" || test "$with_meshgems" == "auto"; then
+if test "$with-meshgems" != "no" ; then
+  if test "$with-meshgems" == "yes" || test "$with-meshgems" == "auto"; then
     MESHGEMS_CADSURF_HOME=""
   else
     MESHGEMS_CADSURF_HOME="$with_meshgems"

@@ -24,17 +24,20 @@
 // ---
 //
 #include "BLSURFPlugin_Hypothesis_i.hxx"
-#include "SMESH_Gen.hxx"
-#include "SMESH_Gen_i.hxx"
-#include "SMESH_PythonDump.hxx"
-#include "GEOM_Object.hxx"
 
-#include "Utils_CorbaException.hxx"
-#include "utilities.h"
+#include <SMESH_Gen.hxx>
+#include <SMESH_Gen_i.hxx>
+#include <SMESH_PythonDump.hxx>
+
+#include <GEOM_Object.hxx>
+
+#include <SALOMEDS_wrap.hxx>
+#include <Utils_CorbaException.hxx>
+#include <utilities.h>
 
 #include <stdexcept>
 #include <cstring>
-#include "boost/regex.hpp"
+#include <boost/regex.hpp>
 
 //=============================================================================
 /*!
@@ -176,7 +179,7 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::IsPhySizeRel() {
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetMinSize(CORBA::Double theMinSize) {
   ASSERT(myBaseImpl);
-  if (GetMinSize() != theMinSize) {
+  if (IsMinSizeRel() || GetMinSize() != theMinSize ) {
     this->GetImpl()->SetMinSize(theMinSize, false);
     SMESH::TPythonDump() << _this() << ".SetMinSize( " << theMinSize << " )";
   }
@@ -185,7 +188,7 @@ void BLSURFPlugin_Hypothesis_i::SetMinSize(CORBA::Double theMinSize) {
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetMinSizeRel(CORBA::Double theMinSize) {
   ASSERT(myBaseImpl);
-  if ( IsMinSizeRel() && (GetMinSize() != theMinSize) ) {
+  if ( !IsMinSizeRel() || (GetMinSize() != theMinSize) ) {
     this->GetImpl()->SetMinSize(theMinSize, true);
     SMESH::TPythonDump() << _this() << ".SetMinSize( " << theMinSize << ", isRelative = True )";
   }
@@ -207,7 +210,7 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::IsMinSizeRel() {
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetMaxSize(CORBA::Double theMaxSize) {
   ASSERT(myBaseImpl);
-  if (GetMaxSize() != theMaxSize) {
+  if (IsMaxSizeRel() || GetMaxSize() != theMaxSize) {
     this->GetImpl()->SetMaxSize(theMaxSize, false);
     SMESH::TPythonDump() << _this() << ".SetMaxSize( " << theMaxSize << " )";
   }
@@ -216,7 +219,7 @@ void BLSURFPlugin_Hypothesis_i::SetMaxSize(CORBA::Double theMaxSize) {
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetMaxSizeRel(CORBA::Double theMaxSize) {
   ASSERT(myBaseImpl);
-  if ( IsMaxSizeRel() && (GetMaxSize() != theMaxSize) ) {
+  if ( !IsMaxSizeRel() || (GetMaxSize() != theMaxSize) ) {
     this->GetImpl()->SetMaxSize(theMaxSize, true);
     SMESH::TPythonDump() << _this() << ".SetMaxSize( " << theMaxSize << ", isRelative = True )";
   }
@@ -1242,7 +1245,7 @@ void BLSURFPlugin_Hypothesis_i::SetAttractorGeom(GEOM::GEOM_Object_ptr theFace, 
   if (theFaceEntry.empty()) {
     aName = "Face_";
     aName += theFace->GetEntry();
-    SALOMEDS::SObject_ptr theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
     if (!theSFace->_is_nil())
       theFaceEntry = theSFace->GetID();
   }
@@ -1259,7 +1262,7 @@ void BLSURFPlugin_Hypothesis_i::SetAttractorGeom(GEOM::GEOM_Object_ptr theFace, 
     if (theAttractor->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theAttractor->GetEntry();
-    SALOMEDS::SObject_ptr theSAtt = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theAttractor, aName.c_str());
+    SALOMEDS::SObject_wrap theSAtt = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theAttractor, aName.c_str());
     if (!theSAtt->_is_nil())
       theAttEntry = theSAtt->GetID();
   }
@@ -1286,7 +1289,7 @@ void BLSURFPlugin_Hypothesis_i::UnsetAttractorGeom(GEOM::GEOM_Object_ptr theFace
   if (theFaceEntry.empty()) {
     aName = "Face_";
     aName += theFace->GetEntry();
-    SALOMEDS::SObject_ptr theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
     if (!theSFace->_is_nil())
       theFaceEntry = theSFace->GetID();
   }
@@ -1706,7 +1709,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertex(GEOM::GEOM_Object_ptr theFace,
     if (theFace->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theFace->GetEntry();
-    SALOMEDS::SObject_ptr theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
     if (!theSFace->_is_nil())
       theFaceEntry = theSFace->GetID();
   }
@@ -1744,7 +1747,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexNamed(GEOM::GEOM_Object_ptr the
     if (theFace->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theFace->GetEntry();
-    SALOMEDS::SObject_ptr theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
     if (!theSFace->_is_nil())
       theFaceEntry = theSFace->GetID();
   }
@@ -1799,7 +1802,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeom(GEOM::GEOM_Object_ptr theF
     if (theFace->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theFace->GetEntry();
-    SALOMEDS::SObject_ptr theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
     if (!theSFace->_is_nil())
       theFaceEntry = theSFace->GetID();
   }
@@ -1812,7 +1815,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeom(GEOM::GEOM_Object_ptr theF
     if (theVertex->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theVertex->GetEntry();
-    SALOMEDS::SObject_ptr theSVertex = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theVertex, aName.c_str());
+    SALOMEDS::SObject_wrap theSVertex = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theVertex, aName.c_str());
     if (!theSVertex->_is_nil())
       theVertexEntry = theSVertex->GetID();
   }
@@ -1854,7 +1857,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexWithGroup(GEOM::GEOM_Object_ptr
     if (theFace->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theFace->GetEntry();
-    SALOMEDS::SObject_ptr theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
     if (!theSFace->_is_nil())
       theFaceEntry = theSFace->GetID();
   }
@@ -1894,7 +1897,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexNamedWithGroup(GEOM::GEOM_Objec
     if (theFace->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theFace->GetEntry();
-    SALOMEDS::SObject_ptr theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
     if (!theSFace->_is_nil())
       theFaceEntry = theSFace->GetID();
   }
@@ -1940,7 +1943,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeomWithGroup(GEOM::GEOM_Object
     if (theFace->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theFace->GetEntry();
-    SALOMEDS::SObject_ptr theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
     if (!theSFace->_is_nil())
       theFaceEntry = theSFace->GetID();
   }
@@ -1953,7 +1956,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeomWithGroup(GEOM::GEOM_Object
     if (theVertex->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theVertex->GetEntry();
-    SALOMEDS::SObject_ptr theSVertex = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theVertex, aName.c_str());
+    SALOMEDS::SObject_wrap theSVertex = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theVertex, aName.c_str());
     if (!theSVertex->_is_nil())
       theVertexEntry = theSVertex->GetID();
   }
@@ -1995,7 +1998,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeomWithGroup(GEOM::GEOM_Object
 //    if (theFace->GetShapeType() == GEOM::COMPOUND)
 //      aName = "Compound_";
 //    aName += theFace->GetEntry();
-//    SALOMEDS::SObject_ptr theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+//    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
 //    if (!theSFace->_is_nil())
 //      theFaceEntry = theSFace->GetID();
 //  }
@@ -2034,7 +2037,7 @@ BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVertices(GEO
     if (theFace->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theFace->GetEntry();
-    SALOMEDS::SObject_ptr theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
     if (!theSFace->_is_nil())
       theFaceEntry = theSFace->GetID();
   }
@@ -2070,7 +2073,7 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertex(GEOM::GEOM_Object_ptr theFac
     if (theFace->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theFace->GetEntry();
-    SALOMEDS::SObject_ptr theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
     if (!theSFace->_is_nil())
       theFaceEntry = theSFace->GetID();
   }
@@ -2121,7 +2124,7 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexGeom(GEOM::GEOM_Object_ptr th
     if (theFace->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theFace->GetEntry();
-    SALOMEDS::SObject_ptr theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
     if (!theSFace->_is_nil())
       theFaceEntry = theSFace->GetID();
   }
@@ -2134,7 +2137,7 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexGeom(GEOM::GEOM_Object_ptr th
     if (theVertex->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theVertex->GetEntry();
-    SALOMEDS::SObject_ptr theSVertex = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theVertex, aName.c_str());
+    SALOMEDS::SObject_wrap theSVertex = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theVertex, aName.c_str());
     if (!theSVertex->_is_nil())
       theVertexEntry = theSVertex->GetID();
   }
@@ -2169,7 +2172,7 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertices(GEOM::GEOM_Object_ptr theF
     if (theFace->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theFace->GetEntry();
-    SALOMEDS::SObject_ptr theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
     if (!theSFace->_is_nil())
       theFaceEntry = theSFace->GetID();
   }
@@ -2492,7 +2495,7 @@ void BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexWithGroup(GEOM::GEOM_Ob
     if (theFace->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theFace->GetEntry();
-    SALOMEDS::SObject_ptr theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
     if (!theSFace->_is_nil())
       theFaceEntry = theSFace->GetID();
   }

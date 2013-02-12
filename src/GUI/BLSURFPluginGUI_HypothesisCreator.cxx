@@ -1680,20 +1680,23 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
       h->SetGeometricMesh( (int) h_data.myGeometricMesh );
 
     if ( ((int) h_data.myPhysicalMesh == PhysicalGlobalSize)||((int) h_data.myPhysicalMesh == PhysicalLocalSize) ) {
-      if ( h->GetPhySize() != h_data.myPhySize ) {
+      if ( h->GetPhySize()   != h_data.myPhySize ||
+           h->IsPhySizeRel() != h_data.myPhySizeRel ) {
         if ( h_data.myPhySizeRel )
           h->SetPhySizeRel( h_data.myPhySize );
         else
           h->SetPhySize( h_data.myPhySize );
       }
     }
-    if (h->GetMinSize() != h_data.myMinSize) {
+    if (h->GetMinSize()   != h_data.myMinSize ||
+        h->IsMinSizeRel() != h_data.myMinSizeRel ) {
       if ( h_data.myMinSizeRel )
         h->SetMinSizeRel( h_data.myMinSize <= 0 ? -1 : h_data.myMinSize );
       else
         h->SetMinSize( h_data.myMinSize <= 0 ? -1 : h_data.myMinSize );
     }
-    if (h->GetMaxSize() != h_data.myMaxSize) {
+    if (h->GetMaxSize()   != h_data.myMaxSize ||
+        h->IsMaxSizeRel() != h_data.myMaxSizeRel ) {
       if ( h_data.myMaxSizeRel )
         h->SetMaxSizeRel( h_data.myMaxSize <= 0 ? -1 : h_data.myMaxSize );
       else
@@ -2683,14 +2686,12 @@ LightApp_SelectionMgr* BLSURFPluginGUI_HypothesisCreator::selectionMgr()
 CORBA::Object_var BLSURFPluginGUI_HypothesisCreator::entryToObject(QString entry)
 {
   SMESH_Gen_i* smeshGen_i = SMESH_Gen_i::GetSMESHGen();
-  SALOMEDS::Study_ptr myStudy = smeshGen_i->GetCurrentStudy();
+  SALOMEDS::Study_var myStudy = smeshGen_i->GetCurrentStudy();
   CORBA::Object_var obj;
-  SALOMEDS::GenericAttribute_var anAttr;
   SALOMEDS::SObject_var aSObj = myStudy->FindObjectID( entry.toStdString().c_str() );
-  if (!aSObj->_is_nil() && aSObj->FindAttribute(anAttr, "AttributeIOR")) {
-    SALOMEDS::AttributeIOR_var anIOR = SALOMEDS::AttributeIOR::_narrow(anAttr);
-    CORBA::String_var aVal = anIOR->Value();
-    obj = myStudy->ConvertIORToObject(aVal);
+  if (!aSObj->_is_nil()) {
+    obj = aSObj->GetObject();
+    aSObj->UnRegister();
   }
   return obj;
 }

@@ -84,14 +84,12 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
                                  const TopoDS_Shape&                  aShape,
                                  SMESH_Hypothesis::Hypothesis_Status& aStatus);
 
-    void SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsurf_session_t *bls, precad_session_t *pcs, SMESH_Mesh& aMesh, bool *use_precad);
+    void SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsurf_session_t *bls, precad_session_t *pcs, const TopoDS_Shape& shape, bool *use_precad);
 
     virtual bool Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape);
 
-#ifdef WITH_SMESH_CANCEL_COMPUTE
     virtual void CancelCompute();
     bool computeCanceled() { return _compute_canceled; }
-#endif
 
     virtual bool Evaluate(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape,
                           MapShapeNbElems& aResMap);
@@ -104,6 +102,10 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
     bool compute(SMESH_Mesh&          aMesh,
                  const TopoDS_Shape&  aShape);
 
+    void set_param(cadsurf_session_t *css,
+                   const char *       option_name,
+                   const char *       option_value);
+
     TopoDS_Shape entryToShape(std::string entry);
     void createEnforcedVertexOnFace(TopoDS_Shape FaceShape, BLSURFPlugin_Hypothesis::TEnfVertexList enfVertexList);
     void Set_NodeOnEdge(SMESHDS_Mesh* meshDS, SMDS_MeshNode* node, const TopoDS_Shape& ed);
@@ -115,9 +117,7 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
       SALOMEDS::Study_var myStudy;
       SMESH_Gen_i*        smeshGen_i;
 
-#ifdef WITH_SMESH_CANCEL_COMPUTE
       volatile bool _compute_canceled;
-#endif
 };
 
 #endif

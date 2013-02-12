@@ -443,13 +443,10 @@ TopoDS_Shape BLSURFPlugin_BLSURF::entryToShape(std::string entry)
   GEOM::GEOM_Object_var aGeomObj;
   TopoDS_Shape S = TopoDS_Shape();
   SALOMEDS::SObject_var aSObj = myStudy->FindObjectID( entry.c_str() );
-  SALOMEDS::GenericAttribute_var anAttr;
-
-  if (!aSObj->_is_nil() && aSObj->FindAttribute(anAttr, "AttributeIOR")) {
-    SALOMEDS::AttributeIOR_var anIOR = SALOMEDS::AttributeIOR::_narrow(anAttr);
-    CORBA::String_var aVal = anIOR->Value();
-    CORBA::Object_var obj = myStudy->ConvertIORToObject(aVal);
+  if (!aSObj->_is_nil()) {
+    CORBA::Object_var obj = aSObj->GetObject();
     aGeomObj = GEOM::GEOM_Object::_narrow(obj);
+    aSObj->UnRegister();
   }
   if ( !aGeomObj->_is_nil() )
     S = smeshGen_i->GeomObjectToShape( aGeomObj.in() );
@@ -700,7 +697,7 @@ void BLSURFPlugin_BLSURF::SetParameters(
                                         const BLSURFPlugin_Hypothesis* hyp,
                                         cadsurf_session_t *            css,
                                         precad_session_t *             pcs,
-                                        SMESH_Mesh&                   mesh,
+                                        const TopoDS_Shape&            GeomShape,
                                         bool *                  use_precad
                                        )
 {
@@ -708,7 +705,7 @@ void BLSURFPlugin_BLSURF::SetParameters(
   // Clear map so that it is not stored in the algorithm with old enforced vertices in it
   EnfVertexCoords2EnfVertexList.clear();
   
-   double diagonal               = mesh.GetShapeDiagonalSize();
+   double diagonal               = SMESH_Mesh::GetShapeDiagonalSize( GeomShape );
    double bbSegmentation         = _gen->GetBoundaryBoxSegmentation();
    int    _physicalMesh          = BLSURFPlugin_Hypothesis::GetDefaultPhysicalMesh();
    int    _geometricMesh         = BLSURFPlugin_Hypothesis::GetDefaultGeometricMesh();
@@ -743,17 +740,23 @@ void BLSURFPlugin_BLSURF::SetParameters(
     MESSAGE("BLSURFPlugin_BLSURF::SetParameters");
     _physicalMesh  = (int) hyp->GetPhysicalMesh();
     _geometricMesh = (int) hyp->GetGeometricMesh();
-     if (hyp->GetPhySize() > 0)
-       _phySize       = hyp->GetPhySize();
-     _phySizeRel    = hyp->IsPhySizeRel();
-     if (hyp->GetMinSize() > 0)
-       _minSize       = hyp->GetMinSize();
-     _minSizeRel    = hyp->IsMinSizeRel();
-     if (hyp->GetMaxSize() > 0)
-       _maxSize       = hyp->GetMaxSize();
-     _maxSizeRel    = hyp->IsMaxSizeRel();
-     if (hyp->GetGradation() > 0)
-       _gradation     = hyp->GetGradation();
+    if (hyp->GetPhySize() > 0) {
+      _phySize       = hyp->GetPhySize();
+      // if user size is not explicitly specified, "relative" flag is ignored
+      _phySizeRel    = hyp->IsPhySizeRel();
+    }
+    if (hyp->GetMinSize() > 0) {
+      _minSize       = hyp->GetMinSize();
+      // if min size is not explicitly specified, "relative" flag is ignored
+      _minSizeRel    = hyp->IsMinSizeRel();
+    }
+    if (hyp->GetMaxSize() > 0) {
+      _maxSize       = hyp->GetMaxSize();
+      // if max size is not explicitly specified, "relative" flag is ignored
+      _maxSizeRel    = hyp->IsMaxSizeRel();
+    }
+    if (hyp->GetGradation() > 0)
+      _gradation     = hyp->GetGradation();
     _quadAllowed   = hyp->GetQuadAllowed();
      if (hyp->GetAngleMesh() > 0)
      _angleMesh     = hyp->GetAngleMesh();
@@ -782,7 +785,7 @@ void BLSURFPlugin_BLSURF::SetParameters(
     for ( opIt = opts.begin(); opIt != opts.end(); ++opIt )
       if ( !opIt->second.empty() ) {
         MESSAGE("cadsurf_set_param(): " << opIt->first << " = " << opIt->second);
-        cadsurf_set_param(css, opIt->first.c_str(), opIt->second.c_str());
+        set_param(css, opIt->first.c_str(), opIt->second.c_str());
       }
       
     const BLSURFPlugin_Hypothesis::TOptionValues & preCADopts = hyp->GetPreCADOptionValues();
@@ -819,58 +822,83 @@ void BLSURFPlugin_BLSURF::SetParameters(
    switch (_physicalMesh)
    {
      case BLSURFPlugin_Hypothesis::PhysicalGlobalSize:
-       cadsurf_set_param(css, "physical_size_mode", "global");
-       cadsurf_set_param(css, "global_physical_size", _phySizeRel ? to_string_rel(_phySize).c_str() : to_string(_phySize).c_str());
+       set_param(css, "physical_size_mode", "global");
+       set_param(css, "global_physical_size", _phySizeRel ? to_string_rel(_phySize).c_str() : to_string(_phySize).c_str());
        break;
      case BLSURFPlugin_Hypothesis::PhysicalLocalSize:
-       cadsurf_set_param(css, "physical_size_mode", "local");
-       cadsurf_set_param(css, "global_physical_size", _phySizeRel ? to_string_rel(_phySize).c_str() : to_string(_phySize).c_str());
+       set_param(css, "physical_size_mode", "local");
+       set_param(css, "global_physical_size", _phySizeRel ? to_string_rel(_phySize).c_str() : to_string(_phySize).c_str());
        useGradation = true;
        break;
      default:
-       cadsurf_set_param(css, "physical_size_mode", "none");
+       set_param(css, "physical_size_mode", "none");
    }
 
    switch (_geometricMesh)
    {
      case BLSURFPlugin_Hypothesis::GeometricalGlobalSize:
-       cadsurf_set_param(css, "geometric_size_mode", "global");
-       cadsurf_set_param(css, "geometric_approximation", to_string(_angleMesh).c_str());
-       cadsurf_set_param(css, "chordal_error", to_string(_chordalError).c_str());
+       set_param(css, "geometric_size_mode", "global");
+       set_param(css, "geometric_approximation", to_string(_angleMesh).c_str());
+       set_param(css, "chordal_error", to_string(_chordalError).c_str());
        useGradation = true;
        break;
      case BLSURFPlugin_Hypothesis::GeometricalLocalSize:
-       cadsurf_set_param(css, "geometric_size_mode", "local");
-       cadsurf_set_param(css, "geometric_approximation", to_string(_angleMesh).c_str());
-       cadsurf_set_param(css, "chordal_error", to_string(_chordalError).c_str());
+       set_param(css, "geometric_size_mode", "local");
+       set_param(css, "geometric_approximation", to_string(_angleMesh).c_str());
+       set_param(css, "chordal_error", to_string(_chordalError).c_str());
        useGradation = true;
        break;
      default:
-       cadsurf_set_param(css, "geometric_size_mode", "none");
+       set_param(css, "geometric_size_mode", "none");
    }
 
-   cadsurf_set_param(css, "minsize",                           _minSizeRel ? to_string_rel(_minSize).c_str() : to_string(_minSize).c_str());
-   cadsurf_set_param(css, "maxsize",                           _maxSizeRel ? to_string_rel(_maxSize).c_str() : to_string(_maxSize).c_str());
-   if ( useGradation )
-     cadsurf_set_param(css, "gradation",                         to_string(_gradation).c_str());
-   cadsurf_set_param(css, "element_generation",                _quadAllowed ? "quad_dominant" : "triangle");
+   if ( hyp && hyp->GetPhySize() > 0 ) {
+     // user size is explicitly specified via hypothesis parameters
+     // min and max sizes should be compared with explicitly specified user size
+     // - compute absolute min size
+     double mins = _minSizeRel ? _minSize * diagonal : _minSize;
+     // - min size should not be greater than user size
+     if ( _phySize < mins )
+       set_param(css, "min_size", _phySizeRel ? to_string_rel(_phySize).c_str() : to_string(_phySize).c_str());
+     else
+       set_param(css, "min_size", _minSizeRel ? to_string_rel(_minSize).c_str() : to_string(_minSize).c_str());
+     // - compute absolute max size
+     double maxs = _maxSizeRel ? _maxSize * diagonal : _maxSize;
+     // - max size should not be less than user size
+     if ( _phySize > maxs )
+       set_param(css, "max_size", _phySizeRel ? to_string_rel(_phySize).c_str() : to_string(_phySize).c_str());
+     else
+       set_param(css, "max_size", _maxSizeRel ? to_string_rel(_maxSize).c_str() : to_string(_maxSize).c_str());
+   }
+   else {
+     // user size is not explicitly specified
+     // - if minsize is not explicitly specified, we pass default value computed automatically, in this case "relative" flag is ignored
+     set_param(css, "min_size", _minSizeRel ? to_string_rel(_minSize).c_str() : to_string(_minSize).c_str());
+     // - if maxsize is not explicitly specified, we pass default value computed automatically, in this case "relative" flag is ignored
+     set_param(css, "max_size", _maxSizeRel ? to_string_rel(_maxSize).c_str() : to_string(_maxSize).c_str());
+   }
+  
+  if ( useGradation )
+     set_param(css, "gradation",                         to_string(_gradation).c_str());
+   set_param(css, "element_generation",                _quadAllowed ? "quad_dominant" : "triangle");
 
 
-   cadsurf_set_param(css, "metric",                            _anisotropic ? "anisotropic" : "isotropic");
+   set_param(css, "metric",                            _anisotropic ? "anisotropic" : "isotropic");
    if ( _anisotropic )
-     cadsurf_set_param(css, "anisotropic_ratio",                 to_string(_anisotropicRatio).c_str());
-   cadsurf_set_param(css, "remove_tiny_edges",                 _removeTinyEdges ? "1" : "0");
+     set_param(css, "anisotropic_ratio",                 to_string(_anisotropicRatio).c_str());
+   set_param(css, "remove_tiny_edges",                 _removeTinyEdges ? "1" : "0");
    if ( _removeTinyEdges )
-     cadsurf_set_param(css, "tiny_edge_length",                  to_string(_tinyEdgeLength).c_str());
-   cadsurf_set_param(css, "force_bad_surface_element_removal", _badElementRemoval ? "1" : "0");
+     set_param(css, "tiny_edge_length",                  to_string(_tinyEdgeLength).c_str());
+   set_param(css, "force_bad_surface_element_removal", _badElementRemoval ? "1" : "0");
    if ( _badElementRemoval )
-     cadsurf_set_param(css, "bad_surface_element_aspect_ratio",  to_string(_badElementAspectRatio).c_str());
-   cadsurf_set_param(css, "optimisation",                      _optimizeMesh ? "yes" : "no");
-   cadsurf_set_param(css, "element_order",                     _quadraticMesh ? "quadratic" : "linear");
-   cadsurf_set_param(css, "verbose",                           to_string(_verb).c_str());
+     set_param(css, "bad_surface_element_aspect_ratio",  to_string(_badElementAspectRatio).c_str());
+   set_param(css, "optimisation",                      _optimizeMesh ? "yes" : "no");
+   set_param(css, "element_order",                     _quadraticMesh ? "quadratic" : "linear");
+   set_param(css, "verbose",                           to_string(_verb).c_str());
 
    _smp_phy_size = _phySizeRel ? _phySize*diagonal : _phySize;
-   std::cout << "_smp_phy_size = " << _smp_phy_size << std::endl;
+   if ( _verb > 0 )
+     std::cout << "_smp_phy_size = " << _smp_phy_size << std::endl;
 
    if (_physicalMesh == BLSURFPlugin_Hypothesis::PhysicalLocalSize){
     TopoDS_Shape GeomShape;
@@ -1110,7 +1138,6 @@ void BLSURFPlugin_BLSURF::SetParameters(
     if (useInternalVertexAllFaces) {
       std::string grpName = BLSURFPlugin_Hypothesis::GetInternalEnforcedVertexAllFacesGroup(hyp);
       MESSAGE("Setting Internal Enforced Vertices");
-      GeomShape = mesh.GetShapeToMesh();
       gp_Pnt aPnt;
       TopExp_Explorer exp (GeomShape, TopAbs_FACE);
       for (; exp.More(); exp.Next()){
@@ -1170,6 +1197,33 @@ void BLSURFPlugin_BLSURF::SetParameters(
 //         clean_iso_sizemap_p = sizemap_new(c, distene_sizemap_type_iso_cad_point, (void *)size_on_vertex, NULL);
 // #endif
     }
+  }
+}
+
+//================================================================================
+/*!
+ * \brief Throws an exception if a parameter name is wrong
+ */
+//================================================================================
+
+void BLSURFPlugin_BLSURF::set_param(cadsurf_session_t *css,
+                                    const char *       option_name,
+                                    const char *       option_value)
+{
+  status_t status = cadsurf_set_param(css, option_name, option_value );
+  if ( status != MESHGEMS_STATUS_OK )
+  {
+    if ( status == MESHGEMS_STATUS_UNKNOWN_PARAMETER ) {
+      throw SALOME_Exception
+        ( SMESH_Comment("Invalid name of CADSURF parameter: ") << option_name );
+    }
+    else if ( status == MESHGEMS_STATUS_NOLICENSE )
+      throw SALOME_Exception
+        ( "No valid license available" );
+    else
+      throw SALOME_Exception
+        ( SMESH_Comment("Unacceptable value of CADSURF parameter '")
+          << option_name << "': " << option_value);
   }
 }
 
@@ -1491,6 +1545,15 @@ namespace
     }
   };
 
+  /*!
+   * \brief A structure holding an error description and a verbisity level
+   */
+  struct message_cb_user_data
+  {
+    std::string * _error;
+    int           _verbosity;
+  };
+
 
 } // namespace
 
@@ -1593,13 +1656,15 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   context_t *ctx =  context_new();
 
   /* Set the message callback in the working context */
-  context_set_message_callback(ctx, message_cb, &_comment);
-#ifdef WITH_SMESH_CANCEL_COMPUTE
+  message_cb_user_data mcud;
+  mcud._error     = & this->SMESH_Algo::_comment;
+  mcud._verbosity =
+    _hypothesis ? _hypothesis->GetVerbosity() : BLSURFPlugin_Hypothesis::GetDefaultVerbosity();
+  context_set_message_callback(ctx, message_cb, &mcud);
+
+  /* set the interruption callback */
   _compute_canceled = false;
   context_set_interrupt_callback(ctx, interrupt_cb, this);
-#else
-  context_set_interrupt_callback(ctx, interrupt_cb, NULL);
-#endif
 
   /* create the CAD object we will work on. It is associated to the context ctx. */
   cad_t *c     = cad_new(ctx);
@@ -1636,7 +1701,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
                 // #if BLSURF_VERSION_LONG >= "3.1.1"
                 //     c,
                 // #endif
-                _hypothesis, css, pcs, aMesh, &use_precad);
+                _hypothesis, css, pcs, aShape, &use_precad);
   MESSAGE("END SetParameters");
 
   haveQuadraticSubMesh = haveQuadraticSubMesh || (_hypothesis != NULL && _hypothesis->GetQuadraticMesh());
@@ -2761,18 +2826,16 @@ status_t message_cb(message_t *msg, void *user_data)
   message_get_number(msg, &errnumber);
   message_get_description(msg, &desc);
   string err( desc );
+  message_cb_user_data * mcud = (message_cb_user_data*)user_data;
   if ( errnumber < 0 || err.find("license") != string::npos ) {
-    string * error = (string*)user_data;
-//   if ( !error->empty() )
-//     *error += "\n";
     // remove ^A from the tail
     int len = strlen( desc );
     while (len > 0 && desc[len-1] != '\n')
       len--;
-    error->append( desc, len );
+    mcud->_error->append( desc, len );
   }
-  else {
-      std::cout << desc << std::endl;
+  else if ( mcud->_verbosity > 0 ) {
+    std::cout << desc << std::endl;
   }
   return STATUS_OK;
 }

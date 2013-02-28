@@ -27,6 +27,15 @@
 #ifndef BLSURFPLUGINGUI_HypothesisCreator_H
 #define BLSURFPLUGINGUI_HypothesisCreator_H
 
+// akl: avoid compilation warning on Linux : "_POSIX_C_SOURCE" and "_XOPEN_SOURCE" are redefined
+#ifdef _POSIX_C_SOURCE
+#undef _POSIX_C_SOURCE
+#endif
+
+#ifdef _XOPEN_SOURCE
+#undef _XOPEN_SOURCE
+#endif
+
 #ifdef WIN32
   #if defined BLSURFPLUGIN_GUI_EXPORTS || defined BLSURFPluginGUI_EXPORTS
     #define BLSURFPLUGIN_GUI_EXPORT __declspec( dllexport )

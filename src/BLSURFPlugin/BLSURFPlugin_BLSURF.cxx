@@ -2242,8 +2242,8 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   }
 
   /* retrieve mesh data (see meshgems/mesh.h) */
-  integer nv, ne, nt, nq, vtx[4], tag;
-  integer *evedg, *evtri, *evquad, type;
+  integer nv, ne, nt, nq, vtx[4], tag, nb_tag;
+  integer *evedg, *evtri, *evquad, *tags_buff, type;
   real xyz[3];
 
   mesh_get_vertex_count(msh, &nv);
@@ -2254,6 +2254,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   evedg  = (integer *)mesh_calloc_generic_buffer(msh);
   evtri  = (integer *)mesh_calloc_generic_buffer(msh);
   evquad = (integer *)mesh_calloc_generic_buffer(msh);
+  tags_buff = (integer*)mesh_calloc_generic_buffer(msh);
 
   SMDS_MeshNode** nodes = new SMDS_MeshNode*[nv+1];
   bool* tags = new bool[nv+1];
@@ -2345,6 +2346,15 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     mesh_get_edge_vertices(msh, it, vtx);
     mesh_get_edge_extra_vertices(msh, it, &type, evedg);
     mesh_get_edge_tag(msh, it, &tag);
+
+    // If PreCAD performed some cleaning operations (remove tiny edges,
+    // merge edges ...) an output tag can indeed represent several original tags.
+    // Get the initial tags corresponding to the output tag and redefine the tag as 
+    // the last of the two initial tags (else the output tag is out of emap and hasn't any meaning)
+    mesh_get_composite_tag_definition(msh, tag, &nb_tag, tags_buff);
+    if(nb_tag > 1)  
+      tag=tags_buff[nb_tag-1]; 
+
     if (tags[vtx[0]]) {
       Set_NodeOnEdge(meshDS, nodes[vtx[0]], emap(tag));
       tags[vtx[0]] = false;

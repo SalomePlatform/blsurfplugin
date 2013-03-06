@@ -697,7 +697,7 @@ void BLSURFPlugin_BLSURF::SetParameters(
                                         const BLSURFPlugin_Hypothesis* hyp,
                                         cadsurf_session_t *            css,
                                         precad_session_t *             pcs,
-                                        const TopoDS_Shape&            GeomShape,
+                                        const TopoDS_Shape&            theGeomShape,
                                         bool *                  use_precad
                                        )
 {
@@ -705,7 +705,7 @@ void BLSURFPlugin_BLSURF::SetParameters(
   // Clear map so that it is not stored in the algorithm with old enforced vertices in it
   EnfVertexCoords2EnfVertexList.clear();
   
-   double diagonal               = SMESH_Mesh::GetShapeDiagonalSize( GeomShape );
+   double diagonal               = SMESH_Mesh::GetShapeDiagonalSize( theGeomShape );
    double bbSegmentation         = _gen->GetBoundaryBoxSegmentation();
    int    _physicalMesh          = BLSURFPlugin_Hypothesis::GetDefaultPhysicalMesh();
    int    _geometricMesh         = BLSURFPlugin_Hypothesis::GetDefaultGeometricMesh();
@@ -1139,7 +1139,7 @@ void BLSURFPlugin_BLSURF::SetParameters(
       std::string grpName = BLSURFPlugin_Hypothesis::GetInternalEnforcedVertexAllFacesGroup(hyp);
       MESSAGE("Setting Internal Enforced Vertices");
       gp_Pnt aPnt;
-      TopExp_Explorer exp (GeomShape, TopAbs_FACE);
+      TopExp_Explorer exp (theGeomShape, TopAbs_FACE);
       for (; exp.More(); exp.Next()){
         MESSAGE("Iterating shapes. Shape type is " << exp.Current().ShapeType());
         TopExp_Explorer exp_face (exp.Current(), TopAbs_VERTEX, TopAbs_EDGE);

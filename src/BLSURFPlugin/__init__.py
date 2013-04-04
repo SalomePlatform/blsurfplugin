@@ -17,22 +17,6 @@
 # See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 #
 
-# -* Makefile *- 
-# Author : Patrick GOLDBRONN (CEA)
-# Date : 30/11/2001
-#
-SUBDIRS = examples tui gui
-SUBDIRSTUI = tui
-SUBDIRSGUI = gui
-
-usr_docs:
-	@@SETX@; for d in $(SUBDIRSGUI); do 	\
-	   (cd $$d && $(MAKE) $@) || exit 1; 	\
-	done;
-
-docs: usr_docs
-
-dev_docs:
-	@@SETX@; for d in $(SUBDIRSTUI); do 	\
-	   (cd $$d && $(MAKE) $@) || exit 1; 	\
-	done;
+##
+# @package BLSURFPluginBuilder
+# Python API for the BLSURF meshing plug-in module.

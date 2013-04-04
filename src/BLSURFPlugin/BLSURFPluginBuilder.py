@@ -18,11 +18,11 @@
 #
 
 ##
-# @package BLSURFPluginDC
+# @package BLSURFPluginBuilder
 # Python API for the BLSURF meshing plug-in module.
 
-from smesh_algorithm import Mesh_Algorithm
-from smesh import AssureGeomPublished
+from salome.smesh.smesh_algorithm import Mesh_Algorithm
+from salome.smesh.smeshBuilder import AssureGeomPublished
 
 # Topology treatment way of BLSURF
 FromCAD, PreProcess, PreProcessPlus, PreCAD = 0,1,2,3

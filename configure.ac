@@ -433,6 +433,7 @@ AC_OUTPUT([ \
   adm_local/cmake_files/Makefile \
   doc/Makefile \
   doc/salome/Makefile \
+  doc/salome/examples/Makefile \
   doc/salome/gui/Makefile \
   doc/salome/gui/BLSURFPLUGIN/Makefile \
   doc/salome/gui/BLSURFPLUGIN/doxyfile \

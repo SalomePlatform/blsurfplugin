@@ -1,4 +1,4 @@
-# Copyright (C) 2007-2013  CEA/DEN, EDF R&D
+# Copyright (C) 2007-2013  CEA/DEN, EDF R&D, OPEN CASCADE
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -17,22 +17,15 @@
 # See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 #
 
-# -* Makefile *- 
-# Author : Patrick GOLDBRONN (CEA)
-# Date : 30/11/2001
+#  File   : Makefile
+#  Author : Alexander KOVALEV (Open Cascade NN)
+#  Modified by : 
+#  Module : doc
 #
-SUBDIRS = examples tui gui
-SUBDIRSTUI = tui
-SUBDIRSGUI = gui
+include $(top_srcdir)/adm_local/unix/make_common_starter.am
 
-usr_docs:
-	@@SETX@; for d in $(SUBDIRSGUI); do 	\
-	   (cd $$d && $(MAKE) $@) || exit 1; 	\
-	done;
+pyexamplesdir = $(docdir)/examples/BLSURFPLUGIN
 
-docs: usr_docs
+pyexamples_SCRIPTS = blsurfdemo.py
 
-dev_docs:
-	@@SETX@; for d in $(SUBDIRSTUI); do 	\
-	   (cd $$d && $(MAKE) $@) || exit 1; 	\
-	done;
+EXTRA_DIST += $(pyexamples_SCRIPTS)

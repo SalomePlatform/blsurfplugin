@@ -73,4 +73,8 @@ libBLSURFEngine_la_LDFLAGS  =			\
 	$(BOOST_LIB_REGEX)
 
 # Scripts to be installed.
-dist_salomescript_DATA= BLSURFPluginDC.py
+#dist_salomescript_DATA= BLSURFPluginDC.py
+mypkgpythondir = $(salomepythondir)/salome/BLSURFPlugin
+mypkgpython_PYTHON = \
+	__init__.py \
+	BLSURFPluginBuilder.py

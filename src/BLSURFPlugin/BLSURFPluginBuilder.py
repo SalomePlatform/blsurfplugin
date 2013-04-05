@@ -54,14 +54,14 @@ BLSURF = "BLSURF"
 
 ## BLSurf 2D algorithm.
 #
-#  It can be created by calling smesh.Mesh.Triangle(smesh.BLSURF,geom=0)
+#  It can be created by calling smeshBuilder.Mesh.Triangle(smesh.BLSURF,geom=0)
 #
 class BLSURF_Algorithm(Mesh_Algorithm):
 
-  ## name of the dynamic method in smesh.Mesh class
+  ## name of the dynamic method in smeshBuilder.Mesh class
   #  @internal
   meshMethod = "Triangle"
-  ## type of algorithm used with helper function in smesh.Mesh class
+  ## type of algorithm used with helper function in smeshBuilder.Mesh class
   #  @internal
   algoType   = BLSURF
   ## doc string of the method

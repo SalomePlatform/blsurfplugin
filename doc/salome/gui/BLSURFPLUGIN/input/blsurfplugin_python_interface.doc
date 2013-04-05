@@ -4,7 +4,7 @@
 
 Python package BLSURFPlugin defines several classes, destined for creation of the 2D meshes.
 
-BLSURF meshing plugin dynamically adds several methods to the \ref SMESH_SWIG.smeshBuilder.Mesh "class Mesh" to create meshing algorithms.
+BLSURF meshing plugin dynamically adds several methods to the smeshBuilder.Mesh to create meshing algorithms.
 
 Below you can see an example of usage of the BLSURFPlugin Python API for mesh generation:
 

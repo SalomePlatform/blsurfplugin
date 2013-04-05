@@ -54,7 +54,7 @@ BLSURF = "BLSURF"
 
 ## BLSurf 2D algorithm.
 #
-#  It can be created by calling smeshBuilder.Mesh.Triangle(smesh.BLSURF,geom=0)
+#  It can be created by calling smeshBuilder.Mesh.Triangle(smeshBuilder.BLSURF,geom=0)
 #
 class BLSURF_Algorithm(Mesh_Algorithm):
 

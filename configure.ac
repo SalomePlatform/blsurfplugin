@@ -442,6 +442,7 @@ AC_OUTPUT([ \
   doc/salome/gui/BLSURFPLUGIN/static/header_py.html \
   doc/salome/tui/Makefile \
   doc/salome/tui/doxyfile \
+  doc/salome/tui/static/header.html \
   bin/VERSION \
   bin/Makefile \
   idl/Makefile \

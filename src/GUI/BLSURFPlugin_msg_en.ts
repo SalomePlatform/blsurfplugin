@@ -430,5 +430,9 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
         <source>BLSURF_ENF_VER_INTERNAL_VERTICES</source>
         <translation>Use internal vertices of all faces</translation>
     </message>
+    <message>
+        <source>ZERO_VALUE_OF</source>
+        <translation>Invalid value (zero) of "%1"</translation>
+    </message>
 </context>
 </TS>

@@ -533,8 +533,39 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams(QString& msg) const
         else {
           ok = false;
         }
+        if ( ok && sizeMap.toDouble() <= 0.0 )
+        {
+          msg = tr("ZERO_VALUE_OF").arg( tr("SMP_SIZEMAP_COLUMN"));
+          ok = false;
+        }
       }
     }
+  }
+
+  // 22207: BLSURFPLUGIN: The user is allowed to enter 0 as a global or local size.
+  if ( ok )
+  {
+    if ( !( ok = ( myStdWidget->myPhySize->text().isEmpty() ||
+                   myStdWidget->myPhySize->text().toDouble() > 0.0 )))
+      msg = tr("ZERO_VALUE_OF").arg( tr("BLSURF_HPHYDEF"));
+  }
+  if ( ok )
+  {
+    if ( !( ok = ( myStdWidget->myMaxSize->text().isEmpty() ||
+                   myStdWidget->myMaxSize->text().toDouble() > 0.0 )))
+      msg = tr("ZERO_VALUE_OF").arg( tr("BLSURF_MAXSIZE"));
+  }
+  if ( ok )
+  {
+    if ( !( ok = ( myStdWidget->myAngleMesh->text().isEmpty() ||
+                   myStdWidget->myAngleMesh->text().toDouble() > 0.0 )))
+      msg = tr("ZERO_VALUE_OF").arg( tr("BLSURF_ANGLE_MESH"));
+  }
+  if ( ok )
+  {
+    if ( !( ok = ( myStdWidget->myChordalError->text().isEmpty() ||
+                   myStdWidget->myChordalError->text().toDouble() > 0.0 )))
+      msg = tr("ZERO_VALUE_OF").arg( tr("BLSURF_CHORDAL_ERROR"));
   }
 
   // Enforced vertices

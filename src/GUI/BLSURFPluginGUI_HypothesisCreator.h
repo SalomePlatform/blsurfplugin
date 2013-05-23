@@ -218,14 +218,15 @@ private:
   GeomSelectionTools* getGeomSelectionTool();
   GEOM::GEOM_Gen_var  getGeomEngine();
   //void                insertElementType( TopAbs_ShapeEnum );
-  void                insertElement( GEOM::GEOM_Object_var, bool modify = false );
-  void                insertAttractor(GEOM::GEOM_Object_var, GEOM::GEOM_Object_var, bool modify = false);
+  bool                insertElement( GEOM::GEOM_Object_var, bool modify = false );
+  bool                insertAttractor(GEOM::GEOM_Object_var, GEOM::GEOM_Object_var, bool modify = false);
   int                 findRowFromEntry(QString entry);
   CORBA::Object_var   entryToObject(QString entry);
   static LightApp_SelectionMgr* selectionMgr();
 
 private:
   
+  QTabWidget*             myTabWidget;
   QWidget*                myStdGroup;
   BLSURFPluginGUI_StdWidget* myStdWidget;
   QLineEdit*              myName;

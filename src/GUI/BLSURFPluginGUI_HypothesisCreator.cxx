@@ -533,16 +533,17 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams(QString& msg) const
         else {
           ok = false;
         }
-        if ( ok && sizeMap.toDouble() <= 0.0 )
-        {
-          msg = tr("ZERO_VALUE_OF").arg( tr("SMP_SIZEMAP_COLUMN"));
-          ok = false;
-        }
       }
     }
   }
 
   // 22207: BLSURFPLUGIN: The user is allowed to enter 0 as a global or local size.
+  if ( ok )
+  {
+    // In case if not STD_TAB is current tab, then text() of empty spinboxes returns "0" value.
+    // So STD_TAB must be current tab to get correct value of it's spinbox.
+    myTabWidget->setCurrentIndex( STD_TAB );
+  }
   if ( ok )
   {
     if ( !( ok = ( myStdWidget->myPhySize->text().isEmpty() ||
@@ -585,11 +586,11 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   lay->setMargin( 5 );
   lay->setSpacing( 0 );
 
-  // tab
-  QTabWidget* tab = new QTabWidget( fr );
-  tab->setTabShape( QTabWidget::Rounded );
-  tab->setTabPosition( QTabWidget::North );
-  lay->addWidget( tab );
+  // main TabWidget of the dialog
+  myTabWidget = new QTabWidget( fr );
+  myTabWidget->setTabShape( QTabWidget::Rounded );
+  myTabWidget->setTabPosition( QTabWidget::North );
+  lay->addWidget( myTabWidget );
 
   myName = 0;
   
@@ -864,12 +865,12 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 //   anEnfLayout->setRowStretch(1, 1);
 
   // ---
-  tab->insertTab( STD_TAB, myStdGroup, tr( "SMESH_ARGUMENTS" ) );
-  tab->insertTab( ADV_TAB, myAdvGroup, tr( "BLSURF_ADV_ARGS" ) );
-  tab->insertTab( SMP_TAB, mySmpGroup, tr( "LOCAL_SIZE" ) );
-  tab->insertTab( ENF_TAB, myEnfGroup, tr( "BLSURF_ENF_VER" ) );
+  myTabWidget->insertTab( STD_TAB, myStdGroup, tr( "SMESH_ARGUMENTS" ) );
+  myTabWidget->insertTab( ADV_TAB, myAdvGroup, tr( "BLSURF_ADV_ARGS" ) );
+  myTabWidget->insertTab( SMP_TAB, mySmpGroup, tr( "LOCAL_SIZE" ) );
+  myTabWidget->insertTab( ENF_TAB, myEnfGroup, tr( "BLSURF_ENF_VER" ) );
 
-  tab->setCurrentIndex( STD_TAB );
+  myTabWidget->setCurrentIndex( STD_TAB );
 
   connect( myAdvWidget->addBtn->menu(), SIGNAL( aboutToShow() ),         this, SLOT( onAddOption() ) );
   connect( myAdvWidget->addBtn->menu(), SIGNAL( triggered( QAction* ) ), this, SLOT( onOptionChosenInPopup( QAction* ) ) );
@@ -2350,18 +2351,25 @@ void BLSURFPluginGUI_HypothesisCreator::onSetSizeMap(QTreeWidgetItem* item, int 
 
 void BLSURFPluginGUI_HypothesisCreator::onAddMap()
 {
+  bool res = false;
   if ( smpTab->currentIndex() == ATT_TAB ){    
     if ( myGeomSelWdg2->IsObjectSelected() && myAttSelWdg->IsObjectSelected() ){ 
       mySMapObject = myGeomSelWdg2->GetObject< GEOM::GEOM_Object >(0);
       myAttObject = myAttSelWdg->GetObject< GEOM::GEOM_Object >(0);
-      insertAttractor(mySMapObject, myAttObject);
+      res = insertAttractor(mySMapObject, myAttObject);
     }
   }
   if (smpTab->currentIndex() == SMP_STD_TAB  ){
     if ( myGeomSelWdg1->IsObjectSelected() ){
       mySMapObject = myGeomSelWdg1->GetObject< GEOM::GEOM_Object >(0);
-      insertElement(mySMapObject);  
+      res = insertElement(mySMapObject);  
     }  
+  }
+  if ( !res ) {
+    // Local size should be more than 0
+    QString msg = tr("ZERO_VALUE_OF").arg( tr("BLSURF_SM_SIZE"));
+    SUIT_MessageBox::critical( dlg(),"Error" , msg );
+    return;
   }
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;  
   that->getGeomSelectionTool()->selectionMgr()->clearFilters();
@@ -2382,18 +2390,25 @@ void BLSURFPluginGUI_HypothesisCreator::onAddMap()
 void BLSURFPluginGUI_HypothesisCreator::onModifyMap()
 {
   MESSAGE("BLSURFPluginGUI_HypothesisCreator::onModifyMap()");
+  bool res = false;
   if ( smpTab->currentIndex() == ATT_TAB ){    
     if ( myGeomSelWdg2->IsObjectSelected() && myAttSelWdg->IsObjectSelected() ){ 
       mySMapObject = myGeomSelWdg2->GetObject< GEOM::GEOM_Object >(0);
       myAttObject = myAttSelWdg->GetObject< GEOM::GEOM_Object >(0);
-      insertAttractor(mySMapObject, myAttObject, /*modify = */true);
+      res = insertAttractor(mySMapObject, myAttObject, /*modify = */true);
     }
   }
   if (smpTab->currentIndex() == SMP_STD_TAB  ){
     if ( myGeomSelWdg1->IsObjectSelected() ){
       mySMapObject = myGeomSelWdg1->GetObject< GEOM::GEOM_Object >(0);
-      insertElement(mySMapObject, /*modify = */true);  
+      res = insertElement(mySMapObject, /*modify = */true);  
     }  
+  }
+  if ( !res ) {
+    // Local size should be more than 0
+    QString msg = tr("ZERO_VALUE_OF").arg( tr("BLSURF_SM_SIZE"));
+    SUIT_MessageBox::critical( dlg(),"Error" , msg );
+    return;
   }
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;  
   that->getGeomSelectionTool()->selectionMgr()->clearFilters();
@@ -2411,7 +2426,7 @@ void BLSURFPluginGUI_HypothesisCreator::onModifyMap()
   myAttSelWdg->SetObject(CORBA::Object::_nil());
 }
 
-void BLSURFPluginGUI_HypothesisCreator::insertElement(GEOM::GEOM_Object_var anObject, bool modify)
+bool BLSURFPluginGUI_HypothesisCreator::insertElement(GEOM::GEOM_Object_var anObject, bool modify)
 {
   MESSAGE("BLSURFPluginGUI_HypothesisCreator::insertElement()");
   BLSURFPlugin::BLSURFPlugin_Hypothesis_var h =
@@ -2444,6 +2459,10 @@ void BLSURFPluginGUI_HypothesisCreator::insertElement(GEOM::GEOM_Object_var anOb
   QString shapeEntry;
   shapeEntry = QString::fromStdString(entry);
   double phySize = mySmpSizeSpin->value();
+
+  if ( phySize == 0 )
+    return false; // Local size should be more than 0
+
   std::ostringstream oss;
   oss << phySize;
   QString sizeMap;
@@ -2457,7 +2476,7 @@ void BLSURFPluginGUI_HypothesisCreator::insertElement(GEOM::GEOM_Object_var anOb
     if (that->mySMPMap.contains(shapeEntry)) {  
       if (that->mySMPMap[shapeEntry] != "__TO_DELETE__") {
   //             MESSAGE("Size map for shape with name(entry): "<< shapeName << "(" << entry << ")");
-        return;
+        return false;
       }
     }
     mySizeMapTable->addTopLevelItem(item);
@@ -2478,9 +2497,10 @@ void BLSURFPluginGUI_HypothesisCreator::insertElement(GEOM::GEOM_Object_var anOb
     myStdWidget->myPhysicalMesh->setCurrentIndex( PhysicalLocalSize );
     myStdWidget->onPhysicalMeshChanged();
   }
+  return true;
 }
 
-void BLSURFPluginGUI_HypothesisCreator::insertAttractor(GEOM::GEOM_Object_var aFace, GEOM::GEOM_Object_var anAttractor, bool modify)
+bool BLSURFPluginGUI_HypothesisCreator::insertAttractor(GEOM::GEOM_Object_var aFace, GEOM::GEOM_Object_var anAttractor, bool modify)
 {
   MESSAGE("BLSURFPluginGUI_HypothesisCreator::insertAttractor()");
   BLSURFPlugin::BLSURFPlugin_Hypothesis_var h =
@@ -2503,6 +2523,10 @@ void BLSURFPluginGUI_HypothesisCreator::insertAttractor(GEOM::GEOM_Object_var aF
   double infDist = 0. ;
   double constDist = 0. ;
   phySize = myAttSizeSpin->value();
+
+  if ( phySize == 0 )
+    return false; // Local size should be more than 0
+
   if (myAttractorCheck->isChecked()){
     infDist = myAttDistSpin->value();
   }
@@ -2530,7 +2554,7 @@ void BLSURFPluginGUI_HypothesisCreator::insertAttractor(GEOM::GEOM_Object_var aF
     if (that->mySMPMap.contains(shapeEntry)) {  
       if (that->mySMPMap[shapeEntry] != "__TO_DELETE__") {
     //             MESSAGE("Size map for shape with name(entry): "<< shapeName << "(" << entry << ")");
-        return;
+        return false;
       }
     }
     item = new QTreeWidgetItem();
@@ -2567,6 +2591,7 @@ void BLSURFPluginGUI_HypothesisCreator::insertAttractor(GEOM::GEOM_Object_var aF
     myStdWidget->onPhysicalMeshChanged();
   }
   MESSAGE("mySMPMap.size() = "<<mySMPMap.size());
+  return true;
 }
 
 bool BLSURFPluginGUI_HypothesisCreator::sizeMapsValidation()

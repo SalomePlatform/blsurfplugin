@@ -4,6 +4,10 @@
 <context>
     <name>@default</name>
     <message>
+        <source>ZERO_VALUE_OF</source>
+        <translation type="unfinished">Invalid value (zero) of "%1"</translation>
+    </message>
+    <message>
         <source>BLSURF_MESH_TYPE</source>
         <translation>Type de maillage</translation>
     </message>

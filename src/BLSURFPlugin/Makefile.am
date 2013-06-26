@@ -48,7 +48,6 @@ libBLSURFEngine_la_CPPFLAGS =		\
 	$(PYTHON_INCLUDES)      	\
 	$(KERNEL_CXXFLAGS)		\
 	$(GUI_CXXFLAGS)			\
-	$(MED_CXXFLAGS)			\
 	$(GEOM_CXXFLAGS)		\
 	$(CAS_CPPFLAGS)			\
 	$(VTK_INCLUDES)			\
@@ -68,7 +67,6 @@ libBLSURFEngine_la_LDFLAGS  =			\
 	$(MESHGEMS_CADSURF_LIBS) \
 	$(SMESH_LDFLAGS) -lSMESHimpl -lSMESHEngine -lStdMeshers -lStdMeshersEngine -lSMDS -lSMESHDS \
 	$(GEOM_LDFLAGS) -lGEOMbasic \
-	$(MED_LDFLAGS) -lSalomeIDLMED \
 	$(KERNEL_LDFLAGS) -lOpUtil -lSalomeGenericObj -lSalomeNS -lSALOMELocalTrace -lSALOMEBasics \
 	$(BOOST_LIB_REGEX)
 

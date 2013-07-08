@@ -1553,6 +1553,7 @@ namespace
   {
     std::string * _error;
     int           _verbosity;
+    double *      _progress;
   };
 
 
@@ -1659,6 +1660,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   /* Set the message callback in the working context */
   message_cb_user_data mcud;
   mcud._error     = & this->SMESH_Algo::_comment;
+  mcud._progress  = & this->SMESH_Algo::_progress;
   mcud._verbosity =
     _hypothesis ? _hypothesis->GetVerbosity() : BLSURFPlugin_Hypothesis::GetDefaultVerbosity();
   context_set_message_callback(ctx, message_cb, &mcud);
@@ -1741,7 +1743,6 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
 
   assert(Py_IsInitialized());
   PyGILState_STATE gstate;
-  gstate = PyGILState_Ensure();
 
   string theSizeMapStr;
 
@@ -1792,6 +1793,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
         if (theSizeMapStr.find(bad_end) == (theSizeMapStr.size()-bad_end.size()-1))
           continue;
         // Expr To Python function, verification is performed at validation in GUI
+        gstate = PyGILState_Ensure();
         PyObject * obj = NULL;
         obj= PyRun_String(theSizeMapStr.c_str(), Py_file_input, main_dict, NULL);
         Py_DECREF(obj);
@@ -1799,6 +1801,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
         func = PyObject_GetAttrString(main_mod, "f");
         FaceId2PythonSmp[iface]=func;
         FaceId2SizeMap.erase(faceKey);
+        PyGILState_Release(gstate);
       }
 
       // Specific size map = Attractor
@@ -1958,6 +1961,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
           if (theSizeMapStr.find(bad_end) == (theSizeMapStr.size()-bad_end.size()-1))
             continue;
           // Expr To Python function, verification is performed at validation in GUI
+          gstate = PyGILState_Ensure();
           PyObject * obj = NULL;
           obj= PyRun_String(theSizeMapStr.c_str(), Py_file_input, main_dict, NULL);
           Py_DECREF(obj);
@@ -1965,6 +1969,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
           func = PyObject_GetAttrString(main_mod, "f");
           EdgeId2PythonSmp[ic]=func;
           EdgeId2SizeMap.erase(edgeKey);
+          PyGILState_Release(gstate);
         }
       }
       /* data of nodes existing on the edge */
@@ -2215,8 +2220,6 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     // There was an error while meshing
     error(_comment);
   }
-
-  PyGILState_Release(gstate);
 
   std::cout << std::endl;
   std::cout << "End of Surface Mesh generation" << std::endl;
@@ -2845,8 +2848,11 @@ status_t message_cb(message_t *msg, void *user_data)
       len--;
     mcud->_error->append( desc, len );
   }
-  else if ( mcud->_verbosity > 0 ) {
-    std::cout << desc << std::endl;
+  else {
+    if ( errnumber == 3009001 )
+      * mcud->_progress = atof( desc + 11 ) / 100.;
+    if ( mcud->_verbosity > 0 )
+      std::cout << desc << std::endl;
   }
   return STATUS_OK;
 }

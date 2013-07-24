@@ -82,4 +82,5 @@ libBLSURFPluginGUI_la_LDFLAGS =			\
 nodist_salomeres_DATA =		\
 	BLSURFPlugin_images.qm	\
 	BLSURFPlugin_msg_en.qm  \
-	BLSURFPlugin_msg_fr.qm
+	BLSURFPlugin_msg_fr.qm  \
+	BLSURFPlugin_msg_ja.qm

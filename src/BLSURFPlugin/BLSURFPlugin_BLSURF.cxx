@@ -818,6 +818,8 @@ void BLSURFPlugin_BLSURF::SetParameters(
     precad_set_param(pcs, "process_3d_topology",    _precadProcess3DTopology ? "1" : "0");
     precad_set_param(pcs, "discard_input_topology", _precadDiscardInput ? "1" : "0");
   }
+  // unlimit mesh size (issue 0022266)
+  set_param(css, "max_number_of_points_per_patch", "1000000");
   
    bool useGradation = false;
    switch (_physicalMesh)

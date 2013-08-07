@@ -27,6 +27,7 @@
 
 <meshers-group name="BLSURF"
                resources="BLSURFPlugin"
+               idl-module="BLSURFPlugin"
                server-lib="BLSURFEngine"
                gui-lib="BLSURFPluginGUI">
   <hypotheses>

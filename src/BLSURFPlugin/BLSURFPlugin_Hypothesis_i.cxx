@@ -2584,6 +2584,446 @@ void BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexEntry(const char* theFa
  */
 ///////////////////////
 
+///////////////////////
+// PERIODICITY       //
+///////////////////////
+
+
+std::string BLSURFPlugin_Hypothesis_i::ShapeTypeToString(GEOM::shape_type theShapeType)
+{
+//enum shape_type { COMPOUND, COMPSOLID, SOLID, SHELL, FACE, WIRE, EDGE, VERTEX, SHAPE /*, __max_shape_type=0xffffffff */ };
+  std::map<GEOM::shape_type, std::string> MapShapeTypeToString;
+  MapShapeTypeToString[GEOM::COMPOUND] = std::string("COMPOUND");
+  MapShapeTypeToString[GEOM::COMPSOLID] = std::string("COMPSOLID");
+  MapShapeTypeToString[GEOM::SOLID] = std::string("SOLID");
+  MapShapeTypeToString[GEOM::SHELL] = std::string("SHELL");
+  MapShapeTypeToString[GEOM::FACE] = std::string("FACE");
+  MapShapeTypeToString[GEOM::WIRE] = std::string("WIRE");
+  MapShapeTypeToString[GEOM::EDGE] = std::string("EDGE");
+  MapShapeTypeToString[GEOM::VERTEX] = std::string("VERTEX");
+  MapShapeTypeToString[GEOM::SHAPE] = std::string("SHAPE");
+  std::string txtShapeType = MapShapeTypeToString[theShapeType];
+  return txtShapeType;
+}
+
+void BLSURFPlugin_Hypothesis_i::CheckShapeTypes(GEOM::GEOM_Object_ptr shape, std::vector<GEOM::shape_type> theShapeTypes)
+{
+  // Check shape types
+  bool ok = false;
+  std::stringstream typesTxt;
+  for (std::size_t i=0; i<theShapeTypes.size(); i++)
+    {
+      GEOM::shape_type theShapeType = theShapeTypes[i];
+      if (shape->GetShapeType() == theShapeType)
+        ok = true;
+      typesTxt << ShapeTypeToString(theShapeType);
+      if (i < theShapeTypes.size()-1 )
+        typesTxt << ", ";
+    }
+  if (!ok){
+    std::stringstream msg;
+    msg << "shape shape type is not in" << typesTxt;
+    MESSAGE(msg);
+    THROW_SALOME_CORBA_EXCEPTION(msg.str().c_str(), SALOME::BAD_PARAM);
+  }
+}
+
+void BLSURFPlugin_Hypothesis_i::CheckShapeType(GEOM::GEOM_Object_ptr shape, GEOM::shape_type theShapeType)
+{
+  // Check shape type
+  if (shape->GetShapeType() != theShapeType) {
+    std::stringstream msg;
+    msg << "shape shape type is not " << ShapeTypeToString(theShapeType);
+    MESSAGE(msg);
+    THROW_SALOME_CORBA_EXCEPTION(msg.str().c_str(), SALOME::BAD_PARAM);
+  }
+}
+
+std::string BLSURFPlugin_Hypothesis_i::PublishIfNeeded(GEOM::GEOM_Object_ptr shape, GEOM::shape_type theShapeType, std::string prefix)
+{
+  // Check shape is published in the object browser
+  string shapeEntry = shape->GetStudyEntry();
+
+  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+  SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
+  string aName;
+
+  // Publish shape if needed
+  if (shapeEntry.empty()) {
+    if (shape->GetShapeType() == theShapeType)
+      aName = prefix;
+    aName += shape->GetEntry();
+    SALOMEDS::SObject_wrap theSFace1 = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, shape, aName.c_str());
+    if (!theSFace1->_is_nil())
+      shapeEntry = theSFace1->GetID();
+  }
+  if (shapeEntry.empty())
+    THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
+  return shapeEntry;
+}
+
+// Format the output of two vectors to use it in MESSAGE and PythonDump
+std::string BLSURFPlugin_Hypothesis_i::FormatVerticesEntries(vector<string> &theSourceVerticesEntries, vector<string> &theTargetVerticesEntries)
+{
+  std::stringstream listEntriesTxt;
+
+  if (!theSourceVerticesEntries.empty())
+    {
+      listEntriesTxt << ", [" ;
+      for (size_t i = 0; i<theSourceVerticesEntries.size(); i++)
+        {
+          if (i>0)
+            listEntriesTxt << ", ";
+          listEntriesTxt << theSourceVerticesEntries[i];
+        }
+
+      listEntriesTxt << "], [" ;
+      for (size_t i = 0; i<theTargetVerticesEntries.size(); i++)
+        {
+          if (i>0)
+            listEntriesTxt << ", ";
+          listEntriesTxt << theTargetVerticesEntries[i];
+        }
+      listEntriesTxt << "]" ;
+    }
+  return listEntriesTxt.str();
+}
+
+
+void BLSURFPlugin_Hypothesis_i::AddPreCadFacesPeriodicity(GEOM::GEOM_Object_ptr theFace1, GEOM::GEOM_Object_ptr theFace2)
+throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+  const GEOM::ListOfGO theSourceVertices;
+  const GEOM::ListOfGO theTargetVertices;
+  AddPreCadFacesPeriodicityWithVertices(theFace1, theFace2, theSourceVertices, theTargetVertices);
+}
+
+
+void BLSURFPlugin_Hypothesis_i::AddPreCadFacesPeriodicityWithVertices(GEOM::GEOM_Object_ptr theFace1, GEOM::GEOM_Object_ptr theFace2,
+    const GEOM::ListOfGO& theSourceVertices, const GEOM::ListOfGO& theTargetVertices)
+throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+
+  size_t theLength = theSourceVertices.length();
+  if (theLength != theTargetVertices.length())
+    THROW_SALOME_CORBA_EXCEPTION( "The sizes of theSourceVertices and theTargetVertices must be the same" ,SALOME::BAD_PARAM );
+
+  std::vector<GEOM::shape_type> allowedShapeTypes;
+  allowedShapeTypes.push_back(GEOM::FACE);
+  allowedShapeTypes.push_back(GEOM::COMPOUND);
+
+  string prefix1 = "Source_face_";
+  CheckShapeTypes(theFace1, allowedShapeTypes);
+  string theFace1Entry = PublishIfNeeded(theFace1, GEOM::FACE, prefix1);
+
+  string prefix2 = "Target_face_";
+  CheckShapeTypes(theFace2, allowedShapeTypes);
+  string theFace2Entry = PublishIfNeeded(theFace2, GEOM::FACE, prefix2);
+
+  string prefix3 = "Source_vertex_";
+  vector<string> theSourceVerticesEntries (theLength) ;
+  GEOM::GEOM_Object_ptr theVtx_i;
+  string theEntry_i;
+  for (size_t ind = 0; ind < theLength; ind++) {
+      theVtx_i = theSourceVertices[ind];
+      theEntry_i = PublishIfNeeded(theVtx_i, GEOM::VERTEX, prefix3);
+      theSourceVerticesEntries[ind] = theEntry_i;
+  }
+
+  string prefix4 = "Target_vertex_";
+  vector<string> theTargetVerticesEntries (theLength) ;
+  for (size_t ind = 0; ind < theLength; ind++) {
+      theVtx_i = theTargetVertices[ind];
+      theEntry_i = PublishIfNeeded(theVtx_i, GEOM::VERTEX, prefix4);
+      theTargetVerticesEntries[ind] = theEntry_i;
+  }
+
+  string theFace2Name = theFace2->GetName();
+  MESSAGE("IDL : theFace1->GetName : " << theFace1->GetName());
+  MESSAGE("IDL : theFace2->GetName : " << theFace2->GetName());
+  MESSAGE("IDL : AddPreCadFacesPeriodicity( "<< theFace1Entry << ", " << theFace2Entry <<  ")");
+  try {
+      AddPreCadFacesPeriodicityEntry(theFace1Entry.c_str(), theFace2Entry.c_str(),
+          theSourceVerticesEntries, theTargetVerticesEntries);
+  } catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+}
+
+
+void BLSURFPlugin_Hypothesis_i::AddPreCadFacesPeriodicityEntry(const char* theFace1Entry, const char* theFace2Entry,
+    vector<string> &theSourceVerticesEntries, vector<string> &theTargetVerticesEntries)
+    throw (SALOME::SALOME_Exception)
+{
+
+  ASSERT(myBaseImpl);
+
+  string listEntriesTxt = FormatVerticesEntries(theSourceVerticesEntries, theTargetVerticesEntries);
+
+  MESSAGE("IDL : AddPreCadFacesPeriodicityEntry(" << theFace1Entry << ", " << theFace2Entry << listEntriesTxt.c_str() << ")");
+
+  this->GetImpl()->AddPreCadFacesPeriodicity(theFace1Entry, theFace2Entry,
+      theSourceVerticesEntries, theTargetVerticesEntries);
+
+  SMESH::TPythonDump pd;
+  if (!theSourceVerticesEntries.empty())
+    {
+      pd << _this() << ".AddPreCadFacesPeriodicityWithVertices(" << theFace1Entry << ", " << theFace2Entry;
+      pd << listEntriesTxt.c_str();
+      pd << ")";
+    }
+  else
+    pd << _this() << ".AddPreCadFacesPeriodicity(" << theFace1Entry << ", " << theFace2Entry << ")";
+  MESSAGE("IDL : AddPreCadFacesPeriodicityEntry END");
+}
+
+void BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicity(GEOM::GEOM_Object_ptr theEdge1, GEOM::GEOM_Object_ptr theEdge2)
+      throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+  const GEOM::ListOfGO theSourceVertices;
+  const GEOM::ListOfGO theTargetVertices;
+  AddPreCadEdgesPeriodicityWithVertices(theEdge1, theEdge2, theSourceVertices, theTargetVertices);
+}
+
+void BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicityWithVertices(GEOM::GEOM_Object_ptr theEdge1, GEOM::GEOM_Object_ptr theEdge2,
+    const GEOM::ListOfGO& theSourceVertices, const GEOM::ListOfGO& theTargetVertices)
+      throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+
+  size_t theLength = theSourceVertices.length();
+  if (theLength != theTargetVertices.length())
+    THROW_SALOME_CORBA_EXCEPTION( "The sizes of theSourceVertices and theTargetVertices must be the same" ,SALOME::BAD_PARAM );
+
+  std::vector<GEOM::shape_type> allowedShapeTypes;
+  allowedShapeTypes.push_back(GEOM::EDGE);
+  allowedShapeTypes.push_back(GEOM::COMPOUND);
+
+  string prefix1 = "Source_edge_";
+  CheckShapeTypes(theEdge1, allowedShapeTypes);
+  string theEdge1Entry = PublishIfNeeded(theEdge1, GEOM::EDGE, prefix1);
+
+  string prefix2 = "Target_edge_";
+  CheckShapeTypes(theEdge2, allowedShapeTypes);
+  string theEdge2Entry = PublishIfNeeded(theEdge2, GEOM::EDGE, prefix2);
+
+  string prefix3 = "Source_vertex_";
+  vector<string> theSourceVerticesEntries (theLength) ;
+  GEOM::GEOM_Object_ptr theVtx_i;
+  string theEntry_i;
+  for (size_t ind = 0; ind < theLength; ind++) {
+      theVtx_i = theSourceVertices[ind];
+      theEntry_i = PublishIfNeeded(theVtx_i, GEOM::VERTEX, prefix3);
+      theSourceVerticesEntries[ind] = theEntry_i;
+  }
+
+  string prefix4 = "Target_vertex_";
+  vector<string> theTargetVerticesEntries (theLength) ;
+  for (size_t ind = 0; ind < theLength; ind++) {
+      theVtx_i = theTargetVertices[ind];
+      theEntry_i = PublishIfNeeded(theVtx_i, GEOM::VERTEX, prefix4);
+      theTargetVerticesEntries[ind] = theEntry_i;
+  }
+
+  string theEdge2Name = theEdge2->GetName();
+  MESSAGE("IDL : theEdge1->GetName : " << theEdge1->GetName());
+  MESSAGE("IDL : theEdge2->GetName : " << theEdge2->GetName());
+  MESSAGE("IDL : AddPreCadEdgesPeriodicity( "<< theEdge1Entry << ", " << theEdge2Entry << ")");
+  try {
+      AddPreCadEdgesPeriodicityEntry(theEdge1Entry.c_str(), theEdge2Entry.c_str(),
+          theSourceVerticesEntries, theTargetVerticesEntries);
+  } catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+}
+
+
+void BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicityEntry(const char* theEdge1Entry, const char* theEdge2Entry,
+    vector<string> &theSourceVerticesEntries, vector<string> &theTargetVerticesEntries)
+    throw (SALOME::SALOME_Exception)
+{
+
+  ASSERT(myBaseImpl);
+
+  string listEntriesTxt = FormatVerticesEntries(theSourceVerticesEntries, theTargetVerticesEntries);
+
+  MESSAGE("IDL : AddPreCadEdgesPeriodicityEntry(" << theEdge1Entry << ", " << theEdge2Entry << listEntriesTxt.c_str() << ")");
+  this->GetImpl()->AddPreCadEdgesPeriodicity(theEdge1Entry, theEdge2Entry,
+      theSourceVerticesEntries, theTargetVerticesEntries);
+
+  SMESH::TPythonDump pd;
+  if (!theSourceVerticesEntries.empty())
+    {
+      pd << _this() << ".AddPreCadEdgesPeriodicityWithVertices(" << theEdge1Entry << ", " << theEdge2Entry;
+      pd << listEntriesTxt.c_str();
+      pd << ")";
+    }
+  else
+    pd << _this() << ".AddPreCadEdgesPeriodicity(" << theEdge1Entry << ", " << theEdge2Entry << ")";
+
+  MESSAGE("IDL : AddPreCadEdgesPeriodicityEntry END");
+}
+
+void BLSURFPlugin_Hypothesis_i::AddFacePeriodicity(GEOM::GEOM_Object_ptr theFace1, GEOM::GEOM_Object_ptr theFace2)
+    throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+
+  string prefix1 = "Source_face_";
+  CheckShapeType(theFace1, GEOM::FACE);
+  string theFace1Entry = PublishIfNeeded(theFace1, GEOM::FACE, prefix1);
+  string prefix2 = "Target_face_";
+  CheckShapeType(theFace2, GEOM::FACE);
+  string theFace2Entry = PublishIfNeeded(theFace2, GEOM::FACE, prefix2);
+
+  MESSAGE("IDL : theFace1->GetName : " << theFace1->GetName());
+  MESSAGE("IDL : theFace2->GetName : " << theFace2->GetName());
+  MESSAGE("IDL : AddFacePeriodicity( "<< theFace1Entry << ", " << theFace2Entry << ")");
+  try {
+      AddFacePeriodicityEntry(theFace1Entry.c_str(), theFace2Entry.c_str());
+  } catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+
+
+}
+
+void BLSURFPlugin_Hypothesis_i::AddFacePeriodicityEntry(const char* theFace1Entry, const char* theFace2Entry)
+    throw (SALOME::SALOME_Exception){
+
+  ASSERT(myBaseImpl);
+
+  MESSAGE("IDL : AddFacePeriodicityEntry(" << theFace1Entry << ", " << theFace2Entry << ")");
+  this->GetImpl()->AddFacePeriodicity(theFace1Entry, theFace2Entry);
+  SMESH::TPythonDump pd;
+  pd << _this() << ".AddFacePeriodicity(" << theFace1Entry << ", " << theFace2Entry << ")";
+  MESSAGE("IDL : AddFacePeriodicityEntry END");
+}
+
+
+void BLSURFPlugin_Hypothesis_i::AddEdgePeriodicity(GEOM::GEOM_Object_ptr theFace1, GEOM::GEOM_Object_ptr theEdge1,
+    GEOM::GEOM_Object_ptr theFace2, GEOM::GEOM_Object_ptr theEdge2, int edge_orientation)
+    throw (SALOME::SALOME_Exception){
+  ASSERT(myBaseImpl);
+
+  string prefix_theFace1 = "Source_face_";
+  CheckShapeType(theFace1, GEOM::FACE);
+  string theFace1Entry = PublishIfNeeded(theFace1, GEOM::FACE, prefix_theFace1);
+  string prefix_theFace2 = "Target_face_";
+  CheckShapeType(theFace2, GEOM::FACE);
+  string theFace2Entry = PublishIfNeeded(theFace2, GEOM::FACE, prefix_theFace2);
+
+  string prefix_theEdge1 = "Source_edge_";
+  CheckShapeType(theEdge1, GEOM::EDGE);
+  string theEdge1Entry = PublishIfNeeded(theEdge1, GEOM::EDGE, prefix_theEdge1);
+  string prefix_theEdge2 = "Target_edge_";
+  CheckShapeType(theEdge2, GEOM::EDGE);
+  string theEdge2Entry = PublishIfNeeded(theEdge2, GEOM::EDGE, prefix_theEdge2);
+
+  MESSAGE("IDL : theFace1->GetName : " << theFace1->GetName());
+  MESSAGE("IDL : theEdge1->GetName : " << theEdge1->GetName());
+  MESSAGE("IDL : theFace2->GetName : " << theFace2->GetName());
+  MESSAGE("IDL : theEdge2->GetName : " << theEdge2->GetName());
+  MESSAGE("IDL : AddEdgePeriodicity( "<< theFace1Entry << ", " << theEdge1Entry << ", " << theFace2Entry << ", "  << theEdge2Entry << ", " << edge_orientation << ")");
+  try {
+      AddEdgePeriodicityEntry(theFace1Entry.c_str(), theEdge1Entry.c_str(), theFace2Entry.c_str(), theEdge2Entry.c_str(), edge_orientation);
+  } catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+
+
+}
+
+void BLSURFPlugin_Hypothesis_i::AddEdgePeriodicityWithoutFaces(GEOM::GEOM_Object_ptr theEdge1,
+    GEOM::GEOM_Object_ptr theEdge2, int edge_orientation)
+    throw (SALOME::SALOME_Exception){
+  ASSERT(myBaseImpl);
+
+  string theFace1Entry = "";
+  string theFace2Entry = "";
+
+  string prefix_theEdge1 = "Source_edge_";
+  CheckShapeType(theEdge1, GEOM::EDGE);
+  string theEdge1Entry = PublishIfNeeded(theEdge1, GEOM::EDGE, prefix_theEdge1);
+  string prefix_theEdge2 = "Target_edge_";
+  CheckShapeType(theEdge2, GEOM::EDGE);
+  string theEdge2Entry = PublishIfNeeded(theEdge2, GEOM::EDGE, prefix_theEdge2);
+
+  MESSAGE("IDL : theEdge1->GetName : " << theEdge1->GetName());
+  MESSAGE("IDL : theEdge2->GetName : " << theEdge2->GetName());
+  MESSAGE("IDL : AddEdgePeriodicity( "<< theFace1Entry << ", " << theEdge1Entry << ", " << theFace2Entry << ", "  << theEdge2Entry << ", " << edge_orientation << ")");
+  try {
+      AddEdgePeriodicityEntry(theFace1Entry.c_str(), theEdge1Entry.c_str(), theFace2Entry.c_str(), theEdge2Entry.c_str(), edge_orientation);
+  } catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+
+
+}
+
+void BLSURFPlugin_Hypothesis_i::AddEdgePeriodicityEntry(const char* theFace1Entry, const char* theEdge1Entry, const char* theFace2Entry, const char* theEdge2Entry, const int edge_orientation)
+    throw (SALOME::SALOME_Exception){
+
+  ASSERT(myBaseImpl);
+
+  MESSAGE("IDL : AddEdgePeriodicityEntry(" << theFace1Entry << ", " << theEdge1Entry << ", " << theFace2Entry << ", "  << theEdge2Entry << ", " << edge_orientation << ")");
+  this->GetImpl()->AddEdgePeriodicity(theFace1Entry, theEdge1Entry, theFace2Entry, theEdge2Entry, edge_orientation);
+  SMESH::TPythonDump pd;
+  if (theFace1Entry)
+    pd << _this() << ".AddEdgePeriodicity(" << theFace1Entry << ", " << theEdge1Entry << ", " << theFace2Entry << ", "  << theEdge2Entry << ", " << edge_orientation <<")";
+  else
+    pd << _this() << ".AddEdgePeriodicityWithoutFaces(" << theEdge1Entry << ", " << theEdge2Entry << ", " << edge_orientation <<")";
+  MESSAGE("IDL : AddEdgePeriodicityEntry END");
+}
+
+void BLSURFPlugin_Hypothesis_i::AddVertexPeriodicity(GEOM::GEOM_Object_ptr theEdge1, GEOM::GEOM_Object_ptr theVertex1,
+    GEOM::GEOM_Object_ptr theEdge2, GEOM::GEOM_Object_ptr theVertex2)
+    throw (SALOME::SALOME_Exception){
+  ASSERT(myBaseImpl);
+
+  string prefix_theEdge1 = "Source_edge_";
+  CheckShapeType(theEdge1, GEOM::EDGE);
+  string theEdge1Entry = PublishIfNeeded(theEdge1, GEOM::EDGE, prefix_theEdge1);
+  string prefix_theEdge2 = "Target_edge_";
+  CheckShapeType(theEdge2, GEOM::EDGE);
+  string theEdge2Entry = PublishIfNeeded(theEdge2, GEOM::EDGE, prefix_theEdge2);
+
+  string prefix_theVertex1 = "Source_vertex_";
+  CheckShapeType(theVertex1, GEOM::VERTEX);
+  string theVertex1Entry = PublishIfNeeded(theVertex1, GEOM::VERTEX, prefix_theVertex1);
+  string prefix_theVertex2 = "Target_vertex_";
+  CheckShapeType(theVertex2, GEOM::VERTEX);
+  string theVertex2Entry = PublishIfNeeded(theVertex2, GEOM::VERTEX, prefix_theVertex2);
+
+  MESSAGE("IDL : theEdge1->GetName : " << theEdge1->GetName());
+  MESSAGE("IDL : theVertex1->GetName : " << theVertex1->GetName());
+  MESSAGE("IDL : theEdge2->GetName : " << theEdge2->GetName());
+  MESSAGE("IDL : theVertex2->GetName : " << theVertex2->GetName());
+  MESSAGE("IDL : AddVertexPeriodicity( "<< theEdge1Entry << ", " << theVertex1Entry << ", " << theEdge2Entry << ", "  << theVertex2Entry << ")");
+  try {
+      AddVertexPeriodicityEntry(theEdge1Entry.c_str(), theVertex1Entry.c_str(), theEdge2Entry.c_str(), theVertex2Entry.c_str());
+  } catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+
+
+}
+
+void BLSURFPlugin_Hypothesis_i::AddVertexPeriodicityEntry(const char* theEdge1Entry, const char* theVertex1Entry, const char* theEdge2Entry, const char* theVertex2Entry)
+    throw (SALOME::SALOME_Exception){
+
+  ASSERT(myBaseImpl);
+
+  MESSAGE("IDL : AddVertexPeriodicityEntry(" << theEdge1Entry << ", " << theVertex1Entry << ", " << theEdge2Entry << ", "  << theVertex2Entry << ")");
+  this->GetImpl()->AddVertexPeriodicity(theEdge1Entry, theVertex1Entry, theEdge2Entry, theVertex2Entry);
+  SMESH::TPythonDump pd;
+  pd << _this() << ".AddVertexPeriodicity(" << theEdge1Entry << ", " << theVertex1Entry << ", " << theEdge2Entry << ", "  << theVertex2Entry << ")";
+  MESSAGE("IDL : AddVertexPeriodicityEntry END");
+}
+
 
 //================================================================================
 /*!

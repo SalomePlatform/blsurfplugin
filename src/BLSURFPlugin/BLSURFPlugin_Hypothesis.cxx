@@ -78,7 +78,9 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   _enfVertexEntryEnfVertexMap(GetDefaultEnfVertexEntryEnfVertexMap()),
   _groupNameNodeIDMap(GetDefaultGroupNameNodeIDMap()),
   _GMFFileName(GetDefaultGMFFile()),
-  _enforcedInternalVerticesAllFaces(GetDefaultInternalEnforcedVertex())
+  _enforcedInternalVerticesAllFaces(GetDefaultInternalEnforcedVertex()),
+  _preCadFacesPeriodicityVector(GetDefaultPreCadFacesPeriodicityVector()),
+  _preCadEdgesPeriodicityVector(GetDefaultPreCadEdgesPeriodicityVector())
 {
   _name = "BLSURF_Parameters";
   _param_algo_dim = 2;
@@ -1201,6 +1203,116 @@ void BLSURFPlugin_Hypothesis::SetInternalEnforcedVertexAllFacesGroup(BLSURFPlugi
     _enforcedInternalVerticesAllFacesGroup = theGroupName;
     NotifySubMeshesHypothesisModification();
   }
+}
+
+//=============================================================================
+BLSURFPlugin_Hypothesis::TPreCadPeriodicityVector BLSURFPlugin_Hypothesis::GetPreCadFacesPeriodicityVector(
+    const BLSURFPlugin_Hypothesis* hyp) {
+  return hyp ? hyp->_GetPreCadFacesPeriodicityVector() : GetDefaultPreCadFacesPeriodicityVector();
+}
+
+//=============================================================================
+BLSURFPlugin_Hypothesis::TPreCadPeriodicityVector BLSURFPlugin_Hypothesis::GetPreCadEdgesPeriodicityVector(
+    const BLSURFPlugin_Hypothesis* hyp) {
+  return hyp ? hyp->_GetPreCadEdgesPeriodicityVector() : GetDefaultPreCadEdgesPeriodicityVector();
+}
+
+//=============================================================================
+BLSURFPlugin_Hypothesis::TFacesPeriodicityVector BLSURFPlugin_Hypothesis::GetFacesPeriodicityVector(
+    const BLSURFPlugin_Hypothesis* hyp) {
+  return hyp ? hyp->_GetFacesPeriodicityVector() : GetDefaultFacesPeriodicityVector();
+}
+
+//=============================================================================
+BLSURFPlugin_Hypothesis::TEdgesPeriodicityVector BLSURFPlugin_Hypothesis::GetEdgesPeriodicityVector(
+    const BLSURFPlugin_Hypothesis* hyp){
+  return hyp ? hyp->_GetEdgesPeriodicityVector() : GetDefaultEdgesPeriodicityVector();
+}
+
+//=============================================================================
+BLSURFPlugin_Hypothesis::TVerticesPeriodicityVector BLSURFPlugin_Hypothesis::GetVerticesPeriodicityVector(
+    const BLSURFPlugin_Hypothesis* hyp){
+  return hyp ? hyp->_GetVerticesPeriodicityVector() : GetDefaultVerticesPeriodicityVector();
+}
+
+//=======================================================================
+//function : AddPreCadFacesPeriodicity
+//=======================================================================
+void BLSURFPlugin_Hypothesis::AddPreCadFacesPeriodicity(TEntry theFace1Entry, TEntry theFace2Entry,
+    vector<TEntry> &theSourceVerticesEntries, vector<TEntry> &theTargetVerticesEntries) {
+
+  TPreCadPeriodicity preCadFacesPeriodicity;
+  preCadFacesPeriodicity.shape1Entry = theFace1Entry;
+  preCadFacesPeriodicity.shape2Entry = theFace2Entry;
+  preCadFacesPeriodicity.theSourceVerticesEntries = theSourceVerticesEntries;
+  preCadFacesPeriodicity.theTargetVerticesEntries = theTargetVerticesEntries;
+
+  _preCadFacesPeriodicityVector.push_back(preCadFacesPeriodicity);
+
+  NotifySubMeshesHypothesisModification();
+}
+
+//=======================================================================
+//function : AddPreCadEdgesPeriodicity
+//=======================================================================
+void BLSURFPlugin_Hypothesis::AddPreCadEdgesPeriodicity(TEntry theEdge1Entry, TEntry theEdge2Entry,
+    vector<TEntry> &theSourceVerticesEntries, vector<TEntry> &theTargetVerticesEntries) {
+
+  TPreCadPeriodicity preCadEdgesPeriodicity;
+  preCadEdgesPeriodicity.shape1Entry = theEdge1Entry;
+  preCadEdgesPeriodicity.shape2Entry = theEdge2Entry;
+  preCadEdgesPeriodicity.theSourceVerticesEntries = theSourceVerticesEntries;
+  preCadEdgesPeriodicity.theTargetVerticesEntries = theTargetVerticesEntries;
+
+  _preCadEdgesPeriodicityVector.push_back(preCadEdgesPeriodicity);
+
+  NotifySubMeshesHypothesisModification();
+}
+
+//=======================================================================
+//function : AddFacePeriodicity
+//=======================================================================
+void BLSURFPlugin_Hypothesis::AddFacePeriodicity(TEntry theFace1Entry, TEntry theFace2Entry) {
+
+  std::pair< TEntry, TEntry > pairOfFacesEntries = std::make_pair(theFace1Entry, theFace2Entry);
+
+  _facesPeriodicityVector.push_back(pairOfFacesEntries);
+
+  NotifySubMeshesHypothesisModification();
+}
+
+
+//=======================================================================
+//function : AddEdgePeriodicity
+//=======================================================================
+void BLSURFPlugin_Hypothesis::AddEdgePeriodicity(TEntry theFace1Entry, TEntry theEdge1Entry, TEntry theFace2Entry, TEntry theEdge2Entry, int edge_orientation) {
+
+  TEdgePeriodicity edgePeriodicity;
+  edgePeriodicity.theFace1Entry = theFace1Entry;
+  edgePeriodicity.theEdge1Entry = theEdge1Entry;
+  edgePeriodicity.theFace2Entry = theFace2Entry;
+  edgePeriodicity.theEdge2Entry = theEdge2Entry;
+  edgePeriodicity.edge_orientation = edge_orientation;
+
+  _edgesPeriodicityVector.push_back(edgePeriodicity);
+
+  NotifySubMeshesHypothesisModification();
+}
+
+//=======================================================================
+//function : AddVertexPeriodicity
+//=======================================================================
+void BLSURFPlugin_Hypothesis::AddVertexPeriodicity(TEntry theEdge1Entry, TEntry theVertex1Entry, TEntry theEdge2Entry, TEntry theVertex2Entry) {
+
+  TVertexPeriodicity vertexPeriodicity;
+  vertexPeriodicity.theEdge1Entry = theEdge1Entry;
+  vertexPeriodicity.theVertex1Entry = theVertex1Entry;
+  vertexPeriodicity.theEdge2Entry = theEdge2Entry;
+  vertexPeriodicity.theVertex2Entry = theVertex2Entry;
+
+  _verticesPeriodicityVector.push_back(vertexPeriodicity);
+
+  NotifySubMeshesHypothesisModification();
 }
 
 //=============================================================================

@@ -216,6 +216,33 @@ public:
     }
   };
 
+  // PreCad Face and Edge periodicity
+  struct TPreCadPeriodicity {
+    TEntry shape1Entry;
+    TEntry shape2Entry;
+    std::vector<TEntry> theSourceVerticesEntries;
+    std::vector<TEntry> theTargetVerticesEntries;
+  };
+
+  // Edge periodicity
+  struct TEdgePeriodicity {
+    TEntry theFace1Entry;
+    TEntry theEdge1Entry;
+    TEntry theFace2Entry;
+    TEntry theEdge2Entry;
+    int edge_orientation;
+  };
+
+  // Vertex periodicity
+  struct TVertexPeriodicity {
+    TEntry theEdge1Entry;
+    TEntry theVertex1Entry;
+    TEntry theEdge2Entry;
+    TEntry theVertex2Entry;
+  };
+
+  typedef std::pair< TEntry, TEntry > TFacesPeriodicity;
+
   // List of enforced vertices
   typedef std::set< TEnfVertex*, CompareEnfVertices > TEnfVertexList;
 
@@ -243,7 +270,13 @@ public:
   typedef std::map< TEnfGroupName , TEnfVertexList > TGroupNameEnfVertexListMap;
   */
 
+  // Vector of pairs of entries
+  typedef std::vector< TPreCadPeriodicity > TPreCadPeriodicityVector;
+  typedef std::vector< TFacesPeriodicity > TFacesPeriodicityVector;
+  typedef std::vector< TEdgePeriodicity > TEdgesPeriodicityVector;
+  typedef std::vector< TVertexPeriodicity > TVerticesPeriodicityVector;
   
+
   bool                  SetEnforcedVertex(TEntry theFaceEntry, TEnfName theVertexName, TEntry theVertexEntry, TEnfGroupName theGroupName,
                                           double x = 0.0, double y = 0.0, double z = 0.0);
   TEnfVertexList        GetEnfVertexList(const TEntry& theFaceEntry) throw (std::invalid_argument);
@@ -354,6 +387,35 @@ public:
   static TEnfVertexGroupNameMap     GetDefaultEnfVertexGroupNameMap() { return TEnfVertexGroupNameMap(); }
   */
 
+  static TPreCadPeriodicityVector GetDefaultPreCadFacesPeriodicityVector() { return TPreCadPeriodicityVector(); }
+  const TPreCadPeriodicityVector  _GetPreCadFacesPeriodicityVector() const { return _preCadFacesPeriodicityVector; }
+  static TPreCadPeriodicityVector GetPreCadFacesPeriodicityVector(const BLSURFPlugin_Hypothesis* hyp);
+
+  static TPreCadPeriodicityVector GetDefaultPreCadEdgesPeriodicityVector() { return TPreCadPeriodicityVector(); }
+  const TPreCadPeriodicityVector  _GetPreCadEdgesPeriodicityVector() const { return _preCadEdgesPeriodicityVector; }
+  static TPreCadPeriodicityVector GetPreCadEdgesPeriodicityVector(const BLSURFPlugin_Hypothesis* hyp);
+
+  static TFacesPeriodicityVector GetDefaultFacesPeriodicityVector() { return TFacesPeriodicityVector(); }
+  const TFacesPeriodicityVector  _GetFacesPeriodicityVector() const { return _facesPeriodicityVector; }
+  static TFacesPeriodicityVector GetFacesPeriodicityVector(const BLSURFPlugin_Hypothesis* hyp);
+
+  static TEdgesPeriodicityVector GetDefaultEdgesPeriodicityVector() { return TEdgesPeriodicityVector(); }
+  const TEdgesPeriodicityVector  _GetEdgesPeriodicityVector() const { return _edgesPeriodicityVector; }
+  static TEdgesPeriodicityVector GetEdgesPeriodicityVector(const BLSURFPlugin_Hypothesis* hyp);
+
+  static TVerticesPeriodicityVector GetDefaultVerticesPeriodicityVector() { return TVerticesPeriodicityVector(); }
+  const TVerticesPeriodicityVector  _GetVerticesPeriodicityVector() const { return _verticesPeriodicityVector; }
+  static TVerticesPeriodicityVector GetVerticesPeriodicityVector(const BLSURFPlugin_Hypothesis* hyp);
+
+  void AddPreCadFacesPeriodicity(TEntry theFace1Entry, TEntry theFace2Entry,
+      std::vector<std::string> &theSourceVerticesEntries, std::vector<std::string> &theTargetVerticesEntries);
+  void AddPreCadEdgesPeriodicity(TEntry theEdge1Entry, TEntry theEdge2Entry,
+      std::vector<std::string> &theSourceVerticesEntries, std::vector<std::string> &theTargetVerticesEntries);
+
+  void AddFacePeriodicity(TEntry theFace1Entry, TEntry theFace2Entry);
+  void AddEdgePeriodicity(TEntry theFace1Entry, TEntry theEdge1Entry, TEntry theFace2Entry, TEntry theEdge2Entry, int edge_orientation = 0);
+  void AddVertexPeriodicity(TEntry theEdge1Entry, TEntry theVertex1Entry, TEntry theEdge2Entry, TEntry theVertex2Entry);
+
   static double undefinedDouble() { return -1.0; }
 
   typedef std::map< std::string, std::string > TOptionValues;
@@ -451,6 +513,13 @@ private:
   bool            _enforcedInternalVerticesAllFaces;
   TEnfGroupName   _enforcedInternalVerticesAllFacesGroup;
   
+  TPreCadPeriodicityVector _preCadFacesPeriodicityVector;
+  TPreCadPeriodicityVector _preCadEdgesPeriodicityVector;
+
+  TFacesPeriodicityVector _facesPeriodicityVector;
+  TEdgesPeriodicityVector _edgesPeriodicityVector;
+  TVerticesPeriodicityVector _verticesPeriodicityVector;
+
   std::string     _GMFFileName;
 //   bool            _GMFFileMode;
 

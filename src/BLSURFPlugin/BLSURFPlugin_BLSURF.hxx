@@ -94,9 +94,52 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
     virtual bool Evaluate(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape,
                           MapShapeNbElems& aResMap);
 
+    // List of ids
+    typedef std::vector<int> TListOfIDs;
+
+    // PreCad Edges periodicity
+    struct TPreCadPeriodicityIDs {
+      TListOfIDs shape1IDs;
+      TListOfIDs shape2IDs;
+      std::vector<double> theSourceVerticesCoords;
+      std::vector<double> theTargetVerticesCoords;
+    };
+
+    // Edge periodicity
+    struct TEdgePeriodicityIDs {
+      int theFace1ID;
+      int theEdge1ID;
+      int theFace2ID;
+      int theEdge2ID;
+      int edge_orientation;
+    };
+
+    // Vertex periodicity
+    struct TVertexPeriodicityIDs {
+      int theEdge1ID;
+      int theVertex1ID;
+      int theEdge2ID;
+      int theVertex2ID;
+    };
+
+    // Vector of pairs of ids
+    typedef std::vector< TPreCadPeriodicityIDs > TPreCadIDsPeriodicityVector;
+    typedef std::vector< std::pair<int, int> > TShapesIDsPeriodicityVector;
+    typedef std::vector< TEdgePeriodicityIDs > TEdgesIDsPeriodicityVector;
+    typedef std::vector< TVertexPeriodicityIDs > TVerticesIDsPeriodicityVector;
+
+
+
   protected:
     const BLSURFPlugin_Hypothesis* _hypothesis;
     bool                           _haveViscousLayers;
+
+    TPreCadIDsPeriodicityVector _preCadFacesIDsPeriodicityVector;
+    TPreCadIDsPeriodicityVector _preCadEdgesIDsPeriodicityVector;
+
+    TShapesIDsPeriodicityVector _facesIDsPeriodicityVector;
+    TEdgesIDsPeriodicityVector _edgesIDsPeriodicityVector;
+    TVerticesIDsPeriodicityVector _verticesIDsPeriodicityVector;
 
   private:
     bool compute(SMESH_Mesh&          aMesh,
@@ -107,7 +150,15 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
                    const char *       option_value);
 
     TopoDS_Shape entryToShape(std::string entry);
+    void addCoordsFromVertex(BLSURFPlugin_Hypothesis::TEntry theVertexEntry, std::vector<double> &theVerticesCoords);
     void createEnforcedVertexOnFace(TopoDS_Shape FaceShape, BLSURFPlugin_Hypothesis::TEnfVertexList enfVertexList);
+    void createPreCadFacesPeriodicity(TopoDS_Shape theGeomShape, const BLSURFPlugin_Hypothesis::TPreCadPeriodicity &preCadPeriodicity);
+    void createPreCadEdgesPeriodicity(TopoDS_Shape theGeomShape, const BLSURFPlugin_Hypothesis::TPreCadPeriodicity &preCadPeriodicity);
+    void createFacesPeriodicity(TopoDS_Shape theGeomShape, BLSURFPlugin_Hypothesis::TEntry theFace1,  BLSURFPlugin_Hypothesis::TEntry theFace2);
+    void createEdgesPeriodicity(TopoDS_Shape theGeomShape, BLSURFPlugin_Hypothesis::TEntry theFace1, BLSURFPlugin_Hypothesis::TEntry theEdge1,
+        BLSURFPlugin_Hypothesis::TEntry theFace2, BLSURFPlugin_Hypothesis::TEntry theEdge2, int edge_orientation = 0);
+    void createVerticesPeriodicity(TopoDS_Shape theGeomShape, BLSURFPlugin_Hypothesis::TEntry theEdge1, BLSURFPlugin_Hypothesis::TEntry theVertex1,
+        BLSURFPlugin_Hypothesis::TEntry theEdge2, BLSURFPlugin_Hypothesis::TEntry theVertex2);
     void Set_NodeOnEdge(SMESHDS_Mesh* meshDS, SMDS_MeshNode* node, const TopoDS_Shape& ed);
     void BRepClass_FaceClassifierPerform(BRepClass_FaceClassifier* fc, const TopoDS_Face& face, const gp_Pnt& P, const Standard_Real Tol);
 

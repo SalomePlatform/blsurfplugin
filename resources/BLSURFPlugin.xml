@@ -56,7 +56,8 @@
           SetEnforcedVertexGeomWithGroup,
           UnsetEnforcedVertex,
           UnsetEnforcedVertexGeom,
-          UnsetEnforcedVertices
+          UnsetEnforcedVertices,
+          AddPreCadFacesPeriodicity
         </accumulative-methods>
       </python-wrap>
     </hypothesis>

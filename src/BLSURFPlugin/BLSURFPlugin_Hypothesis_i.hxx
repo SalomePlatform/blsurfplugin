@@ -255,6 +255,55 @@ public:
 //  CORBA::Boolean GetInternalEnforcedVertexEntry(const char* theFaceEntry) throw (SALOME::SALOME_Exception);
   
   ///////////////////////
+  // PERIODICITY       //
+  ///////////////////////
+
+  void AddPreCadFacesPeriodicity(GEOM::GEOM_Object_ptr theFace1, GEOM::GEOM_Object_ptr theFace2)
+      throw (SALOME::SALOME_Exception);
+
+  void AddPreCadFacesPeriodicityWithVertices(GEOM::GEOM_Object_ptr theFace1, GEOM::GEOM_Object_ptr theFace2,
+      const GEOM::ListOfGO& theSourceVertices, const GEOM::ListOfGO& theTargetVertices)
+      throw (SALOME::SALOME_Exception);
+
+  void AddPreCadFacesPeriodicityEntry(const char* theFace1Entry, const char* theFace2Entry,
+      vector<string> &theSourceVerticesEntries, vector<string> &theTargetVerticesEntries)
+      throw (SALOME::SALOME_Exception);
+
+  void AddPreCadEdgesPeriodicity(GEOM::GEOM_Object_ptr theEdge1, GEOM::GEOM_Object_ptr theEdge2)
+      throw (SALOME::SALOME_Exception);
+
+  void AddPreCadEdgesPeriodicityWithVertices(GEOM::GEOM_Object_ptr theEdge1, GEOM::GEOM_Object_ptr theEdge2,
+      const GEOM::ListOfGO& theSourceVertices, const GEOM::ListOfGO& theTargetVertices)
+      throw (SALOME::SALOME_Exception);
+
+  void AddPreCadEdgesPeriodicityEntry(const char* theEdge1Entry, const char* theEdge2Entry,
+      vector<string> &theSourceVerticesEntries, vector<string> &theTargetVerticesEntries)
+      throw (SALOME::SALOME_Exception);
+
+  void AddFacePeriodicity(GEOM::GEOM_Object_ptr theFace1, GEOM::GEOM_Object_ptr theFace2)
+      throw (SALOME::SALOME_Exception);
+
+  void AddFacePeriodicityEntry(const char* theFace1Entry, const char* theFace2Entry)
+    throw (SALOME::SALOME_Exception);
+
+  void AddEdgePeriodicity(GEOM::GEOM_Object_ptr theFace1, GEOM::GEOM_Object_ptr theEdge1,
+      GEOM::GEOM_Object_ptr theFace2, GEOM::GEOM_Object_ptr theEdge2, int edge_orientation = 0)
+      throw (SALOME::SALOME_Exception);
+
+  void AddEdgePeriodicityWithoutFaces(GEOM::GEOM_Object_ptr theEdge1, GEOM::GEOM_Object_ptr theEdge2, int edge_orientation = 0)
+      throw (SALOME::SALOME_Exception);
+
+  void AddEdgePeriodicityEntry(const char* theFace1Entry, const char* theEdge1Entry, const char* theFace2Entry, const char* theEdge2Entry, int edge_orientation = 0)
+    throw (SALOME::SALOME_Exception);
+
+  void AddVertexPeriodicity(GEOM::GEOM_Object_ptr theEdge1, GEOM::GEOM_Object_ptr theVertex1,
+      GEOM::GEOM_Object_ptr theEdge2, GEOM::GEOM_Object_ptr theVertex2)
+      throw (SALOME::SALOME_Exception);
+
+  void AddVertexPeriodicityEntry(const char* theEdge1Entry, const char* theVertex1Entry, const char* theEdge2Entry, const char* theVertex2Entry)
+    throw (SALOME::SALOME_Exception);
+
+  ///////////////////////
   
   /*!
     * Sets the file for export resulting mesh in GMF format
@@ -292,6 +341,17 @@ public:
   CORBA::Boolean GetPreCADRemoveNanoEdges();
   void SetPreCADEpsNano(CORBA::Double epsNano);
   CORBA::Double GetPreCADEpsNano();
+
+private:
+  ///////////////////////
+  // PERIODICITY       //
+  ///////////////////////
+  std::string ShapeTypeToString(GEOM::shape_type theShapeType);
+  void CheckShapeType(GEOM::GEOM_Object_ptr shape, GEOM::shape_type theShapeType);
+  void CheckShapeTypes(GEOM::GEOM_Object_ptr shape, std::vector<GEOM::shape_type> theShapeTypes);
+  std::string PublishIfNeeded(GEOM::GEOM_Object_ptr shape, GEOM::shape_type theShapeType, std::string prefix);
+  std::string FormatVerticesEntries(vector<string> &theSourceVerticesEntries, vector<string> &theTargetVerticesEntries);
+
 };
 
 #endif

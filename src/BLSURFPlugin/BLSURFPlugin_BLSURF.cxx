@@ -689,6 +689,215 @@ void createAttractorOnFace(TopoDS_Shape GeomShape, std::string AttractorFunction
 //     MESSAGE("point OK");
 }
 
+// One sub-shape to get ids from
+BLSURFPlugin_BLSURF::TListOfIDs _getSubShapeIDsInMainShape(TopoDS_Shape theMainShape, TopoDS_Shape theSubShape,
+    TopAbs_ShapeEnum theShapeType)
+{
+  BLSURFPlugin_BLSURF::TListOfIDs face_ids;
+  TopTools_IndexedMapOfShape anIndices;
+  anIndices.Clear();
+  TopExp::MapShapes(theMainShape, theShapeType, anIndices);
+
+//  Standard_Boolean result = BRepTools::Write(theMainShape,"main_shape.brep");
+
+  for (TopExp_Explorer face_iter(theSubShape,theShapeType);face_iter.More();face_iter.Next())
+    {
+      int face_id = anIndices.FindIndex(face_iter.Current());
+      if (face_id == 0)
+        throw SALOME_Exception ( SMESH_Comment("Sub_shape not found in main_shape"));
+      face_ids.push_back(face_id);
+//      std::ostringstream o;
+//      o << "face_" << face_id << ".brep";
+//      std::string face_name = o.str();
+//      const TopoDS_Face& face = TopoDS::Face(face_iter.Current());
+//      Standard_Boolean result = BRepTools::Write(face,face_name.c_str());
+    }
+
+  return face_ids;
+}
+
+void BLSURFPlugin_BLSURF::addCoordsFromVertex(BLSURFPlugin_Hypothesis::TEntry theVertexEntry, std::vector<double> &theVerticesCoords)
+{
+  if (theVertexEntry!="")
+    {
+      TopoDS_Shape aShape = entryToShape(theVertexEntry);
+
+      gp_Pnt aPnt = BRep_Tool::Pnt( TopoDS::Vertex( aShape ) );
+      double theX, theY, theZ;
+      theX = aPnt.X();
+      theY = aPnt.Y();
+      theZ = aPnt.Z();
+
+      theVerticesCoords.push_back(theX);
+      theVerticesCoords.push_back(theY);
+      theVerticesCoords.push_back(theZ);
+    }
+}
+
+/////////////////////////////////////////////////////////
+void BLSURFPlugin_BLSURF::createPreCadFacesPeriodicity(TopoDS_Shape theGeomShape, const BLSURFPlugin_Hypothesis::TPreCadPeriodicity &preCadPeriodicity)
+{
+  MESSAGE("BLSURFPlugin_BLSURF::createFacesPeriodicity");
+
+  TopoDS_Shape geomShape1 = entryToShape(preCadPeriodicity.shape1Entry);
+  TopoDS_Shape geomShape2 = entryToShape(preCadPeriodicity.shape2Entry);
+
+  TListOfIDs theFace1_ids = _getSubShapeIDsInMainShape(theGeomShape, geomShape1, TopAbs_FACE);
+  TListOfIDs theFace2_ids = _getSubShapeIDsInMainShape(theGeomShape, geomShape2, TopAbs_FACE);
+
+  TPreCadPeriodicityIDs preCadFacesPeriodicityIDs;
+  preCadFacesPeriodicityIDs.shape1IDs = theFace1_ids;
+  preCadFacesPeriodicityIDs.shape2IDs = theFace2_ids;
+
+  for (size_t i = 0; i<preCadPeriodicity.theSourceVerticesEntries.size(); i++)
+    addCoordsFromVertex(preCadPeriodicity.theSourceVerticesEntries[i], preCadFacesPeriodicityIDs.theSourceVerticesCoords);
+
+  for (size_t i = 0; i<preCadPeriodicity.theTargetVerticesEntries.size(); i++)
+    addCoordsFromVertex(preCadPeriodicity.theTargetVerticesEntries[i], preCadFacesPeriodicityIDs.theTargetVerticesCoords);
+
+
+  _preCadFacesIDsPeriodicityVector.push_back(preCadFacesPeriodicityIDs);
+  MESSAGE("_preCadFacesIDsPeriodicityVector.size() = " << _preCadFacesIDsPeriodicityVector.size());
+  MESSAGE("BLSURFPlugin_BLSURF::createFacesPeriodicity END");
+
+}
+
+/////////////////////////////////////////////////////////
+void BLSURFPlugin_BLSURF::createPreCadEdgesPeriodicity(TopoDS_Shape theGeomShape, const BLSURFPlugin_Hypothesis::TPreCadPeriodicity &preCadPeriodicity)
+{
+  MESSAGE("BLSURFPlugin_BLSURF::createEdgesPeriodicity");
+
+  TopoDS_Shape geomShape1 = entryToShape(preCadPeriodicity.shape1Entry);
+  TopoDS_Shape geomShape2 = entryToShape(preCadPeriodicity.shape2Entry);
+
+  TListOfIDs theEdge1_ids = _getSubShapeIDsInMainShape(theGeomShape, geomShape1, TopAbs_EDGE);
+  TListOfIDs theEdge2_ids = _getSubShapeIDsInMainShape(theGeomShape, geomShape2, TopAbs_EDGE);
+
+  TPreCadPeriodicityIDs preCadEdgesPeriodicityIDs;
+  preCadEdgesPeriodicityIDs.shape1IDs = theEdge1_ids;
+  preCadEdgesPeriodicityIDs.shape2IDs = theEdge2_ids;
+
+  for (size_t i = 0; i<preCadPeriodicity.theSourceVerticesEntries.size(); i++)
+    addCoordsFromVertex(preCadPeriodicity.theSourceVerticesEntries[i], preCadEdgesPeriodicityIDs.theSourceVerticesCoords);
+
+  for (size_t i = 0; i<preCadPeriodicity.theTargetVerticesEntries.size(); i++)
+    addCoordsFromVertex(preCadPeriodicity.theTargetVerticesEntries[i], preCadEdgesPeriodicityIDs.theTargetVerticesCoords);
+
+
+  _preCadEdgesIDsPeriodicityVector.push_back(preCadEdgesPeriodicityIDs);
+  MESSAGE("_preCadEdgesIDsPeriodicityVector.size() = " << _preCadEdgesIDsPeriodicityVector.size());
+  MESSAGE("BLSURFPlugin_BLSURF::createEdgesPeriodicity END");
+
+}
+
+/////////////////////////////////////////////////////////
+void BLSURFPlugin_BLSURF::createFacesPeriodicity(TopoDS_Shape theGeomShape, BLSURFPlugin_Hypothesis::TEntry theFace1,  BLSURFPlugin_Hypothesis::TEntry theFace2)
+{
+  MESSAGE("BLSURFPlugin_BLSURF::createFacesPeriodicity");
+
+  TopoDS_Shape GeomShape1 = entryToShape(theFace1);
+  TopoDS_Shape GeomShape2 = entryToShape(theFace2);
+
+  TListOfIDs theFace1_ids = _getSubShapeIDsInMainShape(theGeomShape, GeomShape1, TopAbs_FACE);
+  TListOfIDs theFace2_ids = _getSubShapeIDsInMainShape(theGeomShape, GeomShape2, TopAbs_FACE);
+
+  // Only one face id, since only a face can be selected
+  int theFace1_id = theFace1_ids[0];
+  int theFace2_id = theFace2_ids[0];
+
+  std::pair<int, int> pairOfFacesID = std::make_pair(theFace1_id, theFace2_id);
+
+  _facesIDsPeriodicityVector.push_back(pairOfFacesID);
+  MESSAGE("_facesIDsPeriodicityVector.size() = " << _facesIDsPeriodicityVector.size());
+  MESSAGE("BLSURFPlugin_BLSURF::createFacesPeriodicity END");
+
+}
+
+
+/////////////////////////////////////////////////////////
+void BLSURFPlugin_BLSURF::createEdgesPeriodicity(TopoDS_Shape theGeomShape, BLSURFPlugin_Hypothesis::TEntry theFace1, BLSURFPlugin_Hypothesis::TEntry theEdge1,
+    BLSURFPlugin_Hypothesis::TEntry theFace2, BLSURFPlugin_Hypothesis::TEntry theEdge2, int edge_orientation)
+{
+  MESSAGE("BLSURFPlugin_BLSURF::createEdgesPeriodicity");
+
+  TEdgePeriodicityIDs edgePeriodicityIDs;
+
+  if (theFace1 != "")
+    {
+      TopoDS_Shape GeomFace1 = entryToShape(theFace1);
+      TListOfIDs theFace1_ids = _getSubShapeIDsInMainShape(theGeomShape, GeomFace1, TopAbs_FACE);
+      // Only one face id, since only a face can be selected
+      edgePeriodicityIDs.theFace1ID = theFace1_ids[0];
+    }
+  else
+    edgePeriodicityIDs.theFace1ID = 0;
+  if (theFace2 != "")
+    {
+      TopoDS_Shape GeomFace2 = entryToShape(theFace2);
+      TListOfIDs theFace2_ids = _getSubShapeIDsInMainShape(theGeomShape, GeomFace2, TopAbs_FACE);
+      edgePeriodicityIDs.theFace2ID = theFace2_ids[0];
+    }
+  else
+    edgePeriodicityIDs.theFace2ID = 0;
+
+  TopoDS_Shape GeomEdge1 = entryToShape(theEdge1);
+  TopoDS_Shape GeomEdge2 = entryToShape(theEdge2);
+
+  TListOfIDs theEdge1_ids = _getSubShapeIDsInMainShape(theGeomShape, GeomEdge1, TopAbs_EDGE);
+  TListOfIDs theEdge2_ids = _getSubShapeIDsInMainShape(theGeomShape, GeomEdge2, TopAbs_EDGE);
+
+  if (edge_orientation == 0 and GeomEdge1.Closed())
+    {
+      // if edge is closed, we have to set its orientation
+      MESSAGE("GeomEdge1.Orientation() = " << GeomEdge1.Orientation());
+      MESSAGE("GeomEdge2.Orientation() = " << GeomEdge2.Orientation());
+      if(GeomEdge1.Orientation() == TopAbs_FORWARD)
+        edge_orientation = CAD_ORIENTATION_REVERSED;
+      else
+        edge_orientation = CAD_ORIENTATION_FORWARD;
+    }
+
+  // Only one edge id, since only a edge can be selected
+  edgePeriodicityIDs.theEdge1ID = theEdge1_ids[0];
+  edgePeriodicityIDs.theEdge2ID = theEdge2_ids[0];
+  edgePeriodicityIDs.edge_orientation = edge_orientation;
+
+  _edgesIDsPeriodicityVector.push_back(edgePeriodicityIDs);
+  MESSAGE("_edgesIDsPeriodicityVector.size() = " << _edgesIDsPeriodicityVector.size());
+  MESSAGE("BLSURFPlugin_BLSURF::createEdgesPeriodicity END");
+
+}
+
+
+/////////////////////////////////////////////////////////
+void BLSURFPlugin_BLSURF::createVerticesPeriodicity(TopoDS_Shape theGeomShape, BLSURFPlugin_Hypothesis::TEntry theEdge1, BLSURFPlugin_Hypothesis::TEntry theVertex1,
+    BLSURFPlugin_Hypothesis::TEntry theEdge2, BLSURFPlugin_Hypothesis::TEntry theVertex2)
+{
+  MESSAGE("BLSURFPlugin_BLSURF::createVerticesPeriodicity");
+
+  TopoDS_Shape GeomEdge1 = entryToShape(theEdge1);
+  TopoDS_Shape GeomVertex1 = entryToShape(theVertex1);
+  TopoDS_Shape GeomEdge2 = entryToShape(theEdge2);
+  TopoDS_Shape GeomVertex2 = entryToShape(theVertex2);
+
+  TListOfIDs theEdge1_ids = _getSubShapeIDsInMainShape(theGeomShape, GeomEdge1, TopAbs_EDGE);
+  TListOfIDs vertices1_ids = _getSubShapeIDsInMainShape(theGeomShape, GeomVertex1, TopAbs_VERTEX);
+  TListOfIDs theEdge2_ids = _getSubShapeIDsInMainShape(theGeomShape, GeomEdge2, TopAbs_EDGE);
+  TListOfIDs vertices2_ids = _getSubShapeIDsInMainShape(theGeomShape, GeomVertex2, TopAbs_VERTEX);
+
+  // Only one vertex id, since only a vertex can be selected
+  TVertexPeriodicityIDs vertexPeriodicityIDs;
+  vertexPeriodicityIDs.theEdge1ID = theEdge1_ids[0];
+  vertexPeriodicityIDs.theVertex1ID = vertices1_ids[0];
+  vertexPeriodicityIDs.theEdge2ID = theEdge2_ids[0];
+  vertexPeriodicityIDs.theVertex2ID = vertices2_ids[0];
+
+  _verticesIDsPeriodicityVector.push_back(vertexPeriodicityIDs);
+  MESSAGE("_verticesIDsPeriodicityVector.size() = " << _verticesIDsPeriodicityVector.size());
+  MESSAGE("BLSURFPlugin_BLSURF::createVerticesPeriodicity END");
+
+}
+
 /////////////////////////////////////////////////////////
 
 void BLSURFPlugin_BLSURF::SetParameters(
@@ -1201,6 +1410,72 @@ void BLSURFPlugin_BLSURF::SetParameters(
 // #endif
     }
   }
+
+  // PERIODICITY
+
+   // reset vectors
+   _preCadFacesIDsPeriodicityVector.clear();
+   _preCadEdgesIDsPeriodicityVector.clear();
+   _facesIDsPeriodicityVector.clear();
+   _edgesIDsPeriodicityVector.clear();
+   _verticesIDsPeriodicityVector.clear();
+
+  MESSAGE("SetParameters preCadFacesPeriodicityVector");
+  const BLSURFPlugin_Hypothesis::TPreCadPeriodicityVector preCadFacesPeriodicityVector = BLSURFPlugin_Hypothesis::GetPreCadFacesPeriodicityVector(hyp);
+
+  for (std::size_t i = 0; i<preCadFacesPeriodicityVector.size(); i++){
+    MESSAGE("SetParameters preCadFacesPeriodicityVector[" << i << "]");
+    createPreCadFacesPeriodicity(theGeomShape, preCadFacesPeriodicityVector[i]);
+  }
+  MESSAGE("_preCadFacesIDsPeriodicityVector.size() = " << _preCadFacesIDsPeriodicityVector.size());
+
+  MESSAGE("SetParameters preCadEdgesPeriodicityVector");
+  const BLSURFPlugin_Hypothesis::TPreCadPeriodicityVector preCadEdgesPeriodicityVector = BLSURFPlugin_Hypothesis::GetPreCadEdgesPeriodicityVector(hyp);
+
+  for (std::size_t i = 0; i<preCadEdgesPeriodicityVector.size(); i++){
+    MESSAGE("SetParameters preCadEdgesPeriodicityVector[" << i << "]");
+    createPreCadEdgesPeriodicity(theGeomShape, preCadEdgesPeriodicityVector[i]);
+  }
+  MESSAGE("_preCadEdgesIDsPeriodicityVector.size() = " << _preCadEdgesIDsPeriodicityVector.size());
+
+  if ( _preCadFacesIDsPeriodicityVector.size() > 0 or _preCadEdgesIDsPeriodicityVector.size() > 0 )
+    {
+      MESSAGE("USING PRECAD FOR PERIODICITY")
+      *use_precad = true;
+      precad_set_param(pcs, "verbose",                to_string(_verb).c_str());
+    }
+
+  MESSAGE("SetParameters facesPeriodicityVector");
+  const BLSURFPlugin_Hypothesis::TFacesPeriodicityVector facesPeriodicityVector = BLSURFPlugin_Hypothesis::GetFacesPeriodicityVector(hyp);
+
+  for (std::size_t i = 0; i<facesPeriodicityVector.size(); i++){
+    MESSAGE("SetParameters facesPeriodicityVector[" << i << "]");
+    createFacesPeriodicity(theGeomShape, facesPeriodicityVector[i].first, facesPeriodicityVector[i].second);
+  }
+  MESSAGE("_facesIDsPeriodicityVector.size() = " << _facesIDsPeriodicityVector.size());
+
+
+  MESSAGE("SetParameters edgesPeriodicityVector");
+  const BLSURFPlugin_Hypothesis::TEdgesPeriodicityVector edgesPeriodicityVector = BLSURFPlugin_Hypothesis::GetEdgesPeriodicityVector(hyp);
+
+  for (std::size_t i = 0; i<edgesPeriodicityVector.size(); i++){
+    MESSAGE("SetParameters edgesPeriodicityVector[" << i << "]");
+    // TODO: passer directement en paramètre edgesPeriodicityVector[i] plutôt que tous ces attributs
+    createEdgesPeriodicity(theGeomShape, edgesPeriodicityVector[i].theFace1Entry, edgesPeriodicityVector[i].theEdge1Entry,
+        edgesPeriodicityVector[i].theFace2Entry, edgesPeriodicityVector[i].theEdge2Entry, edgesPeriodicityVector[i].edge_orientation);
+  }
+  MESSAGE("_edgesIDsPeriodicityVector.size() = " << _edgesIDsPeriodicityVector.size());
+
+  MESSAGE("SetParameters verticesPeriodicityVector");
+  const BLSURFPlugin_Hypothesis::TVerticesPeriodicityVector verticesPeriodicityVector = BLSURFPlugin_Hypothesis::GetVerticesPeriodicityVector(hyp);
+
+  for (std::size_t i = 0; i<verticesPeriodicityVector.size(); i++){
+    MESSAGE("SetParameters verticesPeriodicityVector[" << i << "]");
+    // TODO: passer directement en paramètre verticesPeriodicityVector[i] plutôt que tous ces attributs
+    createVerticesPeriodicity(theGeomShape, verticesPeriodicityVector[i].theEdge1Entry, verticesPeriodicityVector[i].theVertex1Entry,
+        verticesPeriodicityVector[i].theEdge2Entry, verticesPeriodicityVector[i].theVertex2Entry);
+  }
+  MESSAGE("_verticesIDsPeriodicityVector.size() = " << _verticesIDsPeriodicityVector.size());
 }
 
 //================================================================================
@@ -1242,15 +1517,21 @@ namespace
     cadsurf_session_t* _css;
     cad_t *           _cad;
     dcad_t *          _dcad;
+    cad_t *           _cleanc;
+    dcad_t *          _cleandc;
   public:
     BLSURF_Cleaner(context_t *       ctx,
                    cadsurf_session_t* css,
                    cad_t *           cad,
-                   dcad_t *          dcad)
+                   dcad_t *          dcad,
+                   cad_t *           cleanc,
+                   dcad_t *          cleandc)
       : _ctx ( ctx  ),
         _css ( css  ),
         _cad ( cad  ),
-        _dcad( dcad )
+        _dcad( dcad ),
+        _cleanc( cleanc ),
+        _cleandc( cleandc )
     {
     }
     ~BLSURF_Cleaner()
@@ -1289,6 +1570,8 @@ namespace
 
         cad_delete(_cad); _cad = 0;
         dcad_delete(_dcad); _dcad = 0;
+        cad_delete(_cleanc); _cleanc = 0;
+        dcad_delete(_cleandc); _cleandc = 0;
         if ( !exceptContext )
         {
           context_delete(_ctx); _ctx = 0;
@@ -1692,13 +1975,16 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   // PreCAD
   // If user requests it, send the CAD through Distene preprocessor : PreCAD
   cad_t *cleanc = NULL; // preprocessed cad
+  dcad_t *cleandc = NULL; // preprocessed dcad
   precad_session_t *pcs = precad_session_new(ctx);
+  // Give both dcad and cad to precad
+  precad_data_set_dcad(pcs, dcad);
   precad_data_set_cad(pcs, c);
 
   cadsurf_session_t *css = cadsurf_session_new(ctx);
 
   // an object that correctly deletes all cadsurf objects at destruction
-  BLSURF_Cleaner cleaner( ctx,css,c,dcad );
+  BLSURF_Cleaner cleaner( ctx,css,c,dcad,cleanc,cleandc );
 
   MESSAGE("BEGIN SetParameters");
   bool use_precad = false;
@@ -1708,6 +1994,8 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
                 // #endif
                 _hypothesis, css, pcs, aShape, &use_precad);
   MESSAGE("END SetParameters");
+
+  MESSAGE("_preCadFacesIDsPeriodicityVector.size() = " << _preCadFacesIDsPeriodicityVector.size());
 
   haveQuadraticSubMesh = haveQuadraticSubMesh || (_hypothesis != NULL && _hypothesis->GetQuadraticMesh());
   helper.SetIsQuadratic( haveQuadraticSubMesh );
@@ -1759,6 +2047,10 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     if (fmap.FindIndex(f) > 0)
       continue;
     iface = fmap.Add(f);
+//    std::string aFileName = "fmap_face_";
+//    aFileName.append(to_string(iface));
+//    aFileName.append(".brep");
+//    BRepTools::Write(f,aFileName.c_str());
 
     surfaces.push_back(BRep_Tool::Surface(f));
 
@@ -1952,6 +2244,11 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
       if (ic <= 0)
         ic = emap.Add(e);
 
+//      std::string aFileName = "fmap_edge_";
+//      aFileName.append(to_string(ic));
+//      aFileName.append(".brep");
+//      BRepTools::Write(e,aFileName.c_str());
+
       double tmin,tmax;
       curves.push_back(BRep_Tool::CurveOnSurface(e, f, tmin, tmax));
 
@@ -2079,6 +2376,12 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
           if ( sm->IsMeshComputed() )
             edgeSubmeshes.insert( sm->GetSubMeshDS() );
         }
+
+//        std::string aFileName = "fmap_vertex_";
+//        aFileName.append(to_string(*ip));
+//        aFileName.append(".brep");
+//        BRepTools::Write(v,aFileName.c_str());
+
         if (HasSizeMapOnVertex){
           vertexKey = VerticesWithSizeMap.FindIndex(v);
           if (VertexId2SizeMap.find(vertexKey)!=VertexId2SizeMap.end()){
@@ -2147,20 +2450,208 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     }
   }
 
+  ///////////////////////
+  // PERIODICITY       //
+  ///////////////////////
+
+  MESSAGE("BEFORE PERIODICITY");
+  MESSAGE("_preCadFacesIDsPeriodicityVector.size() = " << _preCadFacesIDsPeriodicityVector.size());
+  if (! _preCadFacesIDsPeriodicityVector.empty()){
+    MESSAGE("INTO PRECAD FACES PERIODICITY");
+    for (std::size_t i=0; i < _preCadFacesIDsPeriodicityVector.size(); i++){
+      std::vector<int> theFace1_ids = _preCadFacesIDsPeriodicityVector[i].shape1IDs;
+      std::vector<int> theFace2_ids = _preCadFacesIDsPeriodicityVector[i].shape2IDs;
+      int* theFace1_ids_c = &theFace1_ids[0];
+      int* theFace2_ids_c = &theFace2_ids[0];
+      std::ostringstream o;
+      o << "_preCadFacesIDsPeriodicityVector[" << i << "] = [";
+      for (std::size_t j=0; j < theFace1_ids.size(); j++)
+        o << theFace1_ids[j] << ", ";
+      o << "], [";
+      for (std::size_t j=0; j < theFace2_ids.size(); j++)
+        o << theFace2_ids[j] << ", ";
+      o << "]";
+      MESSAGE(o.str());
+      MESSAGE("theFace1_ids.size(): " << theFace1_ids.size());
+      MESSAGE("theFace2_ids.size(): " << theFace2_ids.size());
+      if (_preCadFacesIDsPeriodicityVector[i].theSourceVerticesCoords.empty())
+        {
+          // If no source points, call peridoicity without transformation function
+          MESSAGE("periodicity without transformation function");
+          meshgems_cad_periodicity_transformation_t periodicity_transformation = NULL;
+          status = cad_add_face_multiple_periodicity_with_transformation_function(c, theFace1_ids_c, theFace1_ids.size(),
+              theFace2_ids_c, theFace2_ids.size(), periodicity_transformation, NULL);
+          if(status != STATUS_OK)
+            cout << "cad_add_face_multiple_periodicity_with_transformation_function failed with error code " << status << "\n";
+        }
+      else
+        {
+          // get the transformation vertices
+          MESSAGE("periodicity with transformation vertices");
+          double* theSourceVerticesCoords_c = &_preCadFacesIDsPeriodicityVector[i].theSourceVerticesCoords[0];
+          double* theTargetVerticesCoords_c = &_preCadFacesIDsPeriodicityVector[i].theTargetVerticesCoords[0];
+          int nbSourceVertices = _preCadFacesIDsPeriodicityVector[i].theSourceVerticesCoords.size()/3;
+          int nbTargetVertices = _preCadFacesIDsPeriodicityVector[i].theTargetVerticesCoords.size()/3;
+
+          MESSAGE("nbSourceVertices: " << nbSourceVertices << ", nbTargetVertices: " << nbTargetVertices);
+
+          status = cad_add_face_multiple_periodicity_with_transformation_function_by_points(c, theFace1_ids_c, theFace1_ids.size(),
+              theFace2_ids_c, theFace2_ids.size(), theSourceVerticesCoords_c, nbSourceVertices, theTargetVerticesCoords_c, nbTargetVertices);
+          if(status != STATUS_OK)
+            cout << "cad_add_face_multiple_periodicity_with_transformation_function_by_points failed with error code " << status << "\n";
+        }
+    }
+
+    MESSAGE("END PRECAD FACES PERIODICITY");
+  }
+
+  MESSAGE("_preCadEdgesIDsPeriodicityVector.size() = " << _preCadEdgesIDsPeriodicityVector.size());
+  if (! _preCadEdgesIDsPeriodicityVector.empty()){
+    MESSAGE("INTO PRECAD EDGES PERIODICITY");
+    for (std::size_t i=0; i < _preCadEdgesIDsPeriodicityVector.size(); i++){
+      std::vector<int> theEdge1_ids = _preCadEdgesIDsPeriodicityVector[i].shape1IDs;
+      std::vector<int> theEdge2_ids = _preCadEdgesIDsPeriodicityVector[i].shape2IDs;
+      // Use the address of the first element of the vector to initialise the array
+      int* theEdge1_ids_c = &theEdge1_ids[0];
+      int* theEdge2_ids_c = &theEdge2_ids[0];
+
+      std::ostringstream o;
+      o << "_preCadEdgesIDsPeriodicityVector[" << i << "] = [";
+      for (std::size_t j=0; j < theEdge1_ids.size(); j++)
+        o << theEdge1_ids[j] << ", ";
+      o << "], [";
+      for (std::size_t j=0; j < theEdge2_ids.size(); j++)
+        o << theEdge2_ids[j] << ", ";
+      o << "]";
+      MESSAGE(o.str());
+      MESSAGE("theEdge1_ids.size(): " << theEdge1_ids.size());
+      MESSAGE("theEdge2_ids.size(): " << theEdge2_ids.size());
+
+      if (_preCadEdgesIDsPeriodicityVector[i].theSourceVerticesCoords.empty())
+        {
+          // If no source points, call peridoicity without transformation function
+          MESSAGE("periodicity without transformation function");
+          meshgems_cad_periodicity_transformation_t periodicity_transformation = NULL;
+          status = cad_add_edge_multiple_periodicity_with_transformation_function(c, theEdge1_ids_c, theEdge1_ids.size(),
+              theEdge2_ids_c, theEdge2_ids.size(), periodicity_transformation, NULL);
+          if(status != STATUS_OK)
+            cout << "cad_add_edge_multiple_periodicity_with_transformation_function failed with error code " << status << "\n";
+        }
+      else
+        {
+          // get the transformation vertices
+          MESSAGE("periodicity with transformation vertices");
+          double* theSourceVerticesCoords_c = &_preCadEdgesIDsPeriodicityVector[i].theSourceVerticesCoords[0];
+          double* theTargetVerticesCoords_c = &_preCadEdgesIDsPeriodicityVector[i].theTargetVerticesCoords[0];
+          int nbSourceVertices = _preCadEdgesIDsPeriodicityVector[i].theSourceVerticesCoords.size()/3;
+          int nbTargetVertices = _preCadEdgesIDsPeriodicityVector[i].theTargetVerticesCoords.size()/3;
+
+          MESSAGE("nbSourceVertices: " << nbSourceVertices << ", nbTargetVertices: " << nbTargetVertices);
+
+          status = cad_add_edge_multiple_periodicity_with_transformation_function_by_points(c, theEdge1_ids_c, theEdge1_ids.size(),
+              theEdge2_ids_c, theEdge2_ids.size(), theSourceVerticesCoords_c, nbSourceVertices, theTargetVerticesCoords_c, nbTargetVertices);
+          if(status != STATUS_OK)
+            cout << "cad_add_edge_multiple_periodicity_with_transformation_function_by_points failed with error code " << status << "\n";
+          else
+            MESSAGE("cad_add_edge_multiple_periodicity_with_transformation_function_by_points succeeded.\n");
+        }
+    }
+
+    MESSAGE("END PRECAD EDGES PERIODICITY");
+  }
+
+  if (! _facesIDsPeriodicityVector.empty()){
+    MESSAGE("INTO FACE PERIODICITY");
+    for (std::size_t i=0; i < _facesIDsPeriodicityVector.size(); i++){
+      int theFace1 = _facesIDsPeriodicityVector[i].first;
+      int theFace2 = _facesIDsPeriodicityVector[i].second;
+      MESSAGE("_facesIDsPeriodicityVector[" << i << "] = (" << theFace1 << ", " << theFace2 << ")");
+      status = cad_add_face_periodicity(c, theFace1, theFace2);
+      if(status != STATUS_OK){
+        cout << "cad_add_face_periodicity failed with error code " << status << "\n";
+      }
+    }
+    MESSAGE("END FACE PERIODICITY");
+  }
+
+
+  if (! _edgesIDsPeriodicityVector.empty()){
+    MESSAGE("INTO EDGE PERIODICITY");
+    for (std::size_t i=0; i < _edgesIDsPeriodicityVector.size(); i++){
+      int theFace1 = _edgesIDsPeriodicityVector[i].theFace1ID;
+      int theEdge1 = _edgesIDsPeriodicityVector[i].theEdge1ID;
+      int theFace2 = _edgesIDsPeriodicityVector[i].theFace2ID;
+      int theEdge2 = _edgesIDsPeriodicityVector[i].theEdge2ID;
+      int edge_orientation = _edgesIDsPeriodicityVector[i].edge_orientation;
+      MESSAGE("_edgesIDsPeriodicityVector[" << i << "] = (" << theFace1 << ", " << theEdge1 << ", " << theFace2 << ", " << theEdge2 << ", " << edge_orientation << ")");
+      status = cad_add_edge_periodicity(c, theFace1, theEdge1, theFace2, theEdge2, edge_orientation);
+      if(status != STATUS_OK){
+        cout << "cad_add_edge_periodicity failed with error code " << status << "\n";
+      }
+    }
+    MESSAGE("END EDGE PERIODICITY");
+  }
+
+  if (! _verticesIDsPeriodicityVector.empty()){
+    MESSAGE("INTO VERTEX PERIODICITY");
+    for (std::size_t i=0; i < _verticesIDsPeriodicityVector.size(); i++){
+      int theEdge1 = _verticesIDsPeriodicityVector[i].theEdge1ID;
+      int theVertex1 = _verticesIDsPeriodicityVector[i].theVertex1ID;
+      int theEdge2 = _verticesIDsPeriodicityVector[i].theEdge2ID;
+      int theVertex2 = _verticesIDsPeriodicityVector[i].theVertex2ID;
+      MESSAGE("_verticesIDsPeriodicityVector[" << i << "] = (" << theEdge1 << ", " << theVertex1 << ", " << theEdge2 << ", " << theVertex2 << ")");
+      status = cad_add_point_periodicity(c, theEdge1, theVertex1, theEdge2, theVertex2);
+      if(status != STATUS_OK){
+        cout << "cad_add_vertex_periodicity failed with error code " << status << "\n";
+      }
+    }
+    MESSAGE("END VERTEX PERIODICITY");
+  }
+
+    ////
 
   if (use_precad) {
+    MESSAGE("use_precad");
     /* Now launch the PreCAD process */
     status = precad_process(pcs);
     if(status != STATUS_OK){
-      cout << "PreCAD processing failed with error code " << status << "\n";
+      // TODO: raise an error if status < 0.
+      cout << "================ WARNING =================== \n";
+      stringstream msg;
+      msg << "PreCAD processing failed with error code " << status << "\n";
+      msg << *mcud._error;
+      cout << msg.str();
+      cout << "============================================ \n";
+      // the text of _comment is set in message_cb by mcud->_error
+      // => No need to append msg to _comment
+      if (status > 0)
+        {
+          // TODO: fix the SIGSEGV of COMPERR_WARNING with 2 launches
+          error(COMPERR_WARNING, _comment);
+        }
+      if (status < 0)
+        {
+          error(_comment);
+        }
     }
     else {
       // retrieve the pre-processed CAD object
+
+      // dcad
+      cleandc = precad_new_dcad(pcs);
+      if(!cleandc){
+        cout << "Unable to retrieve PreCAD result on dcad \n";
+      }
+      else
+        cout << "PreCAD processing successfull on dcad \n";
+
+      // cad
       cleanc = precad_new_cad(pcs);
       if(!cleanc){
-        cout << "Unable to retrieve PreCAD result \n";
+        cout << "Unable to retrieve PreCAD result on cad \n";
       }
-      cout << "PreCAD processing successfull \n";
+      else
+        cout << "PreCAD processing successfull on cad \n";
 
       // #if BLSURF_VERSION_LONG >= "3.1.1"
       //       /* We can now get the updated sizemaps (if any) */
@@ -2184,9 +2675,18 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     precad_session_delete(pcs);
   }
 
-  cadsurf_data_set_dcad(css, dcad);
+  if (cleandc) {
+    cout << "Give the pre-processed dcad object to the current BLSurf session \n";
+    cadsurf_data_set_dcad(css, cleandc);
+  }
+  else {
+    // Use the original one
+    cadsurf_data_set_dcad(css, dcad);
+  }
+
   if (cleanc) {
     // Give the pre-processed CAD object to the current BLSurf session
+    cout << "Give the pre-processed CAD object to the current BLSurf session \n";
     cadsurf_data_set_cad(css, cleanc);
   }
   else {
@@ -2843,7 +3343,8 @@ status_t message_cb(message_t *msg, void *user_data)
   message_get_description(msg, &desc);
   string err( desc );
   message_cb_user_data * mcud = (message_cb_user_data*)user_data;
-  if ( errnumber < 0 || err.find("license") != string::npos ) {
+  // Get all the error message and some warning messages related to license and periodicity
+  if ( errnumber < 0 || err.find("license") != string::npos || err.find("periodicity") != string::npos ) {
     // remove ^A from the tail
     int len = strlen( desc );
     while (len > 0 && desc[len-1] != '\n')

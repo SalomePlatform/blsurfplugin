@@ -442,6 +442,7 @@ AC_OUTPUT([ \
   src/Makefile \
   src/BLSURFPlugin/Makefile \
   src/GUI/Makefile \
+  tests/Makefile \
   BLSURFPLUGIN_version.h \
   Makefile \
 ])

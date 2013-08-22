@@ -424,6 +424,95 @@ class BLSURF_Algorithm(Mesh_Algorithm):
       pass
     return self.params
 
+  #-----------------------------------------
+  # Periodicity (BLSURF with PreCAD)
+  #-----------------------------------------
+  
+  ## Defines periodicity between two groups of faces, using PreCAD
+  #  @param theFace1 : GEOM face (or group, compound) to associate with theFace2
+  #  @param theFace2 : GEOM face (or group, compound) associated with theFace1
+  #  @param theSourceVertices (optionnal): list of GEOM vertices on theFace1 defining the transformation from theFace1 to theFace2.
+  #    If None, PreCAD tries to find a simple translation. Else, need at least 3 not aligned vertices.
+  #  @param theTargetVertices (optionnal): list of GEOM vertices on theFace2 defining the transformation from theFace1 to theFace2.
+  #    If None, PreCAD tries to find a simple translation. Else, need at least 3 not aligned vertices.
+  def AddPreCadFacesPeriodicity(self, theFace1, theFace2, theSourceVertices=[], theTargetVertices=[]):
+    """calls preCad function:
+    status_t cad_add_face_multiple_periodicity_with_transformation_function(cad t *cad,
+          integer *fid1, integer size1, integer *fid2, integer size2,
+          periodicity_transformation_t transf, void *user data);
+    """
+    if theSourceVertices and theTargetVertices:
+      self.Parameters().AddPreCadFacesPeriodicityWithVertices(theFace1, theFace2, theSourceVertices, theTargetVertices)
+    else:
+      self.Parameters().AddPreCadFacesPeriodicity(theFace1, theFace2)
+    pass
+
+  ## Defines periodicity between two groups of edges, using PreCAD
+  #  @param theEdge1 : GEOM edge (or group, compound) to associate with theEdge2
+  #  @param theEdge2 : GEOM edge (or group, compound) associated with theEdge1
+  #  @param theSourceVertices (optionnal): list of GEOM vertices on theEdge1 defining the transformation from theEdge1 to theEdge2.
+  #    If None, PreCAD tries to find a simple translation. Else, need at least 3 not aligned vertices.
+  #  @param  theTargetVertices (optionnal): list of GEOM vertices on theEdge2 defining the transformation from theEdge1 to theEdge2.
+  #    If None, PreCAD tries to find a simple translation. Else, need at least 3 not aligned vertices.
+  def AddPreCadEdgesPeriodicity(self, theEdge1, theEdge2, theSourceVertices=[], theTargetVertices=[]):
+    """calls preCad function:
+    status_t cad_add_edge_multiple_periodicity_with_transformation_function(cad t *cad,
+          integer *eid1, integer size1, integer *eid2, integer size2,
+          periodicity_transformation_t transf, void *user data);
+    """
+    if theSourceVertices and theTargetVertices:
+        self.Parameters().AddPreCadEdgesPeriodicityWithVertices(theEdge1, theEdge2, theSourceVertices, theTargetVertices)
+    else:
+        self.Parameters().AddPreCadEdgesPeriodicity(theEdge1, theEdge2)
+    pass
+
+
+  #-----------------------------------------
+  # Periodicity (BLSURF without PreCAD)
+  #-----------------------------------------
+
+
+  ## Defines periodicity between two faces, without using PreCAD.
+  #  User has to call AddEdgePeriodicity with the edges of the face,
+  #  and AddVertexPeriodicity with the vertices of each edge.
+  #  @param theFace1 : GEOM face to associate with theFace2
+  #  @param theFace2 : GEOM face associated with theFace1
+  def AddFacePeriodicity(self, theFace1, theFace2):
+    self.Parameters().AddFacePeriodicity(theFace1, theFace2)
+    pass
+      
+  ## Defines periodicity between two edges belonging to two periodic faces, without using PreCAD.
+  #  To be used with AddFacePeriodicity.
+  #  User has to call AddVertexPeriodicity with the vertices of each edge
+  #  @param theFace1 : GEOM face to associate with theFace2
+  #  @param theEdge1 : GEOM edge to associate with theEdge2
+  #  @param theFace2 : GEOM face associated with theFace1
+  #  @param theEdge2 : GEOM edge associated with theEdge1
+  #  @param theEdgeOrientation : -1 (reversed), 0 (unknown) or 1 (forward)
+  def AddEdgePeriodicity(self, theFace1, theEdge1, theFace2, theEdge2, theEdgeOrientation=0):
+    self.Parameters().AddEdgePeriodicity(theFace1, theEdge1, theFace2, theEdge2, theEdgeOrientation)
+    pass
+
+  ## Defines periodicity between two edges without face periodicity, without using PreCAD.
+  #  User has to call AddVertexPeriodicity with the vertices of each edge.
+  #  @param theEdge1 : GEOM edge to associate with theEdge2
+  #  @param theEdge2 : GEOM edge associated with theEdge1
+  #  @param theEdgeOrientation : -1 (reversed), 0 (unknown) or 1 (forward)
+  def AddEdgePeriodicityWithoutFaces(self, theEdge1, theEdge2, theEdgeOrientation=0):
+    self.Parameters().AddEdgePeriodicityWithoutFaces(theEdge1, theEdge2, theEdgeOrientation)
+    pass
+      
+  ## Defines periodicity between two vertices.
+  #  To be used with AddFacePeriodicity and AddEdgePeriodicity.
+  #  @param theEdge1 : GEOM edge to associate with theEdge2
+  #  @param theVertex1 : GEOM face to associate with theVertex2
+  #  @param theEdge2 : GEOM edge associated with theEdge1
+  #  @param theVertex2 : GEOM face associated with theVertex1
+  def AddVertexPeriodicity(self, theEdge1, theVertex1, theEdge2, theVertex2):
+    self.Parameters().AddVertexPeriodicity(theEdge1, theVertex1, theEdge2, theVertex2)
+    pass
+
+
   #=====================
   # Obsolete methods
   #=====================

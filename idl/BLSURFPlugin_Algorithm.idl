@@ -426,6 +426,22 @@ module BLSURFPlugin
 //    TFaceEntryInternalVerticesList GetAllInternalEnforcedVerticesFaces();
     ///////////////////////
     
+
+    ///////////////////////
+    // PERIODICITY       //
+    ///////////////////////
+
+    void AddPreCadFacesPeriodicity(in GEOM::GEOM_Object theFace1, in GEOM::GEOM_Object theFace2) raises (SALOME::SALOME_Exception);
+    void AddPreCadFacesPeriodicityWithVertices(in GEOM::GEOM_Object theFace1, in GEOM::GEOM_Object theFace2, in GEOM::ListOfGO theSourceVertices, in GEOM::ListOfGO theTargetVertices) raises (SALOME::SALOME_Exception);
+    void AddPreCadEdgesPeriodicity(in GEOM::GEOM_Object theEdge1, in GEOM::GEOM_Object theEdge2) raises (SALOME::SALOME_Exception);
+    void AddPreCadEdgesPeriodicityWithVertices(in GEOM::GEOM_Object theEdge1, in GEOM::GEOM_Object theEdge2, in GEOM::ListOfGO theSourceVertices, in GEOM::ListOfGO theTargetVertices) raises (SALOME::SALOME_Exception);
+    void AddFacePeriodicity(in GEOM::GEOM_Object theFace1, in GEOM::GEOM_Object theFace2) raises (SALOME::SALOME_Exception);
+    void AddEdgePeriodicity(in GEOM::GEOM_Object theFace1, in GEOM::GEOM_Object theEdge1, in GEOM::GEOM_Object theFace2, in GEOM::GEOM_Object theEdge2, in long edge_orientation) raises (SALOME::SALOME_Exception);
+    void AddEdgePeriodicityWithoutFaces(in GEOM::GEOM_Object theEdge1, in GEOM::GEOM_Object theEdge2, in long edge_orientation) raises (SALOME::SALOME_Exception);
+    void AddVertexPeriodicity(in GEOM::GEOM_Object theEdge1, in GEOM::GEOM_Object theVertex1, in GEOM::GEOM_Object theEdge2, in GEOM::GEOM_Object theVertex2) raises (SALOME::SALOME_Exception);
+    
+    ///////////////////////
+
     /*!
      * Sets the file for export resulting mesh in GMF format
      */

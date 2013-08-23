@@ -287,13 +287,13 @@ public:
     throw (SALOME::SALOME_Exception);
 
   void AddEdgePeriodicity(GEOM::GEOM_Object_ptr theFace1, GEOM::GEOM_Object_ptr theEdge1,
-      GEOM::GEOM_Object_ptr theFace2, GEOM::GEOM_Object_ptr theEdge2, int edge_orientation = 0)
+			  GEOM::GEOM_Object_ptr theFace2, GEOM::GEOM_Object_ptr theEdge2, CORBA::Long edge_orientation = 0)
       throw (SALOME::SALOME_Exception);
 
-  void AddEdgePeriodicityWithoutFaces(GEOM::GEOM_Object_ptr theEdge1, GEOM::GEOM_Object_ptr theEdge2, int edge_orientation = 0)
+  void AddEdgePeriodicityWithoutFaces(GEOM::GEOM_Object_ptr theEdge1, GEOM::GEOM_Object_ptr theEdge2, CORBA::Long edge_orientation = 0)
       throw (SALOME::SALOME_Exception);
 
-  void AddEdgePeriodicityEntry(const char* theFace1Entry, const char* theEdge1Entry, const char* theFace2Entry, const char* theEdge2Entry, int edge_orientation = 0)
+  void AddEdgePeriodicityEntry(const char* theFace1Entry, const char* theEdge1Entry, const char* theFace2Entry, const char* theEdge2Entry, const long edge_orientation = 0)
     throw (SALOME::SALOME_Exception);
 
   void AddVertexPeriodicity(GEOM::GEOM_Object_ptr theEdge1, GEOM::GEOM_Object_ptr theVertex1,

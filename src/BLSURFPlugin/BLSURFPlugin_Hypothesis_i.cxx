@@ -2905,7 +2905,8 @@ void BLSURFPlugin_Hypothesis_i::AddFacePeriodicityEntry(const char* theFace1Entr
 
 
 void BLSURFPlugin_Hypothesis_i::AddEdgePeriodicity(GEOM::GEOM_Object_ptr theFace1, GEOM::GEOM_Object_ptr theEdge1,
-    GEOM::GEOM_Object_ptr theFace2, GEOM::GEOM_Object_ptr theEdge2, int edge_orientation)
+						   GEOM::GEOM_Object_ptr theFace2, GEOM::GEOM_Object_ptr theEdge2,
+						   CORBA::Long edge_orientation)
     throw (SALOME::SALOME_Exception){
   ASSERT(myBaseImpl);
 
@@ -2938,7 +2939,8 @@ void BLSURFPlugin_Hypothesis_i::AddEdgePeriodicity(GEOM::GEOM_Object_ptr theFace
 }
 
 void BLSURFPlugin_Hypothesis_i::AddEdgePeriodicityWithoutFaces(GEOM::GEOM_Object_ptr theEdge1,
-    GEOM::GEOM_Object_ptr theEdge2, int edge_orientation)
+							       GEOM::GEOM_Object_ptr theEdge2,
+							       CORBA::Long edge_orientation)
     throw (SALOME::SALOME_Exception){
   ASSERT(myBaseImpl);
 
@@ -2964,7 +2966,7 @@ void BLSURFPlugin_Hypothesis_i::AddEdgePeriodicityWithoutFaces(GEOM::GEOM_Object
 
 }
 
-void BLSURFPlugin_Hypothesis_i::AddEdgePeriodicityEntry(const char* theFace1Entry, const char* theEdge1Entry, const char* theFace2Entry, const char* theEdge2Entry, const int edge_orientation)
+void BLSURFPlugin_Hypothesis_i::AddEdgePeriodicityEntry(const char* theFace1Entry, const char* theEdge1Entry, const char* theFace2Entry, const char* theEdge2Entry, const long edge_orientation)
     throw (SALOME::SALOME_Exception){
 
   ASSERT(myBaseImpl);

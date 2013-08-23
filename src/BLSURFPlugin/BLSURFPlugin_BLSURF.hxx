@@ -143,7 +143,8 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
 
   private:
     bool compute(SMESH_Mesh&          aMesh,
-                 const TopoDS_Shape&  aShape);
+                 const TopoDS_Shape&  aShape,
+                 bool                 allowSubMeshClearing);
 
     void set_param(cadsurf_session_t *css,
                    const char *       option_name,

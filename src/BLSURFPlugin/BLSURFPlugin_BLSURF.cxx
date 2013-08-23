@@ -1586,13 +1586,15 @@ namespace
   {
     // sort nodes by position in the following order:
     // SMDS_TOP_FACE=2, SMDS_TOP_EDGE=1, SMDS_TOP_VERTEX=0, SMDS_TOP_3DSPACE=3
-    int operator()( const SMDS_MeshNode* n1, const SMDS_MeshNode* n2 ) const
+    bool operator()( const SMDS_MeshNode* n1, const SMDS_MeshNode* n2 ) const
     {
-      SMDS_TypeOfPosition pos1 = n1->GetPosition()->GetTypeOfPosition();
-      SMDS_TypeOfPosition pos2 = n2->GetPosition()->GetTypeOfPosition();
-      if ( pos1 == pos2 ) return 0;
-      if ( pos1 < pos2 || pos1 == SMDS_TOP_3DSPACE ) return 1;
-      return -1;
+      // NEW ORDER: nodes earlier added to sub-mesh are considered "less"
+      return n1->getIdInShape() < n2->getIdInShape();
+      // SMDS_TypeOfPosition pos1 = n1->GetPosition()->GetTypeOfPosition();
+      // SMDS_TypeOfPosition pos2 = n2->GetPosition()->GetTypeOfPosition();
+      // if ( pos1 == pos2 ) return 0;
+      // if ( pos1 < pos2 || pos1 == SMDS_TOP_3DSPACE ) return 1;
+      // return -1;
     }
     // sort sub-meshes in order: EDGE, VERTEX
     bool operator()( const SMESHDS_SubMesh* s1, const SMESHDS_SubMesh* s2 ) const
@@ -1795,6 +1797,9 @@ namespace
       helper.SetSubShape( origFace );
       helper.SetElementsOnShape( true );
 
+      SMESH_MesherHelper tmpHelper( *this );
+      tmpHelper.SetSubShape( _proxyFace );
+
       // iterate over tmp faces and copy them in origMesh
       const SMDS_MeshNode* nodes[27];
       const SMDS_MeshNode* nullNode = 0;
@@ -1812,7 +1817,7 @@ namespace
             _tmp2origNN.insert( _tmp2origNN.end(), make_pair( n, nullNode ));
           if ( !n2nIt->second ) {
             n->GetXYZ( xyz );
-            gp_XY uv = helper.GetNodeUV( _proxyFace, n );
+            gp_XY uv = tmpHelper.GetNodeUV( _proxyFace, n );
             n2nIt->second = helper.AddNode( xyz[0], xyz[1], xyz[2], uv.X(), uv.Y() );
           }
           nodes[ nbN ] = n2nIt->second;
@@ -1863,7 +1868,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   // Fix problem with locales
   Kernel_Utils::Localizer aLocalizer;
 
-  if ( !compute( aMesh, aShape ))
+  if ( !compute( aMesh, aShape, /*allowSubMeshClearing=*/true ))
     return false;
 
   if ( _haveViscousLayers )
@@ -1885,7 +1890,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       {
         TmpMesh tmpMesh;
         const TopoDS_Face& proxyFace = tmpMesh.makeProxyFace( viscousMesh, F );
-        if ( !compute( tmpMesh, proxyFace ))
+        if ( !compute( tmpMesh, proxyFace, /*allowSubMeshClearing=*/false ))
           return false;
         tmpMesh.FillInOrigMesh( aMesh, F );
       }
@@ -1899,7 +1904,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       SMESH_subMesh* fSM = aMesh.GetSubMesh( F );
       if ( fSM->IsMeshComputed() ) continue;
 
-      if ( !compute( aMesh, aShape ))
+      if ( !compute( aMesh, aShape, /*allowSubMeshClearing=*/true ))
         return false;
       break;
     }
@@ -1914,7 +1919,8 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 //=============================================================================
 
 bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
-                                  const TopoDS_Shape& aShape)
+                                  const TopoDS_Shape& aShape,
+                                  bool                allowSubMeshClearing)
 {
   /* create a distene context (generic object) */
   status_t status = STATUS_ERROR;
@@ -2039,6 +2045,9 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   for (TopExp_Explorer face_iter(aShape,TopAbs_FACE);face_iter.More();face_iter.Next())
   {
     TopoDS_Face f = TopoDS::Face(face_iter.Current());
+
+    SMESH_subMesh* fSM = aMesh.GetSubMesh( f );
+    if ( !fSM->IsEmpty() ) continue; // skip already meshed FACE with viscous layers
 
     // make INTERNAL face oriented FORWARD (issue 0020993)
     if (f.Orientation() != TopAbs_FORWARD && f.Orientation() != TopAbs_REVERSED )
@@ -2431,7 +2440,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
       const SMDS_MeshNode* n = nIt->next();
       if ( n->NbInverseElements( SMDSAbs_Face ) > 0 )
       {
-        needMerge = true;
+        needMerge = true; // to correctly sew with viscous mesh
         // add existing medium nodes to helper
         if ( aMesh.NbEdges( ORDER_QUADRATIC ) > 0 )
         {
@@ -2442,11 +2451,16 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
         continue;
       }
     }
+    if ( allowSubMeshClearing )
     {
       SMDS_ElemIteratorPtr eIt = smDS->GetElements();
       while ( eIt->more() ) meshDS->RemoveFreeElement( eIt->next(), smDS );
       SMDS_NodeIteratorPtr nIt = smDS->GetNodes();
       while ( nIt->more() ) meshDS->RemoveFreeNode( nIt->next(), smDS );
+    }
+    else
+    {
+      needMerge = true;
     }
   }
 

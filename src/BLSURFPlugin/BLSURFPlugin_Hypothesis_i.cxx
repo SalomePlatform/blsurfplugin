@@ -29,8 +29,6 @@
 #include <SMESH_Gen_i.hxx>
 #include <SMESH_PythonDump.hxx>
 
-#include <GEOM_Object.hxx>
-
 #include <SALOMEDS_wrap.hxx>
 #include <Utils_CorbaException.hxx>
 #include <utilities.h>
@@ -2905,8 +2903,8 @@ void BLSURFPlugin_Hypothesis_i::AddFacePeriodicityEntry(const char* theFace1Entr
 
 
 void BLSURFPlugin_Hypothesis_i::AddEdgePeriodicity(GEOM::GEOM_Object_ptr theFace1, GEOM::GEOM_Object_ptr theEdge1,
-						   GEOM::GEOM_Object_ptr theFace2, GEOM::GEOM_Object_ptr theEdge2,
-						   CORBA::Long edge_orientation)
+                                                   GEOM::GEOM_Object_ptr theFace2, GEOM::GEOM_Object_ptr theEdge2,
+                                                   CORBA::Long edge_orientation)
     throw (SALOME::SALOME_Exception){
   ASSERT(myBaseImpl);
 
@@ -2939,8 +2937,8 @@ void BLSURFPlugin_Hypothesis_i::AddEdgePeriodicity(GEOM::GEOM_Object_ptr theFace
 }
 
 void BLSURFPlugin_Hypothesis_i::AddEdgePeriodicityWithoutFaces(GEOM::GEOM_Object_ptr theEdge1,
-							       GEOM::GEOM_Object_ptr theEdge2,
-							       CORBA::Long edge_orientation)
+                                                               GEOM::GEOM_Object_ptr theEdge2,
+                                                               CORBA::Long edge_orientation)
     throw (SALOME::SALOME_Exception){
   ASSERT(myBaseImpl);
 

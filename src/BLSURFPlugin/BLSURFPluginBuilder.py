@@ -85,6 +85,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
       print "Warning: BLSURFPlugin module unavailable"
     self.Create(mesh, geom, BLSURF, "libBLSURFEngine.so")
     self.params=None
+    self.geompyD = mesh.geompyD
     #self.SetPhysicalMesh() - PAL19680
     pass
 
@@ -512,6 +513,77 @@ class BLSURF_Algorithm(Mesh_Algorithm):
     self.Parameters().AddVertexPeriodicity(theEdge1, theVertex1, theEdge2, theVertex2)
     pass
 
+  ## Define periodicity between two groups of faces, given a transformation function.
+  #  This uses the basic BLSURF API for each face, each edge, and each vertex.
+  #  @param theFace1 : GEOM face (or group, compound) to associate with theFace2
+  #  @param theFace2 : GEOM face (or group, compound) associated with theFace1
+  #  @param f_transf : python function defining the transformation between an object of theFace1
+  # into an object of theFace2
+  def AddAdvancedFacesPeriodicity(self, theFace1, theFace2, f_transf):
+    source_faces = self.geompyD.SubShapeAll(theFace1, self.geompyD.ShapeType["FACE"])
+    i = 0
+    j = 0
+    k = 0
+    for source_face in source_faces:
+      self.geompyD.addToStudyInFather(theFace1, source_face, "source_face_%i"%i)
+      p_source = self.geompyD.MakeVertexInsideFace(source_face)
+      p_target = f_transf(p_source)
+      target_face = self.geompyD.GetFaceNearPoint(theFace2, p_target)
+      self.geompyD.addToStudyInFather(theFace2, target_face, "target_face_%i"%i)
+      self.AddFacePeriodicity(source_face, target_face)
+      i += 1
+      
+      source_edges = self.geompyD.SubShapeAll(source_face, self.geompyD.ShapeType["EDGE"])
+      for source_edge in source_edges:
+        self.geompyD.addToStudyInFather(theFace1, source_edge, "source_edge_%i"%(j))
+        p_source = self.geompyD.MakeVertexOnCurve(source_edge, 0.5)
+        p_target = f_transf(p_source)
+        target_edge = self.geompyD.GetEdgeNearPoint(theFace2, p_target)
+        self.geompyD.addToStudyInFather(theFace2, target_edge, "target_edge_%i"%(j))
+        self.AddEdgePeriodicity(source_face, source_edge, target_face, target_edge)
+        j += 1
+        
+        source_vertices = self.geompyD.SubShapeAll(source_edge, self.geompyD.ShapeType["VERTEX"])
+        for source_vertex in source_vertices:
+          self.geompyD.addToStudyInFather(theFace1, source_vertex, "source_vertex_%i"%(k))
+          target_vertex_tmp = f_transf(source_vertex)
+          target_vertex = self.geompyD.GetSame(theFace2, target_vertex_tmp)
+          self.geompyD.addToStudyInFather(theFace2, target_vertex, "target_vertex_%i"%(k))
+          self.AddVertexPeriodicity(source_edge, source_vertex, target_edge, target_vertex)
+          k += 1
+      pass
+
+  ## Define periodicity between two groups of edges, without faces, given a transformation function.
+  #  This uses the basic BLSURF API for each edge and each vertex.
+  #  @param theFace1 : GEOM edge (or group, compound) to associate with theEdge2
+  #  @param theFace2 : GEOM edge (or group, compound) associated with theEdge1
+  #  @param f_transf : python function defining the transformation between an object of theEdge1
+  # into an object of theFace2
+  def AddAdvancedEdgesPeriodicity(self, theEdge1, theEdge2, f_transf):
+    source_edges = self.geompyD.SubShapeAll(theEdge1, self.geompyD.ShapeType["EDGE"])
+    j = 0
+    k = 0
+    for source_edge in source_edges:
+      self.geompyD.addToStudyInFather(theEdge1, source_edge, "source_edge_%i"%j)
+      p_source = self.geompyD.MakeVertexOnCurve(source_edge, 0.5)
+      p_target = f_transf(p_source)
+      target_edge = self.geompyD.GetEdgeNearPoint(theEdge2, p_target)
+      self.geompyD.addToStudyInFather(theEdge2, target_edge, "target_edge_%i"%j)
+      self.AddEdgePeriodicityWithoutFaces(source_edge, target_edge)
+      
+      j += 1
+      
+      source_vertices = self.geompyD.SubShapeAll(source_edge, self.geompyD.ShapeType["VERTEX"])
+      for source_vertex in source_vertices:
+        self.geompyD.addToStudyInFather(theEdge1, source_vertex, "source_vertex_%i"%k)
+        target_vertex_tmp = self.geompyD.MakeTranslation(source_vertex, 10, 0., 0)
+        target_vertex_tmp = f_transf(source_vertex)
+        target_vertex = self.geompyD.GetSame(theEdge2, target_vertex_tmp)
+        self.geompyD.addToStudyInFather(theEdge2, target_vertex, "target_vertex_%i"%k)
+        self.AddVertexPeriodicity(source_edge, source_vertex, target_edge, target_vertex)
+        
+        k += 1
+    pass
 
   #=====================
   # Obsolete methods

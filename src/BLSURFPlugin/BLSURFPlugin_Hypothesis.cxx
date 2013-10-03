@@ -1236,10 +1236,19 @@ BLSURFPlugin_Hypothesis::TVerticesPeriodicityVector BLSURFPlugin_Hypothesis::Get
 }
 
 //=======================================================================
+//function : ClearAllEnforcedVertices
+//=======================================================================
+void BLSURFPlugin_Hypothesis::ClearPreCadPeriodicityVectors() {
+  _preCadFacesPeriodicityVector.clear();
+  _preCadEdgesPeriodicityVector.clear();
+  NotifySubMeshesHypothesisModification();
+}
+
+//=======================================================================
 //function : AddPreCadFacesPeriodicity
 //=======================================================================
 void BLSURFPlugin_Hypothesis::AddPreCadFacesPeriodicity(TEntry theFace1Entry, TEntry theFace2Entry,
-    vector<TEntry> &theSourceVerticesEntries, vector<TEntry> &theTargetVerticesEntries) {
+    vector<string> &theSourceVerticesEntries, vector<string> &theTargetVerticesEntries) {
 
   TPreCadPeriodicity preCadFacesPeriodicity;
   preCadFacesPeriodicity.shape1Entry = theFace1Entry;
@@ -1256,7 +1265,7 @@ void BLSURFPlugin_Hypothesis::AddPreCadFacesPeriodicity(TEntry theFace1Entry, TE
 //function : AddPreCadEdgesPeriodicity
 //=======================================================================
 void BLSURFPlugin_Hypothesis::AddPreCadEdgesPeriodicity(TEntry theEdge1Entry, TEntry theEdge2Entry,
-    vector<TEntry> &theSourceVerticesEntries, vector<TEntry> &theTargetVerticesEntries) {
+    vector<string> &theSourceVerticesEntries, vector<string> &theTargetVerticesEntries) {
 
   TPreCadPeriodicity preCadEdgesPeriodicity;
   preCadEdgesPeriodicity.shape1Entry = theEdge1Entry;
@@ -1458,7 +1467,153 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save) {
     save << " " << "__ENFORCED_VERTICES_END__";
   }
 
+  //PERIODICITY
+
+  SavePreCADPeriodicity(save, "FACES");
+  SavePreCADPeriodicity(save, "EDGES");
+
+  SaveFacesPeriodicity(save);
+  SaveEdgesPeriodicity(save);
+  SaveVerticesPeriodicity(save);
+
   return save;
+}
+
+void BLSURFPlugin_Hypothesis::SaveFacesPeriodicity(std::ostream & save){
+
+  TFacesPeriodicityVector::const_iterator it_faces_periodicity = _facesPeriodicityVector.begin();
+  if (it_faces_periodicity != _facesPeriodicityVector.end()) {
+    MESSAGE("__FACES_PERIODICITY_BEGIN__");
+    save << " " << "__FACES_PERIODICITY_BEGIN__";
+    for (; it_faces_periodicity != _facesPeriodicityVector.end(); ++it_faces_periodicity) {
+      TFacesPeriodicity periodicity_i = (*it_faces_periodicity);
+      save << " " << "__BEGIN_PERIODICITY_DESCRIPTION__";
+      save << " " << "__BEGIN_ENTRY1__";
+      save << " " << periodicity_i.first;
+      save << " " << "__END_ENTRY1__";
+      save << " " << "__BEGIN_ENTRY2__";
+      save << " " << periodicity_i.second;
+      save << " " << "__END_ENTRY2__";
+      save << " " << "__END_PERIODICITY_DESCRIPTION__";
+    }
+    save << " " << "__FACES_PERIODICITY_END__";
+    MESSAGE("__FACES_PERIODICITY_END__");
+  }
+}
+
+void BLSURFPlugin_Hypothesis::SaveEdgesPeriodicity(std::ostream & save){
+
+  TEdgesPeriodicityVector::const_iterator it_edges_periodicity = _edgesPeriodicityVector.begin();
+  if (it_edges_periodicity != _edgesPeriodicityVector.end()) {
+    save << " " << "__EDGES_PERIODICITY_BEGIN__";
+    MESSAGE("__EDGES_PERIODICITY_BEGIN__");
+    for (; it_edges_periodicity != _edgesPeriodicityVector.end(); ++it_edges_periodicity) {
+      TEdgePeriodicity periodicity_i = (*it_edges_periodicity);
+      save << " " << "__BEGIN_PERIODICITY_DESCRIPTION__";
+      if (not periodicity_i.theFace1Entry.empty()){
+        save << " " << "__BEGIN_FACE1__";
+        save << " " << periodicity_i.theFace1Entry;
+        save << " " << "__END_FACE1__";
+      }
+      save << " " << "__BEGIN_EDGE1__";
+      save << " " << periodicity_i.theEdge1Entry;
+      save << " " << "__END_EDGE1__";
+      if (not periodicity_i.theFace2Entry.empty()){
+        save << " " << "__BEGIN_FACE2__";
+        save << " " << periodicity_i.theFace2Entry;
+        save << " " << "__END_FACE2__";
+      }
+      save << " " << "__BEGIN_EDGE2__";
+      save << " " << periodicity_i.theEdge2Entry;
+      save << " " << "__END_EDGE2__";
+      save << " " << "__BEGIN_EDGE_ORIENTATION__";
+      save << " " << periodicity_i.edge_orientation;
+      save << " " << "__END_EDGE_ORIENTATION__";
+      save << " " << "__END_PERIODICITY_DESCRIPTION__";
+    }
+    save << " " << "__EDGES_PERIODICITY_END__";
+    MESSAGE("__EDGES_PERIODICITY_END__");
+  }
+}
+
+void BLSURFPlugin_Hypothesis::SaveVerticesPeriodicity(std::ostream & save){
+
+  TVerticesPeriodicityVector::const_iterator it_vertices_periodicity = _verticesPeriodicityVector.begin();
+  if (it_vertices_periodicity != _verticesPeriodicityVector.end()) {
+    MESSAGE("__VERTICES_PERIODICITY_BEGIN__");
+    save << " " << "__VERTICES_PERIODICITY_BEGIN__";
+    for (; it_vertices_periodicity != _verticesPeriodicityVector.end(); ++it_vertices_periodicity) {
+      TVertexPeriodicity periodicity_i = (*it_vertices_periodicity);
+      save << " " << "__BEGIN_PERIODICITY_DESCRIPTION__";
+      save << " " << "__BEGIN_EDGE1__";
+      save << " " << periodicity_i.theEdge1Entry;
+      save << " " << "__END_EDGE1__";
+      save << " " << "__BEGIN_VERTEX1__";
+      save << " " << periodicity_i.theVertex1Entry;
+      save << " " << "__END_VERTEX1__";
+      save << " " << "__BEGIN_EDGE2__";
+      save << " " << periodicity_i.theEdge2Entry;
+      save << " " << "__END_EDGE2__";
+      save << " " << "__BEGIN_VERTEX2__";
+      save << " " << periodicity_i.theVertex2Entry;
+      save << " " << "__END_VERTEX2__";
+      save << " " << "__END_PERIODICITY_DESCRIPTION__";
+    }
+    save << " " << "__VERTICES_PERIODICITY_END__";
+    MESSAGE("__VERTICES_PERIODICITY_END__");
+  }
+}
+
+void BLSURFPlugin_Hypothesis::SavePreCADPeriodicity(std::ostream & save, const char* shapeType) {
+  TPreCadPeriodicityVector precad_periodicity;
+  if (shapeType == "FACES")
+    precad_periodicity = _preCadFacesPeriodicityVector;
+  else
+    precad_periodicity = _preCadEdgesPeriodicityVector;
+  TPreCadPeriodicityVector::const_iterator it_precad_periodicity = precad_periodicity.begin();
+  if (it_precad_periodicity != precad_periodicity.end()) {
+    save << " " << "__PRECAD_" << shapeType << "_PERIODICITY_BEGIN__";
+    for (; it_precad_periodicity != precad_periodicity.end(); ++it_precad_periodicity) {
+      TPreCadPeriodicity periodicity_i = (*it_precad_periodicity);
+      save << " " << "__BEGIN_PERIODICITY_DESCRIPTION__";
+      if (!periodicity_i.shape1Entry.empty()) {
+        save << " " << "__BEGIN_ENTRY1__";
+        save << " " << periodicity_i.shape1Entry;
+        save << " " << "__END_ENTRY1__";
+      }
+      if (!periodicity_i.shape2Entry.empty()) {
+        save << " " << "__BEGIN_ENTRY2__";
+        save << " " << periodicity_i.shape2Entry;
+        save << " " << "__END_ENTRY2__";
+      }
+
+      std::vector<std::string>::const_iterator sourceVerticesEntriesIt = periodicity_i.theSourceVerticesEntries.begin();
+      bool hasSourceVertices = false;
+      if (sourceVerticesEntriesIt != periodicity_i.theSourceVerticesEntries.end()) {
+        hasSourceVertices = true;
+        save << " " << "__BEGIN_SOURCE_VERTICES_LIST__";
+      }
+      for (; sourceVerticesEntriesIt != periodicity_i.theSourceVerticesEntries.end(); ++sourceVerticesEntriesIt)
+        save << " " << (*sourceVerticesEntriesIt);
+      if (hasSourceVertices)
+        save << " " << "__END_SOURCE_VERTICES_LIST__";
+
+      std::vector<std::string>::const_iterator targetVerticesEntriesIt = periodicity_i.theTargetVerticesEntries.begin();
+      bool hasTargetVertices = false;
+      if (targetVerticesEntriesIt != periodicity_i.theTargetVerticesEntries.end()) {
+        hasTargetVertices = true;
+        save << " " << "__BEGIN_TARGET_VERTICES_LIST__";
+      }
+      for (; targetVerticesEntriesIt != periodicity_i.theTargetVerticesEntries.end(); ++targetVerticesEntriesIt)
+        save << " " << (*targetVerticesEntriesIt);
+      if (hasTargetVertices)
+        save << " " << "__END_TARGET_VERTICES_LIST__";
+
+      save << " " << "__END_PERIODICITY_DESCRIPTION__";
+    }
+    save << " " << "__PRECAD_" << shapeType << "_PERIODICITY_END__";
+  }
+
 }
 
 //=============================================================================
@@ -1610,6 +1765,11 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   bool hasAttractor = false;
   bool hasNewAttractor = false;
   bool hasEnforcedVertex = false;
+  bool hasPreCADFacesPeriodicity = false;
+  bool hasPreCADEdgesPeriodicity = false;
+  bool hasFacesPeriodicity = false;
+  bool hasEdgesPeriodicity = false;
+  bool hasVerticesPeriodicity = false;
 
   isOK = (load >> option_or_sm);
   if (isOK)
@@ -1630,6 +1790,16 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
       hasNewAttractor = true;
     else if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
       hasEnforcedVertex = true;
+    else if (option_or_sm == "__PRECAD_FACES_PERIODICITY_BEGIN__")
+      hasPreCADFacesPeriodicity = true;
+    else if (option_or_sm == "__PRECAD_EDGES_PERIODICITY_BEGIN__")
+      hasPreCADEdgesPeriodicity = true;
+    else if (option_or_sm == "__FACES_PERIODICITY_BEGIN__")
+      hasFacesPeriodicity = true;
+    else if (option_or_sm == "__EDGES_PERIODICITY_BEGIN__")
+      hasEdgesPeriodicity = true;
+    else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
+      hasVerticesPeriodicity = true;
 
   if (isOK && hasCADSurfOptions) {
     isOK = (load >> i);
@@ -1722,6 +1892,16 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         hasNewAttractor = true;
       else if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
         hasEnforcedVertex = true;
+      else if (option_or_sm == "__PRECAD_FACES_PERIODICITY_BEGIN__")
+        hasPreCADFacesPeriodicity = true;
+      else if (option_or_sm == "__PRECAD_EDGES_PERIODICITY_BEGIN__")
+        hasPreCADEdgesPeriodicity = true;
+      else if (option_or_sm == "__FACES_PERIODICITY_BEGIN__")
+        hasFacesPeriodicity = true;
+      else if (option_or_sm == "__EDGES_PERIODICITY_BEGIN__")
+        hasEdgesPeriodicity = true;
+      else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
+        hasVerticesPeriodicity = true;
   }
   
   std::string optName, optValue;
@@ -1764,6 +1944,16 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         hasNewAttractor = true;
       else if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
         hasEnforcedVertex = true;
+      else if (option_or_sm == "__PRECAD_FACES_PERIODICITY_BEGIN__")
+        hasPreCADFacesPeriodicity = true;
+      else if (option_or_sm == "__PRECAD_EDGES_PERIODICITY_BEGIN__")
+        hasPreCADEdgesPeriodicity = true;
+      else if (option_or_sm == "__FACES_PERIODICITY_BEGIN__")
+        hasFacesPeriodicity = true;
+      else if (option_or_sm == "__EDGES_PERIODICITY_BEGIN__")
+        hasEdgesPeriodicity = true;
+      else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
+        hasVerticesPeriodicity = true;
   }
 
   while (isOK && hasPreCADOptions) {
@@ -1803,6 +1993,16 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         hasNewAttractor = true;
       else if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
         hasEnforcedVertex = true;
+      else if (option_or_sm == "__PRECAD_FACES_PERIODICITY_BEGIN__")
+        hasPreCADFacesPeriodicity = true;
+      else if (option_or_sm == "__PRECAD_EDGES_PERIODICITY_BEGIN__")
+        hasPreCADEdgesPeriodicity = true;
+      else if (option_or_sm == "__FACES_PERIODICITY_BEGIN__")
+        hasFacesPeriodicity = true;
+      else if (option_or_sm == "__EDGES_PERIODICITY_BEGIN__")
+        hasEdgesPeriodicity = true;
+      else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
+        hasVerticesPeriodicity = true;
   }
   
   std::string smEntry, smValue;
@@ -1841,6 +2041,16 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         hasNewAttractor = true;
       else if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
         hasEnforcedVertex = true;
+      else if (option_or_sm == "__PRECAD_FACES_PERIODICITY_BEGIN__")
+        hasPreCADFacesPeriodicity = true;
+      else if (option_or_sm == "__PRECAD_EDGES_PERIODICITY_BEGIN__")
+        hasPreCADEdgesPeriodicity = true;
+      else if (option_or_sm == "__FACES_PERIODICITY_BEGIN__")
+        hasFacesPeriodicity = true;
+      else if (option_or_sm == "__EDGES_PERIODICITY_BEGIN__")
+        hasEdgesPeriodicity = true;
+      else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
+        hasVerticesPeriodicity = true;
   }
 
   std::string atEntry, atValue;
@@ -1877,6 +2087,16 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         hasNewAttractor = true;
       else if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
         hasEnforcedVertex = true;
+      else if (option_or_sm == "__PRECAD_FACES_PERIODICITY_BEGIN__")
+        hasPreCADFacesPeriodicity = true;
+      else if (option_or_sm == "__PRECAD_EDGES_PERIODICITY_BEGIN__")
+        hasPreCADEdgesPeriodicity = true;
+      else if (option_or_sm == "__FACES_PERIODICITY_BEGIN__")
+        hasFacesPeriodicity = true;
+      else if (option_or_sm == "__EDGES_PERIODICITY_BEGIN__")
+        hasEdgesPeriodicity = true;
+      else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
+        hasVerticesPeriodicity = true;
   }
 
   std::string newAtFaceEntry, atTestString;
@@ -1911,6 +2131,16 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
     if (isOK)
       if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
         hasEnforcedVertex = true;
+      else if (option_or_sm == "__PRECAD_FACES_PERIODICITY_BEGIN__")
+        hasPreCADFacesPeriodicity = true;
+      else if (option_or_sm == "__PRECAD_EDGES_PERIODICITY_BEGIN__")
+        hasPreCADEdgesPeriodicity = true;
+      else if (option_or_sm == "__FACES_PERIODICITY_BEGIN__")
+        hasFacesPeriodicity = true;
+      else if (option_or_sm == "__EDGES_PERIODICITY_BEGIN__")
+        hasEdgesPeriodicity = true;
+      else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
+        hasVerticesPeriodicity = true;
   }
 
 
@@ -2047,7 +2277,375 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
     }
   }
 
+  // PERIODICITY
+
+  if (hasPreCADFacesPeriodicity){
+    LoadPreCADPeriodicity(load, "FACES");
+
+    isOK = (load >> option_or_sm);
+    if (isOK)
+      if (option_or_sm == "__PRECAD_EDGES_PERIODICITY_BEGIN__")
+        hasPreCADEdgesPeriodicity = true;
+      else if (option_or_sm == "__FACES_PERIODICITY_BEGIN__")
+        hasFacesPeriodicity = true;
+      else if (option_or_sm == "__EDGES_PERIODICITY_BEGIN__")
+        hasEdgesPeriodicity = true;
+      else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
+        hasVerticesPeriodicity = true;
+  }
+
+  if (hasPreCADEdgesPeriodicity){
+    LoadPreCADPeriodicity(load, "EDGES");
+
+    isOK = (load >> option_or_sm);
+    if (isOK)
+      if (option_or_sm == "__FACES_PERIODICITY_BEGIN__")
+        hasFacesPeriodicity = true;
+      else if (option_or_sm == "__EDGES_PERIODICITY_BEGIN__")
+        hasEdgesPeriodicity = true;
+      else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
+        hasVerticesPeriodicity = true;
+  }
+
+  if (hasFacesPeriodicity){
+      LoadFacesPeriodicity(load);
+
+    isOK = (load >> option_or_sm);
+    if (isOK)
+      if (option_or_sm == "__EDGES_PERIODICITY_BEGIN__")
+        hasEdgesPeriodicity = true;
+      else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
+        hasVerticesPeriodicity = true;
+  }
+
+  if (hasEdgesPeriodicity){
+      LoadEdgesPeriodicity(load);
+
+    isOK = (load >> option_or_sm);
+    if (isOK)
+      if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
+        hasVerticesPeriodicity = true;
+  }
+
+  if (hasVerticesPeriodicity)
+      LoadVerticesPeriodicity(load);
+
   return load;
+}
+
+void BLSURFPlugin_Hypothesis::LoadFacesPeriodicity(std::istream & load){
+
+  bool isOK = true;
+
+  std::string periodicitySeparator;
+  TEntry shape1Entry;
+  TEntry shape2Entry;
+
+  _facesPeriodicityVector.clear();
+
+  while (isOK) {
+    isOK = (load >> periodicitySeparator); // __BEGIN_PERIODICITY_DESCRIPTION__
+    MESSAGE("periodicitySeparator 1: " <<periodicitySeparator);
+    TFacesPeriodicity *periodicity_i = new TFacesPeriodicity();
+    if (periodicitySeparator == "__FACES_PERIODICITY_END__")
+      break; // __FACES_PERIODICITY_END__
+    if (periodicitySeparator != "__BEGIN_PERIODICITY_DESCRIPTION__"){
+      MESSAGE("//" << periodicitySeparator << "//");
+      throw std::exception();
+    }
+
+    while (isOK) {
+      isOK = (load >> periodicitySeparator);
+      MESSAGE("periodicitySeparator 2: " <<periodicitySeparator);
+      if (periodicitySeparator == "__END_PERIODICITY_DESCRIPTION__") {
+
+        periodicity_i->first = shape1Entry;
+        periodicity_i->second = shape2Entry;
+
+        _facesPeriodicityVector.push_back(*periodicity_i);
+
+        break; // __END_PERIODICITY_DESCRIPTION__
+      }
+
+      if (periodicitySeparator == "__BEGIN_ENTRY1__") {  // __BEGIN_ENTRY1__
+        isOK = (load >> shape1Entry);
+        isOK = (load >> periodicitySeparator); // __END_ENTRY1__
+        if (periodicitySeparator != "__END_ENTRY1__")
+          throw std::exception();
+        MESSAGE("shape1Entry: " <<shape1Entry);
+      }
+
+      if (periodicitySeparator == "__BEGIN_ENTRY2__") {  // __BEGIN_ENTRY2__
+        isOK = (load >> shape2Entry);
+        isOK = (load >> periodicitySeparator); // __END_ENTRY2__
+        if (periodicitySeparator != "__END_ENTRY2__")
+          throw std::exception();
+        MESSAGE("shape2Entry: " <<shape2Entry);
+      }
+    }
+  }
+}
+
+
+void BLSURFPlugin_Hypothesis::LoadEdgesPeriodicity(std::istream & load){
+
+  bool isOK = true;
+
+  std::string periodicitySeparator;
+  TEntry theFace1Entry;
+  TEntry theEdge1Entry;
+  TEntry theFace2Entry;
+  TEntry theEdge2Entry;
+  int edge_orientation = 0;
+
+  _edgesPeriodicityVector.clear();
+
+  while (isOK) {
+    isOK = (load >> periodicitySeparator); // __BEGIN_PERIODICITY_DESCRIPTION__
+    MESSAGE("periodicitySeparator 1: " <<periodicitySeparator);
+    TEdgePeriodicity *periodicity_i = new TEdgePeriodicity();
+    if (periodicitySeparator == "__EDGES_PERIODICITY_END__")
+      break; // __EDGES_PERIODICITY_END__
+    if (periodicitySeparator != "__BEGIN_PERIODICITY_DESCRIPTION__"){
+      MESSAGE("//" << periodicitySeparator << "//");
+      throw std::exception();
+    }
+
+    while (isOK) {
+      isOK = (load >> periodicitySeparator);
+      MESSAGE("periodicitySeparator 2: " <<periodicitySeparator);
+      if (periodicitySeparator == "__END_PERIODICITY_DESCRIPTION__") {
+
+        periodicity_i->theFace1Entry = theFace1Entry;
+        periodicity_i->theEdge1Entry = theEdge1Entry;
+        periodicity_i->theFace2Entry = theFace2Entry;
+        periodicity_i->theEdge2Entry = theEdge2Entry;
+        periodicity_i->edge_orientation = edge_orientation;
+
+        _edgesPeriodicityVector.push_back(*periodicity_i);
+
+        break; // __END_PERIODICITY_DESCRIPTION__
+      }
+
+      if (periodicitySeparator == "__BEGIN_FACE1__") {  // __BEGIN_FACE1__
+        isOK = (load >> theFace1Entry);
+        MESSAGE("//" << theFace1Entry << "//");
+        isOK = (load >> periodicitySeparator); // __END_FACE1__
+        if (periodicitySeparator != "__END_FACE1__"){
+          MESSAGE("//" << periodicitySeparator << "//");
+          throw std::exception();
+        }
+        MESSAGE("theFace1Entry: " <<theFace1Entry);
+      }
+
+      if (periodicitySeparator == "__BEGIN_EDGE1__") {  // __BEGIN_EDGE1__
+        isOK = (load >> theEdge1Entry);
+        isOK = (load >> periodicitySeparator); // __END_EDGE1__
+        if (periodicitySeparator != "__END_EDGE1__")
+          throw std::exception();
+        MESSAGE("theEdge1Entry: " <<theEdge1Entry);
+      }
+
+      if (periodicitySeparator == "__BEGIN_FACE2__") {  // __BEGIN_FACE2__
+        isOK = (load >> theFace2Entry);
+        isOK = (load >> periodicitySeparator); // __END_FACE2__
+        if (periodicitySeparator != "__END_FACE2__")
+          throw std::exception();
+        MESSAGE("theFace2Entry: " <<theFace2Entry);
+      }
+
+      if (periodicitySeparator == "__BEGIN_EDGE2__") {  // __BEGIN_EDGE2__
+        isOK = (load >> theEdge2Entry);
+        isOK = (load >> periodicitySeparator); // __END_EDGE2__
+        if (periodicitySeparator != "__END_EDGE2__")
+          throw std::exception();
+        MESSAGE("theEdge2Entry: " <<theEdge2Entry);
+      }
+
+      if (periodicitySeparator == "__BEGIN_EDGE_ORIENTATION__") {  // __BEGIN_EDGE_ORIENTATION__
+        isOK = (load >> edge_orientation);
+        isOK = (load >> periodicitySeparator); // __END_EDGE_ORIENTATION__
+        if (periodicitySeparator != "__END_EDGE_ORIENTATION__")
+          throw std::exception();
+        MESSAGE("edge_orientation: " <<edge_orientation);
+      }
+    }
+  }
+}
+
+void BLSURFPlugin_Hypothesis::LoadVerticesPeriodicity(std::istream & load){
+
+  bool isOK = true;
+
+  std::string periodicitySeparator;
+  TEntry theEdge1Entry;
+  TEntry theVertex1Entry;
+  TEntry theEdge2Entry;
+  TEntry theVertex2Entry;
+
+  _verticesPeriodicityVector.clear();
+
+  while (isOK) {
+    isOK = (load >> periodicitySeparator); // __BEGIN_PERIODICITY_DESCRIPTION__
+    MESSAGE("periodicitySeparator 1: " <<periodicitySeparator);
+    TVertexPeriodicity *periodicity_i = new TVertexPeriodicity();
+    if (periodicitySeparator == "__VERTICES_PERIODICITY_END__")
+      break; // __VERTICES_PERIODICITY_END__
+    if (periodicitySeparator != "__BEGIN_PERIODICITY_DESCRIPTION__"){
+      MESSAGE("//" << periodicitySeparator << "//");
+      throw std::exception();
+    }
+
+    while (isOK) {
+      isOK = (load >> periodicitySeparator);
+      MESSAGE("periodicitySeparator 2: " <<periodicitySeparator);
+      if (periodicitySeparator == "__END_PERIODICITY_DESCRIPTION__") {
+
+        periodicity_i->theEdge1Entry = theEdge1Entry;
+        periodicity_i->theVertex1Entry = theVertex1Entry;
+        periodicity_i->theEdge2Entry = theEdge2Entry;
+        periodicity_i->theVertex2Entry = theVertex2Entry;
+
+        _verticesPeriodicityVector.push_back(*periodicity_i);
+
+        break; // __END_PERIODICITY_DESCRIPTION__
+      }
+
+      if (periodicitySeparator == "__BEGIN_EDGE1__") {  // __BEGIN_EDGE1__
+        isOK = (load >> theEdge1Entry);
+        isOK = (load >> periodicitySeparator); // __END_EDGE1__
+        if (periodicitySeparator != "__END_EDGE1__")
+          throw std::exception();
+        MESSAGE("theEdge1Entry: " <<theEdge1Entry);
+      }
+
+      if (periodicitySeparator == "__BEGIN_VERTEX1__") {  // __BEGIN_VERTEX1__
+        isOK = (load >> theVertex1Entry);
+        isOK = (load >> periodicitySeparator); // __END_VERTEX1__
+        if (periodicitySeparator != "__END_VERTEX1__")
+          throw std::exception();
+        MESSAGE("theVertex1Entry: " <<theVertex1Entry);
+      }
+
+      if (periodicitySeparator == "__BEGIN_EDGE2__") {  // __BEGIN_EDGE2__
+        isOK = (load >> theEdge2Entry);
+        isOK = (load >> periodicitySeparator); // __END_EDGE2__
+        if (periodicitySeparator != "__END_EDGE2__")
+          throw std::exception();
+        MESSAGE("theEdge2Entry: " <<theEdge2Entry);
+      }
+
+      if (periodicitySeparator == "__BEGIN_VERTEX2__") {  // __BEGIN_VERTEX2__
+        isOK = (load >> theVertex2Entry);
+        isOK = (load >> periodicitySeparator); // __END_VERTEX2__
+        if (periodicitySeparator != "__END_VERTEX2__")
+          throw std::exception();
+        MESSAGE("theVertex2Entry: " <<theVertex2Entry);
+      }
+    }
+  }
+}
+
+void BLSURFPlugin_Hypothesis::LoadPreCADPeriodicity(std::istream & load, const char* shapeType) {
+
+  bool isOK = true;
+
+  std::string periodicitySeparator;
+  TEntry shape1Entry;
+  TEntry shape2Entry;
+  std::vector<std::string> theSourceVerticesEntries;
+  std::vector<std::string> theTargetVerticesEntries;
+
+  bool hasSourceVertices = false;
+  bool hasTargetVertices = false;
+
+  if (shapeType == "FACES")
+    _preCadFacesPeriodicityVector.clear();
+  else
+    _preCadEdgesPeriodicityVector.clear();
+
+
+  while (isOK) {
+    isOK = (load >> periodicitySeparator); // __BEGIN_PERIODICITY_DESCRIPTION__
+    MESSAGE("periodicitySeparator 1: " <<periodicitySeparator);
+    TPreCadPeriodicity *periodicity_i = new TPreCadPeriodicity();
+//     MESSAGE("periodicitySeparator: " <<periodicitySeparator);
+    std::string endSeparator = "__PRECAD_" + std::string(shapeType) + "_PERIODICITY_END__";
+    if (periodicitySeparator == endSeparator)
+      break; // __PRECAD_FACES_PERIODICITY_END__
+    if (periodicitySeparator != "__BEGIN_PERIODICITY_DESCRIPTION__"){
+      MESSAGE("//" << endSeparator << "//");
+      MESSAGE("//" << periodicitySeparator << "//");
+      throw std::exception();
+    }
+
+    while (isOK) {
+      isOK = (load >> periodicitySeparator);
+      MESSAGE("periodicitySeparator 2: " <<periodicitySeparator);
+      if (periodicitySeparator == "__END_PERIODICITY_DESCRIPTION__") {
+
+        periodicity_i->shape1Entry = shape1Entry;
+        periodicity_i->shape2Entry = shape2Entry;
+
+        MESSAGE("theSourceVerticesEntries.size(): " << theSourceVerticesEntries.size());
+        MESSAGE("theTargetVerticesEntries.size(): " << theTargetVerticesEntries.size());
+
+        if (hasSourceVertices)
+          periodicity_i->theSourceVerticesEntries = theSourceVerticesEntries;
+        if (hasTargetVertices)
+          periodicity_i->theTargetVerticesEntries = theTargetVerticesEntries;
+
+        if (shapeType == "FACES")
+          _preCadFacesPeriodicityVector.push_back(*periodicity_i);
+        else
+          _preCadEdgesPeriodicityVector.push_back(*periodicity_i);
+
+        theSourceVerticesEntries.clear();
+        theTargetVerticesEntries.clear();
+        hasSourceVertices = false;
+        hasTargetVertices = false;
+        break; // __END_PERIODICITY_DESCRIPTION__
+      }
+
+      if (periodicitySeparator == "__BEGIN_ENTRY1__") {  // __BEGIN_ENTRY1__
+        isOK = (load >> shape1Entry);
+        isOK = (load >> periodicitySeparator); // __END_ENTRY1__
+        if (periodicitySeparator != "__END_ENTRY1__")
+          throw std::exception();
+        MESSAGE("shape1Entry: " <<shape1Entry);
+      }
+
+      if (periodicitySeparator == "__BEGIN_ENTRY2__") {  // __BEGIN_ENTRY2__
+        isOK = (load >> shape2Entry);
+        isOK = (load >> periodicitySeparator); // __END_ENTRY2__
+        if (periodicitySeparator != "__END_ENTRY2__")
+          throw std::exception();
+        MESSAGE("shape2Entry: " <<shape2Entry);
+      }
+
+      if (periodicitySeparator == "__BEGIN_SOURCE_VERTICES_LIST__") {  // __BEGIN_SOURCE_VERTICES_LIST__
+        hasSourceVertices = true;
+        while (isOK && (periodicitySeparator != "__END_SOURCE_VERTICES_LIST__")) {
+          isOK = (load >> periodicitySeparator);
+          if (periodicitySeparator != "__END_SOURCE_VERTICES_LIST__") {
+            theSourceVerticesEntries.push_back(periodicitySeparator);
+            MESSAGE("theSourceVerticesEntries: " <<periodicitySeparator);
+          }
+        }
+      }
+
+      if (periodicitySeparator == "__BEGIN_TARGET_VERTICES_LIST__") {  // __BEGIN_TARGET_VERTICES_LIST__
+        hasTargetVertices = true;
+        while (isOK && (periodicitySeparator != "__END_TARGET_VERTICES_LIST__")) {
+          isOK = (load >> periodicitySeparator);
+          if (periodicitySeparator != "__END_TARGET_VERTICES_LIST__") {
+            theTargetVerticesEntries.push_back(periodicitySeparator);
+            MESSAGE("theTargetVerticesEntries: " <<periodicitySeparator);
+          }
+        }
+      }
+    }
+  }
 }
 
 //=============================================================================

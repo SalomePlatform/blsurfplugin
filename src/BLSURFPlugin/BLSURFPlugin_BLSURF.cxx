@@ -716,6 +716,17 @@ BLSURFPlugin_BLSURF::TListOfIDs _getSubShapeIDsInMainShape(TopoDS_Shape theMainS
   return face_ids;
 }
 
+void BLSURFPlugin_BLSURF::addCoordsFromVertices(const std::vector<std::string> &theVerticesEntries, std::vector<double> &theVerticesCoords)
+{
+  for (std::vector<std::string>::const_iterator it = theVerticesEntries.begin(); it != theVerticesEntries.end(); it++)
+    {
+      BLSURFPlugin_Hypothesis::TEntry theVertexEntry = *it;
+      MESSAGE("Vertex entry " << theVertexEntry);
+      addCoordsFromVertex(theVertexEntry, theVerticesCoords);
+    }
+}
+
+
 void BLSURFPlugin_BLSURF::addCoordsFromVertex(BLSURFPlugin_Hypothesis::TEntry theVertexEntry, std::vector<double> &theVerticesCoords)
 {
   if (theVertexEntry!="")
@@ -749,12 +760,14 @@ void BLSURFPlugin_BLSURF::createPreCadFacesPeriodicity(TopoDS_Shape theGeomShape
   preCadFacesPeriodicityIDs.shape1IDs = theFace1_ids;
   preCadFacesPeriodicityIDs.shape2IDs = theFace2_ids;
 
-  for (size_t i = 0; i<preCadPeriodicity.theSourceVerticesEntries.size(); i++)
-    addCoordsFromVertex(preCadPeriodicity.theSourceVerticesEntries[i], preCadFacesPeriodicityIDs.theSourceVerticesCoords);
+  MESSAGE("preCadPeriodicity.theSourceVerticesEntries.size(): " << preCadPeriodicity.theSourceVerticesEntries.size());
+  MESSAGE("preCadPeriodicity.theTargetVerticesEntries.size(): " << preCadPeriodicity.theTargetVerticesEntries.size());
 
-  for (size_t i = 0; i<preCadPeriodicity.theTargetVerticesEntries.size(); i++)
-    addCoordsFromVertex(preCadPeriodicity.theTargetVerticesEntries[i], preCadFacesPeriodicityIDs.theTargetVerticesCoords);
+  addCoordsFromVertices(preCadPeriodicity.theSourceVerticesEntries, preCadFacesPeriodicityIDs.theSourceVerticesCoords);
+  addCoordsFromVertices(preCadPeriodicity.theTargetVerticesEntries, preCadFacesPeriodicityIDs.theTargetVerticesCoords);
 
+  MESSAGE("preCadFacesPeriodicityIDs.theSourceVerticesCoords.size(): " << preCadFacesPeriodicityIDs.theSourceVerticesCoords.size());
+  MESSAGE("preCadFacesPeriodicityIDs.theTargetVerticesCoords.size(): " << preCadFacesPeriodicityIDs.theTargetVerticesCoords.size());
 
   _preCadFacesIDsPeriodicityVector.push_back(preCadFacesPeriodicityIDs);
   MESSAGE("_preCadFacesIDsPeriodicityVector.size() = " << _preCadFacesIDsPeriodicityVector.size());
@@ -777,12 +790,8 @@ void BLSURFPlugin_BLSURF::createPreCadEdgesPeriodicity(TopoDS_Shape theGeomShape
   preCadEdgesPeriodicityIDs.shape1IDs = theEdge1_ids;
   preCadEdgesPeriodicityIDs.shape2IDs = theEdge2_ids;
 
-  for (size_t i = 0; i<preCadPeriodicity.theSourceVerticesEntries.size(); i++)
-    addCoordsFromVertex(preCadPeriodicity.theSourceVerticesEntries[i], preCadEdgesPeriodicityIDs.theSourceVerticesCoords);
-
-  for (size_t i = 0; i<preCadPeriodicity.theTargetVerticesEntries.size(); i++)
-    addCoordsFromVertex(preCadPeriodicity.theTargetVerticesEntries[i], preCadEdgesPeriodicityIDs.theTargetVerticesCoords);
-
+  addCoordsFromVertices(preCadPeriodicity.theSourceVerticesEntries, preCadEdgesPeriodicityIDs.theSourceVerticesCoords);
+  addCoordsFromVertices(preCadPeriodicity.theTargetVerticesEntries, preCadEdgesPeriodicityIDs.theTargetVerticesCoords);
 
   _preCadEdgesIDsPeriodicityVector.push_back(preCadEdgesPeriodicityIDs);
   MESSAGE("_preCadEdgesIDsPeriodicityVector.size() = " << _preCadEdgesIDsPeriodicityVector.size());

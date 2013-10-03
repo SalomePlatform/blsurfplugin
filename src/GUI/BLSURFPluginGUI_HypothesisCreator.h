@@ -85,8 +85,13 @@ class QAction;
 class QTreeWidgetItem;
 class QTableWidgetItem;
 class QObject;
+class QSplitter;
+class QGridLayout;
+class QVBoxLayout;
+class QSpacerItem;
 
 class SMESHGUI_SpinBox;
+class SMESH_NumberFilter;
 class LightApp_SelectionMgr;
 class BLSURFPluginGUI_StdWidget;
 class BLSURFPluginGUI_AdvWidget;
@@ -133,6 +138,10 @@ typedef std::map< TEntry, TEnfVertexList > TFaceEntryEnfVertexListMap;
 // Map Face Entry / InternalEnforcedVertices
 typedef std::map< TEntry, bool > TFaceEntryInternalVerticesMap;
 
+// PreCad Face and Edge periodicity
+typedef std::vector<std::string> TPreCadPeriodicity;
+typedef std::vector< TPreCadPeriodicity > TPreCadPeriodicityVector;
+
 typedef struct
 {
   int     myTopology, myVerbosity;
@@ -153,6 +162,7 @@ typedef struct
   /* TODO GROUPS
   TGroupNameEnfVertexListMap groupNameEnfVertexListMap;
   */
+  TPreCadPeriodicityVector preCadPeriodicityVector;
   QString myName;
 } BlsurfHypothesisData;
 
@@ -207,6 +217,13 @@ protected slots:
 //   void                deactivateSelection(QWidget*, QWidget*);
   void                clearEnforcedVertexWidgets();
   void                onInternalVerticesClicked(int);
+  // Periodicity tab
+  void                onPeriodicityByVerticesChecked(bool);
+  void                onPeriodicityRadioButtonChanged();
+  void                onAddPeriodicity();
+  void                onRemovePeriodicity();
+  void                onPeriodicityTreeClicked(QTreeWidgetItem*, int);
+  void                onPeriodicityContentModified();
 
 private:
   bool                readParamsFromHypo( BlsurfHypothesisData& ) const;
@@ -223,6 +240,8 @@ private:
   int                 findRowFromEntry(QString entry);
   CORBA::Object_var   entryToObject(QString entry);
   static LightApp_SelectionMgr* selectionMgr();
+  void                avoidSimultaneousSelection(ListOfWidgets &myCustomWidgets) const;
+  void                AddPreCadSequenceToVector(BlsurfHypothesisData& h_data, BLSURFPlugin::TPeriodicityList_var preCadFacePeriodicityVector, bool onFace) const;
 
 private:
   
@@ -298,6 +317,46 @@ private:
   QMap<QString, TopAbs_ShapeEnum> mySMPShapeTypeMap;
   GeomSelectionTools*             GeomToolSelected;
   LightApp_SelectionMgr*          aSel;
+
+  // Periodicity
+  QWidget* myPeriodicityGroup;
+  QSplitter* myPeriodicitySplitter;
+  QTreeWidget* myPeriodicityTreeWidget;
+  QWidget* myPeriodicityRightWidget;
+  QGridLayout* myPeriodicityRightGridLayout;
+  QGroupBox* myPeriodicityGroupBox1;
+  QGroupBox* myPeriodicityGroupBox2;
+  QGridLayout* aPeriodicityLayout1;
+  QGridLayout* myPeriodicityGroupBox1Layout;
+  QGridLayout* myPeriodicityGroupBox2Layout;
+  QRadioButton* myPeriodicityOnFaceRadioButton;
+  QRadioButton* myPeriodicityOnEdgeRadioButton;
+  QLabel* myPeriodicityMainSourceLabel;
+  QLabel* myPeriodicityMainTargetLabel;
+  QLabel* myPeriodicitySourceLabel;
+  QLabel* myPeriodicityTargetLabel;
+  StdMeshersGUI_ObjectReferenceParamWdg* myPeriodicitySourceFaceWdg;
+//  StdMeshersGUI_ObjectReferenceParamWdg* myPeriodicitySourceEdgeWdg;
+  GEOM::GEOM_Object_var myPeriodicityFace;
+  StdMeshersGUI_ObjectReferenceParamWdg* myPeriodicityTargetFaceWdg;
+//  StdMeshersGUI_ObjectReferenceParamWdg* myPeriodicityTargetEdgeWdg;
+  GEOM::GEOM_Object_var myPeriodicityEdge;
+  QLabel* myPeriodicityP1SourceLabel;
+  QLabel* myPeriodicityP2SourceLabel;
+  QLabel* myPeriodicityP3SourceLabel;
+  QLabel* myPeriodicityP1TargetLabel;
+  QLabel* myPeriodicityP2TargetLabel;
+  QLabel* myPeriodicityP3TargetLabel;
+  StdMeshersGUI_ObjectReferenceParamWdg* myPeriodicityP1SourceWdg;
+  StdMeshersGUI_ObjectReferenceParamWdg* myPeriodicityP2SourceWdg;
+  StdMeshersGUI_ObjectReferenceParamWdg* myPeriodicityP3SourceWdg;
+  StdMeshersGUI_ObjectReferenceParamWdg* myPeriodicityP1TargetWdg;
+  StdMeshersGUI_ObjectReferenceParamWdg* myPeriodicityP2TargetWdg;
+  StdMeshersGUI_ObjectReferenceParamWdg* myPeriodicityP3TargetWdg;
+  ListOfWidgets myPeriodicitySelectionWidgets;
+  QPushButton* myPeriodicityAddButton;
+  QPushButton* myPeriodicityRemoveButton;
+  QSpacerItem* myPeriodicityVerticalSpacer;
 
   BLSURFPlugin::string_array_var myOptions, myPreCADOptions;
 

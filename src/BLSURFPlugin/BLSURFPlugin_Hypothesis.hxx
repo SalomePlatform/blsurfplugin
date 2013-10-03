@@ -220,8 +220,8 @@ public:
   struct TPreCadPeriodicity {
     TEntry shape1Entry;
     TEntry shape2Entry;
-    std::vector<TEntry> theSourceVerticesEntries;
-    std::vector<TEntry> theTargetVerticesEntries;
+    std::vector<std::string> theSourceVerticesEntries;
+    std::vector<std::string> theTargetVerticesEntries;
   };
 
   // Edge periodicity
@@ -387,6 +387,8 @@ public:
   static TEnfVertexGroupNameMap     GetDefaultEnfVertexGroupNameMap() { return TEnfVertexGroupNameMap(); }
   */
 
+//  const TPreCadPeriodicityEntriesVector _GetPreCadFacesPeriodicityEntries() const { return _preCadFacesPeriodicityEntriesVector; }
+
   static TPreCadPeriodicityVector GetDefaultPreCadFacesPeriodicityVector() { return TPreCadPeriodicityVector(); }
   const TPreCadPeriodicityVector  _GetPreCadFacesPeriodicityVector() const { return _preCadFacesPeriodicityVector; }
   static TPreCadPeriodicityVector GetPreCadFacesPeriodicityVector(const BLSURFPlugin_Hypothesis* hyp);
@@ -406,6 +408,8 @@ public:
   static TVerticesPeriodicityVector GetDefaultVerticesPeriodicityVector() { return TVerticesPeriodicityVector(); }
   const TVerticesPeriodicityVector  _GetVerticesPeriodicityVector() const { return _verticesPeriodicityVector; }
   static TVerticesPeriodicityVector GetVerticesPeriodicityVector(const BLSURFPlugin_Hypothesis* hyp);
+
+  void ClearPreCadPeriodicityVectors();
 
   void AddPreCadFacesPeriodicity(TEntry theFace1Entry, TEntry theFace2Entry,
       std::vector<std::string> &theSourceVerticesEntries, std::vector<std::string> &theTargetVerticesEntries);
@@ -519,6 +523,30 @@ private:
   TFacesPeriodicityVector _facesPeriodicityVector;
   TEdgesPeriodicityVector _edgesPeriodicityVector;
   TVerticesPeriodicityVector _verticesPeriodicityVector;
+
+  // Called by SaveTo to store content of _preCadFacesPeriodicityVector and _preCadEdgesPeriodicityVector
+  void SavePreCADPeriodicity(std::ostream & save, const char* shapeType);
+
+  // Called by LoadFrom to fill _preCadFacesPeriodicityVector and _preCadEdgesPeriodicityVector
+  void LoadPreCADPeriodicity(std::istream & load, const char* shapeType);
+
+  // Called by LoadFrom to fill _facesPeriodicityVector
+  void LoadFacesPeriodicity(std::istream & load);
+
+  // Called by LoadFrom to fill _edgesPeriodicityVector
+  void LoadEdgesPeriodicity(std::istream & load);
+
+  // Called by LoadFrom to fill _verticesPeriodicityVector
+  void LoadVerticesPeriodicity(std::istream & load);
+
+  // Called by SaveTo to store content of _facesPeriodicityVector
+  void SaveFacesPeriodicity(std::ostream & save);
+
+  // Called by SaveTo to store content of _edgesPeriodicityVector
+  void SaveEdgesPeriodicity(std::ostream & save);
+
+  // Called by SaveTo to store content of _verticesPeriodicityVector
+  void SaveVerticesPeriodicity(std::ostream & save);
 
   std::string     _GMFFileName;
 //   bool            _GMFFileMode;

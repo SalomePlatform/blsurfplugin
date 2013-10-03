@@ -258,6 +258,13 @@ public:
   // PERIODICITY       //
   ///////////////////////
 
+  void ClearPreCadPeriodicityVectors();
+
+  BLSURFPlugin::TPeriodicityList* GetPreCadFacesPeriodicityVector();
+  BLSURFPlugin::TPeriodicityList* GetPreCadEdgesPeriodicityVector();
+
+  BLSURFPlugin::TPeriodicityList* PreCadVectorToSequence(const ::BLSURFPlugin_Hypothesis::TPreCadPeriodicityVector& preCadPeriodicityVector);
+
   void AddPreCadFacesPeriodicity(GEOM::GEOM_Object_ptr theFace1, GEOM::GEOM_Object_ptr theFace2)
       throw (SALOME::SALOME_Exception);
 
@@ -266,7 +273,7 @@ public:
       throw (SALOME::SALOME_Exception);
 
   void AddPreCadFacesPeriodicityEntry(const char* theFace1Entry, const char* theFace2Entry,
-      vector<string> &theSourceVerticesEntries, vector<string> &theTargetVerticesEntries)
+      const BLSURFPlugin::TEntryList& theSourceVerticesEntries, const BLSURFPlugin::TEntryList& theTargetVerticesEntries)
       throw (SALOME::SALOME_Exception);
 
   void AddPreCadEdgesPeriodicity(GEOM::GEOM_Object_ptr theEdge1, GEOM::GEOM_Object_ptr theEdge2)
@@ -277,7 +284,7 @@ public:
       throw (SALOME::SALOME_Exception);
 
   void AddPreCadEdgesPeriodicityEntry(const char* theEdge1Entry, const char* theEdge2Entry,
-      vector<string> &theSourceVerticesEntries, vector<string> &theTargetVerticesEntries)
+      const BLSURFPlugin::TEntryList& theSourceVerticesEntries, const BLSURFPlugin::TEntryList& theTargetVerticesEntries)
       throw (SALOME::SALOME_Exception);
 
   void AddFacePeriodicity(GEOM::GEOM_Object_ptr theFace1, GEOM::GEOM_Object_ptr theFace2)

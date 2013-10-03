@@ -357,6 +357,68 @@ A group can optionnaly be defined on those enforced vertices.
 
 \ref blsurf_top "Back to top"
 
+
+\section blsurf_periodicity Periodicity
+
+\subsection periodicity_introduction Introduction
+
+Periodicity is used to have the same discretization on two faces (in 3D) or two edges (in 2D).
+This is useful for instance for a Representative Volume Element so that the translated meshes share the same nodes on the common faces.
+
+In GUI, periodicity association uses PreCAD (optional BLSURF add-on). Be sure to have a PreCAD license to be able to use it. Otherwise, use \ref periodicity_tui_basic_api_usage "the basic API in TUI" or the \ref periodicity_tui_advanced_api_usage "the advanced API in TUI".
+
+\image html blsurf_periodicity_translation.png "Two periodic faces (translation)"
+
+\image html blsurf_periodicity_reflexion.png "Two periodic faces (reflexion)"
+
+\image html blsurf_periodicity_2D.png "Associations of edges in 2D (both red edges are associated with each other)"
+
+\subsection periodicity_gui_usage GUI usage
+
+\image html blsurf_parameters_periodicity.png
+
+The periodicity association can be defined:
+
+- on 2 groups of faces (in 3D)
+- on 2 groups of edges (in 2D)
+
+If the transformation is a translation, PreCAD makes the periodicity association with only this information.
+
+Otherwise, for instance a rotation, the user has to define 3 non-colinear vertices and their image by the transformation.
+
+\subsection periodicity_tui_precad_usage TUI PreCAD usage
+
+The two methods to define periodicity with PreCAD are:
+- BLSURFPluginBuilder.BLSURF_Algorithm.AddPreCadFacesPeriodicity 
+- BLSURFPluginBuilder.BLSURF_Algorithm.AddPreCadEdgesPeriodicity
+
+List of source and target vertices to define a transformation are optional.
+
+\sa Sample TUI Script of the definition of BLSurf periodicity \ref tui_blsurf_periodicity_preCAD "using preCAD".
+
+\subsection periodicity_tui_basic_api_usage TUI Basic API usage
+
+In the CADSurf basic API, only available in TUI, the periodicity must be defined face by face, edge by edge and vertex by vertex.
+
+The methods are:
+- BLSURFPluginBuilder.BLSURF_Algorithm.AddFacePeriodicity
+- BLSURFPluginBuilder.BLSURF_Algorithm.AddEdgePeriodicity
+- BLSURFPluginBuilder.BLSURF_Algorithm.AddEdgePeriodicityWithoutFaces
+- BLSURFPluginBuilder.BLSURF_Algorithm.AddVertexPeriodicity
+
+Sample TUI Script of the definition of BLSurf periodicity \ref tui_blsurf_periodicity_basic "using basic API (without preCAD)".
+
+\subsection periodicity_tui_advanced_api_usage TUI Advanced API usage
+
+To ease the periodicity description, the basic API methods can be called through two advanced methods, given two geom groups and a python geom transformation:
+
+- BLSURFPluginBuilder.BLSURF_Algorithm.AddAdvancedFacesPeriodicity (in 3D)
+- BLSURFPluginBuilder.BLSURF_Algorithm.AddAdvancedEdgesPeriodicity (in 2D)
+
+Sample TUI Script of the definition of BLSurf periodicity \ref tui_blsurf_periodicity_advanced "using advanced API (without preCAD)".
+
+\ref blsurf_top "Back to top"
+
 \section blsurf_limitations Limitations
 
 Currently BLSURF plugin has the following limitations.

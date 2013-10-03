@@ -77,33 +77,8 @@ def proj_y(shape1):
     shape2 = geompy.MakeTranslation(shape1, 0, 10., 0)
     return shape2
 
-def AddAdvancedEdgesPeriodicity(edges1, edges2, f_transf):
-    source_edges = geompy.SubShapeAll(edges1, geompy.ShapeType["EDGE"])
-    j = 0
-    k = 0
-    for source_edge in source_edges:
-        geompy.addToStudyInFather(edges1, source_edge, "source_edge_%i"%j)
-        p_source = geompy.MakeVertexOnCurve(source_edge, 0.5)
-        p_target = f_transf(p_source)
-        target_edge = geompy.GetEdgeNearPoint(part, p_target)
-        geompy.addToStudyInFather(edges2, target_edge, "target_edge_%i"%j)
-        algo2d.AddEdgePeriodicityWithoutFaces(source_edge, target_edge)
-        
-        j += 1
-        
-        source_vertices = geompy.SubShapeAll(source_edge, geompy.ShapeType["VERTEX"])
-        for source_vertex in source_vertices:
-            geompy.addToStudyInFather(edges1, source_vertex, "source_vertex_%i"%k)
-            target_vertex_tmp = geompy.MakeTranslation(source_vertex, 10, 0., 0)
-            target_vertex_tmp = f_transf(source_vertex)
-            target_vertex = geompy.GetSame(part, target_vertex_tmp)
-            geompy.addToStudyInFather(edges2, target_vertex, "target_vertex_%i"%k)
-            algo2d.AddVertexPeriodicity(source_edge, source_vertex, target_edge, target_vertex)
-            
-            k += 1
-    
-AddAdvancedEdgesPeriodicity(left, right, proj_x)
-AddAdvancedEdgesPeriodicity(bottom, top, proj_y)
+algo2d.AddAdvancedEdgesPeriodicity(left, right, proj_x)
+algo2d.AddAdvancedEdgesPeriodicity(bottom, top, proj_y)
 
 Mesh.Compute()
 

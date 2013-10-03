@@ -434,5 +434,117 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
         <source>ZERO_VALUE_OF</source>
         <translation>Invalid value (zero) of "%1"</translation>
     </message>
+    <message>
+        <source>BLSURF_PERIODICITY</source>
+        <translation>Periodicity</translation>
+    </message>
+    <message>
+        <source>BLSURF_PRECAD_PERIODICITY</source>
+        <translation>Periodicity association (using PreCAD)</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_ON_FACE</source>
+        <translation>On face</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_ON_EDGE</source>
+        <translation>On edge only</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_OBJ_SOURCE_COLUMN</source>
+        <translation>Source</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_OBJ_TARGET_COLUMN</source>
+        <translation>Target</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_P1_SOURCE_COLUMN</source>
+        <translation>P1</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_P2_SOURCE_COLUMN</source>
+        <translation>P2</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_P3_SOURCE_COLUMN</source>
+        <translation>P3</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_P1_TARGET_COLUMN</source>
+        <translation>P1</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_P2_TARGET_COLUMN</source>
+        <translation>P2</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_P3_TARGET_COLUMN</source>
+        <translation>P3</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_MAIN_SOURCE</source>
+        <translation>Source</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_MAIN_TARGET</source>
+        <translation>Target</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_SOURCE</source>
+        <translation>Source</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_TARGET</source>
+        <translation>Target</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_WITH_VERTICES</source>
+        <translation>Transformation vertices</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_P1_SOURCE</source>
+        <translation>P1</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_P2_SOURCE</source>
+        <translation>P2</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_P3_SOURCE</source>
+        <translation>P3</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_P1_TARGET</source>
+        <translation>P1</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_P2_TARGET</source>
+        <translation>P2</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_P3_TARGET</source>
+        <translation>P3</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_ADD</source>
+        <translation>Add</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_REMOVE</source>
+        <translation>Remove</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_WRONG_NUMBER_OF_VERTICES</source>
+        <translation>Wrong number of vertices provided</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_SELECT_FACE</source>
+        <translation>Face</translation>
+    </message>
+    <message>
+        <source>BLSURF_PERIODICITY_SELECT_EDGE</source>
+        <translation>Edge</translation>
+    </message>
 </context>
 </TS>

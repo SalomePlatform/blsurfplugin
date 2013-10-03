@@ -58,6 +58,7 @@
 #include <QTableWidget>
 #include <QTabWidget>
 #include <QVBoxLayout>
+#include <QSplitter>
 
 #include <QStandardItemModel>
 #include <QStandardItem>
@@ -86,6 +87,7 @@ enum {
   ADV_TAB,
   SMP_TAB,
   ENF_TAB,
+  PERIODICITY_TAB,
   SMP_NAME_COLUMN =0,
   SMP_SIZEMAP_COLUMN,
   SMP_ENTRY_COLUMN,
@@ -99,7 +101,36 @@ enum {
   ENF_VER_Z_COLUMN,
   ENF_VER_ENTRY_COLUMN,
   ENF_VER_GROUP_COLUMN,
-  ENF_VER_NB_COLUMNS
+  ENF_VER_NB_COLUMNS,
+// Periodicity
+  PERIODICITY_OBJ_SOURCE_COLUMN = 0,
+  PERIODICITY_OBJ_TARGET_COLUMN,
+  PERIODICITY_P1_SOURCE_COLUMN,
+  PERIODICITY_P2_SOURCE_COLUMN,
+  PERIODICITY_P3_SOURCE_COLUMN,
+  PERIODICITY_P1_TARGET_COLUMN,
+  PERIODICITY_P2_TARGET_COLUMN,
+  PERIODICITY_P3_TARGET_COLUMN,
+  PERIODICITY_SHAPE_TYPE,
+
+//  PERIODICITY_OBJ_SOURCE_COLUMN = 0,
+//  PERIODICITY_ENTRY_SOURCE_COLUMN,
+//  PERIODICITY_OBJ_TARGET_COLUMN,
+//  PERIODICITY_ENTRY_TARGET_COLUMN,
+//  PERIODICITY_P1_SOURCE_COLUMN,
+//  PERIODICITY_P1_ENTRY_SOURCE_COLUMN,
+//  PERIODICITY_P2_SOURCE_COLUMN,
+//  PERIODICITY_P2_ENTRY_SOURCE_COLUMN,
+//  PERIODICITY_P3_SOURCE_COLUMN,
+//  PERIODICITY_P3_ENTRY_SOURCE_COLUMN,
+//  PERIODICITY_P1_TARGET_COLUMN,
+//  PERIODICITY_P1_ENTRY_TARGET_COLUMN,
+//  PERIODICITY_P2_TARGET_COLUMN,
+//  PERIODICITY_P2_ENTRY_TARGET_COLUMN,
+//  PERIODICITY_P3_TARGET_COLUMN,
+//  PERIODICITY_P3_ENTRY_TARGET_COLUMN,
+
+  PERIODICITY_NB_COLUMN
 };
 
 enum {
@@ -455,6 +486,31 @@ GEOM::GEOM_Gen_var BLSURFPluginGUI_HypothesisCreator::getGeomEngine()
   return GeometryGUI::GetGeomGen();
 }
 
+void BLSURFPluginGUI_HypothesisCreator::avoidSimultaneousSelection(ListOfWidgets &selectionWidgets) const
+{
+  StdMeshersGUI_ObjectReferenceParamWdg* widgetToActivate = 0;
+  ListOfWidgets::const_iterator anIt = selectionWidgets.begin();
+  for ( ; anIt != selectionWidgets.end(); anIt++)
+    {
+      if ( *anIt && (*anIt)->inherits("StdMeshersGUI_ObjectReferenceParamWdg"))
+        {
+          StdMeshersGUI_ObjectReferenceParamWdg * w1 =
+              ( StdMeshersGUI_ObjectReferenceParamWdg* ) ( *anIt );
+          ListOfWidgets::const_iterator anIt2 = anIt;
+          for ( ++anIt2; anIt2 != selectionWidgets.end(); anIt2++)
+            if ( *anIt2 && (*anIt2)->inherits("StdMeshersGUI_ObjectReferenceParamWdg"))
+              {
+                StdMeshersGUI_ObjectReferenceParamWdg * w2 =
+                    ( StdMeshersGUI_ObjectReferenceParamWdg* ) ( *anIt2 );
+                w1->AvoidSimultaneousSelection( w2 );
+              }
+          if ( !widgetToActivate )
+            widgetToActivate = w1;
+        }
+    }
+  if ( widgetToActivate )
+    widgetToActivate->activateSelection();
+}
 
 bool BLSURFPluginGUI_HypothesisCreator::checkParams(QString& msg) const
 {
@@ -865,10 +921,198 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 //   anEnfLayout->setRowStretch(1, 1);
 
   // ---
+  // Periodicity parameters
+  myPeriodicityGroup = new QWidget();
+  aPeriodicityLayout1 = new QGridLayout(myPeriodicityGroup);
+
+  myPeriodicitySplitter = new QSplitter(myPeriodicityGroup);
+  myPeriodicitySplitter->setOrientation(Qt::Horizontal);
+  aPeriodicityLayout1->addWidget(myPeriodicitySplitter, 0, 0, 1, 1);
+
+  myPeriodicityTreeWidget = new QTreeWidget(myPeriodicitySplitter);
+
+  QStringList myPeriodicityTreeHeaders;
+  myPeriodicityTreeHeaders << tr("BLSURF_PERIODICITY_OBJ_SOURCE_COLUMN")
+                           << tr("BLSURF_PERIODICITY_OBJ_TARGET_COLUMN")
+                           << tr("BLSURF_PERIODICITY_P1_SOURCE_COLUMN")
+                           << tr("BLSURF_PERIODICITY_P2_SOURCE_COLUMN")
+                           << tr("BLSURF_PERIODICITY_P3_SOURCE_COLUMN")
+                           << tr("BLSURF_PERIODICITY_P1_TARGET_COLUMN")
+                           << tr("BLSURF_PERIODICITY_P2_TARGET_COLUMN")
+                           << tr("BLSURF_PERIODICITY_P3_TARGET_COLUMN")
+                           << tr("BLSURF_PERIODICITY_SHAPE_TYPE");
+  myPeriodicityTreeWidget->setHeaderLabels(myPeriodicityTreeHeaders);
+
+  // Hide the vertex name to make the widget more readable
+  myPeriodicityTreeWidget->hideColumn(PERIODICITY_P1_SOURCE_COLUMN);
+  myPeriodicityTreeWidget->hideColumn(PERIODICITY_P2_SOURCE_COLUMN);
+  myPeriodicityTreeWidget->hideColumn(PERIODICITY_P3_SOURCE_COLUMN);
+  myPeriodicityTreeWidget->hideColumn(PERIODICITY_P1_TARGET_COLUMN);
+  myPeriodicityTreeWidget->hideColumn(PERIODICITY_P2_TARGET_COLUMN);
+  myPeriodicityTreeWidget->hideColumn(PERIODICITY_P3_TARGET_COLUMN);
+  myPeriodicityTreeWidget->hideColumn(PERIODICITY_SHAPE_TYPE);
+
+
+  myPeriodicityTreeWidget->setColumnCount(PERIODICITY_NB_COLUMN);
+  myPeriodicityTreeWidget->setSortingEnabled(true);
+
+  myPeriodicityTreeWidget->setAlternatingRowColors(true);
+  myPeriodicityTreeWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
+  myPeriodicityTreeWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
+  
+  int periodicityVisibleColumns = 2;
+  for (size_t column = 0; column < periodicityVisibleColumns; ++column) {
+      myPeriodicityTreeWidget->header()->setResizeMode(column,QHeaderView::Interactive);
+      myPeriodicityTreeWidget->resizeColumnToContents(column);
+  }
+  myPeriodicityTreeWidget->header()->setStretchLastSection(true);
+
+  myPeriodicitySplitter->addWidget(myPeriodicityTreeWidget);
+
+  myPeriodicityRightWidget = new QWidget(myPeriodicitySplitter);
+
+  myPeriodicityRightGridLayout = new QGridLayout(myPeriodicityRightWidget);
+  myPeriodicityGroupBox1 = new QGroupBox(tr("BLSURF_PRECAD_PERIODICITY"), myPeriodicityRightWidget);
+  myPeriodicityGroupBox1Layout = new QGridLayout(myPeriodicityGroupBox1);
+
+  myPeriodicityRightGridLayout->addWidget(myPeriodicityGroupBox1, 0, 0, 1, 2);
+
+  myPeriodicityOnFaceRadioButton = new QRadioButton(tr("BLSURF_PERIODICITY_ON_FACE"), myPeriodicityGroupBox1);
+  myPeriodicityGroupBox1Layout->addWidget(myPeriodicityOnFaceRadioButton, 0, 0, 1, 2);
+
+  myPeriodicityOnFaceRadioButton->setChecked(true);
+
+  myPeriodicityOnEdgeRadioButton = new QRadioButton(tr("BLSURF_PERIODICITY_ON_EDGE"), myPeriodicityGroupBox1);
+  myPeriodicityGroupBox1Layout->addWidget(myPeriodicityOnEdgeRadioButton, 0, 2, 1, 2);
+
+
+  // FACE, EDGE AND VERTEX SELECTION
+  TColStd_MapOfInteger shapeTypesFace, shapeTypesEdge;
+  shapeTypesFace.Add( TopAbs_FACE );
+  shapeTypesFace.Add( TopAbs_EDGE );
+  shapeTypesFace.Add( TopAbs_COMPOUND );
+  shapeTypesEdge.Add( TopAbs_EDGE );
+  shapeTypesEdge.Add( TopAbs_COMPOUND );
+
+//  myPeriodicityEdgeFilter = new SMESH_NumberFilter("GEOM", TopAbs_EDGE, 0, shapeTypesEdge);
+
+  myPeriodicityMainSourceLabel = new QLabel(tr("BLSURF_PERIODICITY_MAIN_SOURCE"), myPeriodicityGroupBox1);
+  myPeriodicityGroupBox1Layout->addWidget(myPeriodicityMainSourceLabel, 1, 0, 1, 1);
+
+  SMESH_NumberFilter* myPeriodicitySourceFaceFilter = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 0, shapeTypesFace);
+  myPeriodicitySourceFaceWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicitySourceFaceFilter, 0, /*multiSel=*/false, /*stretch=*/false);
+//  myPeriodicitySourceFaceWdg->SetDefaultText(tr("BLSURF_PERIODICITY_SELECT_FACE"), "QLineEdit { color: grey }");
+  myPeriodicityGroupBox1Layout->addWidget(myPeriodicitySourceFaceWdg, 1, 1, 1, 1);
+
+//  myPeriodicitySourceEdgeWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityEdgeFilter, 0, /*multiSel=*/false, /*stretch=*/false);
+//  myPeriodicitySourceEdgeWdg->SetDefaultText(tr("BLSURF_PERIODICITY_SELECT_EDGE"), "QLineEdit { color: grey }");
+//  myPeriodicitySourceEdgeWdg->hide();
+//  myPeriodicityGroupBox1Layout->addWidget(myPeriodicitySourceEdgeWdg, 1, 1, 1, 1);
+
+  myPeriodicityMainTargetLabel = new QLabel(tr("BLSURF_PERIODICITY_MAIN_TARGET"), myPeriodicityGroupBox1);
+  myPeriodicityGroupBox1Layout->addWidget(myPeriodicityMainTargetLabel, 1, 2, 1, 1);
+
+  SMESH_NumberFilter* myPeriodicityTargetFaceFilter = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 0, shapeTypesFace);
+  myPeriodicityTargetFaceWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityTargetFaceFilter, 0, /*multiSel=*/false, /*stretch=*/false);
+//  myPeriodicityTargetFaceWdg->SetDefaultText(tr("BLSURF_PERIODICITY_SELECT_FACE"), "QLineEdit { color: grey }");
+  myPeriodicityGroupBox1Layout->addWidget(myPeriodicityTargetFaceWdg, 1, 3, 1, 1);
+
+//  myPeriodicityTargetEdgeWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityEdgeFilter, 0, /*multiSel=*/false, /*stretch=*/false);
+//  myPeriodicityTargetEdgeWdg->SetDefaultText(tr("BLSURF_PERIODICITY_SELECT_EDGE"), "QLineEdit { color: grey }");
+//  myPeriodicityTargetEdgeWdg->hide();
+//  myPeriodicityGroupBox1Layout->addWidget(myPeriodicityTargetEdgeWdg, 1, 3, 1, 1);
+
+  myPeriodicityGroupBox2 = new QGroupBox(tr("BLSURF_PERIODICITY_WITH_VERTICES"), myPeriodicityRightWidget);
+  myPeriodicityGroupBox2Layout = new QGridLayout(myPeriodicityGroupBox2);
+  myPeriodicityRightGridLayout->addWidget(myPeriodicityGroupBox2, 1, 0, 1, 2);
+
+  myPeriodicityGroupBox2->setCheckable(true);
+  myPeriodicityGroupBox2->setChecked(false);
+
+  myPeriodicitySourceLabel = new QLabel(tr("BLSURF_PERIODICITY_SOURCE"), myPeriodicityGroupBox2);
+  myPeriodicityGroupBox2Layout->addWidget(myPeriodicitySourceLabel, 0, 0, 1, 2);
+
+  myPeriodicityTargetLabel = new QLabel(tr("BLSURF_PERIODICITY_TARGET"), myPeriodicityGroupBox2);
+  myPeriodicityGroupBox2Layout->addWidget(myPeriodicityTargetLabel, 0, 2, 1, 2);
+
+  // P1
+  myPeriodicityP1SourceLabel = new QLabel(tr("BLSURF_PERIODICITY_P1_SOURCE"), myPeriodicityGroupBox2);
+  myPeriodicityGroupBox2Layout->addWidget(myPeriodicityP1SourceLabel, 1, 0, 1, 1);
+
+
+  SMESH_NumberFilter* myPeriodicityP1SourceFilter = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 1, TopAbs_VERTEX);
+  myPeriodicityP1SourceWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityP1SourceFilter, 0, /*multiSel=*/false, /*stretch=*/false);
+  myPeriodicityGroupBox2Layout->addWidget(myPeriodicityP1SourceWdg, 1, 1, 1, 1);
+
+  // P2
+  myPeriodicityP2SourceLabel = new QLabel(tr("BLSURF_PERIODICITY_P2_SOURCE"), myPeriodicityGroupBox2);
+  myPeriodicityGroupBox2Layout->addWidget(myPeriodicityP2SourceLabel, 2, 0, 1, 1);
+
+  SMESH_NumberFilter* myPeriodicityP2SourceFilter = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 1, TopAbs_VERTEX);
+  myPeriodicityP2SourceWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityP2SourceFilter, 0, /*multiSel=*/false, /*stretch=*/false);
+  myPeriodicityGroupBox2Layout->addWidget(myPeriodicityP2SourceWdg, 2, 1, 1, 1);
+
+  // P3
+  myPeriodicityP3SourceLabel = new QLabel(tr("BLSURF_PERIODICITY_P3_SOURCE"), myPeriodicityGroupBox2);
+  myPeriodicityGroupBox2Layout->addWidget(myPeriodicityP3SourceLabel, 3, 0, 1, 1);
+
+  SMESH_NumberFilter* myPeriodicityP3SourceFilter = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 1, TopAbs_VERTEX);
+  myPeriodicityP3SourceWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityP3SourceFilter, 0, /*multiSel=*/false, /*stretch=*/false);
+  myPeriodicityGroupBox2Layout->addWidget(myPeriodicityP3SourceWdg, 3, 1, 1, 1);
+
+  // P1
+  myPeriodicityP1TargetLabel = new QLabel(tr("BLSURF_PERIODICITY_P1_TARGET"), myPeriodicityGroupBox2);
+  myPeriodicityGroupBox2Layout->addWidget(myPeriodicityP1TargetLabel, 1, 2, 1, 1);
+
+  SMESH_NumberFilter* myPeriodicityP1TargetFilter = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 1, TopAbs_VERTEX);
+  myPeriodicityP1TargetWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityP1TargetFilter, 0, /*multiSel=*/false, /*stretch=*/false);
+  myPeriodicityGroupBox2Layout->addWidget(myPeriodicityP1TargetWdg, 1, 3, 1, 1);
+
+  // P2
+  myPeriodicityP2TargetLabel = new QLabel(tr("BLSURF_PERIODICITY_P2_TARGET"), myPeriodicityGroupBox2);
+  myPeriodicityGroupBox2Layout->addWidget(myPeriodicityP2TargetLabel, 2, 2, 1, 1);
+
+  SMESH_NumberFilter* myPeriodicityP2TargetFilter = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 1, TopAbs_VERTEX);
+  myPeriodicityP2TargetWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityP2TargetFilter, 0, /*multiSel=*/false, /*stretch=*/false);
+  myPeriodicityGroupBox2Layout->addWidget(myPeriodicityP2TargetWdg, 2, 3, 1, 1);
+
+  // P3
+  myPeriodicityP3TargetLabel = new QLabel(tr("BLSURF_PERIODICITY_P3_TARGET"), myPeriodicityGroupBox2);
+  myPeriodicityGroupBox2Layout->addWidget(myPeriodicityP3TargetLabel, 3, 2, 1, 1);
+
+  SMESH_NumberFilter* myPeriodicityP3TargetFilter = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 1, TopAbs_VERTEX);
+  myPeriodicityP3TargetWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityP3TargetFilter, 0, /*multiSel=*/false, /*stretch=*/false);
+  myPeriodicityGroupBox2Layout->addWidget(myPeriodicityP3TargetWdg, 3, 3, 1, 1);
+
+  myPeriodicityVerticalSpacer = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
+  myPeriodicityGroupBox2Layout->addItem(myPeriodicityVerticalSpacer, 7, 1, 1, 1);
+
+
+  myPeriodicityAddButton = new QPushButton(tr("BLSURF_PERIODICITY_ADD"),myPeriodicityRightWidget);
+  myPeriodicityRightGridLayout->addWidget(myPeriodicityAddButton, 2, 0, 1, 1);
+
+  myPeriodicityRemoveButton = new QPushButton(tr("BLSURF_PERIODICITY_REMOVE"),myPeriodicityRightWidget);
+  myPeriodicityRightGridLayout->addWidget(myPeriodicityRemoveButton, 2, 1, 1, 1);
+
+  myPeriodicitySplitter->addWidget(myPeriodicityRightWidget);
+
+  myPeriodicitySelectionWidgets.clear();
+  myPeriodicitySelectionWidgets.append(myPeriodicitySourceFaceWdg);
+  myPeriodicitySelectionWidgets.append(myPeriodicityTargetFaceWdg);
+  myPeriodicitySelectionWidgets.append(myPeriodicityP1SourceWdg);
+  myPeriodicitySelectionWidgets.append(myPeriodicityP2SourceWdg);
+  myPeriodicitySelectionWidgets.append(myPeriodicityP3SourceWdg);
+  myPeriodicitySelectionWidgets.append(myPeriodicityP1TargetWdg);
+  myPeriodicitySelectionWidgets.append(myPeriodicityP2TargetWdg);
+  myPeriodicitySelectionWidgets.append(myPeriodicityP3TargetWdg);
+  avoidSimultaneousSelection(myPeriodicitySelectionWidgets);
+
+  // ---
   myTabWidget->insertTab( STD_TAB, myStdGroup, tr( "SMESH_ARGUMENTS" ) );
   myTabWidget->insertTab( ADV_TAB, myAdvGroup, tr( "BLSURF_ADV_ARGS" ) );
   myTabWidget->insertTab( SMP_TAB, mySmpGroup, tr( "LOCAL_SIZE" ) );
   myTabWidget->insertTab( ENF_TAB, myEnfGroup, tr( "BLSURF_ENF_VER" ) );
+  myTabWidget->insertTab( PERIODICITY_TAB, myPeriodicityGroup, tr( "BLSURF_PERIODICITY" ) );
 
   myTabWidget->setCurrentIndex( STD_TAB );
 
@@ -902,6 +1146,20 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 //   connect( myEnfVertexWdg,     SIGNAL( selectionActivated()),         this,         SLOT( onVertexSelectionActivated() ) );
 //   connect( myEnfFaceWdg,       SIGNAL( selectionActivated()),         this,         SLOT( onFaceSelectionActivated() ) );
 
+  // Periodicity
+  connect( myPeriodicityAddButton,     SIGNAL( clicked()),                    this,   SLOT( onAddPeriodicity() ) );
+  connect( myPeriodicityRemoveButton,  SIGNAL( clicked()),                    this,   SLOT( onRemovePeriodicity() ) );
+  connect( myPeriodicityTreeWidget,    SIGNAL( itemClicked(QTreeWidgetItem*, int)), this, SLOT( onPeriodicityTreeClicked(QTreeWidgetItem *, int) ) );
+  connect( myPeriodicityGroupBox2,     SIGNAL(toggled(bool)),                 this,   SLOT(onPeriodicityByVerticesChecked(bool)));
+
+  ListOfWidgets::const_iterator anIt = myPeriodicitySelectionWidgets.begin();
+  for (; anIt != myPeriodicitySelectionWidgets.end(); anIt++)
+    {
+      StdMeshersGUI_ObjectReferenceParamWdg * w1 = ( StdMeshersGUI_ObjectReferenceParamWdg* ) ( *anIt );
+      connect( w1,     SIGNAL(contentModified ()),                 this,   SLOT(onPeriodicityContentModified()));
+
+    }
+//  connect( myPeriodicitySourceFaceWdg,     SIGNAL(contentModified()),    this,   SLOT(onPeriodicityContentModified()));
   return fr;
 }
 
@@ -1290,6 +1548,204 @@ void BLSURFPluginGUI_HypothesisCreator::onInternalVerticesClicked(int state)
   myInternalEnforcedVerticesAllFacesGroup->setEnabled(state == Qt::Checked);
 }
 
+/** BLSURFPluginGUI_HypothesisCreator::onAddPeriodicity()
+This method is called when a item is added into the periodicity table widget
+*/
+void BLSURFPluginGUI_HypothesisCreator::onAddPeriodicity() {
+//   MESSAGE("BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices");
+
+  BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
+
+  that->getGeomSelectionTool()->selectionMgr()->clearFilters();
+  ListOfWidgets::const_iterator anIt = myPeriodicitySelectionWidgets.begin();
+  for ( ; anIt != myPeriodicitySelectionWidgets.end(); anIt++)
+    {
+          StdMeshersGUI_ObjectReferenceParamWdg * w1 = ( StdMeshersGUI_ObjectReferenceParamWdg* ) ( *anIt );
+          w1->deactivateSelection();
+    }
+
+
+  // Source-Target selection
+  int selSource = myPeriodicitySourceFaceWdg->NbObjects();
+  int selTarget = myPeriodicityTargetFaceWdg->NbObjects();
+
+  if (selSource == 0 or selTarget == 0)
+    return;
+
+  // Vertices selection
+  if (myPeriodicityGroupBox2->isChecked())
+    {
+      int P1Ssel = myPeriodicityP1SourceWdg->NbObjects();
+      int P2Ssel = myPeriodicityP2SourceWdg->NbObjects();
+      int P3Ssel = myPeriodicityP3SourceWdg->NbObjects();
+      int P1Tsel = myPeriodicityP1TargetWdg->NbObjects();
+      int P2Tsel = myPeriodicityP2TargetWdg->NbObjects();
+      int P3Tsel = myPeriodicityP3TargetWdg->NbObjects();
+
+      if (P1Ssel!=1 or P2Ssel!=1 or P3Ssel!=1 or P1Tsel!=1 or P3Tsel!=1 or P3Tsel!=1)
+        {
+          QString msg = tr("BLSURF_PERIODICITY_WRONG_NUMBER_OF_VERTICES");
+          SUIT_MessageBox::critical( dlg(),"Error" , msg );
+          return;
+        }
+    }
+
+  // Add Source-Target in table
+  string shapeEntry, sourceEntry, targetEntry;
+  string shapeName, sourceName, targetName;
+  GEOM::GEOM_Object_var shape;
+
+  QTreeWidgetItem* item = new QTreeWidgetItem();
+  myPeriodicityTreeWidget->addTopLevelItem(item);
+
+  item->setFlags( Qt::ItemIsSelectable   |Qt::ItemIsEnabled );
+
+
+  size_t k=0;
+  for (anIt = myPeriodicitySelectionWidgets.begin(); anIt != myPeriodicitySelectionWidgets.end(); anIt++, k++)
+    {
+      StdMeshersGUI_ObjectReferenceParamWdg * w1 = ( StdMeshersGUI_ObjectReferenceParamWdg* ) ( *anIt );
+      shape = w1->GetObject< GEOM::GEOM_Object >(0);
+      shapeName = shape->GetName();
+      shapeEntry = shape->GetStudyEntry();
+      item->setData(k, Qt::EditRole, shapeName.c_str() );
+      item->setData(k, Qt::UserRole, shapeEntry.c_str() );
+      if (not myPeriodicityGroupBox2->isChecked() and k==1)
+        break;
+    }
+
+  // Add shape type in tree
+  string onFace = (myPeriodicityOnFaceRadioButton->isChecked()) ? "1" : "0";
+  item->setData(PERIODICITY_SHAPE_TYPE, Qt::UserRole, onFace.c_str());
+
+  // Blank input fields
+  for (anIt = myPeriodicitySelectionWidgets.begin(); anIt != myPeriodicitySelectionWidgets.end(); anIt++)
+    {
+      StdMeshersGUI_ObjectReferenceParamWdg * w1 = ( StdMeshersGUI_ObjectReferenceParamWdg* ) ( *anIt );
+      w1->SetObject(GEOM::GEOM_Object::_nil());
+    }
+
+//  for (int column = 0; column < myPeriodicityTreeWidget->columnCount(); ++column)
+//    myPeriodicityTreeWidget->resizeColumnToContents(column);
+
+}
+
+/** BLSURFPluginGUI_HypothesisCreator::onRemovePeriodicity()
+This method is called when a item is removed from the periodicity tree widget
+*/
+void BLSURFPluginGUI_HypothesisCreator::onRemovePeriodicity() {
+//   MESSAGE("BLSURFPluginGUI_HypothesisCreator::onRemoveEnforcedVertex");
+  QList<QTreeWidgetItem *> selectedItems = myPeriodicityTreeWidget->selectedItems();
+  QTreeWidgetItem* item;
+
+  foreach(item,selectedItems) {
+     MESSAGE("Remove " << item->text(0).toStdString());
+    delete item;
+  }
+
+  myEnforcedTreeWidget->selectionModel()->clearSelection();
+}
+
+/** BLSURFPluginGUI_HypothesisCreator::onPeriodicityByVerticesChecked()
+This method enable clears the field for periodicity by vertices
+*/
+void BLSURFPluginGUI_HypothesisCreator::onPeriodicityByVerticesChecked(bool checked)
+{
+  if (not checked)
+    {
+      for (size_t k=2; k<myPeriodicitySelectionWidgets.size(); k++)
+        {
+          StdMeshersGUI_ObjectReferenceParamWdg * w1 = ( StdMeshersGUI_ObjectReferenceParamWdg* ) ( myPeriodicitySelectionWidgets[k] );
+          w1->deactivateSelection();
+          w1->SetObject(CORBA::Object::_nil());
+        }
+    }
+}
+
+/** BLSURFPluginGUI_HypothesisCreator::onPeriodicityRadioButtonChanged()
+This method enable the proper shape selection widget to Face or Edge shapes
+*/
+//void BLSURFPluginGUI_HypothesisCreator::onPeriodicityRadioButtonChanged()
+//{
+//  if (myPeriodicityOnFaceRadioButton->isChecked())
+//    {
+//      MESSAGE("Show Face");
+//      myPeriodicitySourceEdgeWdg->hide();
+//      myPeriodicityTargetEdgeWdg->hide();
+//      myPeriodicitySourceFaceWdg->show();
+//      myPeriodicityTargetFaceWdg->show();
+//    }
+//  else
+//    {
+//      MESSAGE("Show Edge");
+//      myPeriodicitySourceFaceWdg->hide();
+//      myPeriodicityTargetFaceWdg->hide();
+//      myPeriodicitySourceEdgeWdg->show();
+//      myPeriodicityTargetEdgeWdg->show();
+//    }
+//}
+
+void BLSURFPluginGUI_HypothesisCreator::onPeriodicityTreeClicked(QTreeWidgetItem* item, int row)
+{
+  QString shapeName, shapeEntry;
+  CORBA::Object_var shape;
+  size_t k=0;
+  ListOfWidgets::const_iterator anIt = myPeriodicitySelectionWidgets.begin();
+  for (; anIt != myPeriodicitySelectionWidgets.end(); anIt++, k++)
+    {
+      StdMeshersGUI_ObjectReferenceParamWdg * w1 = ( StdMeshersGUI_ObjectReferenceParamWdg* ) ( *anIt );
+
+      shapeName = item->data(k, Qt::EditRole).toString();
+      shapeEntry = item->data(k, Qt::UserRole).toString();
+      if (not shapeEntry.isEmpty())
+        {
+          shape = entryToObject(shapeEntry);
+          w1->SetObject(shape);
+          w1->deactivateSelection();
+          if (k==2)
+            myPeriodicityGroupBox2->setChecked(1);
+        }
+      else if(k==2)
+        myPeriodicityGroupBox2->setChecked(0);
+    }
+
+  if (item->data(PERIODICITY_SHAPE_TYPE, Qt::UserRole) == "1")
+    myPeriodicityOnFaceRadioButton->setChecked(true);
+  else
+    myPeriodicityOnEdgeRadioButton->setChecked(true);
+
+
+}
+
+/** BLSURFPluginGUI_HypothesisCreator::onPeriodicityContentModified()
+This method gives the focus to the next selection widget when a content is modified in a selection widget.
+*/
+void BLSURFPluginGUI_HypothesisCreator::onPeriodicityContentModified()
+{
+  BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
+
+  ListOfWidgets::const_iterator anIt = myPeriodicitySelectionWidgets.begin();
+  size_t k=0;
+  // find wich selection widget is activated
+  for (; anIt != myPeriodicitySelectionWidgets.end(); anIt++, k++)
+    {
+      StdMeshersGUI_ObjectReferenceParamWdg * w1 = ( StdMeshersGUI_ObjectReferenceParamWdg* ) ( *anIt );
+      if (w1->IsSelectionActivated() and k<(myPeriodicitySelectionWidgets.size()-1))
+        {
+          // don't activate vertex selection if the group box is not checked
+          if (k==1 and not myPeriodicityGroupBox2->isChecked())
+            break;
+          // clear the selection, to avoid to put the same object in the other widget
+          that->getGeomSelectionTool()->selectionMgr()->clearSelected();
+          // activate the next widget
+          StdMeshersGUI_ObjectReferenceParamWdg * w2 = ( StdMeshersGUI_ObjectReferenceParamWdg* ) ( myPeriodicitySelectionWidgets[k+1] );
+          w2->activateSelection();
+          break;
+        }
+    }
+}
+
+
 /** BLSURFPluginGUI_HypothesisCreator::retrieveParams()
 This method updates the GUI widgets with the hypothesis data
 */
@@ -1488,6 +1944,26 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
   myInternalEnforcedVerticesAllFacesGroup->setText(QString(data.myInternalEnforcedVerticesAllFacesGroup.c_str()));
   myInternalEnforcedVerticesAllFacesGroup->setEnabled(data.myInternalEnforcedVerticesAllFaces);
 
+  // Periodicity
+  MESSAGE("retrieveParams(): periodicity ");
+
+
+  // Add an item in the tree widget for each association
+  for (size_t i=0 ; i<data.preCadPeriodicityVector.size() ; i++)
+    {
+      QTreeWidgetItem* item = new QTreeWidgetItem();
+      myPeriodicityTreeWidget->addTopLevelItem(item);
+      item->setFlags( Qt::ItemIsSelectable   |Qt::ItemIsEnabled );
+      TPreCadPeriodicity periodicity_i = data.preCadPeriodicityVector[i];
+      for (size_t k=0; k<periodicity_i.size(); k++)
+        {
+          string shapeEntry = periodicity_i[k];
+          string shapeName = myGeomToolSelected->getNameFromEntry(shapeEntry);
+          item->setData(k, Qt::EditRole, shapeName.c_str() );
+          item->setData(k, Qt::UserRole, shapeEntry.c_str() );
+        }
+    }
+
   // update widgets
   that->myStdWidget->onPhysicalMeshChanged();
   that->myStdWidget->onGeometricMeshChanged();
@@ -1498,6 +1974,7 @@ This method updates the hypothesis data with the GUI widgets content.
 */
 QString BLSURFPluginGUI_HypothesisCreator::storeParams() const
 {
+  MESSAGE("BLSURFPluginGUI_HypothesisCreator::storeParams");
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
 
   BlsurfHypothesisData data;
@@ -1625,7 +2102,7 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   }
   
   // attractor new version
-  MESSAGE("retrieveParams, Attractors")
+  MESSAGE("readParamsFromHypo, Attractors")
   BLSURFPlugin::TAttParamsMap_var allMyAttractorParams = h->GetAttractorParams();
   for ( int i = 0;i<allMyAttractorParams->length(); ++i ) {
     BLSURFPlugin::TAttractorParams myAttractorParams =  allMyAttractorParams[i];
@@ -1688,7 +2165,53 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   h_data.myInternalEnforcedVerticesAllFaces = h->GetInternalEnforcedVertexAllFaces();
   h_data.myInternalEnforcedVerticesAllFacesGroup = h->GetInternalEnforcedVertexAllFacesGroup();
 
+  // Periodicity
+  MESSAGE("readParamsFromHypo, Periodicity")
+
+  h_data.preCadPeriodicityVector.clear();
+
+  BLSURFPlugin::TPeriodicityList_var preCadFacePeriodicityVector = h->GetPreCadFacesPeriodicityVector();
+  AddPreCadSequenceToVector(h_data, preCadFacePeriodicityVector, true);
+
+  BLSURFPlugin::TPeriodicityList_var preCadEdgePeriodicityVector = h->GetPreCadEdgesPeriodicityVector();
+  AddPreCadSequenceToVector(h_data, preCadEdgePeriodicityVector, false);
   return true;
+}
+
+void BLSURFPluginGUI_HypothesisCreator::AddPreCadSequenceToVector(BlsurfHypothesisData& h_data,
+    BLSURFPlugin::TPeriodicityList_var preCadFacePeriodicityVector, bool onFace) const
+{
+
+  for (size_t i=0; i<preCadFacePeriodicityVector->length(); i++ )
+    {
+      TPreCadPeriodicity periodicity_i(PERIODICITY_NB_COLUMN);
+      periodicity_i[PERIODICITY_OBJ_SOURCE_COLUMN] = preCadFacePeriodicityVector[i].shape1Entry.in();
+      periodicity_i[PERIODICITY_OBJ_TARGET_COLUMN] = preCadFacePeriodicityVector[i].shape2Entry.in();
+
+      BLSURFPlugin::TEntryList sourceVertices = preCadFacePeriodicityVector[i].theSourceVerticesEntries;
+      BLSURFPlugin::TEntryList targetVertices = preCadFacePeriodicityVector[i].theTargetVerticesEntries;
+
+      if (sourceVertices.length()!=0)
+        {
+          periodicity_i[PERIODICITY_P1_SOURCE_COLUMN] = sourceVertices[0].in();
+          periodicity_i[PERIODICITY_P2_SOURCE_COLUMN] = sourceVertices[1].in();
+          periodicity_i[PERIODICITY_P3_SOURCE_COLUMN] = sourceVertices[2].in();
+        }
+
+      if (targetVertices.length()!=0)
+        {
+          periodicity_i[PERIODICITY_P1_TARGET_COLUMN] = targetVertices[0].in();
+          periodicity_i[PERIODICITY_P2_TARGET_COLUMN] = targetVertices[1].in();
+          periodicity_i[PERIODICITY_P3_TARGET_COLUMN] = targetVertices[2].in();
+        }
+
+      if (onFace)
+        periodicity_i[PERIODICITY_SHAPE_TYPE] = "1";
+      else
+        periodicity_i[PERIODICITY_SHAPE_TYPE] = "0";
+
+      h_data.preCadPeriodicityVector.push_back(periodicity_i);
+    }
 }
 
 /** BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo(h_data)
@@ -1870,6 +2393,47 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
     if ( h->GetInternalEnforcedVertexAllFacesGroup() != h_data.myInternalEnforcedVerticesAllFacesGroup )
       h->SetInternalEnforcedVertexAllFacesGroup( h_data.myInternalEnforcedVerticesAllFacesGroup.c_str() );
 
+    // Periodicity
+    if ( h->GetPreCadFacesPeriodicityVector()->length() > 0 or h->GetPreCadEdgesPeriodicityVector()->length() > 0 )
+          h->ClearPreCadPeriodicityVectors();
+
+    MESSAGE("h_data.preCadPeriodicityVector.size(): " << h_data.preCadPeriodicityVector.size());
+    TPreCadPeriodicityVector::const_iterator pIt = h_data.preCadPeriodicityVector.begin();
+    for ( ; pIt != h_data.preCadPeriodicityVector.end() ; ++pIt)
+      {
+        TPreCadPeriodicity periodicity_i = *pIt;
+        TEntry source = periodicity_i[PERIODICITY_OBJ_SOURCE_COLUMN];
+        TEntry target = periodicity_i[PERIODICITY_OBJ_TARGET_COLUMN];
+        TEntry p1Source = periodicity_i[PERIODICITY_P1_SOURCE_COLUMN];
+        TEntry p2Source = periodicity_i[PERIODICITY_P2_SOURCE_COLUMN];
+        TEntry p3Source = periodicity_i[PERIODICITY_P3_SOURCE_COLUMN];
+        TEntry p1Target = periodicity_i[PERIODICITY_P1_TARGET_COLUMN];
+        TEntry p2Target = periodicity_i[PERIODICITY_P2_TARGET_COLUMN];
+        TEntry p3Target = periodicity_i[PERIODICITY_P3_TARGET_COLUMN];
+        bool onFace = (periodicity_i[PERIODICITY_SHAPE_TYPE]=="1") ? true : false;
+
+        BLSURFPlugin::TEntryList_var sourceVertices = new BLSURFPlugin::TEntryList();
+        sourceVertices->length(3);
+        sourceVertices[0]=CORBA::string_dup(p1Source.c_str());
+        sourceVertices[1]=CORBA::string_dup(p2Source.c_str());
+        sourceVertices[2]=CORBA::string_dup(p3Source.c_str());
+
+
+        BLSURFPlugin::TEntryList_var targetVertices = new BLSURFPlugin::TEntryList();
+        targetVertices->length(3);
+        targetVertices[0]=CORBA::string_dup(p1Target.c_str());
+        targetVertices[1]=CORBA::string_dup(p2Target.c_str());
+        targetVertices[2]=CORBA::string_dup(p3Target.c_str());
+
+        if (onFace)
+          h->AddPreCadFacesPeriodicityEntry(source.c_str(), target.c_str(), sourceVertices, targetVertices);
+        else
+          h->AddPreCadEdgesPeriodicityEntry(source.c_str(), target.c_str(), sourceVertices, targetVertices);
+      }
+
+    MESSAGE("BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo end periodicity");
+
+
   } // try
   catch(const std::exception& ex) {
     std::cout << "Exception: " << ex.what() << std::endl;
@@ -1881,6 +2445,7 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
 // //     SalomeApp_Tools::QtCatchCorbaException(ex);
 // //     ok = false;
 //   }
+  MESSAGE("BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo end");
   return ok;
 }
 
@@ -2041,6 +2606,26 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
 
   h_data.myInternalEnforcedVerticesAllFaces      = myInternalEnforcedVerticesAllFaces->isChecked();
   h_data.myInternalEnforcedVerticesAllFacesGroup = myInternalEnforcedVerticesAllFacesGroup->text().toStdString();
+
+  // Periodicity
+  h_data.preCadPeriodicityVector.clear();
+  // For each tree item, store each value. Shapes are stored as entries.
+  int nbPeriodicityDescriptions = myPeriodicityTreeWidget->topLevelItemCount();
+  for (size_t i=0 ; i<nbPeriodicityDescriptions ; i++) {
+    QTreeWidgetItem* item = myPeriodicityTreeWidget->topLevelItem(i);
+    TPreCadPeriodicity periodicity_i;
+    if (item) {
+        for (size_t k=0; k<myPeriodicityTreeWidget->columnCount(); ++k)
+          {
+            MESSAGE(k);
+            std::string entry = item->data(k, Qt::UserRole).toString().toStdString();
+            MESSAGE(entry);
+            periodicity_i.push_back(entry);
+          }
+        h_data.preCadPeriodicityVector.push_back(periodicity_i);
+    }
+    guiHyp += "PERIODICITY = yes; ";
+  }
 
   MESSAGE("guiHyp : " << guiHyp.toLatin1().data());
   return guiHyp;

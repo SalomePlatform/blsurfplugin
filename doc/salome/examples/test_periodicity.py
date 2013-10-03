@@ -114,9 +114,44 @@ def proj_z(shape1):
     shape2 = geompy.MakeTranslation(shape1, 0, 0, 100.)
     return shape2
 
-algo2d.AddAdvancedFacesPeriodicity(back, front, proj_x)
-algo2d.AddAdvancedFacesPeriodicity(left, right, proj_y)
-algo2d.AddAdvancedFacesPeriodicity(bottom, top, proj_z)
+def AddAdvancedFacesPeriodicity(faces1, faces2, f_transf):
+    # Periodicity left/right
+    source_faces = geompy.SubShapeAll(faces1, geompy.ShapeType["FACE"])
+    i = 0
+    j = 0
+    k = 0
+    for source_face in source_faces:
+        geompy.addToStudyInFather(faces1, source_face, "source_face_%i"%i)
+        p_source = geompy.MakeVertexInsideFace(source_face)
+        p_target = f_transf(p_source)
+        target_face = geompy.GetFaceNearPoint(faces2, p_target)
+        geompy.addToStudyInFather(faces2, target_face, "target_face_%i"%i)
+        algo2d.AddFacePeriodicity(source_face, target_face)
+        i += 1
+        
+        source_edges = geompy.SubShapeAll(source_face, geompy.ShapeType["EDGE"])
+        for source_edge in source_edges:
+            geompy.addToStudyInFather(faces1, source_edge, "source_edge_%i"%(j))
+            p_source = geompy.MakeVertexOnCurve(source_edge, 0.5)
+            p_target = f_transf(p_source)
+            target_edge = geompy.GetEdgeNearPoint(faces2, p_target)
+            geompy.addToStudyInFather(faces2, target_edge, "target_edge_%i"%(j))
+            algo2d.AddEdgePeriodicity(source_face, source_edge, target_face, target_edge)
+            j += 1
+            
+            source_vertices = geompy.SubShapeAll(source_edge, geompy.ShapeType["VERTEX"])
+            for source_vertex in source_vertices:
+                geompy.addToStudyInFather(faces1, source_vertex, "source_vertex_%i"%(k))
+                target_vertex_tmp = f_transf(source_vertex)
+                target_vertex = geompy.GetSame(faces2, target_vertex_tmp)
+                geompy.addToStudyInFather(faces2, target_vertex, "target_vertex_%i"%(k))
+                algo2d.AddVertexPeriodicity(source_edge, source_vertex, target_edge, target_vertex)
+                k += 1
+    pass
+
+AddAdvancedFacesPeriodicity(back, front, proj_x)
+AddAdvancedFacesPeriodicity(left, right, proj_y)
+AddAdvancedFacesPeriodicity(bottom, top, proj_z)
 
 gr_left = Mesh.Group(left)
 gr_right = Mesh.Group(right)

@@ -2668,23 +2668,101 @@ std::string BLSURFPlugin_Hypothesis_i::FormatVerticesEntries(vector<string> &the
   if (!theSourceVerticesEntries.empty())
     {
       listEntriesTxt << ", [" ;
-      for (size_t i = 0; i<theSourceVerticesEntries.size(); i++)
+      size_t i =0;
+      for (std::vector<std::string>::const_iterator it = theSourceVerticesEntries.begin(); it != theSourceVerticesEntries.end(); it++, i++)
         {
           if (i>0)
             listEntriesTxt << ", ";
-          listEntriesTxt << theSourceVerticesEntries[i];
+          listEntriesTxt << *it;
         }
 
       listEntriesTxt << "], [" ;
-      for (size_t i = 0; i<theTargetVerticesEntries.size(); i++)
+      i =0;
+      for (std::vector<std::string>::const_iterator it = theTargetVerticesEntries.begin(); it != theTargetVerticesEntries.end(); it++, i++)
         {
           if (i>0)
             listEntriesTxt << ", ";
-          listEntriesTxt << theTargetVerticesEntries[i];
+          listEntriesTxt << *it;
         }
       listEntriesTxt << "]" ;
     }
   return listEntriesTxt.str();
+}
+
+/**
+ * Erase all PreCad periodicity associations
+ */
+void BLSURFPlugin_Hypothesis_i::ClearPreCadPeriodicityVectors() {
+  ASSERT(myBaseImpl);
+  this->GetImpl()->ClearPreCadPeriodicityVectors();
+  SMESH::TPythonDump() << _this() << ".ClearPreCadPeriodicityVectors()";
+}
+
+BLSURFPlugin::TPeriodicityList* BLSURFPlugin_Hypothesis_i::GetPreCadFacesPeriodicityVector()
+{
+  MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCadFacesPeriodicityVector");
+  const ::BLSURFPlugin_Hypothesis::TPreCadPeriodicityVector preCadPeriodicityVector =
+      this->GetImpl()->_GetPreCadFacesPeriodicityVector();
+
+  BLSURFPlugin::TPeriodicityList_var periodicityList = PreCadVectorToSequence(preCadPeriodicityVector);
+
+  MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCadFacesPeriodicityVector end");
+  return periodicityList._retn();
+}
+
+BLSURFPlugin::TPeriodicityList* BLSURFPlugin_Hypothesis_i::GetPreCadEdgesPeriodicityVector()
+{
+  MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCadEdgesPeriodicityVector");
+  const ::BLSURFPlugin_Hypothesis::TPreCadPeriodicityVector preCadPeriodicityVector =
+      this->GetImpl()->_GetPreCadEdgesPeriodicityVector();
+
+  BLSURFPlugin::TPeriodicityList_var periodicityList = PreCadVectorToSequence(preCadPeriodicityVector);
+
+  MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCadEdgesPeriodicityVector end");
+  return periodicityList._retn();
+}
+
+// convert a vector preCadPeriodicityVector into TPeriodicityList Corba sequence
+BLSURFPlugin::TPeriodicityList* BLSURFPlugin_Hypothesis_i::PreCadVectorToSequence(const ::BLSURFPlugin_Hypothesis::TPreCadPeriodicityVector& preCadPeriodicityVector)
+{
+  MESSAGE("BLSURFPlugin_Hypothesis_i::PreCadVectorToSequence");
+  BLSURFPlugin::TPeriodicityList_var periodicityList = new BLSURFPlugin::TPeriodicityList();
+
+    periodicityList->length(preCadPeriodicityVector.size());
+
+    for (size_t i = 0; i<preCadPeriodicityVector.size(); i++)
+      {
+        ::BLSURFPlugin_Hypothesis::TPreCadPeriodicity preCadPeriodicityVector_i = preCadPeriodicityVector[i];
+
+        BLSURFPlugin::TPreCadPeriodicity_var myPreCadPeriodicity = new BLSURFPlugin::TPreCadPeriodicity();
+        myPreCadPeriodicity->shape1Entry = CORBA::string_dup(preCadPeriodicityVector_i.shape1Entry.c_str());
+        myPreCadPeriodicity->shape2Entry = CORBA::string_dup(preCadPeriodicityVector_i.shape2Entry.c_str());
+
+        BLSURFPlugin::TEntryList_var sourceVertices = new BLSURFPlugin::TEntryList();
+        if (not preCadPeriodicityVector_i.theSourceVerticesEntries.empty())
+          {
+            sourceVertices->length(preCadPeriodicityVector_i.theSourceVerticesEntries.size());
+            for (size_t j=0; j<preCadPeriodicityVector_i.theSourceVerticesEntries.size(); j++)
+              sourceVertices[j]=CORBA::string_dup(preCadPeriodicityVector_i.theSourceVerticesEntries[j].c_str());
+          }
+
+        myPreCadPeriodicity->theSourceVerticesEntries = sourceVertices;
+
+        BLSURFPlugin::TEntryList_var targetVertices = new BLSURFPlugin::TEntryList();
+        if (not preCadPeriodicityVector_i.theTargetVerticesEntries.empty())
+           {
+            targetVertices->length(preCadPeriodicityVector_i.theTargetVerticesEntries.size());
+             for (size_t j=0; j<preCadPeriodicityVector_i.theTargetVerticesEntries.size(); j++)
+               targetVertices[j]=CORBA::string_dup(preCadPeriodicityVector_i.theTargetVerticesEntries[j].c_str());
+           }
+
+        myPreCadPeriodicity->theTargetVerticesEntries = targetVertices;
+
+        periodicityList[i] = myPreCadPeriodicity;
+      }
+
+
+  return periodicityList._retn();
 }
 
 
@@ -2703,6 +2781,7 @@ void BLSURFPlugin_Hypothesis_i::AddPreCadFacesPeriodicityWithVertices(GEOM::GEOM
 throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
+  MESSAGE("BLSURFPlugin_Hypothesis_i::AddPreCadFacesPeriodicityWithVertices");
 
   size_t theLength = theSourceVertices.length();
   if (theLength != theTargetVertices.length())
@@ -2721,21 +2800,23 @@ throw (SALOME::SALOME_Exception)
   string theFace2Entry = PublishIfNeeded(theFace2, GEOM::FACE, prefix2);
 
   string prefix3 = "Source_vertex_";
-  vector<string> theSourceVerticesEntries (theLength) ;
+  BLSURFPlugin::TEntryList_var theSourceVerticesEntries = new BLSURFPlugin::TEntryList();
+  theSourceVerticesEntries->length(theLength);
   GEOM::GEOM_Object_ptr theVtx_i;
   string theEntry_i;
   for (size_t ind = 0; ind < theLength; ind++) {
       theVtx_i = theSourceVertices[ind];
       theEntry_i = PublishIfNeeded(theVtx_i, GEOM::VERTEX, prefix3);
-      theSourceVerticesEntries[ind] = theEntry_i;
+      theSourceVerticesEntries[ind] = CORBA::string_dup(theEntry_i.c_str());
   }
 
   string prefix4 = "Target_vertex_";
-  vector<string> theTargetVerticesEntries (theLength) ;
+  BLSURFPlugin::TEntryList_var theTargetVerticesEntries = new BLSURFPlugin::TEntryList();
+  theTargetVerticesEntries->length(theLength);
   for (size_t ind = 0; ind < theLength; ind++) {
       theVtx_i = theTargetVertices[ind];
       theEntry_i = PublishIfNeeded(theVtx_i, GEOM::VERTEX, prefix4);
-      theTargetVerticesEntries[ind] = theEntry_i;
+      theTargetVerticesEntries[ind] = CORBA::string_dup(theEntry_i.c_str());
   }
 
   string theFace2Name = theFace2->GetName();
@@ -2752,11 +2833,18 @@ throw (SALOME::SALOME_Exception)
 
 
 void BLSURFPlugin_Hypothesis_i::AddPreCadFacesPeriodicityEntry(const char* theFace1Entry, const char* theFace2Entry,
-    vector<string> &theSourceVerticesEntries, vector<string> &theTargetVerticesEntries)
+    const BLSURFPlugin::TEntryList& theSourceVerticesEntriesCorba, const BLSURFPlugin::TEntryList& theTargetVerticesEntriesCorba)
     throw (SALOME::SALOME_Exception)
 {
 
   ASSERT(myBaseImpl);
+
+  // Convert BLSURFPlugin::TEntryList to vector<string>
+  vector<string> theSourceVerticesEntries, theTargetVerticesEntries;
+  for (size_t ind = 0; ind < theSourceVerticesEntriesCorba.length(); ind++) {
+      theSourceVerticesEntries.push_back(theSourceVerticesEntriesCorba[ind].in());
+      theTargetVerticesEntries.push_back(theTargetVerticesEntriesCorba[ind].in());
+  }
 
   string listEntriesTxt = FormatVerticesEntries(theSourceVerticesEntries, theTargetVerticesEntries);
 
@@ -2790,6 +2878,7 @@ void BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicityWithVertices(GEOM::GEOM
     const GEOM::ListOfGO& theSourceVertices, const GEOM::ListOfGO& theTargetVertices)
       throw (SALOME::SALOME_Exception)
 {
+  MESSAGE("BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicityWithVertices");
   ASSERT(myBaseImpl);
 
   size_t theLength = theSourceVertices.length();
@@ -2809,21 +2898,23 @@ void BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicityWithVertices(GEOM::GEOM
   string theEdge2Entry = PublishIfNeeded(theEdge2, GEOM::EDGE, prefix2);
 
   string prefix3 = "Source_vertex_";
-  vector<string> theSourceVerticesEntries (theLength) ;
+  BLSURFPlugin::TEntryList_var theSourceVerticesEntries = new BLSURFPlugin::TEntryList();
+  theSourceVerticesEntries->length(theLength);
   GEOM::GEOM_Object_ptr theVtx_i;
   string theEntry_i;
   for (size_t ind = 0; ind < theLength; ind++) {
       theVtx_i = theSourceVertices[ind];
       theEntry_i = PublishIfNeeded(theVtx_i, GEOM::VERTEX, prefix3);
-      theSourceVerticesEntries[ind] = theEntry_i;
+      theSourceVerticesEntries[ind] = CORBA::string_dup(theEntry_i.c_str());
   }
 
   string prefix4 = "Target_vertex_";
-  vector<string> theTargetVerticesEntries (theLength) ;
+  BLSURFPlugin::TEntryList_var theTargetVerticesEntries = new BLSURFPlugin::TEntryList();
+  theTargetVerticesEntries->length(theLength);
   for (size_t ind = 0; ind < theLength; ind++) {
       theVtx_i = theTargetVertices[ind];
       theEntry_i = PublishIfNeeded(theVtx_i, GEOM::VERTEX, prefix4);
-      theTargetVerticesEntries[ind] = theEntry_i;
+      theTargetVerticesEntries[ind] = CORBA::string_dup(theEntry_i.c_str());
   }
 
   string theEdge2Name = theEdge2->GetName();
@@ -2840,11 +2931,18 @@ void BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicityWithVertices(GEOM::GEOM
 
 
 void BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicityEntry(const char* theEdge1Entry, const char* theEdge2Entry,
-    vector<string> &theSourceVerticesEntries, vector<string> &theTargetVerticesEntries)
+    const BLSURFPlugin::TEntryList& theSourceVerticesEntriesCorba, const BLSURFPlugin::TEntryList& theTargetVerticesEntriesCorba)
     throw (SALOME::SALOME_Exception)
 {
 
   ASSERT(myBaseImpl);
+
+  // Convert BLSURFPlugin::TEntryList to vector<string>
+  vector<string> theSourceVerticesEntries, theTargetVerticesEntries;
+  for (size_t ind = 0; ind < theSourceVerticesEntriesCorba.length(); ind++) {
+      theSourceVerticesEntries.push_back(theSourceVerticesEntriesCorba[ind].in());
+      theTargetVerticesEntries.push_back(theTargetVerticesEntriesCorba[ind].in());
+  }
 
   string listEntriesTxt = FormatVerticesEntries(theSourceVerticesEntries, theTargetVerticesEntries);
 

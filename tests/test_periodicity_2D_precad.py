@@ -108,4 +108,3 @@ checkProjection(gr_top, bottom_translated)
 
 if salome.sg.hasDesktop():
   salome.sg.updateObjBrowser(1)
-  

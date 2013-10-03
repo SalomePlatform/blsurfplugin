@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import salome
+import math
 
 import GEOM
 from salome.geom import geomBuilder
 geompy = geomBuilder.New(salome.myStudy)
-
-import math
 
 simple = False
 
@@ -22,19 +21,33 @@ p3 = geompy.MakeVertex(25., 5., 25.)
 sphere1 = geompy.MakeSpherePntR(p3, 15.)
 geompy.addToStudy(sphere1, "sphere1")
 
+sphere1_trans = geompy.MakeTranslation(sphere1, 0, 100, 0)
+geompy.addToStudy(sphere1_trans, "sphere1_trans")
+
+sphere1_trans = geompy.MakeTranslation(sphere1, 0, 100, 0)
+geompy.addToStudy(sphere1_trans, "sphere1_trans")
+
+p4 = geompy.MakeVertex(5, 50, 90)
+sphere2 = geompy.MakeSpherePntR(p4, 20.)
+
+sphere2_trans = geompy.MakeTranslation(sphere2, 100, 0, 0)
+geompy.addToStudy(sphere2_trans, "sphere2_trans")
+
+sphere2_trans2 = geompy.MakeTranslation(sphere2, 0, 0, -100)
+geompy.addToStudy(sphere2_trans2, "sphere2_trans2")
+
+sphere2_trans3 = geompy.MakeTranslation(sphere2, 100, 0, -100)
+geompy.addToStudy(sphere2_trans3, "sphere2_trans3")
+
+if simple:
+    part = box
+else:
+    part = geompy.MakePartition([box], [sphere1, sphere1_trans, sphere2, sphere2_trans, sphere2_trans2, sphere2_trans3])
+geompy.addToStudy(part, "part")
+
 Vx = geompy.MakeVectorDXDYDZ(1, 0, 0)
 Vy = geompy.MakeVectorDXDYDZ(0, 1, 0)
 Vz = geompy.MakeVectorDXDYDZ(0, 0, 1)
-
-p4 = geompy.MakeVertex(100., 0., 0.)
-axe = geompy.MakePrismVecH(p4, Vz, 1)
-geompy.addToStudy(axe, "axe")
-
-sphere1_rota = geompy.MakeRotation(sphere1, axe, -math.pi/2.)
-geompy.addToStudy(sphere1_rota, "sphere1_rota")
-
-part = geompy.MakePartition([box], [sphere1, sphere1_rota])
-geompy.addToStudy(part, "part")
 
 left_faces = geompy.GetShapesOnPlane(part, geompy.ShapeType["FACE"], Vy, GEOM.ST_ON)
 left = geompy.CreateGroup(part, geompy.ShapeType["FACE"])
@@ -72,7 +85,6 @@ geompy.UnionList(sources, back_faces)
 geompy.UnionList(sources, top_faces)
 geompy.addToStudyInFather(part, sources, "sources")
 
-
 # Mesh
 # ====
 
@@ -86,13 +98,13 @@ algo2d = Mesh.Triangle(algo=smeshBuilder.BLSURF)
 algo2d.SetGeometricMesh( 1 )
 algo2d.SetAngleMesh( 4 )
 algo2d.SetPhySize( 8 )
-algo2d.SetOptionValue( 'periodic_tolerance', '1e-2' )
+algo2d.SetVerbosity(1)
 
-def rota_z(shape1):
-    shape2 = geompy.MakeRotation(shape1, axe, -math.pi/2)
-    return shape2
-
-algo2d.AddAdvancedFacesPeriodicity(left, front, rota_z)
+# Periodicity
+#algo2d.SetPreCADOptionValue("periodic_tolerance", "1e-2")
+algo2d.AddPreCadFacesPeriodicity(left, right)
+algo2d.AddPreCadFacesPeriodicity(front, back)
+algo2d.AddPreCadFacesPeriodicity(bottom, top)
 
 gr_left = Mesh.Group(left)
 gr_right = Mesh.Group(right)
@@ -103,7 +115,9 @@ gr_top = Mesh.Group(top)
 
 Mesh.Compute()
 
-left_rotated = Mesh.RotateObjectMakeMesh( gr_left, axe, -math.pi/2, NewMeshName='left_rotated' )
+left_translated = Mesh.TranslateObjectMakeMesh( gr_left, SMESH.DirStruct( SMESH.PointStruct ( 0, 100, 0 )), 0, 'left_translated' )
+front_translated = Mesh.TranslateObjectMakeMesh( gr_front, SMESH.DirStruct( SMESH.PointStruct ( -100, 0, 0 )), 0, 'front_translated' )
+bottom_translated = Mesh.TranslateObjectMakeMesh( gr_bottom, SMESH.DirStruct( SMESH.PointStruct ( 0, 0, 100 )), 0, 'bottom_translated' )
 
 def checkProjection(gr, mesh_translated, tol=1e-7):
     name = gr.GetName() + "_" + mesh_translated.GetName().split("_")[0]
@@ -118,7 +132,9 @@ def checkProjection(gr, mesh_translated, tol=1e-7):
         mesh_check.MakeGroupByIds("non_coincident_nodes", SMESH.NODE, non_coincident_nodes)
         raise Exception("Projection failed for %s"%name)
         
-checkProjection(gr_front, left_rotated)
+checkProjection(gr_right, left_translated)
+checkProjection(gr_back, front_translated)
+checkProjection(gr_top, bottom_translated)
 
 salome.sg.updateObjBrowser(0)
 

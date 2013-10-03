@@ -110,6 +110,16 @@ module BLSURFPlugin
   };
   typedef sequence<TAttractorParams> TAttParamsMap;
   
+  // Periodicity
+  struct TPreCadPeriodicity {
+    TEntry shape1Entry;
+    TEntry shape2Entry;
+    TEntryList theSourceVerticesEntries;
+    TEntryList theTargetVerticesEntries;
+  };
+  
+  typedef sequence<TPreCadPeriodicity> TPeriodicityList;
+  
   /*!
    * BLSURFPlugin_BLSURF: interface of BLSURF algorithm
    */
@@ -431,15 +441,19 @@ module BLSURFPlugin
     // PERIODICITY       //
     ///////////////////////
 
+    void ClearPreCadPeriodicityVectors();
     void AddPreCadFacesPeriodicity(in GEOM::GEOM_Object theFace1, in GEOM::GEOM_Object theFace2) raises (SALOME::SALOME_Exception);
     void AddPreCadFacesPeriodicityWithVertices(in GEOM::GEOM_Object theFace1, in GEOM::GEOM_Object theFace2, in GEOM::ListOfGO theSourceVertices, in GEOM::ListOfGO theTargetVertices) raises (SALOME::SALOME_Exception);
+    void AddPreCadFacesPeriodicityEntry(in TEntry theFace1, in TEntry theFace2, in TEntryList theSourceVertices, in TEntryList theTargetVertices)  raises (SALOME::SALOME_Exception);
     void AddPreCadEdgesPeriodicity(in GEOM::GEOM_Object theEdge1, in GEOM::GEOM_Object theEdge2) raises (SALOME::SALOME_Exception);
     void AddPreCadEdgesPeriodicityWithVertices(in GEOM::GEOM_Object theEdge1, in GEOM::GEOM_Object theEdge2, in GEOM::ListOfGO theSourceVertices, in GEOM::ListOfGO theTargetVertices) raises (SALOME::SALOME_Exception);
+    void AddPreCadEdgesPeriodicityEntry(in TEntry theEdge1, in TEntry theEdge2, in TEntryList theSourceVertices, in TEntryList theTargetVertices)  raises (SALOME::SALOME_Exception);
     void AddFacePeriodicity(in GEOM::GEOM_Object theFace1, in GEOM::GEOM_Object theFace2) raises (SALOME::SALOME_Exception);
     void AddEdgePeriodicity(in GEOM::GEOM_Object theFace1, in GEOM::GEOM_Object theEdge1, in GEOM::GEOM_Object theFace2, in GEOM::GEOM_Object theEdge2, in long edge_orientation) raises (SALOME::SALOME_Exception);
     void AddEdgePeriodicityWithoutFaces(in GEOM::GEOM_Object theEdge1, in GEOM::GEOM_Object theEdge2, in long edge_orientation) raises (SALOME::SALOME_Exception);
     void AddVertexPeriodicity(in GEOM::GEOM_Object theEdge1, in GEOM::GEOM_Object theVertex1, in GEOM::GEOM_Object theEdge2, in GEOM::GEOM_Object theVertex2) raises (SALOME::SALOME_Exception);
-    
+    TPeriodicityList GetPreCadFacesPeriodicityVector();
+    TPeriodicityList GetPreCadEdgesPeriodicityVector();
     ///////////////////////
 
     /*!

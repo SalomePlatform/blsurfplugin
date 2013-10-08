@@ -2413,17 +2413,23 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
         bool onFace = (periodicity_i[PERIODICITY_SHAPE_TYPE]=="1") ? true : false;
 
         BLSURFPlugin::TEntryList_var sourceVertices = new BLSURFPlugin::TEntryList();
-        sourceVertices->length(3);
-        sourceVertices[0]=CORBA::string_dup(p1Source.c_str());
-        sourceVertices[1]=CORBA::string_dup(p2Source.c_str());
-        sourceVertices[2]=CORBA::string_dup(p3Source.c_str());
+        if (not p1Source.empty())
+          {
+            sourceVertices->length(3);
+            sourceVertices[0]=CORBA::string_dup(p1Source.c_str());
+            sourceVertices[1]=CORBA::string_dup(p2Source.c_str());
+            sourceVertices[2]=CORBA::string_dup(p3Source.c_str());
+          }
 
 
         BLSURFPlugin::TEntryList_var targetVertices = new BLSURFPlugin::TEntryList();
-        targetVertices->length(3);
-        targetVertices[0]=CORBA::string_dup(p1Target.c_str());
-        targetVertices[1]=CORBA::string_dup(p2Target.c_str());
-        targetVertices[2]=CORBA::string_dup(p3Target.c_str());
+        if (not p1Target.empty())
+          {
+            targetVertices->length(3);
+            targetVertices[0]=CORBA::string_dup(p1Target.c_str());
+            targetVertices[1]=CORBA::string_dup(p2Target.c_str());
+            targetVertices[2]=CORBA::string_dup(p3Target.c_str());
+          }
 
         if (onFace)
           h->AddPreCadFacesPeriodicityEntry(source.c_str(), target.c_str(), sourceVertices, targetVertices);

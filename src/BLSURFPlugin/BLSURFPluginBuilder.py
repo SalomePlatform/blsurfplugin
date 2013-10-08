@@ -540,7 +540,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
         p_target = f_transf(p_source)
         target_edge = self.geompyD.GetEdgeNearPoint(theFace2, p_target)
         self.geompyD.addToStudyInFather(theFace2, target_edge, "target_edge_%i"%(j))
-        self.AddEdgePeriodicity(source_face, source_edge, target_face, target_edge)
+        self.AddEdgePeriodicity(source_face, source_edge, target_face, target_edge, 1)
         j += 1
         
         source_vertices = self.geompyD.SubShapeAll(source_edge, self.geompyD.ShapeType["VERTEX"])
@@ -576,7 +576,6 @@ class BLSURF_Algorithm(Mesh_Algorithm):
       source_vertices = self.geompyD.SubShapeAll(source_edge, self.geompyD.ShapeType["VERTEX"])
       for source_vertex in source_vertices:
         self.geompyD.addToStudyInFather(theEdge1, source_vertex, "source_vertex_%i"%k)
-        target_vertex_tmp = self.geompyD.MakeTranslation(source_vertex, 10, 0., 0)
         target_vertex_tmp = f_transf(source_vertex)
         target_vertex = self.geompyD.GetSame(theEdge2, target_vertex_tmp)
         self.geompyD.addToStudyInFather(theEdge2, target_vertex, "target_vertex_%i"%k)

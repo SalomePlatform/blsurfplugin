@@ -1736,13 +1736,14 @@ namespace
           continue;
 
         BRepBuilderAPI_MakePolygon wire;
+        const size_t i0 = tmpVertex.size();
         for ( size_t iN = 1; iN < wirePoints.size(); ++iN )
         {
           wire.Add( SMESH_TNodeXYZ( wirePoints[ iN ].node ));
           origNodes.push_back( wirePoints[ iN ].node );
           tmpVertex.push_back( wire.LastVertex() );
         }
-        tmpVertex[0] = wire.FirstVertex();
+        tmpVertex[ i0 ] = wire.FirstVertex(); // wire.LastVertex()==NULL for 1 vertex in wire
         wire.Close();
         if ( !wire.IsDone() )
           throw SALOME_Exception("BLSURFPlugin_BLSURF: BRepBuilderAPI_MakePolygon failed");

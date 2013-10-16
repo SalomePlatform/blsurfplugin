@@ -161,7 +161,7 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
         BLSURFPlugin_Hypothesis::TEntry theFace2, BLSURFPlugin_Hypothesis::TEntry theEdge2, int edge_orientation = 0);
     void createVerticesPeriodicity(TopoDS_Shape theGeomShape, BLSURFPlugin_Hypothesis::TEntry theEdge1, BLSURFPlugin_Hypothesis::TEntry theVertex1,
         BLSURFPlugin_Hypothesis::TEntry theEdge2, BLSURFPlugin_Hypothesis::TEntry theVertex2);
-    void Set_NodeOnEdge(SMESHDS_Mesh* meshDS, SMDS_MeshNode* node, const TopoDS_Shape& ed);
+    void Set_NodeOnEdge(SMESHDS_Mesh* meshDS, const SMDS_MeshNode* node, const TopoDS_Shape& ed);
     void BRepClass_FaceClassifierPerform(BRepClass_FaceClassifier* fc, const TopoDS_Face& face, const gp_Pnt& P, const Standard_Real Tol);
 
   private:

@@ -2239,8 +2239,8 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
               SMESH_subMesh* vSM = aMesh.GetSubMesh( v );
               vSM->ComputeStateEngine( SMESH_subMesh::COMPUTE );
               mergeSubmeshes.insert( vSM->GetSubMeshDS() );
-              //if ( tag != pmap.Extent() )
-              needMerge = true;
+              // //if ( tag != pmap.Extent() )
+              // needMerge = true;
             }
           }
           if ( tag == 0 ) tag = ienf;
@@ -2295,10 +2295,11 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
       SMESH_subMesh* sm = aMesh.GetSubMesh( e );
       if ( !sm->IsEmpty() )
       {
-        SMESH_subMeshIteratorPtr subsmIt = sm->getDependsOnIterator( /*includeSelf=*/true,
-                                                                     /*complexFirst=*/false);
-        while ( subsmIt->more() )
-          edgeSubmeshes.insert( subsmIt->next()->GetSubMeshDS() );
+        // SMESH_subMeshIteratorPtr subsmIt = sm->getDependsOnIterator( /*includeSelf=*/true,
+        //                                                              /*complexFirst=*/false);
+        // while ( subsmIt->more() )
+        //   edgeSubmeshes.insert( subsmIt->next()->GetSubMeshDS() );
+        edgeSubmeshes.insert( sm->GetSubMeshDS() );
 
         nodeData.reset( new StdMeshers_FaceSide( f, e, &aMesh, /*isForwrd = */true,
                                                  /*ignoreMedium=*/haveQuadraticSubMesh));
@@ -2391,9 +2392,9 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
         *ip = pmap.FindIndex(v);
         if(*ip <= 0) {
           *ip = pmap.Add(v);
-          SMESH_subMesh* sm = aMesh.GetSubMesh(v);
-          if ( sm->IsMeshComputed() )
-            edgeSubmeshes.insert( sm->GetSubMeshDS() );
+          // SMESH_subMesh* sm = aMesh.GetSubMesh(v);
+          // if ( sm->IsMeshComputed() )
+          //   edgeSubmeshes.insert( sm->GetSubMeshDS() );
         }
 
 //        std::string aFileName = "fmap_vertex_";
@@ -2464,9 +2465,10 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     if ( allowSubMeshClearing )
     {
       SMDS_ElemIteratorPtr eIt = smDS->GetElements();
-      while ( eIt->more() ) meshDS->RemoveFreeElement( eIt->next(), smDS );
+      while ( eIt->more() ) meshDS->RemoveFreeElement( eIt->next(), 0 );
       SMDS_NodeIteratorPtr nIt = smDS->GetNodes();
-      while ( nIt->more() ) meshDS->RemoveFreeNode( nIt->next(), smDS );
+      while ( nIt->more() ) meshDS->RemoveFreeNode( nIt->next(), 0 );
+      smDS->Clear();
     }
     else
     {
@@ -2786,14 +2788,15 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   evquad = (integer *)mesh_calloc_generic_buffer(msh);
   tags_buff = (integer*)mesh_calloc_generic_buffer(msh);
 
-  SMDS_MeshNode** nodes = new SMDS_MeshNode*[nv+1];
-  bool* tags = new bool[nv+1];
+  std::vector<const SMDS_MeshNode*> nodes(nv+1);
+  std::vector<bool>                  tags(nv+1);
 
   /* enumerated vertices */
   for(int iv=1;iv<=nv;iv++) {
     mesh_get_vertex_coordinates(msh, iv, xyz);
     mesh_get_vertex_tag(msh, iv, &tag);
     // Issue 0020656. Use vertex coordinates
+    nodes[iv] = NULL;
     if ( tag > 0 && tag <= pmap.Extent() ) {
       TopoDS_Vertex v = TopoDS::Vertex(pmap(tag));
       double tol = BRep_Tool::Tolerance( v );
@@ -2802,8 +2805,10 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
         xyz[0] = p.X(), xyz[1] = p.Y(), xyz[2] = p.Z();
       else
         tag = 0; // enforced or attracted vertex
+      nodes[iv] = SMESH_Algo::VertexNode( v, meshDS );
     }
-    nodes[iv] = meshDS->AddNode(xyz[0], xyz[1], xyz[2]);
+    if ( !nodes[iv] )
+      nodes[iv] = meshDS->AddNode(xyz[0], xyz[1], xyz[2]);
 
     // Create group of enforced vertices if requested
     BLSURFPlugin_Hypothesis::TEnfVertexCoords projVertex;
@@ -3006,9 +3011,6 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   /* release the mesh object, the rest is released by cleaner */
   cadsurf_data_regain_mesh(css, msh);
 
-  delete [] nodes;
-  delete [] tags;
-
   if ( needMerge ) // sew mesh computed by BLSURF with pre-existing mesh
   {
     SMESH_MeshEditor editor( &aMesh );
@@ -3116,7 +3118,7 @@ void BLSURFPlugin_BLSURF::CancelCompute()
  */
 //=============================================================================
 
-void BLSURFPlugin_BLSURF::Set_NodeOnEdge(SMESHDS_Mesh* meshDS, SMDS_MeshNode* node, const TopoDS_Shape& ed) {
+void BLSURFPlugin_BLSURF::Set_NodeOnEdge(SMESHDS_Mesh* meshDS, const SMDS_MeshNode* node, const TopoDS_Shape& ed) {
   const TopoDS_Edge edge = TopoDS::Edge(ed);
 
   gp_Pnt pnt(node->X(), node->Y(), node->Z());

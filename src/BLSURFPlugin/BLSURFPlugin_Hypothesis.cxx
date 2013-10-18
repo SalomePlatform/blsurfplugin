@@ -168,8 +168,8 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   }
   i = 0;
   while (preCADcharOptionNames[i][0]) {
-    _preCADdoubleOptions.insert(preCADcharOptionNames[i]);
-    _preCADoption2value[preCADdoubleOptionNames[i++]].clear();
+    _preCADcharOptions.insert(preCADcharOptionNames[i]);
+    _preCADoption2value[preCADcharOptionNames[i++]].clear();
   }
   
 
@@ -478,6 +478,8 @@ void BLSURFPlugin_Hypothesis::SetPreCADOptionValue(const std::string& optionName
     std::string typeName;
     if (i == 0) {
       // empty string
+    } else if (_preCADcharOptions.find(optionName) != _preCADcharOptions.end()) {
+      // do not check strings
     } else if (_preCADdoubleOptions.find(optionName) != _preCADdoubleOptions.end()) {
       // check if value is double
       char * endPtr;

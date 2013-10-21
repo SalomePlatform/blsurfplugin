@@ -1010,10 +1010,9 @@ void BLSURFPlugin_BLSURF::SetParameters(
     const BLSURFPlugin_Hypothesis::TOptionValues & preCADopts = hyp->GetPreCADOptionValues();
     for ( opIt = preCADopts.begin(); opIt != preCADopts.end(); ++opIt )
       if ( !opIt->second.empty() ) {
-        if (_topology == BLSURFPlugin_Hypothesis::PreCAD) {
-          MESSAGE("precad_set_param(): " << opIt->first << " = " << opIt->second);
-          precad_set_param(pcs, opIt->first.c_str(), opIt->second.c_str());
-        }
+        *use_precad = true;
+        MESSAGE("precad_set_param(): " << opIt->first << " = " << opIt->second);
+        precad_set_param(pcs, opIt->first.c_str(), opIt->second.c_str());
       }
   }
 //   else {

@@ -1,4 +1,7 @@
-# Copyright (C) 2007-2013  CEA/DEN, EDF R&D
+# Copyright (C) 2007-2013  CEA/DEN, EDF R&D, OPEN CASCADE
+#
+# Copyright (C) 2003-2007  OPEN CASCADE, EADS/CCR, LIP6, CEA/DEN,
+# CEDRAT, EDF R&D, LEG, PRINCIPIA R&D, BUREAU VERITAS
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -17,15 +20,19 @@
 # See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 #
 
-# ---
-# File   : Makefile.am
-# Author : Vadim SANDLER, Open CASCADE S.A.S (vadim.sandler@opencascade.com)
-# ---
-#
-include $(top_srcdir)/adm_local/unix/make_common_starter.am
+SET(BLSURFPLUGIN_TEST_FILES
+  test_enforced_internal_vertex.py
+  test_enforced_vertex.py
+  test_periodicity_2D_precad.py
+  test_periodicity_2D.py
+  test_periodicity_precad.py
+  test_periodicity.py
+  test_periodicity_reflexion_2D_precad.py
+  test_periodicity_reflexion_2D.py
+  test_periodicity_reflexion_precad.py
+  test_periodicity_reflexion.py
+  test_periodicity_with_points_2D_precad.py
+  test_precad_intersections.py
+)
 
-# non-distributed files 
-nodist_salomescript_DATA = VERSION
-
-# distributed files
-dist_salomescript_SCRIPTS =
+INSTALL(FILES ${BLSURFPLUGIN_TEST_FILES} DESTINATION ${SALOME_BLSURFPLUGIN_INSTALL_TESTS})

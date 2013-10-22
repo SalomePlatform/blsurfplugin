@@ -289,9 +289,7 @@ BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF(int hypId, int studyId,
   EnfVertexCoords2ProjVertex.clear();
   EnfVertexCoords2EnfVertexList.clear();
 
-#ifdef WITH_SMESH_CANCEL_COMPUTE
   _compute_canceled = false;
-#endif
 }
 
 //=============================================================================
@@ -3104,12 +3102,10 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
  */
 //================================================================================
 
-#ifdef WITH_SMESH_CANCEL_COMPUTE
 void BLSURFPlugin_BLSURF::CancelCompute()
 {
   _compute_canceled = true;
 }
-#endif
 
 //=============================================================================
 /*!
@@ -3391,10 +3387,8 @@ status_t message_cb(message_t *msg, void *user_data)
 status_t interrupt_cb(integer *interrupt_status, void *user_data)
 {
   integer you_want_to_continue = 1;
-#ifdef WITH_SMESH_CANCEL_COMPUTE
   BLSURFPlugin_BLSURF* tmp = (BLSURFPlugin_BLSURF*)user_data;
   you_want_to_continue = !tmp->computeCanceled();
-#endif
 
   if(you_want_to_continue)
   {

@@ -1,4 +1,4 @@
-# Copyright (C) 2007-2013  CEA/DEN, EDF R&D
+# Copyright (C) 2013  CEA/DEN, EDF R&D, OPEN CASCADE
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -17,13 +17,5 @@
 # See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 #
 
-# ---
-# File   : Makefile.am
-# Author : Vadim SANDLER, Open CASCADE S.A.S (vadim.sandler@opencascade.com)
-# ---
-#
-include $(top_srcdir)/adm_local/unix/make_common_starter.am
-
-dist_admlocalm4_DATA =		\
-	check_BLSURF.m4		\
-	check_BLSURFPLUGIN.m4
+SALOME_FIND_PACKAGE_AND_DETECT_CONFLICTS(MESHGEMS MESHGEMS_INCLUDE_DIRS 1)
+MARK_AS_ADVANCED(MESHGEMS_INCLUDE_DIRS MESHGEMS_LIBRARIES)

@@ -1,4 +1,7 @@
-# Copyright (C) 2007-2013  CEA/DEN, EDF R&D
+# Copyright (C) 2007-2013  CEA/DEN, EDF R&D, OPEN CASCADE
+#
+# Copyright (C) 2003-2007  OPEN CASCADE, EADS/CCR, LIP6, CEA/DEN,
+# CEDRAT, EDF R&D, LEG, PRINCIPIA R&D, BUREAU VERITAS
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -17,22 +20,21 @@
 # See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 #
 
-# -* Makefile *- 
-# Author : Patrick GOLDBRONN (CEA)
-# Date : 30/11/2001
-#
-SUBDIRS = examples tui gui
-SUBDIRSTUI = tui
-SUBDIRSGUI = gui
+IF(SALOME_BUILD_GUI)
+  SET(BLSURFPLUGIN_RESOURCES_FILES_WITH_GUI
+	BLSURF.png
+	mesh_select_BLSURF.png
+	mesh_algo_BLSURF.png
+	mesh_hypo_BLSURF.png
+	mesh_tree_algo_BLSURF.png
+	mesh_tree_hypo_BLSURF.png
+  )
+ENDIF(SALOME_BUILD_GUI)
 
-usr_docs:
-	@@SETX@; for d in $(SUBDIRSGUI); do 	\
-	   (cd $$d && $(MAKE) $@) || exit 1; 	\
-	done;
+SET(BLSURFPLUGIN_RESOURCES_FILES
+  BLSURFPlugin.xml
+  SalomeApp.xml
+  ${BLSURFPLUGIN_RESOURCES_FILES_WITH_GUI}
+)
 
-docs: usr_docs
-
-dev_docs:
-	@@SETX@; for d in $(SUBDIRSTUI); do 	\
-	   (cd $$d && $(MAKE) $@) || exit 1; 	\
-	done;
+INSTALL(FILES ${BLSURFPLUGIN_RESOURCES_FILES} DESTINATION ${SALOME_BLSURFPLUGIN_INSTALL_RES_DATA})

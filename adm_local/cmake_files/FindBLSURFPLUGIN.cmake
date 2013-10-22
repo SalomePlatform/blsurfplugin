@@ -1,4 +1,4 @@
-# Copyright (C) 2007-2013  CEA/DEN, EDF R&D
+# Copyright (C) 2007-2013  CEA/DEN, EDF R&D, OPEN CASCADE
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -16,18 +16,10 @@
 #
 # See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 #
-
-# ---
-# File   : Makefile.am
-# Author : Vadim SANDLER, Open CASCADE S.A.S (vadim.sandler@opencascade.com)
-# ---
 #
-include $(top_srcdir)/adm_local/unix/make_common_starter.am
 
-SUBDIRS = BLSURFPlugin
+SET(BLSURFPLUGIN_CXXFLAGS -I${BLSURFPLUGIN_ROOT_DIR}/include/salome)
 
-if BLSURFPLUGIN_ENABLE_GUI
-  SUBDIRS += GUI
-endif
-
-DIST_SUBDIRS = BLSURFPlugin GUI
+FIND_LIBRARY(BLSURFEngine BLSURFEngine ${BLSURFPLUGIN_ROOT_DIR}/lib/salome)
+FIND_LIBRARY(BLSURFPluginGUI BLSURFPluginGUI ${BLSURFPLUGIN_ROOT_DIR}/lib/salome)
+FIND_LIBRARY(SalomeIDLBLSURFPLUGIN SalomeIDLBLSURFPLUGIN ${BLSURFPLUGIN_ROOT_DIR}/lib/salome)

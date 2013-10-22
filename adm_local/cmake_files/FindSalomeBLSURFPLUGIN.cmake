@@ -1,4 +1,4 @@
-# Copyright (C) 2007-2013  CEA/DEN, EDF R&D
+# Copyright (C) 2007-2013  CEA/DEN, EDF R&D, OPEN CASCADE
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -16,17 +16,16 @@
 #
 # See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 #
-
-# -* Makefile *- 
-# Author : Patrick GOLDBRONN (CEA)
-# Date : 30/11/2001
 #
-SUBDIRS = salome
 
-usr_docs:
-	(cd salome && $(MAKE) $(AM_MAKEFLAGS) usr_docs)
+IF(NOT SalomeBLSURFPLUGIN_FIND_QUIETLY)
+  MESSAGE(STATUS "Looking for Salome BLSURFPLUGIN ...")
+ENDIF()
 
-docs: usr_docs
+SET(CMAKE_PREFIX_PATH "${BLSURFPLUGIN_ROOT_DIR}")
 
-dev_docs:
-	(cd salome && $(MAKE) $(AM_MAKEFLAGS) dev_docs)
+SALOME_FIND_PACKAGE(SalomeBLSURFPLUGIN SalomeBLSURFPLUGIN CONFIG)
+
+IF(NOT SalomeBLSURFPLUGIN_FIND_QUIETLY)
+  MESSAGE(STATUS "Found Salome BLSURFPLUGIN: ${BLSURFPLUGIN_ROOT_DIR}")
+ENDIF()

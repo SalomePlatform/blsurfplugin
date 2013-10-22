@@ -1,4 +1,4 @@
-# Copyright (C) 2007-2013  CEA/DEN, EDF R&D
+# Copyright (C) 2012-2013  CEA/DEN, EDF R&D, OPEN CASCADE
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -17,23 +17,24 @@
 # See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 #
 
-# ---
-# File   : Makefile.am
-# Author : Vadim SANDLER, Open CASCADE S.A.S (vadim.sandler@opencascade.com)
-# ---
-#
-include $(top_srcdir)/adm_local/unix/make_common_starter.am
+##
+# Common packages
+##
+SET(SUBDIRS_COMMON
+  BLSURFPlugin
+)
 
-dist_salomeres_DATA =			\
-	BLSURFPlugin.xml		\
-	SalomeApp.xml
+IF(SALOME_BUILD_GUI)
+  SET(SUBDIRS_ENABLE_GUI
+    GUI
+  )
+ENDIF(SALOME_BUILD_GUI)
 
-if BLSURFPLUGIN_ENABLE_GUI
-  dist_salomeres_DATA +=		\
-	BLSURF.png			\
-	mesh_select_BLSURF.png		\
-	mesh_algo_BLSURF.png		\
-	mesh_hypo_BLSURF.png		\
-	mesh_tree_algo_BLSURF.png	\
-	mesh_tree_hypo_BLSURF.png
-endif
+SET(SUBDIRS
+  ${SUBDIRS_COMMON}
+  ${SUBDIRS_ENABLE_GUI}
+)
+
+FOREACH(dir ${SUBDIRS})
+ ADD_SUBDIRECTORY(${dir})
+ENDFOREACH(dir ${SUBDIRS})

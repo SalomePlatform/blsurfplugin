@@ -25,12 +25,22 @@
 #if !defined(__BLSURFPLUGIN_VERSION_H__)
 #define __BLSURFPLUGIN_VERSION_H__
 
-/*
-  BLSURFPLUGIN_VERSION is (major << 16) + (minor << 8) + patch.
+/*!
+  Specify version of SALOME BLSURFPLUGIN module, as follows
+
+  BLSURFPLUGIN_VERSION_MAJOR       : (integer) number identifying major version
+  BLSURFPLUGIN_VERSION_MINOR       : (integer) number identifying minor version
+  BLSURFPLUGIN_VERSION_MAINTENANCE : (integer) number identifying maintenance version
+  BLSURFPLUGIN_VERSION_STR         : (string)  complete version number "major.minor.maintenance"
+  BLSURFPLUGIN_VERSION             : (hex)     complete version number (major << 16) + (minor << 8) + maintenance
+  BLSURFPLUGIN_DEVELOPMENT         : (integer) indicates development version when set to 1
 */
 
-#define BLSURFPLUGIN_VERSION_STR "@VERSION@"
-#define BLSURFPLUGIN_VERSION     @XVERSION@
-#define BLSURFPLUGIN_DEVELOPMENT @VERSION_DEV@
+#define BLSURFPLUGIN_VERSION_MAJOR       @SALOMEBLSURFPLUGIN_MAJOR_VERSION@
+#define BLSURFPLUGIN_VERSION_MINOR       @SALOMEBLSURFPLUGIN_MINOR_VERSION@
+#define BLSURFPLUGIN_VERSION_MAINTENANCE @SALOMEBLSURFPLUGIN_PATCH_VERSION@
+#define BLSURFPLUGIN_VERSION_STR         "@SALOMEBLSURFPLUGIN_VERSION@"
+#define BLSURFPLUGIN_VERSION             @SALOMEBLSURFPLUGIN_XVERSION@
+#define BLSURFPLUGIN_DEVELOPMENT         @SALOMEBLSURFPLUGIN_VERSION_DEV@
 
 #endif // __BLSURFPLUGIN_VERSION_H__

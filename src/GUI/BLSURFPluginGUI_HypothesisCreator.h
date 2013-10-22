@@ -219,7 +219,7 @@ protected slots:
   void                onInternalVerticesClicked(int);
   // Periodicity tab
   void                onPeriodicityByVerticesChecked(bool);
-  void                onPeriodicityRadioButtonChanged();
+//  void                onPeriodicityRadioButtonChanged();
   void                onAddPeriodicity();
   void                onRemovePeriodicity();
   void                onPeriodicityTreeClicked(QTreeWidgetItem*, int);

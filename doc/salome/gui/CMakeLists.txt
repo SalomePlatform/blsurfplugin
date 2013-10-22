@@ -1,5 +1,8 @@
 # Copyright (C) 2007-2013  CEA/DEN, EDF R&D, OPEN CASCADE
 #
+# Copyright (C) 2003-2007  OPEN CASCADE, EADS/CCR, LIP6, CEA/DEN,
+# CEDRAT, EDF R&D, LEG, PRINCIPIA R&D, BUREAU VERITAS
+#
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
@@ -17,26 +20,4 @@
 # See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 #
 
-include $(top_srcdir)/adm_local/unix/make_common_starter.am
-
-# ===============================================================
-# Files to be installed
-# ===============================================================
-#
-
-# Scripts to be installed.
-dist_salomescript_DATA = \
-    test_enforced_internal_vertex.py \
-    test_enforced_vertex.py \
-    test_periodicity_2D_precad.py \
-    test_periodicity_2D.py \
-    test_periodicity_precad.py \
-    test_periodicity.py \
-    test_periodicity_reflexion_2D_precad.py \
-    test_periodicity_reflexion_2D.py \
-    test_periodicity_reflexion_precad.py \
-    test_periodicity_reflexion.py \
-    test_periodicity_with_points_2D_precad.py \
-    test_precad_intersections.py
-
-mypkgpythondir = $(salomepythondir)/salome/BLSURFPlugin
+ADD_SUBDIRECTORY(BLSURFPLUGIN)

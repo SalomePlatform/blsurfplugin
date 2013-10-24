@@ -91,7 +91,7 @@ extern "C"{
 #include <gp_XY.hxx>
 #include <gp_XYZ.hxx>
 
-#ifndef WNT
+#ifndef WIN32
 #include <fenv.h>
 #endif
 
@@ -853,7 +853,7 @@ void BLSURFPlugin_BLSURF::createEdgesPeriodicity(TopoDS_Shape theGeomShape, BLSU
   TListOfIDs theEdge1_ids = _getSubShapeIDsInMainShape(theGeomShape, GeomEdge1, TopAbs_EDGE);
   TListOfIDs theEdge2_ids = _getSubShapeIDsInMainShape(theGeomShape, GeomEdge2, TopAbs_EDGE);
 
-  if (edge_orientation == 0 and GeomEdge1.Closed())
+  if (edge_orientation == 0 && GeomEdge1.Closed())
     {
       // if edge is closed, we have to set its orientation
       MESSAGE("GeomEdge1.Orientation() = " << GeomEdge1.Orientation());
@@ -1444,7 +1444,7 @@ void BLSURFPlugin_BLSURF::SetParameters(
   }
   MESSAGE("_preCadEdgesIDsPeriodicityVector.size() = " << _preCadEdgesIDsPeriodicityVector.size());
 
-  if ( _preCadFacesIDsPeriodicityVector.size() > 0 or _preCadEdgesIDsPeriodicityVector.size() > 0 )
+  if ( _preCadFacesIDsPeriodicityVector.size() > 0 || _preCadEdgesIDsPeriodicityVector.size() > 0 )
     {
       MESSAGE("USING PRECAD FOR PERIODICITY")
       *use_precad = true;
@@ -1948,7 +1948,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   TopTools_IndexedMapOfShape pmap;
 
   // Issue 0019864. On DebianSarge, FE signals do not obey to OSD::SetSignal(false)
-#ifndef WNT
+#ifndef WIN32
   feclearexcept( FE_ALL_EXCEPT );
   int oldFEFlags = fedisableexcept( FE_ALL_EXCEPT );
 #endif
@@ -3075,7 +3075,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   }
 
   // Issue 0019864. On DebianSarge, FE signals do not obey to OSD::SetSignal(false)
-#ifndef WNT
+#ifndef WIN32
   if ( oldFEFlags > 0 )
     feenableexcept( oldFEFlags );
   feclearexcept( FE_ALL_EXCEPT );

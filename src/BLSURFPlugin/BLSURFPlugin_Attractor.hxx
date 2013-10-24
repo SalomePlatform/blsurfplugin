@@ -69,7 +69,7 @@
 #include <GProp_GProps.hxx>
 #include <BRepGProp.hxx>
 
-#ifndef WNT
+#ifndef WIN32
 #include <fenv.h>
 #endif
 

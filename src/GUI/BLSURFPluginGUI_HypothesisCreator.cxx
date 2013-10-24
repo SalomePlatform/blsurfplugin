@@ -356,7 +356,7 @@ void EnforcedTreeWidgetDelegate::setModelData(QWidget *editor, QAbstractItemMode
   } else if (index.column() == ENF_VER_ENTRY_COLUMN) {
     QLineEdit *lineEdit = static_cast<QLineEdit*>(editor);
     QString value = lineEdit->text();
-    if (! vertexExists(model, index, value))
+    if (!vertexExists(model, index, value))
       model->setData(index, value, Qt::EditRole);
   } else if (index.column() == ENF_VER_GROUP_COLUMN) {
     QLineEdit *lineEdit = static_cast<QLineEdit*>(editor);
@@ -1569,7 +1569,7 @@ void BLSURFPluginGUI_HypothesisCreator::onAddPeriodicity() {
   int selSource = myPeriodicitySourceFaceWdg->NbObjects();
   int selTarget = myPeriodicityTargetFaceWdg->NbObjects();
 
-  if (selSource == 0 or selTarget == 0)
+  if (selSource == 0 || selTarget == 0)
     return;
 
   // Vertices selection
@@ -1582,7 +1582,7 @@ void BLSURFPluginGUI_HypothesisCreator::onAddPeriodicity() {
       int P2Tsel = myPeriodicityP2TargetWdg->NbObjects();
       int P3Tsel = myPeriodicityP3TargetWdg->NbObjects();
 
-      if (P1Ssel!=1 or P2Ssel!=1 or P3Ssel!=1 or P1Tsel!=1 or P3Tsel!=1 or P3Tsel!=1)
+      if (P1Ssel!=1 || P2Ssel!=1 || P3Ssel!=1 || P1Tsel!=1 || P3Tsel!=1 || P3Tsel!=1)
         {
           QString msg = tr("BLSURF_PERIODICITY_WRONG_NUMBER_OF_VERTICES");
           SUIT_MessageBox::critical( dlg(),"Error" , msg );
@@ -1610,7 +1610,7 @@ void BLSURFPluginGUI_HypothesisCreator::onAddPeriodicity() {
       shapeEntry = shape->GetStudyEntry();
       item->setData(k, Qt::EditRole, shapeName.c_str() );
       item->setData(k, Qt::UserRole, shapeEntry.c_str() );
-      if (not myPeriodicityGroupBox2->isChecked() and k==1)
+      if (! myPeriodicityGroupBox2->isChecked() && k==1)
         break;
     }
 
@@ -1651,7 +1651,7 @@ This method enable clears the field for periodicity by vertices
 */
 void BLSURFPluginGUI_HypothesisCreator::onPeriodicityByVerticesChecked(bool checked)
 {
-  if (not checked)
+  if (! checked)
     {
       for (size_t k=2; k<myPeriodicitySelectionWidgets.size(); k++)
         {
@@ -1697,7 +1697,7 @@ void BLSURFPluginGUI_HypothesisCreator::onPeriodicityTreeClicked(QTreeWidgetItem
 
       shapeName = item->data(k, Qt::EditRole).toString();
       shapeEntry = item->data(k, Qt::UserRole).toString();
-      if (not shapeEntry.isEmpty())
+      if (! shapeEntry.isEmpty())
         {
           shape = entryToObject(shapeEntry);
           w1->SetObject(shape);
@@ -1730,10 +1730,10 @@ void BLSURFPluginGUI_HypothesisCreator::onPeriodicityContentModified()
   for (; anIt != myPeriodicitySelectionWidgets.end(); anIt++, k++)
     {
       StdMeshersGUI_ObjectReferenceParamWdg * w1 = ( StdMeshersGUI_ObjectReferenceParamWdg* ) ( *anIt );
-      if (w1->IsSelectionActivated() and k<(myPeriodicitySelectionWidgets.size()-1))
+      if (w1->IsSelectionActivated() && k<(myPeriodicitySelectionWidgets.size()-1))
         {
           // don't activate vertex selection if the group box is not checked
-          if (k==1 and not myPeriodicityGroupBox2->isChecked())
+          if (k==1 && !myPeriodicityGroupBox2->isChecked())
             break;
           // clear the selection, to avoid to put the same object in the other widget
           that->getGeomSelectionTool()->selectionMgr()->clearSelected();
@@ -2394,7 +2394,7 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
       h->SetInternalEnforcedVertexAllFacesGroup( h_data.myInternalEnforcedVerticesAllFacesGroup.c_str() );
 
     // Periodicity
-    if ( h->GetPreCadFacesPeriodicityVector()->length() > 0 or h->GetPreCadEdgesPeriodicityVector()->length() > 0 )
+    if ( h->GetPreCadFacesPeriodicityVector()->length() > 0 || h->GetPreCadEdgesPeriodicityVector()->length() > 0 )
           h->ClearPreCadPeriodicityVectors();
 
     MESSAGE("h_data.preCadPeriodicityVector.size(): " << h_data.preCadPeriodicityVector.size());
@@ -2413,7 +2413,7 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
         bool onFace = (periodicity_i[PERIODICITY_SHAPE_TYPE]=="1") ? true : false;
 
         BLSURFPlugin::TEntryList_var sourceVertices = new BLSURFPlugin::TEntryList();
-        if (not p1Source.empty())
+        if (! p1Source.empty())
           {
             sourceVertices->length(3);
             sourceVertices[0]=CORBA::string_dup(p1Source.c_str());
@@ -2423,7 +2423,7 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
 
 
         BLSURFPlugin::TEntryList_var targetVertices = new BLSURFPlugin::TEntryList();
-        if (not p1Target.empty())
+        if (! p1Target.empty())
           {
             targetVertices->length(3);
             targetVertices[0]=CORBA::string_dup(p1Target.c_str());

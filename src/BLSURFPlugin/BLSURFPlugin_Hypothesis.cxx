@@ -1512,7 +1512,7 @@ void BLSURFPlugin_Hypothesis::SaveEdgesPeriodicity(std::ostream & save){
     for (; it_edges_periodicity != _edgesPeriodicityVector.end(); ++it_edges_periodicity) {
       TEdgePeriodicity periodicity_i = (*it_edges_periodicity);
       save << " " << "__BEGIN_PERIODICITY_DESCRIPTION__";
-      if (not periodicity_i.theFace1Entry.empty()){
+      if (! periodicity_i.theFace1Entry.empty()){
         save << " " << "__BEGIN_FACE1__";
         save << " " << periodicity_i.theFace1Entry;
         save << " " << "__END_FACE1__";
@@ -1520,7 +1520,7 @@ void BLSURFPlugin_Hypothesis::SaveEdgesPeriodicity(std::ostream & save){
       save << " " << "__BEGIN_EDGE1__";
       save << " " << periodicity_i.theEdge1Entry;
       save << " " << "__END_EDGE1__";
-      if (not periodicity_i.theFace2Entry.empty()){
+      if (! periodicity_i.theFace2Entry.empty()){
         save << " " << "__BEGIN_FACE2__";
         save << " " << periodicity_i.theFace2Entry;
         save << " " << "__END_FACE2__";

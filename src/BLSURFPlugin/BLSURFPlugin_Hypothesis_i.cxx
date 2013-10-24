@@ -2739,7 +2739,7 @@ BLSURFPlugin::TPeriodicityList* BLSURFPlugin_Hypothesis_i::PreCadVectorToSequenc
         myPreCadPeriodicity->shape2Entry = CORBA::string_dup(preCadPeriodicityVector_i.shape2Entry.c_str());
 
         BLSURFPlugin::TEntryList_var sourceVertices = new BLSURFPlugin::TEntryList();
-        if (not preCadPeriodicityVector_i.theSourceVerticesEntries.empty())
+        if (! preCadPeriodicityVector_i.theSourceVerticesEntries.empty())
           {
             sourceVertices->length(preCadPeriodicityVector_i.theSourceVerticesEntries.size());
             for (size_t j=0; j<preCadPeriodicityVector_i.theSourceVerticesEntries.size(); j++)
@@ -2749,7 +2749,7 @@ BLSURFPlugin::TPeriodicityList* BLSURFPlugin_Hypothesis_i::PreCadVectorToSequenc
         myPreCadPeriodicity->theSourceVerticesEntries = sourceVertices;
 
         BLSURFPlugin::TEntryList_var targetVertices = new BLSURFPlugin::TEntryList();
-        if (not preCadPeriodicityVector_i.theTargetVerticesEntries.empty())
+        if (! preCadPeriodicityVector_i.theTargetVerticesEntries.empty())
            {
             targetVertices->length(preCadPeriodicityVector_i.theTargetVerticesEntries.size());
              for (size_t j=0; j<preCadPeriodicityVector_i.theTargetVerticesEntries.size(); j++)

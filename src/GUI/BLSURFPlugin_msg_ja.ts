@@ -5,7 +5,7 @@
     <name>@default</name>
     <message>
       <source>BLSURF_MESH_TYPE</source>
-      <translation>メッシュの種類</translation>
+      <translation>メッシュ タイプ</translation>
     </message>
     <message>
       <source>BLSURF_PHY_MESH</source>
@@ -13,23 +13,23 @@
     </message>
     <message>
       <source>BLSURF_PHY_MESH_TOOLTIP</source>
-      <translation>&lt;b&gt;&lt;u&gt;物理的なサイズ モード&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;br&gt;-「グローバル サイズ」: 物理的なサイズはグローバルであり、提供されるグローバルの物理的なサイズ、メッシュ作成を使用します。 &lt;br&gt;-「ローカル サイズ」: 曲線と関連付けられている物理 sizemap 関数を使用してサーフェス サイズはローカルで計算されます。 &lt;br&gt;-"なし": 物理的なサイズは計算されません。</translation>
+      <translation>&lt;b&gt;&lt;u&gt;物理的なサイズ モード&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;br&gt;\n 'サイズ' グローバル: 物理的なサイズは、グローバル、メッシュ作成された全体的な物理的なサイズを使用します。&lt;br&gt;\n ローカル 'サイズ': サイズ ローカル カーブとサーフェスのサイズのマップ機能を使用して計算されます。&lt;br&gt;'非アクティブ' \n: 物理的なサイズは計算されません。</translation>
     </message>
     <message>
       <source>BLSURF_GEOM_MESH</source>
-      <translation>幾何学的なメッシュ</translation>
+      <translation>幾何学的メッシュ</translation>
     </message>
     <message>
       <source>BLSURF_GEOM_MESH_TOOLTIP</source>
-      <translation>&lt;b&gt;&lt;u&gt;幾何学的サイズ モード&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;br&gt;-「グローバル サイズ」: 幾何学的なサイズはグローバル、メッシュ作成、幾何学的パラメーターで指定された幾何学的な近似を使用する.&lt;br&gt;-「なし」: 幾何学的なサイズは計算されません。</translation>
+      <translation>&lt;b&gt;&lt;u&gt;幾何学的なサイズ モード&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;br&gt;\n 'サイズ' グローバル: 幾何学的なサイズはグローバルであり、幾何学的パラメーターによって指定された幾何学的な近似、メッシュ作成を使用します。&lt;br&gt;'非アクティブ' \n: 幾何学的なサイズは計算されません。</translation>
     </message>
     <message>
       <source>BLSURF_DEFAULT_USER</source>
-      <translation>なし</translation>
+      <translation>非アクティブ</translation>
     </message>
     <message>
       <source>GLOBAL_SIZE</source>
-      <translation>グローバル サイズ</translation>
+      <translation>全体のサイズ</translation>
     </message>
     <message>
       <source>LOCAL_SIZE</source>
@@ -37,7 +37,7 @@
     </message>
     <message>
       <source>BLSURF_MAIN_PARAMETERS</source>
-      <translation>主なパラメーター</translation>
+      <translation>メインの設定</translation>
     </message>
     <message>
       <source>BLSURF_HPHYDEF</source>
@@ -45,7 +45,7 @@
     </message>
     <message>
       <source>BLSURF_HPHYDEF_TOOLTIP</source>
-      <translation>グローバルな定数のサイズを定義します。&lt;br&gt;既定値計算値である &lt;em&gt;diag&lt;/em&gt;/&lt;em&gt;比&lt;/em&gt; &lt;em&gt;の比率&lt;/em&gt; が、環境設定で定義されています。</translation>
+      <translation>定義済み定数全体のサイズを物理的なメッシュ。&lt;br&gt;\nThe 既定値は、 &lt;em&gt;diag&lt;/em&gt;によって計算されます/&lt;em&gt;比&lt;/em&gt;&lt;em&gt;の比率&lt;/em&gt;が環境設定で定義されています。</translation>
     </message>
     <message>
       <source>BLSURF_MINSIZE</source>
@@ -53,7 +53,7 @@
     </message>
     <message>
       <source>BLSURF_MINSIZE_TOOLTIP</source>
-      <translation>必要なグローバル セルの最小サイズを定義します。&lt;br&gt;既定値計算値である &lt;em&gt;diag&lt;/em&gt;/1000年。</translation>
+      <translation>目的のセルの最小の全体的なサイズを定義します。&lt;br&gt;&lt;em&gt;diag&lt;/em&gt;によって 1000年 \nThe デフォルト値が計算されます。</translation>
     </message>
     <message>
       <source>BLSURF_MAXSIZE</source>
@@ -61,7 +61,7 @@
     </message>
     <message>
       <source>BLSURF_MAXSIZE_TOOLTIP</source>
-      <translation>必要なグローバル最大セル サイズを定義します。&lt;br&gt;既定値計算値である &lt;em&gt;diag&lt;/em&gt;/5。</translation>
+      <translation>目的のセルの最大の全体的なサイズを設定します。&lt;br&gt;&lt;em&gt;diag&lt;/em&gt;によって 5 \nThe デフォルト値が計算されます。</translation>
     </message>
     <message>
       <source>BLSURF_SIZE_REL</source>
@@ -69,19 +69,19 @@
     </message>
     <message>
       <source>BLSURF_SIZE_REL_TOOLTIP</source>
-      <translation>&lt;em&gt;Diag&lt;/em&gt; を基準値であります。</translation>
+      <translation>&lt;em&gt;Diag&lt;/em&gt;を基準値であります。</translation>
     </message>
     <message>
       <source>BLSURF_GRADATION</source>
-      <translation>グラデーション</translation>
+      <translation>増加率</translation>
     </message>
     <message>
       <source>BLSURF_GRADATION_TOOLTIP</source>
-      <translation>最大 2 つの隣接するエッジの長さの比率。</translation>
+      <translation>最大 2 つの隣接するセグメントの長さの比率。</translation>
     </message>
     <message>
       <source>BLSURF_ALLOW_QUADRANGLES</source>
-      <translation>四角形を許可します。</translation>
+      <translation>四角形を許可</translation>
     </message>
     <message>
       <source>BLSURF_GEOMETRICAL_PARAMETERS</source>
@@ -93,15 +93,15 @@
     </message>
     <message>
       <source>BLSURF_ANGLE_MESH_TOOLTIP</source>
-      <translation>メッシュの三角形の平面と 3 つの頂点位置の接面の間の角度を制限します。&lt;br&gt;のうち、小さい方はこの角度、近いメッシュは、正確な表面にしの結果、高密度のメッシュです。</translation>
+      <translation>頂上に、メッシュの三角形の平面と面の接線方向の角度に制限されます。&lt;br&gt;own\nand 角は小さく、メッシュ上で高密度に近いジオメトリにあります。</translation>
     </message>
     <message>
       <source>BLSURF_CHORDAL_ERROR</source>
-      <translation>メッシュの距離</translation>
+      <translation>メッシュからの距離</translation>
     </message>
     <message>
       <source>BLSURF_CHORDAL_TOOLTIP</source>
-      <translation>三角形とそのサポート CAD 表面間の最大の必要な距離。&lt;br&gt;のうち小さい方のこの距離は、メッシュ、正確な表面 (等方性メッシュでのみ使用可能) に近づきますです。</translation>
+      <translation>三角形とその CAD 表面間の最大距離。&lt;br&gt;own\nand 距離は小さくより多くメッシュ (等方性モードでのみ使用可能) の表面の近くになります。</translation>
     </message>
     <message>
       <source>BLSURF_OTHER_PARAMETERS</source>
@@ -113,23 +113,23 @@
     </message>
     <message>
       <source>BLSURF_ANISOTROPIC_TOOLTIP</source>
-      <translation>チェックした場合、このパラメーターには最大異方性比の異方性メッシュ プロセスを支配するメトリックを定義します。&lt;br&gt;既定値 0、メトリック (および生成された要素) が任意に伸ばすことができることを意味します。</translation>
+      <translation>有効な場合、このパラメーターは最大異方性異方性メッシュ比のプロセスを駆動するメトリックの設定。&lt;br&gt;\n デフォルト値の 0 は、メトリック (とこれから生成された各要素) 任意の拡張することができます。</translation>
     </message>
     <message>
       <source>BLSURF_REMOVE_TINY_EDGES</source>
-      <translation>小さなエッジを削除します。</translation>
+      <translation>小さな骨を削除します。</translation>
     </message>
     <message>
       <source>BLSURF_REMOVE_TINY_EDGES_TOOLTIP</source>
-      <translation>チェックした場合、このパラメーターは、エッジが小さなものとして最小の長さを定義します。</translation>
+      <translation>、この設定は、エッジが非常に小さいと見なされます最小の長さが有効な場合。</translation>
     </message>
     <message>
       <source>BLSURF_REMOVE_SLIVERS</source>
-      <translation>悪い要素を削除します。</translation>
+      <translation>悪い部分を削除します。</translation>
     </message>
     <message>
       <source>BLSURF_REMOVE_SLIVERS_TOOLTIP</source>
-      <translation>チェックした場合、このパラメーターは「悪い要素」分類をトリガー アスペクト比を定義します。</translation>
+      <translation>有効な場合は、このパラメーターは「悪い要素」縦横比のトリガーの分類を設定します。</translation>
     </message>
     <message>
       <source>BLSURF_OPTIMISATION</source>
@@ -137,11 +137,11 @@
     </message>
     <message>
       <source>BLSURF_OPTIMISATION_TOOLTIP</source>
-      <translation>チェックした場合、MeshGems CADSurf はより良い要素の形を取得するために、メッシュを最適化します。</translation>
+      <translation>有効な場合は、MeshGems CADSurf は最高の品質項目のメッシュを最適化します。</translation>
     </message>
     <message>
       <source>BLSURF_ELEMENT_ORDER</source>
-      <translation>2 次メッシュ</translation>
+      <translation>正方形のメッシュ</translation>
     </message>
     <message>
       <source>BLSURF_HYPOTHESIS</source>
@@ -153,7 +153,7 @@
     </message>
     <message>
       <source>BLSURF_TITLE</source>
-      <translation>仮説構築</translation>
+      <translation>仮説の構築</translation>
     </message>
     <message>
       <source>BLSURF_TOPOLOGY</source>
@@ -161,7 +161,7 @@
     </message>
     <message>
       <source>BLSURF_TOPOLOGY_CAD</source>
-      <translation>CAD</translation>
+      <translation>CAD から</translation>
     </message>
     <message>
       <source>BLSURF_TOPOLOGY_PROCESS</source>
@@ -169,7 +169,7 @@
     </message>
     <message>
       <source>BLSURF_TOPOLOGY_PROCESS2</source>
-      <translation>前処理 + +</translation>
+      <translation>前処理</translation>
     </message>
     <message>
       <source>BLSURF_TOPOLOGY_PRECAD</source>
@@ -209,11 +209,11 @@
     </message>
     <message>
       <source>BLSURF_REMOVE_OPTION</source>
-      <translation>Clear オプション</translation>
+      <translation>オプションを削除します。</translation>
     </message>
     <message>
       <source>BLSURF_GMF_FILE</source>
-      <translation>組み換えをエクスポートします。</translation>
+      <translation>エクスポート グループ</translation>
     </message>
     <message>
       <source>BLSURF_GMF_MODE</source>
@@ -221,15 +221,15 @@
     </message>
     <message>
       <source>BLSURF_GMF_FILE_DIALOG</source>
-      <translation>組み換えファイルを選択します.</translation>
+      <translation>ファイルの形式] で選択.</translation>
     </message>
     <message>
       <source>BLSURF_GMF_FILE_FORMAT</source>
-      <translation>組み換えファイル (*.mesh *.meshb)</translation>
+      <translation>ファイル グループ (*.mesh *.meshb)</translation>
     </message>
     <message>
       <source>BLSURF_PRECAD_GROUP</source>
-      <translation>PreCAD オプション</translation>
+      <translation>オプション PreCAD</translation>
     </message>
     <message>
       <source>BLSURF_PRECAD_MERGE_EDGES</source>
@@ -237,11 +237,11 @@
     </message>
     <message>
       <source>BLSURF_PRECAD_PROCESS_3D_TOPOLOGY</source>
-      <translation>プロセス 3 D トポロジ</translation>
+      <translation>CAD をきれい</translation>
     </message>
     <message>
       <source>BLSURF_PRECAD_DISCARD_INPUT</source>
-      <translation>入力トポロジを破棄します。</translation>
+      <translation>トポロジを無視します。</translation>
     </message>
     <message>
       <source>SMP_ENTRY_COLUMN</source>
@@ -257,15 +257,15 @@
     </message>
     <message>
       <source>BLSURF_SM_SURFACE</source>
-      <translation>顔 (またはグループ)</translation>
+      <translation>側 (またはグループ)</translation>
     </message>
     <message>
       <source>BLSURF_SM_EDGE</source>
-      <translation>エッジ (またはグループ)</translation>
+      <translation>エッジ （またはグループ） に</translation>
     </message>
     <message>
       <source>BLSURF_SM_POINT</source>
-      <translation>ポイント (またはグループ)</translation>
+      <translation>ポイント （またはグループ）</translation>
     </message>
     <message>
       <source>BLSURF_SM_ATTRACTOR</source>
@@ -273,7 +273,7 @@
     </message>
     <message>
       <source>BLSURF_SM_STD_TAB</source>
-      <translation>簡易マップ</translation>
+      <translation>単純です</translation>
     </message>
     <message>
       <source>BLSURF_SM_ATT_TAB</source>
@@ -289,19 +289,19 @@
     </message>
     <message>
       <source>BLSURF_CONST_SIZE</source>
-      <translation>定数のサイズ] 図形の近く</translation>
+      <translation>オブジェクトの周りの一定のサイズ</translation>
     </message>
     <message>
       <source>BLSURF_ATT_DIST</source>
-      <translation>ディストリクトに影響を与える</translation>
+      <translation>連邦地裁影響:</translation>
     </message>
     <message>
       <source>BLSURF_ATT_RADIUS</source>
-      <translation>一定以上</translation>
+      <translation>定数:</translation>
     </message>
     <message>
       <source>BLSURF_SM_SIZE</source>
-      <translation>ローカルのサイズ</translation>
+      <translation>ローカルのサイズ:</translation>
     </message>
     <message>
       <source>BLSURF_SM_DIST</source>
@@ -309,19 +309,19 @@
     </message>
     <message>
       <source>BLS_SEL_SHAPE</source>
-      <translation>図形を選択します。</translation>
+      <translation>オブジェクトを選択します。</translation>
     </message>
     <message>
       <source>BLS_SEL_VERTICES</source>
-      <translation>頂点を選択します</translation>
+      <translation>・ ポイント (s) の選択</translation>
     </message>
     <message>
       <source>BLS_SEL_FACE</source>
-      <translation>面を選択します。</translation>
+      <translation>顔を選択します。</translation>
     </message>
     <message>
       <source>BLS_SEL_FACES</source>
-      <translation>面を選択します</translation>
+      <translation>1 つを選択/顔 (s)</translation>
     </message>
     <message>
       <source>BLS_SEL_ATTRACTOR</source>
@@ -333,7 +333,7 @@
     </message>
     <message>
       <source>BLSURF_SM_MODIFY</source>
-      <translation>変更します。</translation>
+      <translation>変更</translation>
     </message>
     <message>
       <source>BLSURF_SM_REMOVE</source>
@@ -341,23 +341,23 @@
     </message>
     <message>
       <source>BLSURF_SM_SURF_VALUE</source>
-      <translation>面サイズ</translation>
+      <translation>[最小ファイル サイズの顔 (s)</translation>
     </message>
     <message>
       <source>BLSURF_SM_EDGE_VALUE</source>
-      <translation>サイズに保ちます</translation>
+      <translation>[最小ファイル サイズは・ エッジ （秒）</translation>
     </message>
     <message>
       <source>BLSURF_SM_POINT_VALUE</source>
-      <translation>ポイント サイズ</translation>
+      <translation>サイズは、ポイント (s)</translation>
     </message>
     <message>
       <source>BLSURF_ENF_VER</source>
-      <translation>適用された頂点</translation>
+      <translation>交差点</translation>
     </message>
     <message>
       <source>BLSURF_ENF_VER_FACE_ENTRY_COLUMN</source>
-      <translation>顔のエントリ</translation>
+      <translation>ID の顔</translation>
     </message>
     <message>
       <source>BLSURF_ENF_VER_NAME_COLUMN</source>
@@ -369,7 +369,7 @@
     </message>
     <message>
       <source>BLSURF_ENF_VER_Y_COLUMN</source>
-      <translation>Y</translation>
+      <translation>そこ</translation>
     </message>
     <message>
       <source>BLSURF_ENF_VER_Z_COLUMN</source>
@@ -377,7 +377,7 @@
     </message>
     <message>
       <source>BLSURF_ENF_VER_ENTRY_COLUMN</source>
-      <translation>頂点のエントリ</translation>
+      <translation>ポイント ID</translation>
     </message>
     <message>
       <source>BLSURF_ENF_VER_GROUP_COLUMN</source>
@@ -385,11 +385,11 @@
     </message>
     <message>
       <source>BLSURF_ENF_SELECT_FACE</source>
-      <translation>面を選択します。</translation>
+      <translation>顔を選択します。</translation>
     </message>
     <message>
       <source>BLSURF_ENF_SELECT_VERTEX</source>
-      <translation>頂点を選択します</translation>
+      <translation>ポイントを選択します。</translation>
     </message>
     <message>
       <source>BLSURF_ENF_VER_X_LABEL</source>
@@ -417,7 +417,123 @@
     </message>
     <message>
       <source>BLSURF_ENF_VER_INTERNAL_VERTICES</source>
-      <translation>すべての面の内部頂点を使用します。</translation>
+      <translation>すべての顔の内部のポイントを使用します。</translation>
+    </message>
+    <message>
+      <source>ZERO_VALUE_OF</source>
+      <translation>ZERO_VALUE_OF</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY</source>
+      <translation>BLSURF_PERIODICITY</translation>
+    </message>
+    <message>
+      <source>BLSURF_PRECAD_PERIODICITY</source>
+      <translation>BLSURF_PRECAD_PERIODICITY</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_ON_FACE</source>
+      <translation>BLSURF_PERIODICITY_ON_FACE</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_ON_EDGE</source>
+      <translation>BLSURF_PERIODICITY_ON_EDGE</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_OBJ_SOURCE_COLUMN</source>
+      <translation>BLSURF_PERIODICITY_OBJ_SOURCE_COLUMN</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_OBJ_TARGET_COLUMN</source>
+      <translation>BLSURF_PERIODICITY_OBJ_TARGET_COLUMN</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_P1_SOURCE_COLUMN</source>
+      <translation>BLSURF_PERIODICITY_P1_SOURCE_COLUMN</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_P2_SOURCE_COLUMN</source>
+      <translation>BLSURF_PERIODICITY_P2_SOURCE_COLUMN</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_P3_SOURCE_COLUMN</source>
+      <translation>BLSURF_PERIODICITY_P3_SOURCE_COLUMN</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_P1_TARGET_COLUMN</source>
+      <translation>BLSURF_PERIODICITY_P1_TARGET_COLUMN</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_P2_TARGET_COLUMN</source>
+      <translation>BLSURF_PERIODICITY_P2_TARGET_COLUMN</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_P3_TARGET_COLUMN</source>
+      <translation>BLSURF_PERIODICITY_P3_TARGET_COLUMN</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_MAIN_SOURCE</source>
+      <translation>BLSURF_PERIODICITY_MAIN_SOURCE</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_MAIN_TARGET</source>
+      <translation>BLSURF_PERIODICITY_MAIN_TARGET</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_SOURCE</source>
+      <translation>BLSURF_PERIODICITY_SOURCE</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_TARGET</source>
+      <translation>BLSURF_PERIODICITY_TARGET</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_WITH_VERTICES</source>
+      <translation>BLSURF_PERIODICITY_WITH_VERTICES</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_P1_SOURCE</source>
+      <translation>BLSURF_PERIODICITY_P1_SOURCE</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_P2_SOURCE</source>
+      <translation>BLSURF_PERIODICITY_P2_SOURCE</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_P3_SOURCE</source>
+      <translation>BLSURF_PERIODICITY_P3_SOURCE</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_P1_TARGET</source>
+      <translation>BLSURF_PERIODICITY_P1_TARGET</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_P2_TARGET</source>
+      <translation>BLSURF_PERIODICITY_P2_TARGET</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_P3_TARGET</source>
+      <translation>BLSURF_PERIODICITY_P3_TARGET</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_ADD</source>
+      <translation>BLSURF_PERIODICITY_ADD</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_REMOVE</source>
+      <translation>BLSURF_PERIODICITY_REMOVE</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_WRONG_NUMBER_OF_VERTICES</source>
+      <translation>BLSURF_PERIODICITY_WRONG_NUMBER_OF_VERTICES</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_SELECT_FACE</source>
+      <translation>BLSURF_PERIODICITY_SELECT_FACE</translation>
+    </message>
+    <message>
+      <source>BLSURF_PERIODICITY_SELECT_EDGE</source>
+      <translation>BLSURF_PERIODICITY_SELECT_EDGE</translation>
     </message>
   </context>
 </TS>

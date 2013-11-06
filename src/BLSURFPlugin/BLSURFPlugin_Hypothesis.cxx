@@ -1289,7 +1289,9 @@ void BLSURFPlugin_Hypothesis::AddFacePeriodicity(TEntry theFace1Entry, TEntry th
 
   _facesPeriodicityVector.push_back(pairOfFacesEntries);
 
-  NotifySubMeshesHypothesisModification();
+  // Removed for performance reason since AddFacePeriodicity is called multiple times (one time for each face)
+  // Does not affect the behaviour since it is only called via python, not via GUI.
+  //NotifySubMeshesHypothesisModification();
 }
 
 
@@ -1307,7 +1309,9 @@ void BLSURFPlugin_Hypothesis::AddEdgePeriodicity(TEntry theFace1Entry, TEntry th
 
   _edgesPeriodicityVector.push_back(edgePeriodicity);
 
-  NotifySubMeshesHypothesisModification();
+  // Removed for performance reason since AddEdgePeriodicity is called multiple times (one time for each edge)
+  // Does not affect the behaviour since it is only called via python, not via GUI.
+  //NotifySubMeshesHypothesisModification();
 }
 
 //=======================================================================
@@ -1323,7 +1327,9 @@ void BLSURFPlugin_Hypothesis::AddVertexPeriodicity(TEntry theEdge1Entry, TEntry 
 
   _verticesPeriodicityVector.push_back(vertexPeriodicity);
 
-  NotifySubMeshesHypothesisModification();
+  // Removed for performance reason since AddVertexPeriodicity is called multiple times (one time for each vertex)
+  // Does not affect the behaviour since it is only called via python, not via GUI.
+  //NotifySubMeshesHypothesisModification();
 }
 
 //=============================================================================

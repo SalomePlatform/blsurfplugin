@@ -4,6 +4,7 @@
 #   MESHGEMS_LIBRARIES    - path to the MESHGEMS libraries to be linked against
 #
 
+#########################################################################
 # Copyright (C) 2007-2013  CEA/DEN, EDF R&D
 #
 # This library is free software; you can redistribute it and/or
@@ -31,7 +32,11 @@ MESSAGE(STATUS "Check for MESHGEMS ...")
 
 SET(MESHGEMS_ROOT_DIR $ENV{MESHGEMS_ROOT_DIR})
 
-FIND_PATH(MESHGEMS_INCLUDE_DIRS meshgems/cadsurf.h HINTS ${MESHGEMS_ROOT_DIR} PATH_SUFFIXES include)
+IF(MESHGEMS_ROOT_DIR)
+  LIST(APPEND CMAKE_PREFIX_PATH "${MESHGEMS_ROOT_DIR}")
+ENDIF(MESHGEMS_ROOT_DIR)
+
+FIND_PATH(MESHGEMS_INCLUDE_DIRS meshgems/cadsurf.h PATH_SUFFIXES include)
 
 IF(MACHINE_IS_64)
   SET(_suff "_64")
@@ -44,18 +49,16 @@ ELSE()
   SET(_plt Linux${_suff})
 ENDIF(WIN32)
 
-SET(CADSURF_LIBS_PATHS ${MESHGEMS_ROOT_DIR}/lib)
-
-FIND_LIBRARY(mg-cadsurf mg-cadsurf PATHS ${CADSURF_LIBS_PATHS} PATH_SUFFIXES ${_plt})
-FIND_LIBRARY(mg-precad mg-precad PATHS ${CADSURF_LIBS_PATHS} PATH_SUFFIXES ${_plt})
-FIND_LIBRARY(meshgems meshgems PATHS ${CADSURF_LIBS_PATHS} PATH_SUFFIXES ${_plt})
+FIND_LIBRARY(MESHGEMS_LIBRARY_mg-cadsurf NAMES mg-cadsurf PATH_SUFFIXES "${_plt}")
+FIND_LIBRARY(MESHGEMS_LIBRARY_mg-precad NAMES mg-precad PATH_SUFFIXES "${_plt}")
+FIND_LIBRARY(MESHGEMS_LIBRARY_meshgems NAMES meshgems PATH_SUFFIXES "${_plt}")
 
 # TODO: search all components
 SET(MESHGEMS_LIBRARIES)
-SET(MESHGEMS_LIBRARIES ${MESHGEMS_LIBRARIES} ${mg-cadsurf})
-SET(MESHGEMS_LIBRARIES ${MESHGEMS_LIBRARIES} ${mg-precad})
+SET(MESHGEMS_LIBRARIES ${MESHGEMS_LIBRARIES} ${MESHGEMS_LIBRARY_mg-cadsurf})
+SET(MESHGEMS_LIBRARIES ${MESHGEMS_LIBRARIES} ${MESHGEMS_LIBRARY_mg-precad})
 IF(meshgems)
-  SET(MESHGEMS_LIBRARIES ${MESHGEMS_LIBRARIES} ${meshgems})
+  SET(MESHGEMS_LIBRARIES ${MESHGEMS_LIBRARIES} ${MESHGEMS_LIBRARY_meshgems})
 ENDIF(meshgems)
 
 INCLUDE(FindPackageHandleStandardArgs)

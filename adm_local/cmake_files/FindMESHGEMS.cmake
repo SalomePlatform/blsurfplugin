@@ -49,9 +49,9 @@ ELSE()
   SET(_plt Linux${_suff})
 ENDIF(WIN32)
 
-FIND_LIBRARY(MESHGEMS_LIBRARY_mg-cadsurf NAMES mg-cadsurf PATH_SUFFIXES "${_plt}")
-FIND_LIBRARY(MESHGEMS_LIBRARY_mg-precad NAMES mg-precad PATH_SUFFIXES "${_plt}")
-FIND_LIBRARY(MESHGEMS_LIBRARY_meshgems NAMES meshgems PATH_SUFFIXES "${_plt}")
+FIND_LIBRARY(MESHGEMS_LIBRARY_mg-cadsurf NAMES mg-cadsurf PATH_SUFFIXES ${_plt})
+FIND_LIBRARY(MESHGEMS_LIBRARY_mg-precad NAMES mg-precad PATH_SUFFIXES ${_plt})
+FIND_LIBRARY(MESHGEMS_LIBRARY_meshgems NAMES meshgems PATH_SUFFIXES ${_plt})
 
 # TODO: search all components
 SET(MESHGEMS_LIBRARIES)

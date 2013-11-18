@@ -35,31 +35,19 @@ tar zxf BLSURFPLUGIN_SRC.tgz
 bash
 cd <salome>
 source env_build.sh
-export BLSURFHOME=<salome>/blsurf
 
-Note: you can avoid setting BLSURFHOME environment variable but use
---with-blsurf key of configure script instead.
+* cmake build procedure
 
-* configure build system
-
-cd BLSURFPLUGIN_SRC
-./build_configure
-
-cd ..
 mkdir BLSURFPLUGIN_BUILD
 cd BLSURFPLUGIN_BUILD
-../BLSURFPLUGIN_SRC/configure --prefix=<salome>/BLSURFPLUGIN_INSTALL
+cmake -DCMAKE_BUILD_TYPE=<Mode> -DCMAKE_INSTALL_PREFIX=<BLSURFPLUGIN_INSTALL> ../BLSURFPLUGIN_SRC
 
-Note: you can use --with-blsurf option to pass the root directory of
-blsurf product to the confogure script. In this case you can avoid
-setting BLSURFHOME environment variable. Try 'configure --help'
-command to learn more about available configure script options.
+,where <Mode> is build mode (Release or Debug), 
+<BLSURFPLUGIN_INSTALL> is a destination folder to install 
+BLSURFPLUGIN module of SALOME.
 
-Check "Summary" area in the log output of the configure script to
-verify that all pre-requisites required for the successful compilation
-of BLSURFPLUFIN module have been found. All pre-requisite products
-should have status "yes". If any product has status "no", the
-compilation procedure will fail.
+Verify that all pre-requisites required for the successful compilation
+of BLSURFPLUFIN module have been found.
 
 * compile and install plugin module 
 
@@ -70,7 +58,7 @@ exit
 
 If the compilation is finished successfully (make and make install
 steps are finished without errors) the BLSURFPLUGIN meshing module
-should be installed in the directory <salome>/BLSURFPLUGIN_INSTALL.
+should be installed in the directory <BLSURFPLUGIN_INSTALL>.
 
 ----------------------------------
 3. Launch SALOME with BLSURFPLUGIN
@@ -82,7 +70,7 @@ bash
 cd <salome>
 source env_products.sh
 
-export BLSURFPLUGIN_ROOT_DIR=<salome>/BLSURFPLUGIN_INSTALL
+export BLSURFPLUGIN_ROOT_DIR=<BLSURFPLUGIN_INSTALL>
 export SalomeAppConfig=${BLSURFPLUGIN_ROOT_DIR}/share/salome/resources/blsurfplugin
 export DISTENE_LICENSE_FILE=<salome>/dlim8.key
 

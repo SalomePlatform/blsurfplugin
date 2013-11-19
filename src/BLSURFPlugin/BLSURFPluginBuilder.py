@@ -36,7 +36,7 @@ BLSURF_Custom, SizeMap = BLSURF_GlobalSize, BLSURF_LocalSize
 # import BLSURFPlugin module if possible
 noBLSURFPlugin = 0
 try:
-  import BLSURFPlugin
+  from salome.BLSURFPlugin import BLSURFPluginBuilder
 except ImportError:
   noBLSURFPlugin = 1
   pass

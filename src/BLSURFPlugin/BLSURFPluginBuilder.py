@@ -22,7 +22,6 @@
 # Python API for the BLSURF meshing plug-in module.
 
 from salome.smesh.smesh_algorithm import Mesh_Algorithm
-from salome.smesh.smeshBuilder import AssureGeomPublished
 
 # Topology treatment way of BLSURF
 FromCAD, PreProcess, PreProcessPlus, PreCAD = 0,1,2,3
@@ -36,7 +35,7 @@ BLSURF_Custom, SizeMap = BLSURF_GlobalSize, BLSURF_LocalSize
 # import BLSURFPlugin module if possible
 noBLSURFPlugin = 0
 try:
-  from salome.BLSURFPlugin import BLSURFPluginBuilder
+  import BLSURFPlugin
 except ImportError:
   noBLSURFPlugin = 1
   pass
@@ -268,6 +267,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   ## To get all the enforced vertices on a face (or group, compound)
   #  @param theFace : GEOM face (or group, compound) on which to define an enforced vertex
   def GetEnforcedVertices(self, theFace):
+    from salome.smesh.smeshBuilder import AssureGeomPublished
     AssureGeomPublished( self.mesh, theFace )
     return self.Parameters().GetEnforcedVertices(theFace)
 
@@ -283,6 +283,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   #  @param vertexName   : name of the enforced vertex
   #  @param groupName    : name of the group
   def SetEnforcedVertex(self, theFace, x, y, z, vertexName = "", groupName = ""):
+    from salome.smesh.smeshBuilder import AssureGeomPublished
     AssureGeomPublished( self.mesh, theFace )
     if vertexName == "":
       if groupName == "":
@@ -303,6 +304,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   #  @param theVertex    : GEOM vertex (or group, compound) to be projected on theFace.
   #  @param groupName    : name of the group
   def SetEnforcedVertexGeom(self, theFace, theVertex, groupName = ""):
+    from salome.smesh.smeshBuilder import AssureGeomPublished
     AssureGeomPublished( self.mesh, theFace )
     AssureGeomPublished( self.mesh, theVertex )
     if groupName == "":
@@ -317,6 +319,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   #  @param y            : y coordinate
   #  @param z            : z coordinate
   def UnsetEnforcedVertex(self, theFace, x, y, z):
+    from salome.smesh.smeshBuilder import AssureGeomPublished
     AssureGeomPublished( self.mesh, theFace )
     return self.Parameters().UnsetEnforcedVertex(theFace, x, y, z)
 
@@ -324,6 +327,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   #  @param theFace      : GEOM face (or group, compound) on which to remove the enforced vertex
   #  @param theVertex    : GEOM vertex (or group, compound) to remove.
   def UnsetEnforcedVertexGeom(self, theFace, theVertex):
+    from salome.smesh.smeshBuilder import AssureGeomPublished
     AssureGeomPublished( self.mesh, theFace )
     AssureGeomPublished( self.mesh, theVertex )
     return self.Parameters().UnsetEnforcedVertexGeom(theFace, theVertex)
@@ -331,6 +335,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   ## To remove all enforced vertices on a given face.
   #  @param theFace      : face (or group/compound of faces) on which to remove all enforced vertices
   def UnsetEnforcedVertices(self, theFace):
+    from salome.smesh.smeshBuilder import AssureGeomPublished
     AssureGeomPublished( self.mesh, theFace )
     return self.Parameters().UnsetEnforcedVertices(theFace)
 
@@ -364,6 +369,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   #  @param theInfluenceDistance : influence of the attractor ( the size grow slower on theFace if it's high)
   #  @param theConstantSizeDistance : distance until which the mesh size will be kept constant on theFace
   def SetAttractorGeom(self, theFace, theAttractor, theStartSize, theEndSize, theInfluenceDistance, theConstantSizeDistance):
+    from salome.smesh.smeshBuilder import AssureGeomPublished
     AssureGeomPublished( self.mesh, theFace )
     AssureGeomPublished( self.mesh, theAttractor )
     self.Parameters().SetAttractorGeom(theFace, theAttractor, theStartSize, theEndSize, theInfluenceDistance, theConstantSizeDistance)
@@ -372,6 +378,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   ## Unsets an attractor on the chosen face.
   #  @param theFace      : face on which the attractor has to be removed
   def UnsetAttractorGeom(self, theFace):
+    from salome.smesh.smeshBuilder import AssureGeomPublished
     AssureGeomPublished( self.mesh, theFace )
     self.Parameters().SetAttractorGeom(theFace)
     pass
@@ -387,6 +394,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   #  @param theObject   : GEOM face, edge or vertex (or group, compound) on which to define a size map
   #  @param theSizeMap  : Size map defined as a string
   def SetSizeMap(self, theObject, theSizeMap):
+    from salome.smesh.smeshBuilder import AssureGeomPublished
     AssureGeomPublished( self.mesh, theObject )
     self.Parameters().SetSizeMap(theObject, theSizeMap)
     pass
@@ -395,12 +403,14 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   #  @param theObject   : GEOM face, edge or vertex (or group, compound) on which to define a size map
   #  @param theSizeMap  : Size map defined as a double
   def SetConstantSizeMap(self, theObject, theSizeMap):
+    from salome.smesh.smeshBuilder import AssureGeomPublished
     AssureGeomPublished( self.mesh, theObject )
     self.Parameters().SetConstantSizeMap(theObject, theSizeMap)
 
   ## To remove a size map defined on a face, edge or vertex (or group, compound)
   #  @param theObject   : GEOM face, edge or vertex (or group, compound) on which to define a size map
   def UnsetSizeMap(self, theObject):
+    from salome.smesh.smeshBuilder import AssureGeomPublished
     AssureGeomPublished( self.mesh, theObject )
     self.Parameters().UnsetSizeMap(theObject)
     pass

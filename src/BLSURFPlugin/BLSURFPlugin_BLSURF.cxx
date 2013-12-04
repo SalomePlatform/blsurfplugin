@@ -2407,6 +2407,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
             if (theSizeMapStr.find(bad_end) == (theSizeMapStr.size()-bad_end.size()-1))
               continue;
             // Expr To Python function, verification is performed at validation in GUI
+            gstate = PyGILState_Ensure();
             PyObject * obj = NULL;
             obj= PyRun_String(theSizeMapStr.c_str(), Py_file_input, main_dict, NULL);
             Py_DECREF(obj);
@@ -2414,6 +2415,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
             func = PyObject_GetAttrString(main_mod, "f");
             VertexId2PythonSmp[*ip]=func;
             VertexId2SizeMap.erase(vertexKey);   // do not erase if using a vector
+            PyGILState_Release(gstate);
           }
         }
       }

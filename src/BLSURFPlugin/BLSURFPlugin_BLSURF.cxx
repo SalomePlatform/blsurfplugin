@@ -1645,7 +1645,11 @@ namespace
       }
       if ( u2node.size() < 2 ) return;
 
-      double tol = (( u2node.rbegin()->first - u2node.begin()->first ) / 20.) / u2node.size();
+      //double tol = (( u2node.rbegin()->first - u2node.begin()->first ) / 20.) / u2node.size();
+      Standard_Real f,l;
+      BRep_Tool::Range( TopoDS::Edge( shape ), f,l );
+      double tol = (( l - f ) / 20.) / u2node.size();
+
       std::multimap< double, const SMDS_MeshNode* >::iterator un2, un1;
       for ( un2 = u2node.begin(), un1 = un2++; un2 != u2node.end(); un1 = un2++ )
       {

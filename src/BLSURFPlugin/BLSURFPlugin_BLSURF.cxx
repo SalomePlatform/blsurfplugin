@@ -3066,12 +3066,17 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
         sm->SetIsAlwaysComputed( true );
 
   // Set error to FACE's w/o elements
+  SMESH_ComputeErrorName err = COMPERR_ALGO_FAILED;
+  if ( _comment.empty() )
+  {
+    err      = COMPERR_WARNING;
+    _comment = "No mesh elements assigned to a face";
+  }
   for ( int i = 1; i <= fmap.Extent(); ++i )
   {
     SMESH_subMesh* sm = aMesh.GetSubMesh( fmap(i) );
     if ( !sm->GetSubMeshDS() || sm->GetSubMeshDS()->NbElements() == 0 )
-      sm->GetComputeError().reset
-        ( new SMESH_ComputeError( COMPERR_ALGO_FAILED, _comment, this ));
+      sm->GetComputeError().reset( new SMESH_ComputeError( err, _comment, this ));
   }
 
   // Issue 0019864. On DebianSarge, FE signals do not obey to OSD::SetSignal(false)

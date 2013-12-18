@@ -1645,7 +1645,11 @@ namespace
       }
       if ( u2node.size() < 2 ) return;
 
-      double tol = (( u2node.rbegin()->first - u2node.begin()->first ) / 20.) / u2node.size();
+      //double tol = (( u2node.rbegin()->first - u2node.begin()->first ) / 20.) / u2node.size();
+      Standard_Real f,l;
+      BRep_Tool::Range( TopoDS::Edge( shape ), f,l );
+      double tol = (( l - f ) / 20.) / u2node.size();
+
       std::multimap< double, const SMDS_MeshNode* >::iterator un2, un1;
       for ( un2 = u2node.begin(), un1 = un2++; un2 != u2node.end(); un1 = un2++ )
       {
@@ -2407,6 +2411,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
             if (theSizeMapStr.find(bad_end) == (theSizeMapStr.size()-bad_end.size()-1))
               continue;
             // Expr To Python function, verification is performed at validation in GUI
+            gstate = PyGILState_Ensure();
             PyObject * obj = NULL;
             obj= PyRun_String(theSizeMapStr.c_str(), Py_file_input, main_dict, NULL);
             Py_DECREF(obj);
@@ -2414,6 +2419,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
             func = PyObject_GetAttrString(main_mod, "f");
             VertexId2PythonSmp[*ip]=func;
             VertexId2SizeMap.erase(vertexKey);   // do not erase if using a vector
+            PyGILState_Release(gstate);
           }
         }
       }
@@ -3066,12 +3072,17 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
         sm->SetIsAlwaysComputed( true );
 
   // Set error to FACE's w/o elements
+  SMESH_ComputeErrorName err = COMPERR_ALGO_FAILED;
+  if ( _comment.empty() )
+  {
+    err      = COMPERR_WARNING;
+    _comment = "No mesh elements assigned to a face";
+  }
   for ( int i = 1; i <= fmap.Extent(); ++i )
   {
     SMESH_subMesh* sm = aMesh.GetSubMesh( fmap(i) );
     if ( !sm->GetSubMeshDS() || sm->GetSubMeshDS()->NbElements() == 0 )
-      sm->GetComputeError().reset
-        ( new SMESH_ComputeError( COMPERR_ALGO_FAILED, _comment, this ));
+      sm->GetComputeError().reset( new SMESH_ComputeError( err, _comment, this ));
   }
 
   // Issue 0019864. On DebianSarge, FE signals do not obey to OSD::SetSignal(false)

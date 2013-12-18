@@ -13,7 +13,7 @@
     </message>
     <message>
       <source>BLSURF_PHY_MESH_TOOLTIP</source>
-      <translation>&lt;b&gt;&lt;u&gt;物理的なサイズ モード&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;br&gt;\n 'サイズ' グローバル: 物理的なサイズは、グローバル、メッシュ作成された全体的な物理的なサイズを使用します。&lt;br&gt;\n ローカル 'サイズ': サイズ ローカル カーブとサーフェスのサイズのマップ機能を使用して計算されます。&lt;br&gt;'非アクティブ' \n: 物理的なサイズは計算されません。</translation>
+      <translation>&lt;b&gt;&lt;u&gt;物理サイズ モード&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;br&gt;-「全体的なサイズ」: 物理的なサイズはグローバルで、メッシャーは、提供されている全体的な物理的なサイズが使用されます。&lt;br&gt;-'ローカル サイズ': サイズ マップ関数を使用してサイズのカーブおよびサーフェス上にローカルに計算できます。&lt;br&gt;-「非アクティブ」: 物理的なサイズが計算されなくなります。</translation>
     </message>
     <message>
       <source>BLSURF_GEOM_MESH</source>
@@ -21,7 +21,7 @@
     </message>
     <message>
       <source>BLSURF_GEOM_MESH_TOOLTIP</source>
-      <translation>&lt;b&gt;&lt;u&gt;幾何学的なサイズ モード&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;br&gt;\n 'サイズ' グローバル: 幾何学的なサイズはグローバルであり、幾何学的パラメーターによって指定された幾何学的な近似、メッシュ作成を使用します。&lt;br&gt;'非アクティブ' \n: 幾何学的なサイズは計算されません。</translation>
+      <translation>&lt;b&gt;&lt;u&gt;幾何学的サイズ モード&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;br&gt;-「全体的なサイズ」: 全体的な幾何学的サイズとメッシャーは、幾何学的パラメーターによって提供される幾何学的な近似を使用します。&lt;br&gt;-「非アクティブ」: 幾何学的なサイズが計算されなくなります。</translation>
     </message>
     <message>
       <source>BLSURF_DEFAULT_USER</source>
@@ -45,7 +45,7 @@
     </message>
     <message>
       <source>BLSURF_HPHYDEF_TOOLTIP</source>
-      <translation>定義済み定数全体のサイズを物理的なメッシュ。&lt;br&gt;\nThe 既定値は、 &lt;em&gt;diag&lt;/em&gt;によって計算されます/&lt;em&gt;比&lt;/em&gt;&lt;em&gt;の比率&lt;/em&gt;が環境設定で定義されています。</translation>
+      <translation>物理的メッシュの定義済み定数全体的なサイズです。&lt;br&gt;&lt;em&gt;Diag&lt;/em&gt;によって既定値が計算されます/&lt;em&gt;比率&lt;/em&gt;、&lt;em&gt;比率&lt;/em&gt;は環境設定で定義されます。</translation>
     </message>
     <message>
       <source>BLSURF_MINSIZE</source>
@@ -53,7 +53,7 @@
     </message>
     <message>
       <source>BLSURF_MINSIZE_TOOLTIP</source>
-      <translation>目的のセルの最小の全体的なサイズを定義します。&lt;br&gt;&lt;em&gt;diag&lt;/em&gt;によって 1000年 \nThe デフォルト値が計算されます。</translation>
+      <translation>それは最小の全体目的セルのサイズを定義します。&lt;br&gt;既定値は、 &lt;em&gt;diag&lt;/em&gt;1000 で計算されます。</translation>
     </message>
     <message>
       <source>BLSURF_MAXSIZE</source>
@@ -61,7 +61,7 @@
     </message>
     <message>
       <source>BLSURF_MAXSIZE_TOOLTIP</source>
-      <translation>目的のセルの最大の全体的なサイズを設定します。&lt;br&gt;&lt;em&gt;diag&lt;/em&gt;によって 5 \nThe デフォルト値が計算されます。</translation>
+      <translation>目的セルの最大の全体的なサイズを定義します。&lt;br&gt;既定値は、 &lt;em&gt;diag&lt;/em&gt;5 によって計算されます。</translation>
     </message>
     <message>
       <source>BLSURF_SIZE_REL</source>
@@ -93,7 +93,7 @@
     </message>
     <message>
       <source>BLSURF_ANGLE_MESH_TOOLTIP</source>
-      <translation>頂上に、メッシュの三角形の平面と面の接線方向の角度に制限されます。&lt;br&gt;own\nand 角は小さく、メッシュ上で高密度に近いジオメトリにあります。</translation>
+      <translation>頂上への接線方向の平面の各メッシュの三角形の平面と角度に制限されます。&lt;br&gt;角度が小さい、メッシュが緻密で、ジオメトリの近くにあります。</translation>
     </message>
     <message>
       <source>BLSURF_CHORDAL_ERROR</source>
@@ -101,7 +101,7 @@
     </message>
     <message>
       <source>BLSURF_CHORDAL_TOOLTIP</source>
-      <translation>三角形とその CAD 表面間の最大距離。&lt;br&gt;own\nand 距離は小さくより多くメッシュ (等方性モードでのみ使用可能) の表面の近くになります。</translation>
+      <translation>三角形とその CAD 表面間の最大距離。&lt;br&gt;距離が小さい、メッシュが (等方性モードでのみ使用可能) の表面に近いことになります。</translation>
     </message>
     <message>
       <source>BLSURF_OTHER_PARAMETERS</source>
@@ -113,7 +113,7 @@
     </message>
     <message>
       <source>BLSURF_ANISOTROPIC_TOOLTIP</source>
-      <translation>有効な場合、このパラメーターは最大異方性異方性メッシュ比のプロセスを駆動するメトリックの設定。&lt;br&gt;\n デフォルト値の 0 は、メトリック (とこれから生成された各要素) 任意の拡張することができます。</translation>
+      <translation>有効な場合、このパラメーターは異方性メッシュ比のプロセス運転メトリックの最大異方性を設定します。&lt;br&gt;メトリック (およびこうして生成要素) することができます任意引き伸ばされること 0 の既定値。</translation>
     </message>
     <message>
       <source>BLSURF_REMOVE_TINY_EDGES</source>
@@ -421,119 +421,119 @@
     </message>
     <message>
       <source>ZERO_VALUE_OF</source>
-      <translation>ZERO_VALUE_OF</translation>
+      <translation>"%1"の無効な値 (0)</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY</source>
-      <translation>BLSURF_PERIODICITY</translation>
+      <translation>Periodicité</translation>
     </message>
     <message>
       <source>BLSURF_PRECAD_PERIODICITY</source>
-      <translation>BLSURF_PRECAD_PERIODICITY</translation>
+      <translation>定期的な協会 (PreCAD を使用)</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_ON_FACE</source>
-      <translation>BLSURF_PERIODICITY_ON_FACE</translation>
+      <translation>両側</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_ON_EDGE</source>
-      <translation>BLSURF_PERIODICITY_ON_EDGE</translation>
+      <translation>エッジのみで</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_OBJ_SOURCE_COLUMN</source>
-      <translation>BLSURF_PERIODICITY_OBJ_SOURCE_COLUMN</translation>
+      <translation>ソース</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_OBJ_TARGET_COLUMN</source>
-      <translation>BLSURF_PERIODICITY_OBJ_TARGET_COLUMN</translation>
+      <translation>ターゲット</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_P1_SOURCE_COLUMN</source>
-      <translation>BLSURF_PERIODICITY_P1_SOURCE_COLUMN</translation>
+      <translation>P1</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_P2_SOURCE_COLUMN</source>
-      <translation>BLSURF_PERIODICITY_P2_SOURCE_COLUMN</translation>
+      <translation>P2</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_P3_SOURCE_COLUMN</source>
-      <translation>BLSURF_PERIODICITY_P3_SOURCE_COLUMN</translation>
+      <translation>P3</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_P1_TARGET_COLUMN</source>
-      <translation>BLSURF_PERIODICITY_P1_TARGET_COLUMN</translation>
+      <translation>P1</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_P2_TARGET_COLUMN</source>
-      <translation>BLSURF_PERIODICITY_P2_TARGET_COLUMN</translation>
+      <translation>P2</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_P3_TARGET_COLUMN</source>
-      <translation>BLSURF_PERIODICITY_P3_TARGET_COLUMN</translation>
+      <translation>P3</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_MAIN_SOURCE</source>
-      <translation>BLSURF_PERIODICITY_MAIN_SOURCE</translation>
+      <translation>ソース</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_MAIN_TARGET</source>
-      <translation>BLSURF_PERIODICITY_MAIN_TARGET</translation>
+      <translation>ターゲット</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_SOURCE</source>
-      <translation>BLSURF_PERIODICITY_SOURCE</translation>
+      <translation>ソース</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_TARGET</source>
-      <translation>BLSURF_PERIODICITY_TARGET</translation>
+      <translation>ターゲット</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_WITH_VERTICES</source>
-      <translation>BLSURF_PERIODICITY_WITH_VERTICES</translation>
+      <translation>変換を定義する点。</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_P1_SOURCE</source>
-      <translation>BLSURF_PERIODICITY_P1_SOURCE</translation>
+      <translation>P1</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_P2_SOURCE</source>
-      <translation>BLSURF_PERIODICITY_P2_SOURCE</translation>
+      <translation>P2</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_P3_SOURCE</source>
-      <translation>BLSURF_PERIODICITY_P3_SOURCE</translation>
+      <translation>P3</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_P1_TARGET</source>
-      <translation>BLSURF_PERIODICITY_P1_TARGET</translation>
+      <translation>P1</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_P2_TARGET</source>
-      <translation>BLSURF_PERIODICITY_P2_TARGET</translation>
+      <translation>P2</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_P3_TARGET</source>
-      <translation>BLSURF_PERIODICITY_P3_TARGET</translation>
+      <translation>P3</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_ADD</source>
-      <translation>BLSURF_PERIODICITY_ADD</translation>
+      <translation>追加</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_REMOVE</source>
-      <translation>BLSURF_PERIODICITY_REMOVE</translation>
+      <translation>削除</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_WRONG_NUMBER_OF_VERTICES</source>
-      <translation>BLSURF_PERIODICITY_WRONG_NUMBER_OF_VERTICES</translation>
+      <translation>提供されるポイントの数が正しくありません。</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_SELECT_FACE</source>
-      <translation>BLSURF_PERIODICITY_SELECT_FACE</translation>
+      <translation>Face</translation>
     </message>
     <message>
       <source>BLSURF_PERIODICITY_SELECT_EDGE</source>
-      <translation>BLSURF_PERIODICITY_SELECT_EDGE</translation>
+      <translation>Edge</translation>
     </message>
   </context>
 </TS>

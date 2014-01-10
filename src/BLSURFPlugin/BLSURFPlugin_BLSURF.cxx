@@ -2747,10 +2747,6 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     if ( _comment.empty() )
       _comment = "Exception in cadsurf_compute_mesh()";
   }
-  if ( status != STATUS_OK) {
-    // There was an error while meshing
-    error(_comment);
-  }
 
   std::cout << std::endl;
   std::cout << "End of Surface Mesh generation" << std::endl;
@@ -3073,16 +3069,27 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
 
   // Set error to FACE's w/o elements
   SMESH_ComputeErrorName err = COMPERR_ALGO_FAILED;
-  if ( _comment.empty() )
+  if ( _comment.empty() && status == STATUS_OK )
   {
     err      = COMPERR_WARNING;
     _comment = "No mesh elements assigned to a face";
   }
+  bool badFaceFound = false;
   for ( int i = 1; i <= fmap.Extent(); ++i )
   {
     SMESH_subMesh* sm = aMesh.GetSubMesh( fmap(i) );
     if ( !sm->GetSubMeshDS() || sm->GetSubMeshDS()->NbElements() == 0 )
+    {
       sm->GetComputeError().reset( new SMESH_ComputeError( err, _comment, this ));
+      badFaceFound = true;
+    }
+  }
+  if ( err == COMPERR_WARNING )
+  {
+    _comment.clear();
+  }
+  if ( status != STATUS_OK && !badFaceFound ) {
+    error(_comment);
   }
 
   // Issue 0019864. On DebianSarge, FE signals do not obey to OSD::SetSignal(false)
@@ -3376,7 +3383,10 @@ status_t message_cb(message_t *msg, void *user_data)
   string err( desc );
   message_cb_user_data * mcud = (message_cb_user_data*)user_data;
   // Get all the error message and some warning messages related to license and periodicity
-  if ( errnumber < 0 || err.find("license") != string::npos || err.find("periodicity") != string::npos ) {
+  if ( errnumber < 0 ||
+       err.find("license"    ) != string::npos ||
+       err.find("periodicity") != string::npos )
+  {
     // remove ^A from the tail
     int len = strlen( desc );
     while (len > 0 && desc[len-1] != '\n')

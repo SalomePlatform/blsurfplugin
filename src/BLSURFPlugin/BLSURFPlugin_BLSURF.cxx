@@ -255,7 +255,7 @@ BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF(int hypId, int studyId,
 
   myStudy = NULL;
   myStudy = aStudyMgr->GetStudyByID(_studyId);
-  if (myStudy)
+  if ( !myStudy->_is_nil() )
     MESSAGE("myStudy->StudyId() = " << myStudy->StudyId());
 
   /* Initialize the Python interpreter */

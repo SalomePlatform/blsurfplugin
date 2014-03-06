@@ -1615,7 +1615,7 @@ namespace
 
   //================================================================================
   /*!
-   * \brief Fills groups on nodes to be merged
+   * \brief Fills groups of nodes to be merged
    */
   //================================================================================
 
@@ -3015,11 +3015,8 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     SMESH_MeshEditor editor( &aMesh );
     SMESH_MeshEditor::TListOfListOfNodes nodeGroupsToMerge;
     TIDSortedElemSet segementsOnEdge;
-    TIDSortedNodeSet nodesOnEdge;
     TSubMeshSet::iterator smIt;
     SMESHDS_SubMesh* smDS;
-    typedef SMDS_StdIterator< const SMDS_MeshNode*, SMDS_NodeIteratorPtr > TNodeIterator;
-    double tol;
 
     // merge nodes on EDGE's with ones computed by BLSURF
     for ( smIt = mergeSubmeshes.begin(); smIt != mergeSubmeshes.end(); ++smIt )
@@ -3140,6 +3137,12 @@ void BLSURFPlugin_BLSURF::Set_NodeOnEdge(SMESHDS_Mesh* meshDS, const SMDS_MeshNo
   Standard_Real p1 = 1.0;
   TopLoc_Location loc;
   Handle(Geom_Curve) curve = BRep_Tool::Curve(edge, loc, p0, p1);
+  if ( curve.IsNull() )
+  {
+    // issue 22499. Node at a sphere apex
+    meshDS->SetNodeOnEdge(node, edge, p0);
+    return;
+  }
 
   if ( !loc.IsIdentity() ) pnt.Transform( loc.Transformation().Inverted() );
   GeomAPI_ProjectPointOnCurve proj(pnt, curve, p0, p1);
@@ -3158,9 +3161,6 @@ void BLSURFPlugin_BLSURF::Set_NodeOnEdge(SMESHDS_Mesh* meshDS, const SMDS_MeshNo
       meshDS->MoveNode( node, curve_pnt.X(), curve_pnt.Y(), curve_pnt.Z() );
     }
   }
-//   GProp_GProps LProps;
-//   BRepGProp::LinearProperties(ed, LProps);
-//   double lg = (double)LProps.Mass();
 
   meshDS->SetNodeOnEdge(node, edge, pa);
 }

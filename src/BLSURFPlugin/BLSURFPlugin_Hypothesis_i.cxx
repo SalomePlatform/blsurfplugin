@@ -145,7 +145,7 @@ void BLSURFPlugin_Hypothesis_i::SetPhySizeRel(CORBA::Double theValue) {
 //   MESSAGE("BLSURFPlugin_Hypothesis_i::SetPhySizeRel");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetPhySize(theValue, true);
-  SMESH::TPythonDump() << _this() << ".SetPhySize( " << theValue << ", isRelative = True )";
+  SMESH::TPythonDump() << _this() << ".SetPhySizeRel( " << theValue << " )";
 }
 
 //=============================================================================
@@ -188,7 +188,7 @@ void BLSURFPlugin_Hypothesis_i::SetMinSizeRel(CORBA::Double theMinSize) {
   ASSERT(myBaseImpl);
   if ( !IsMinSizeRel() || (GetMinSize() != theMinSize) ) {
     this->GetImpl()->SetMinSize(theMinSize, true);
-    SMESH::TPythonDump() << _this() << ".SetMinSize( " << theMinSize << ", isRelative = True )";
+    SMESH::TPythonDump() << _this() << ".SetMinSizeRel( " << theMinSize << " )";
   }
 }
 
@@ -219,7 +219,7 @@ void BLSURFPlugin_Hypothesis_i::SetMaxSizeRel(CORBA::Double theMaxSize) {
   ASSERT(myBaseImpl);
   if ( !IsMaxSizeRel() || (GetMaxSize() != theMaxSize) ) {
     this->GetImpl()->SetMaxSize(theMaxSize, true);
-    SMESH::TPythonDump() << _this() << ".SetMaxSize( " << theMaxSize << ", isRelative = True )";
+    SMESH::TPythonDump() << _this() << ".SetMaxSizeRel( " << theMaxSize << " )";
   }
 }
 

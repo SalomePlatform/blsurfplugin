@@ -133,7 +133,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   ## Sets upper boundary of mesh element size.
   #  @param theVal : global maximal cell size desired.
   #  @param isRelative : if True, the value is relative to the length of the diagonal of the bounding box
-  def SetMaxSize(self, theVal=-1):
+  def SetMaxSize(self, theVal=-1, isRelative = False):
     if isRelative:
       self.Parameters().SetMaxSizeRel(theVal)
     else:

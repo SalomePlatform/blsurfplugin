@@ -2887,8 +2887,13 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     // the last of the two initial tags (else the output tag is out of emap and hasn't any meaning)
     mesh_get_composite_tag_definition(msh, tag, &nb_tag, tags_buff);
     if(nb_tag > 1)  
-      tag=tags_buff[nb_tag-1]; 
-
+      tag=tags_buff[nb_tag-1];
+    if ( tag > emap.Extent() )
+    {
+      std::cerr << "MG-CADSurf BUG:::: Edge tag " << tag
+                << " more than nb CAD egdes (" << emap.Extent() << ")" << std::endl;
+      continue;
+    }
     if (tags[vtx[0]]) {
       Set_NodeOnEdge(meshDS, nodes[vtx[0]], emap(tag));
       tags[vtx[0]] = false;

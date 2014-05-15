@@ -5,7 +5,7 @@
     <name>@default</name>
     <message>
         <source>ZERO_VALUE_OF</source>
-        <translation type="unfinished">Invalid value (zero) of "%1"</translation>
+        <translation>Valeur invalide (zéro) de &quot;%1&quot;</translation>
     </message>
     <message>
         <source>BLSURF_MESH_TYPE</source>
@@ -127,7 +127,7 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
     </message>
     <message>
         <source>BLSURF_ANISOTROPIC_TOOLTIP</source>
-        <translation>Si activé, ce paramètre défini le ratio d'anisotropie maximum de la métrique pilotant de processus de maillage anisotropique.&lt;br&gt;
+        <translation>Si activé, ce paramètre défini le ratio d&apos;anisotropie maximum de la métrique pilotant de processus de maillage anisotropique.&lt;br&gt;
           La valeur par défaut de 0 signifie que la métrique (et donc les éléments générés) peut être étirée arbitrairement.</translation>
     </message>
     <message>
@@ -144,7 +144,7 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
     </message>
     <message>
         <source>BLSURF_REMOVE_SLIVERS_TOOLTIP</source>
-        <translation>Si activé, ce paramètre défini les proportions déclenchants la classification des "mauvais éléments”.</translation>
+        <translation>Si activé, ce paramètre défini les proportions déclenchants la classification des &quot;mauvais éléments”.</translation>
     </message>
     <message>
         <source>BLSURF_OPTIMISATION</source>
@@ -434,7 +434,7 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
         <source>BLSURF_ENF_VER_INTERNAL_VERTICES</source>
         <translation>Utiliser les points internes de toutes les faces</translation>
     </message>
-        <message>
+    <message>
         <source>BLSURF_PERIODICITY</source>
         <translation>Periodicité</translation>
     </message>
@@ -536,7 +536,7 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
     </message>
     <message>
         <source>BLSURF_PERIODICITY_WRONG_NUMBER_OF_VERTICES</source>
-        <translation>Le nombre de points fournis n'est pas correct</translation>
+        <translation>Le nombre de points fournis n&apos;est pas correct</translation>
     </message>
     <message>
         <source>BLSURF_PERIODICITY_SELECT_FACE</source>

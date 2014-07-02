@@ -471,7 +471,7 @@ BLSURFPluginGUI_HypothesisCreator::~BLSURFPluginGUI_HypothesisCreator()
 /**
  * \brief {Get or create the geom selection tool for active study}
  * */
-GeomSelectionTools* BLSURFPluginGUI_HypothesisCreator::getGeomSelectionTool()
+GeomSelectionTools* BLSURFPluginGUI_HypothesisCreator::getGeomSelectionTool() const
 {
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
   _PTR(Study) aStudy = SMESH::GetActiveStudyDocument();
@@ -1133,7 +1133,8 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   connect( mySizeMapTable,      SIGNAL( itemChanged (QTreeWidgetItem *, int)),this,  SLOT( onSetSizeMap(QTreeWidgetItem *, int) ) );
   connect( myAttractorCheck,    SIGNAL( stateChanged ( int )),         this,         SLOT( onAttractorClicked( int ) ) );
   connect( myConstSizeCheck,    SIGNAL( stateChanged ( int )),         this,         SLOT( onConstSizeClicked( int ) ) );
-  connect( smpTab,              SIGNAL( currentChanged ( int )),       this,         SLOT( onSmpTabChanged( int ) ) );
+  connect( smpTab,              SIGNAL( currentChanged ( int )),       this,         SLOT( onTabChanged( int ) ) );
+  connect( myTabWidget,         SIGNAL( currentChanged ( int )),       this,         SLOT( onTabChanged( int ) ) );
 
   // Enforced vertices
   connect( myEnforcedTreeWidget,SIGNAL( itemClicked(QTreeWidgetItem *, int)), this,  SLOT( synchronizeCoords() ) );
@@ -1423,7 +1424,7 @@ void BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices() {
 
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
 
-  that->getGeomSelectionTool()->selectionMgr()->clearFilters();
+  getGeomSelectionTool()->selectionMgr()->clearFilters();
   myEnfFaceWdg->deactivateSelection();
   myEnfVertexWdg->deactivateSelection();
 
@@ -2812,20 +2813,41 @@ void BLSURFPluginGUI_HypothesisCreator::onSmpItemClicked(QTreeWidgetItem * item,
   } 
 }
 
-void BLSURFPluginGUI_HypothesisCreator::onSmpTabChanged(int tab)
+void BLSURFPluginGUI_HypothesisCreator::onTabChanged(int tab)
 {
-  myAttDistSpin->setValue(0.);           // Reinitialize widgets 
-  myAttSizeSpin->setValue(0.);
-  myAttDistSpin2->setValue(0.);
-  mySmpSizeSpin->setValue(0.); 
-  myGeomSelWdg1->deactivateSelection();
-  myGeomSelWdg2->deactivateSelection();
-  myAttSelWdg->deactivateSelection();
-  myGeomSelWdg1->SetObject(CORBA::Object::_nil());
-  myGeomSelWdg2->SetObject(CORBA::Object::_nil());
-  myAttSelWdg->SetObject(CORBA::Object::_nil());
-  myAttractorCheck->setChecked(false);
-  myConstSizeCheck->setChecked(false);
+  getGeomSelectionTool()->selectionMgr()->clearFilters();// rm other tab filters
+  if ( sender() == myTabWidget )
+  {
+    myGeomSelWdg1             ->deactivateSelection();
+    myGeomSelWdg2             ->deactivateSelection();
+    myAttSelWdg               ->deactivateSelection();
+    myEnfFaceWdg              ->deactivateSelection();
+    myEnfVertexWdg            ->deactivateSelection();
+    myPeriodicitySourceFaceWdg->deactivateSelection();
+    myPeriodicityTargetFaceWdg->deactivateSelection();
+    myPeriodicityP1SourceWdg  ->deactivateSelection();
+    myPeriodicityP2SourceWdg  ->deactivateSelection();
+    myPeriodicityP3SourceWdg  ->deactivateSelection();
+    myPeriodicityP1TargetWdg  ->deactivateSelection();
+    myPeriodicityP2TargetWdg  ->deactivateSelection();
+    myPeriodicityP3TargetWdg  ->deactivateSelection();
+    return;
+  }
+  else if ( sender() == smpTab )
+  {
+    myAttDistSpin->setValue(0.);           // Reinitialize widgets
+    myAttSizeSpin->setValue(0.);
+    myAttDistSpin2->setValue(0.);
+    mySmpSizeSpin->setValue(0.);
+    myGeomSelWdg1->deactivateSelection();
+    myGeomSelWdg2->deactivateSelection();
+    myAttSelWdg->deactivateSelection();
+    myGeomSelWdg1->SetObject(CORBA::Object::_nil());
+    myGeomSelWdg2->SetObject(CORBA::Object::_nil());
+    myAttSelWdg->SetObject(CORBA::Object::_nil());
+    myAttractorCheck->setChecked(false);
+    myConstSizeCheck->setChecked(false);
+  }
 }
 
 void BLSURFPluginGUI_HypothesisCreator::onAttractorClicked(int state)
@@ -2969,8 +2991,7 @@ void BLSURFPluginGUI_HypothesisCreator::onAddMap()
     SUIT_MessageBox::critical( dlg(),"Error" , msg );
     return;
   }
-  BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;  
-  that->getGeomSelectionTool()->selectionMgr()->clearFilters();
+  getGeomSelectionTool()->selectionMgr()->clearFilters();
   myAttDistSpin->setValue(0.);
   myAttSizeSpin->setValue(0.);
   myAttDistSpin2->setValue(0.);
@@ -3008,8 +3029,7 @@ void BLSURFPluginGUI_HypothesisCreator::onModifyMap()
     SUIT_MessageBox::critical( dlg(),"Error" , msg );
     return;
   }
-  BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;  
-  that->getGeomSelectionTool()->selectionMgr()->clearFilters();
+  getGeomSelectionTool()->selectionMgr()->clearFilters();
   myAttDistSpin->setValue(0.);
   myAttSizeSpin->setValue(0.);
   myAttDistSpin2->setValue(0.);

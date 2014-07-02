@@ -199,7 +199,7 @@ protected slots:
   // Sizemap tab
   void                onMapGeomContentModified();
   void                onSmpItemClicked( QTreeWidgetItem *, int );
-  void                onSmpTabChanged(int);
+  void                onTabChanged(int);
   void                onAttractorClicked(int);
   void                onConstSizeClicked(int);
   void                onAddMap();
@@ -233,7 +233,7 @@ private:
   bool                sizeMapsValidation();
   bool                sizeMapValidationFromRow(int,bool displayError = true);
   bool                sizeMapValidationFromEntry(QString,bool displayError = true);
-  GeomSelectionTools* getGeomSelectionTool();
+  GeomSelectionTools* getGeomSelectionTool() const;
   GEOM::GEOM_Gen_var  getGeomEngine();
   //void                insertElementType( TopAbs_ShapeEnum );
   bool                insertElement( GEOM::GEOM_Object_var, bool modify = false );

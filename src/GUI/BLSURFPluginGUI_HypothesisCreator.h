@@ -191,6 +191,7 @@ protected:
   virtual QString     type() const;
 
 protected slots:
+  void                onStateChange();
   // Advanced tab
   void                onAddOption();
   void                onDeleteOption();

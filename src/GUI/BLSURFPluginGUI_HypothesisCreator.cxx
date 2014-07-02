@@ -1119,6 +1119,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   connect( myAdvWidget->addBtn->menu(), SIGNAL( aboutToShow() ),         this, SLOT( onAddOption() ) );
   connect( myAdvWidget->addBtn->menu(), SIGNAL( triggered( QAction* ) ), this, SLOT( onOptionChosenInPopup( QAction* ) ) );
   connect( myAdvWidget->rmBtn,          SIGNAL( clicked()),              this, SLOT( onDeleteOption() ) );
+  connect( myStdWidget->myAllowQuadrangles, SIGNAL( stateChanged( int )),this, SLOT( onStateChange() ));
 
   // Size Maps
   connect( addMapButton,        SIGNAL( clicked()),                    this,         SLOT( onAddMap() ) );
@@ -1176,6 +1177,11 @@ This method stop the selection of the widgets StdMeshersGUI_ObjectReferenceParam
 //     myEnfVertexWdg->deactivateSelection();
 //   }
 // }
+
+void BLSURFPluginGUI_HypothesisCreator::onStateChange()
+{
+  myStdWidget->myGradation->setEnabled( !myStdWidget->myAllowQuadrangles->isChecked() );
+}
 
 /** 
  * This method resets the content of the X, Y, Z widgets;
@@ -1967,6 +1973,7 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
   // update widgets
   that->myStdWidget->onPhysicalMeshChanged();
   that->myStdWidget->onGeometricMeshChanged();
+  that->onStateChange();
 }
 
 /** BLSURFPluginGUI_HypothesisCreator::storeParams()

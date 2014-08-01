@@ -201,6 +201,7 @@ PyObject * newPyStdOut( std::string& out )
 ////////////////////////END PYTHON///////////////////////////
 
 //////////////////MY MAPS////////////////////////////////////////
+namespace {
 TopTools_IndexedMapOfShape FacesWithSizeMap;
 std::map<int,string> FaceId2SizeMap;
 TopTools_IndexedMapOfShape EdgesWithSizeMap;
@@ -212,9 +213,11 @@ std::map<int,PyObject*> FaceId2PythonSmp;
 std::map<int,PyObject*> EdgeId2PythonSmp;
 std::map<int,PyObject*> VertexId2PythonSmp;
 
+typedef std::map<int, std::vector< BLSURFPlugin_Attractor* > > TId2ClsAttractorVec;
+TId2ClsAttractorVec FaceId2ClassAttractor;
+TId2ClsAttractorVec FaceIndex2ClassAttractor;
 std::map<int,std::vector<double> > FaceId2AttractorCoords;
-std::map<int,BLSURFPlugin_Attractor*> FaceId2ClassAttractor;
-std::map<int,BLSURFPlugin_Attractor*> FaceIndex2ClassAttractor;
+int theNbAttractors;
 
 TopTools_IndexedMapOfShape FacesWithEnforcedVertices;
 std::map< int, BLSURFPlugin_Hypothesis::TEnfVertexCoordsList > FaceId2EnforcedVertexCoords;
@@ -225,7 +228,7 @@ bool HasSizeMapOnFace=false;
 bool HasSizeMapOnEdge=false;
 bool HasSizeMapOnVertex=false;
 //bool HasAttractorOnFace=false;
-
+}
 //=============================================================================
 /*!
  *
@@ -1281,6 +1284,7 @@ void BLSURFPlugin_BLSURF::SetParameters(
     //  - build the map here for each face with an attractor set and only if the attractor shape as changed since the last call to _buildmap()
     //  -> define a bool _mapbuilt in the class that is set to false by default and set to true when calling _buildmap()  OK
 
+      theNbAttractors = 0;
     const BLSURFPlugin_Hypothesis::TAttractorMap class_attractors = BLSURFPlugin_Hypothesis::GetClassAttractorEntries(hyp);
     int key=-1;
     BLSURFPlugin_Hypothesis::TAttractorMap::const_iterator AtIt = class_attractors.begin();
@@ -1288,6 +1292,8 @@ void BLSURFPlugin_BLSURF::SetParameters(
       if ( !AtIt->second->Empty() ) {
        // MESSAGE("cadsurf_set_attractor(): " << AtIt->first << " = " << AtIt->second);
         GeomShape = entryToShape(AtIt->first);
+        if ( !SMESH_MesherHelper::IsSubShape( GeomShape, theGeomShape ))
+          continue;
         AttShape = AtIt->second->GetAttractorShape();
         GeomType  = GeomShape.ShapeType();
         // Group Management
@@ -1307,15 +1313,10 @@ void BLSURFPlugin_BLSURF::SetParameters(
            || AttShape.ShapeType() == TopAbs_COMPOUND) ){
             HasSizeMapOnFace = true;
 
-            if (! FacesWithSizeMap.Contains(TopoDS::Face(GeomShape)) ) {
-                key = FacesWithSizeMap.Add(TopoDS::Face(GeomShape) );
-            }
-            else {
-              key = FacesWithSizeMap.FindIndex(TopoDS::Face(GeomShape));
-//                 MESSAGE("Face with key " << key << " already in map");
-            }
+            key = FacesWithSizeMap.Add(TopoDS::Face(GeomShape) );
 
-            FaceId2ClassAttractor[key] = AtIt->second;
+            FaceId2ClassAttractor[key].push_back( AtIt->second );
+            ++theNbAttractors;
         }
         else{
           MESSAGE("Wrong shape type !!")
@@ -1880,6 +1881,8 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
   // Fix problem with locales
   Kernel_Utils::Localizer aLocalizer;
 
+  this->SMESH_Algo::_progress = 1e-3; // prevent progress advancment while computing attractors
+
   if ( !compute( aMesh, aShape, /*allowSubMeshClearing=*/true ))
     return false;
 
@@ -2163,11 +2166,17 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
       // -----------------
       // Class Attractors
       // -----------------
-      std::map<int,BLSURFPlugin_Attractor* >::iterator clAttractor_iter = FaceId2ClassAttractor.find(faceKey);
+      TId2ClsAttractorVec::iterator clAttractor_iter = FaceId2ClassAttractor.find(faceKey);
       if (clAttractor_iter != FaceId2ClassAttractor.end()){
         MESSAGE("Face indice: " << iface);
         MESSAGE("Adding attractor");
-        FaceIndex2ClassAttractor[iface]=clAttractor_iter->second;
+        std::vector< BLSURFPlugin_Attractor* > & attVec = clAttractor_iter->second;
+        for ( size_t i = 0; i < attVec.size(); ++i )
+          if ( !attVec[i]->IsMapBuilt() ) {
+            std::cout<<"Compute " << theNbAttractors-- << "-th attractor" <<std::endl;
+            attVec[i]->BuildMap();
+          }
+        FaceIndex2ClassAttractor[iface].swap( attVec );
         FaceId2ClassAttractor.erase(clAttractor_iter);
       }
     } // if (HasSizeMapOnFace && !use_precad)
@@ -3262,6 +3271,7 @@ status_t surf_fun(real *uv, real *xyz, real*du, real *dv,
 status_t size_on_surface(integer face_id, real *uv, real *size, void *user_data)
 {
   //MESSAGE("size_on_surface")
+  TId2ClsAttractorVec::iterator f2attVec;
   if (FaceId2PythonSmp.count(face_id) != 0){
     //MESSAGE("A size map is used to calculate size on face : "<<face_id)
     PyObject * pyresult = NULL;
@@ -3290,12 +3300,20 @@ status_t size_on_surface(integer face_id, real *uv, real *size, void *user_data)
     *size = result;
     PyGILState_Release(gstate);
   }
-  else if (FaceIndex2ClassAttractor.count(face_id) !=0 && !FaceIndex2ClassAttractor[face_id]->Empty()){
+  else if (( f2attVec = FaceIndex2ClassAttractor.find(face_id)) != FaceIndex2ClassAttractor.end() && !f2attVec->second.empty()){
 //    MESSAGE("attractor used on face :"<<face_id)
     // MESSAGE("List of attractor is not empty")
     // MESSAGE("Attractor empty : "<< FaceIndex2ClassAttractor[face_id]->Empty())
-    real result = FaceIndex2ClassAttractor[face_id]->GetSize(uv[0],uv[1]);
-    *size = result;
+    real result = 0;
+    //result = 1e100;
+    std::vector< BLSURFPlugin_Attractor* > & attVec = f2attVec->second;
+    for ( size_t i = 0; i < attVec.size(); ++i )
+    {
+      result += attVec[i]->GetSize(uv[0],uv[1]);
+      //result = Min( result, attVec[i]->GetSize(uv[0],uv[1]));
+    }
+    *size = result / attVec.size(); // mean of sizes defined by all attractors
+    //*size = result;
   }
   else {
     // MESSAGE("List of attractor is empty !!!")

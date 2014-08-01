@@ -138,8 +138,14 @@ class BLSURFPlugin_Attractor {
     
     bool              _isMapBuilt;
     bool              _isEmpty;
+
+  // data of a specific case: a point attractor on a plane
+  Handle(Geom_Surface) _plane;
+  gp_Pnt               _attractorPnt;
     
-    double            _distance(double u, double v);            // Retrieve the value of the distance map at point (u,v) of the parametric space of _face
+  double            (BLSURFPlugin_Attractor::*_distance)(double u, double v);            // Retrieve the value of the distance map at point (u,v) of the parametric space of _face
+  double            _distanceFromMap(double u, double v);
+  double            _distanceFromPoint(double u, double v);
 };    
 
 #endif

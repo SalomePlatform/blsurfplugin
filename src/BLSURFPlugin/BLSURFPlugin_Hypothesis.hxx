@@ -167,7 +167,7 @@ public:
   const TSizeMap& GetCustomSizeMapEntries() const { return _customSizeMap; }
  */
   
-  typedef std::map< std::string, BLSURFPlugin_Attractor* > TAttractorMap;
+  typedef std::multimap< std::string, BLSURFPlugin_Attractor* > TAttractorMap;
   typedef std::map< std::string, std::vector<double> > TParamsMap; //TODO à finir 
   
   void SetClassAttractorEntry(const std::string& entry, const std::string& att_entry, double StartSize, double EndSize, double ActionRadius, double ConstantRadius);

@@ -35,9 +35,10 @@
 #include <cmath>
 
 // cascade include
-#include "ShapeAnalysis.hxx"
-#include "ShapeConstruct_ProjectCurveOnSurface.hxx"
+#include <ShapeAnalysis.hxx>
+#include <ShapeConstruct_ProjectCurveOnSurface.hxx>
 #include <Precision.hxx>
+#include <GeomLib_IsPlanarSurface.hxx>
 
 BLSURFPlugin_Attractor::BLSURFPlugin_Attractor ()
   : _face(),
@@ -97,6 +98,27 @@ bool BLSURFPlugin_Attractor::init(){
   _known.clear();
   _trial.clear();
   Handle(Geom_Surface) aSurf = BRep_Tool::Surface(_face);
+
+  _distance = &BLSURFPlugin_Attractor::_distanceFromMap;
+
+  if ( GeomLib_IsPlanarSurface( aSurf ).IsPlanar() &&
+       _attractorShape.ShapeType() == TopAbs_VERTEX )
+  {
+    // a specific case, the map is not needed
+    gp_Pnt P = BRep_Tool::Pnt( TopoDS::Vertex( _attractorShape ));
+    GeomAPI_ProjectPointOnSurf projector( P, aSurf );
+    if ( projector.IsDone() && projector.NbPoints() == 1 )
+    {
+      projector.LowerDistanceParameters(u0,v0);
+
+      _attractorPnt = aSurf->Value( u0,v0 );
+      _plane        = aSurf;
+      _distance     = &BLSURFPlugin_Attractor::_distanceFromPoint;
+      _isMapBuilt   = true;
+      _isEmpty      = false;
+      return true;
+    }
+  }
   
   // Calculation of the bounds of the face
   ShapeAnalysis::GetFaceUVBounds(_face,_u1,_u2,_v1,_v2);
@@ -182,7 +204,12 @@ void BLSURFPlugin_Attractor::SetParameters(double Start_Size, double End_Size, d
   _constantRadius = Constant_Radius;
 }
 
-double BLSURFPlugin_Attractor::_distance(double u, double v){
+double BLSURFPlugin_Attractor::_distanceFromPoint(double u, double v)
+{
+  return _attractorPnt.Distance( _plane->Value( u, v ));
+}
+
+double BLSURFPlugin_Attractor::_distanceFromMap(double u, double v){
   
   //   BLSURF seems to perform a linear interpolation so it's sufficient to give it a non-continuous distance map
   int i = floor ( (u - _u1) * _gridU / (_u2 - _u1) + 0.5 );
@@ -191,9 +218,10 @@ double BLSURFPlugin_Attractor::_distance(double u, double v){
   return _DMap[i][j];
 }
 
-
-double BLSURFPlugin_Attractor::GetSize(double u, double v){   
-  double myDist = 0.5 * (_distance(u,v) - _constantRadius + fabs(_distance(u,v) - _constantRadius));
+double BLSURFPlugin_Attractor::GetSize(double u, double v)
+{
+  const double attrDist = (this->*_distance)(u,v);
+  const double myDist = 0.5 * (attrDist - _constantRadius + fabs(attrDist - _constantRadius));
   switch(_type)
   {
     case TYPE_EXP:
@@ -210,13 +238,13 @@ double BLSURFPlugin_Attractor::GetSize(double u, double v){
       }
       break;
     case TYPE_LIN:
-        return _startSize + ( 0.5 * (_distance(u,v) - _constantRadius + abs(_distance(u,v) - _constantRadius)) ) ;
+        return _startSize + ( 0.5 * (attrDist - _constantRadius + abs(attrDist - _constantRadius)) ) ;
       break;
   }
 }
 
 
-void BLSURFPlugin_Attractor::BuildMap(){ 
+void BLSURFPlugin_Attractor::BuildMap() { 
   
   MESSAGE("building the map");
   int i, j, k, n;  
@@ -237,7 +265,7 @@ void BLSURFPlugin_Attractor::BuildMap(){
   Handle(Geom_Surface) aSurf = BRep_Tool::Surface(_face);
   
   // While there are points in "Trial" (representing a kind of advancing front), loop on them -----------------------------------------------------------
-  while (_trial.size() > 0 ){
+  while (_trial.size() > 0 ) {
     min = _trial.begin();                        // Get trial point with min distance from start
     i0 = (*min)[1];
     j0 = (*min)[2];

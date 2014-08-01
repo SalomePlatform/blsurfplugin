@@ -619,26 +619,26 @@ void BLSURFPlugin_Hypothesis::SetClassAttractorEntry(const std::string& entry, c
   
   const TopoDS_Shape AttractorShape = BLSURFPlugin_Hypothesis::entryToShape(attEntry);
   const TopoDS_Face FaceShape = TopoDS::Face(BLSURFPlugin_Hypothesis::entryToShape(entry));
-  bool attExists = (_classAttractors.find(entry) != _classAttractors.end());
-  double u1,u2,v1,v2, diag;
-  
-  if ( !attExists || (attExists && _classAttractors[entry]->GetAttractorEntry().compare(attEntry) != 0)){ 
-    ShapeAnalysis::GetFaceUVBounds(FaceShape,u1,u2,v1,v2);
-//     diag = sqrt((u2 - u1) * (u2 - u1) + (v2 - v1) * (v2 - v1));  
-    BLSURFPlugin_Attractor* myAttractor = new BLSURFPlugin_Attractor(FaceShape, AttractorShape, attEntry);//, 0.1 ); // test 0.002 * diag); 
-    myAttractor->BuildMap();
-    myAttractor->SetParameters(StartSize, EndSize, ActionRadius, ConstantRadius);
-    _classAttractors[entry] = myAttractor;
-    NotifySubMeshesHypothesisModification();
+  TAttractorMap::iterator attIt = _classAttractors.find(entry);
+  for ( ; attIt != _classAttractors.end(); ++attIt )
+    if ( attIt->first == entry && 
+         attIt->second->GetAttractorEntry() == attEntry )
+      break;
+  bool attExists = (attIt != _classAttractors.end());
+
+  BLSURFPlugin_Attractor* myAttractor;
+  if ( !attExists ) {
+    myAttractor = new BLSURFPlugin_Attractor(FaceShape, AttractorShape, attEntry);//, 0.1 );
+    _classAttractors.insert( make_pair( entry, myAttractor ));
   }
   else {
-    _classAttractors[entry]->SetParameters(StartSize, EndSize, ActionRadius, ConstantRadius);
-    if (!_classAttractors[entry]->IsMapBuilt()){
-      _classAttractors[entry]->BuildMap();
-    }
-    NotifySubMeshesHypothesisModification();
+    myAttractor = attIt->second;
   }
-    
+  // if (!myAttractor->IsMapBuilt())
+  //   myAttractor->BuildMap();
+  myAttractor->SetParameters(StartSize, EndSize, ActionRadius, ConstantRadius);
+
+  NotifySubMeshesHypothesisModification();
 }
 
 //=======================================================================
@@ -698,7 +698,11 @@ void BLSURFPlugin_Hypothesis::ClearEntry(const std::string& entry)
    else {
      TAttractorMap::iterator it_clAt = _classAttractors.find( entry );
      if ( it_clAt != _classAttractors.end() ) {
-       _classAttractors.erase(it_clAt);
+       do {
+         _classAttractors.erase(it_clAt);
+         it_clAt = _classAttractors.find( entry );
+       }
+       while ( it_clAt != _classAttractors.end() );
        MESSAGE("_classAttractors.size() = "<<_classAttractors.size())
        NotifySubMeshesHypothesisModification();
      }
@@ -2112,7 +2116,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   double attParams[4];
   double step;
   while (isOK && hasNewAttractor) {
-    std::cout<<"Load new attractor"<<std::endl;
+    //std::cout<<"Load new attractor"<<std::endl;
     isOK = (load >> newAtFaceEntry);
     if (isOK) {
       if (newAtFaceEntry == "__NEW_ATTRACTORS_END__")
@@ -2128,8 +2132,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
       const TopoDS_Face faceShape = TopoDS::Face(BLSURFPlugin_Hypothesis::entryToShape(newAtFaceEntry));
       BLSURFPlugin_Attractor* attractor = new BLSURFPlugin_Attractor(faceShape, attractorShape, newAtShapeEntry);//, step);
       attractor->SetParameters(attParams[0], attParams[1], attParams[2], attParams[3]);
-      attractor->BuildMap();                     
-      _classAttractors[newAtFaceEntry]=attractor;
+      //attractor->BuildMap();                     
+      _classAttractors.insert( make_pair( newAtFaceEntry, attractor ));
     }
   }
   

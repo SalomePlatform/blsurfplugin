@@ -1129,6 +1129,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   connect( mySizeMapTable,      SIGNAL( itemClicked (QTreeWidgetItem *, int)),this,  SLOT( onSmpItemClicked(QTreeWidgetItem *, int) ) );
   connect( myGeomSelWdg2,       SIGNAL( contentModified() ),           this,         SLOT( onMapGeomContentModified() ) );
   connect( myGeomSelWdg1,       SIGNAL( contentModified() ),           this,         SLOT( onMapGeomContentModified() ) );
+  connect( myAttSelWdg,         SIGNAL( contentModified() ),           this,         SLOT( onMapGeomContentModified() ) );
 //   connect( myAttractorGroup,    SIGNAL( clicked(bool) ),               this,         SLOT( onAttractorGroupClicked(bool) ) );
   connect( mySizeMapTable,      SIGNAL( itemChanged (QTreeWidgetItem *, int)),this,  SLOT( onSetSizeMap(QTreeWidgetItem *, int) ) );
   connect( myAttractorCheck,    SIGNAL( stateChanged ( int )),         this,         SLOT( onAttractorClicked( int ) ) );
@@ -1882,28 +1883,31 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
     i.next();
     const QString entry = i.key();
     const QString sizeMap = i.value();
-    string shapeName = myGeomToolSelected->getNameFromEntry(entry.toStdString()); 
+    string shapeName = myGeomToolSelected->getNameFromEntry(entry.toStdString());
     int row = mySizeMapTable->topLevelItemCount();
     QTreeWidgetItem* item = new QTreeWidgetItem();
-    mySizeMapTable->addTopLevelItem( item ); 
+    mySizeMapTable->addTopLevelItem( item );
     item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled );
     item->setData(SMP_ENTRY_COLUMN,Qt::DisplayRole, QVariant(entry) );
     item->setData(SMP_NAME_COLUMN, Qt::DisplayRole, QVariant( QString::fromStdString(shapeName) ) );
-    if (that->myATTMap.contains(entry)){
-      const QString attEntry = that->myATTMap[entry];
-      std::string attName = myGeomToolSelected->getNameFromEntry(attEntry.toStdString());
-      QTreeWidgetItem* child = new QTreeWidgetItem();
-      item->addChild( child );
-      item->setExpanded(true);
-      child->setData(SMP_SIZEMAP_COLUMN, Qt::EditRole, QVariant( sizeMap  ) );
-      child->setData(SMP_ENTRY_COLUMN, Qt::DisplayRole, QVariant( attEntry  ) );
-      child->setData(SMP_NAME_COLUMN, Qt::DisplayRole, QVariant( QString::fromStdString( attName ) ) );
-   
-      if (that->myAttDistMap[entry] >  std::numeric_limits<double>::epsilon()){
-        item->setData(SMP_SIZEMAP_COLUMN, Qt::DisplayRole, QVariant( QString::fromStdString("Attractor" )  ) ); 
-      }
-      else{
-        item->setData(SMP_SIZEMAP_COLUMN, Qt::DisplayRole, QVariant( QString::fromStdString("Constant Size" )  ) );
+    if (that->myATTMap.contains(entry)) {
+      TAttractorVec & attVec = that->myATTMap[entry];
+      for ( size_t i = 0; i < attVec.size(); ++i )
+      {
+        std::string attName = myGeomToolSelected->getNameFromEntry( attVec[i].attEntry );
+        QTreeWidgetItem* child = new QTreeWidgetItem();
+        item->addChild( child );
+        item->setExpanded(true);
+        child->setData(SMP_SIZEMAP_COLUMN, Qt::EditRole, QVariant( attVec[i].startSize  ));
+        child->setData(SMP_ENTRY_COLUMN, Qt::DisplayRole, QVariant( attVec[i].attEntry.c_str() ));
+        child->setData(SMP_NAME_COLUMN, Qt::DisplayRole, QVariant( attName.c_str() ));
+
+        if ( attVec[i].infDist >  std::numeric_limits<double>::epsilon()){
+          item->setData(SMP_SIZEMAP_COLUMN, Qt::DisplayRole, QVariant( "Attractor" ));
+        }
+        else{
+          item->setData(SMP_SIZEMAP_COLUMN, Qt::DisplayRole, QVariant( "Constant Size" ));
+        }
       }
     }
     else
@@ -2047,8 +2051,8 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
 
   that->mySMPMap.clear();
   that->myATTMap.clear();
-  that->myAttDistMap.clear();
-  that->myDistMap.clear();
+  // that->myAttDistMap.clear();
+  // that->myDistMap.clear();
 
   // classic size maps
   BLSURFPlugin::string_array_var mySizeMaps = h->GetSizeMapEntries();
@@ -2117,15 +2121,12 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
     QString faceEntry = myAttractorParams.faceEntry.in();
     QString attEntry  = myAttractorParams.attEntry.in();
     MESSAGE("attEntry = "<<attEntry.toStdString())
-    double  startSize = myAttractorParams.startSize;
-    double  endSize   = myAttractorParams.endSize;
-    double  infDist   = myAttractorParams.infDist;
-    double  constDist = myAttractorParams.constDist;
-    that->mySMPMap[faceEntry] = QString::number( startSize, 'g',  6 ); // TODO utiliser les préférences ici (cf. sketcher)
+    that->mySMPMap[faceEntry] = QString::number( myAttractorParams.startSize, 'g',  6 ); // TODO utiliser les préférences ici (cf. sketcher)
     that->mySMPShapeTypeMap[faceEntry] = myGeomToolSelected->entryToShapeType(faceEntry.toStdString());
-    that->myATTMap[faceEntry] = attEntry;
-    that->myAttDistMap[faceEntry] = infDist;
-    that->myDistMap[faceEntry] = constDist;
+    that->myATTMap[faceEntry].push_back( TAttractor( myAttractorParams.attEntry.in(),
+                                                     myAttractorParams.startSize,
+                                                     myAttractorParams.infDist,
+                                                     myAttractorParams.constDist ));
   }
   
   // Enforced vertices
@@ -2337,14 +2338,17 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
 //        h->SetCustomSizeMapEntry( entry.toLatin1().constData(), sizeMap.toLatin1().constData() );
       }
       else {
-        if (!myATTMap[entry].isEmpty()){
-          QString att_entry = myATTMap[entry];
-          double infDist = myAttDistMap[entry];
-          double constDist = myDistMap[entry];
-          double phySize = h->GetPhySize();
-          QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
-          h->SetClassAttractorEntry( entry.toLatin1().constData(), att_entry.toLatin1().constData(), sizeMap.toDouble() , phySize, infDist, constDist ); 
-          QApplication::restoreOverrideCursor();
+        if (!myATTMap[entry].empty()){
+          const TAttractorVec& attVec = myATTMap[entry];
+          for ( size_t i = 0; i < attVec.size(); ++i )
+          {
+            h->SetClassAttractorEntry( entry.toLatin1().constData(),
+                                       attVec[i].attEntry.c_str(),
+                                       attVec[i].startSize,
+                                       h->GetPhySize(),
+                                       attVec[i].infDist,
+                                       attVec[i].constDist );
+          }
         }
         else {
           QString fullSizeMap;
@@ -2747,75 +2751,108 @@ void BLSURFPluginGUI_HypothesisCreator::onDeleteOption()
 
 void BLSURFPluginGUI_HypothesisCreator::onMapGeomContentModified()
 {
-  BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
-  
-  if ( myGeomSelWdg2->IsObjectSelected() ){ 
+  if ( myGeomSelWdg2->IsObjectSelected() ){
     mySMapObject = myGeomSelWdg2->GetObject< GEOM::GEOM_Object >(0);
   }
   else if ( myGeomSelWdg1->IsObjectSelected() ){
     mySMapObject = myGeomSelWdg1->GetObject< GEOM::GEOM_Object >(0);
   }
-  std::string entry = (string) mySMapObject->GetStudyEntry();
-  QString qEntry = QString::fromStdString(entry);
-  if (that->mySMPMap.contains(qEntry) && that->mySMPMap[qEntry] != "__TO_DELETE__" ) {  
-    addMapButton->setEnabled(false);
-    modifyMapButton->setEnabled(true);
+  else {
+    mySMapObject = GEOM::GEOM_Object::_nil();
   }
-  else{
-    addMapButton->setEnabled(true);
-    modifyMapButton->setEnabled(false);
+  bool dataAvailable = !mySMapObject->_is_nil();
+  QString qEntry;
+  if ( dataAvailable )
+    qEntry = SMESH::toQStr( mySMapObject->GetStudyEntry() );
+
+  bool mapExists = ( mySMPMap.contains(qEntry) && mySMPMap[qEntry] != "__TO_DELETE__" );
+  if (( mapExists && myGeomSelWdg2->IsObjectSelected() )  &&
+      ( dataAvailable = myAttSelWdg->isEnabled() )        &&
+      ( dataAvailable = myAttSelWdg->IsObjectSelected() ) &&
+      ( myATTMap.contains( qEntry )))
+  {
+    mapExists = false;
+    QString attEntry = myAttSelWdg->GetValue();
+    const TAttractorVec& attVec = myATTMap[ qEntry ];
+    for ( size_t i = 0; i < attVec.size() && !mapExists; ++i )
+      mapExists = ( attEntry == attVec[i].attEntry.c_str() );
   }
-      
-} 
+
+  addMapButton->setEnabled( !mapExists && dataAvailable );
+  modifyMapButton->setEnabled( mapExists && dataAvailable );
+}
 
 void BLSURFPluginGUI_HypothesisCreator::onSmpItemClicked(QTreeWidgetItem * item, int col)
 { 
   MESSAGE("BLSURFPluginGUI_HypothesisCreator::onSmpItemClicked("<<col<<")")
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
-  if (col == SMP_SIZEMAP_COLUMN){
+  if (col == SMP_SIZEMAP_COLUMN) {
     QString entry   = item->data( SMP_ENTRY_COLUMN, Qt::EditRole ).toString();
+    QString childEntry;
     if (!mySMPMap.contains(entry))
-      return;
+    {
+      if ( QTreeWidgetItem* parent = item->parent() )
+      {
+        childEntry = entry;
+        item = parent;
+        entry = item->data( SMP_ENTRY_COLUMN, Qt::EditRole ).toString();
+      }
+      if (!mySMPMap.contains(entry))
+        return;
+    }
     QString sizeMap = item->data( SMP_SIZEMAP_COLUMN, Qt::EditRole ).toString();
-    CORBA::Object_var obj = entryToObject(entry); 
-    if (sizeMap.startsWith("Attractor") || sizeMap.startsWith("Constant")){  // ADVANCED MAPS
+    CORBA::Object_var obj = entryToObject(entry);
+    if (sizeMap.startsWith("Attractor") || sizeMap.startsWith("Constant")) {  // ADVANCED MAPS
       smpTab->setCurrentIndex(ATT_TAB);         // Change Tab
-      double phySize = that->mySMPMap[entry].toDouble();  // Retrieve values of the selected item in the current tab widgets
-      double infDist = that->myAttDistMap[entry];
-      double constDist = that->myDistMap[entry];
-      QString attEntry = that->myATTMap[entry];
-      CORBA::Object_var attObj = entryToObject(attEntry);
-      myAttSizeSpin->setValue(phySize);
-      if (sizeMap.startsWith("Attractor")){     
-        myAttDistSpin->setValue(infDist);
-        myAttractorCheck->setChecked(true);
+      // Retrieve values of the selected item in the current tab widgets
+      const TAttractorVec& attVec = myATTMap[entry];
+      if ( !attVec.empty() )
+      {
+        int iAtt = 0;
+        if ( !childEntry.isEmpty() )
+          for ( size_t i = 0; i < attVec.size(); ++i )
+            if ( childEntry == attVec[i].attEntry.c_str() )
+            {
+              iAtt = i;
+              break;
+            }
+        double phySize   = attVec[iAtt].startSize;
+        double infDist   = attVec[iAtt].infDist;
+        double constDist = attVec[iAtt].constDist;
+        QString attEntry = attVec[iAtt].attEntry.c_str();
+        CORBA::Object_var attObj = entryToObject(attEntry);
+        myAttSizeSpin->setValue(phySize);
+        if ( infDist > std::numeric_limits<double>::epsilon() /*sizeMap.startsWith("Attractor")*/){
+          myAttDistSpin->setValue(infDist);
+          myAttractorCheck->setChecked(true);
+        }
+        else {
+          myAttractorCheck->setChecked(false);
+        }
+        if (/*sizeMap.startsWith("Constant") || */constDist > std::numeric_limits<double>::epsilon()){
+          myAttDistSpin2->setValue(constDist);
+          myConstSizeCheck->setChecked(true);
+        }
+        else{
+          myConstSizeCheck->setChecked(false);
+        }
+        myGeomSelWdg2->SetObject(obj);
+        myAttSelWdg->SetObject(attObj);
       }
-      else {
-        myAttractorCheck->setChecked(false);
-      }
-      if (sizeMap.startsWith("Constant") || constDist > std::numeric_limits<double>::epsilon()){
-        myAttDistSpin2->setValue(constDist);
-        myConstSizeCheck->setChecked(true);
-      }
-      else{
-        myConstSizeCheck->setChecked(false);
-      }
-      myGeomSelWdg2->SetObject(obj); 
-      myAttSelWdg->SetObject(attObj);
     }
     else {                                                                   // CLASSIC MAPS
       smpTab->setCurrentIndex(SMP_STD_TAB);  // Change Tab
       myGeomSelWdg1->SetObject(obj);         // Retrieve values of the selected item in the current tab widgets
       if (!sizeMap.startsWith("def")){
-        mySmpSizeSpin->setValue(that->mySMPMap[entry].toDouble()); 
+        mySmpSizeSpin->setValue(that->mySMPMap[entry].toDouble());
       }
-    }  
-  } 
+    }
+  }
 }
 
 void BLSURFPluginGUI_HypothesisCreator::onTabChanged(int tab)
 {
-  getGeomSelectionTool()->selectionMgr()->clearFilters();// rm other tab filters
+  getGeomSelectionTool()->selectionMgr()->clearFilters();
   if ( sender() == myTabWidget )
   {
     myGeomSelWdg1             ->deactivateSelection();
@@ -2876,7 +2913,8 @@ void BLSURFPluginGUI_HypothesisCreator::onAttractorClicked(int state)
     else if (!myAttSelWdg->IsObjectSelected()){           // Only constant size selected
       myAttSelWdg->SetDefaultText(tr("BLS_SEL_SHAPE"), "QLineEdit { color: grey }");
     }
-  }   
+  }
+  onMapGeomContentModified();
 }
 
 void BLSURFPluginGUI_HypothesisCreator::onConstSizeClicked(int state)
@@ -2907,6 +2945,7 @@ void BLSURFPluginGUI_HypothesisCreator::onConstSizeClicked(int state)
     myAttSelWdg->SetDefaultText(tr("BLS_SEL_ATTRACTOR"), "QLineEdit { color: grey }");
     }
   }   
+  onMapGeomContentModified();
 }
 
 void BLSURFPluginGUI_HypothesisCreator::onRemoveMap()
@@ -2929,10 +2968,10 @@ void BLSURFPluginGUI_HypothesisCreator::onRemoveMap()
         that->mySMPShapeTypeMap.remove(entry);
       if (that->myATTMap.contains(entry))
         that->myATTMap.remove(entry);
-      if (that->myDistMap.contains(entry))
-        that->myDistMap.remove(entry);
-      if (that->myAttDistMap.contains(entry))
-        that->myAttDistMap.remove(entry);
+      // if (that->myDistMap.contains(entry))
+      //   that->myDistMap.remove(entry);
+      // if (that->myAttDistMap.contains(entry))
+      //   that->myAttDistMap.remove(entry);
       delete item;
   }
   mySizeMapTable->resizeColumnToContents(SMP_NAME_COLUMN);
@@ -2972,8 +3011,8 @@ void BLSURFPluginGUI_HypothesisCreator::onSetSizeMap(QTreeWidgetItem* item, int 
 void BLSURFPluginGUI_HypothesisCreator::onAddMap()
 {
   bool res = false;
-  if ( smpTab->currentIndex() == ATT_TAB ){    
-    if ( myGeomSelWdg2->IsObjectSelected() && myAttSelWdg->IsObjectSelected() ){ 
+  if ( smpTab->currentIndex() == ATT_TAB ){
+    if ( myGeomSelWdg2->IsObjectSelected() && myAttSelWdg->IsObjectSelected() ){
       mySMapObject = myGeomSelWdg2->GetObject< GEOM::GEOM_Object >(0);
       myAttObject = myAttSelWdg->GetObject< GEOM::GEOM_Object >(0);
       res = insertAttractor(mySMapObject, myAttObject);
@@ -2982,8 +3021,8 @@ void BLSURFPluginGUI_HypothesisCreator::onAddMap()
   if (smpTab->currentIndex() == SMP_STD_TAB  ){
     if ( myGeomSelWdg1->IsObjectSelected() ){
       mySMapObject = myGeomSelWdg1->GetObject< GEOM::GEOM_Object >(0);
-      res = insertElement(mySMapObject);  
-    }  
+      res = insertElement(mySMapObject);
+    }
   }
   if ( !res ) {
     // Local size should be more than 0
@@ -3047,8 +3086,8 @@ void BLSURFPluginGUI_HypothesisCreator::onModifyMap()
 bool BLSURFPluginGUI_HypothesisCreator::insertElement(GEOM::GEOM_Object_var anObject, bool modify)
 {
   MESSAGE("BLSURFPluginGUI_HypothesisCreator::insertElement()");
-  BLSURFPlugin::BLSURFPlugin_Hypothesis_var h =
-    BLSURFPlugin::BLSURFPlugin_Hypothesis::_narrow( initParamsHypothesis());
+  // BLSURFPlugin::BLSURFPlugin_Hypothesis_var h =
+  //   BLSURFPlugin::BLSURFPlugin_Hypothesis::_narrow( initParamsHypothesis());
 
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
 
@@ -3100,7 +3139,7 @@ bool BLSURFPluginGUI_HypothesisCreator::insertElement(GEOM::GEOM_Object_var anOb
     mySizeMapTable->addTopLevelItem(item);
   }
   that->mySMPMap[shapeEntry] = sizeMap;
-  that->myDistMap[shapeEntry] = 0. ;
+  //that->myDistMap[shapeEntry] = 0. ;
   that->mySMPShapeTypeMap[shapeEntry] = shapeType;
   item->setFlags( Qt::ItemIsSelectable |Qt::ItemIsEditable   |Qt::ItemIsEnabled );
   item->setData(SMP_ENTRY_COLUMN, Qt::EditRole, QVariant(shapeEntry) );
@@ -3162,29 +3201,39 @@ bool BLSURFPluginGUI_HypothesisCreator::insertAttractor(GEOM::GEOM_Object_var aF
   QString constDistString = QString::fromStdString(oss3.str());
   
   QTreeWidgetItem* item; 
-  QTreeWidgetItem* child; 
-  if (modify){
+  QTreeWidgetItem* child;
+  TAttractor attParams( attEntry.c_str(), phySize, infDist, constDist );
+  if (modify) {
     int rowToChange = findRowFromEntry(shapeEntry);
     item = mySizeMapTable->topLevelItem( rowToChange );
-    child = item->child( 0 );
+    
+    for ( int i = 0, nb = item->childCount(); i < nb; ++i )
+      if (( child = item->child( i )))
+        if ( qAttEntry == child->data( SMP_ENTRY_COLUMN, Qt::EditRole ).toString() )
+          break;
+    TAttractorVec & attVec = myATTMap[shapeEntry];
+    for ( size_t i = 0; i < attVec.size(); ++i )
+      if ( attVec[i].attEntry == attEntry )
+      {
+        attVec[i] = attParams;
+        break;
+      }
   }
   else{
-    if (that->mySMPMap.contains(shapeEntry)) {  
-      if (that->mySMPMap[shapeEntry] != "__TO_DELETE__") {
-    //             MESSAGE("Size map for shape with name(entry): "<< shapeName << "(" << entry << ")");
-        return false;
-      }
-    }
+    // if (that->mySMPMap.contains(shapeEntry)) {  
+    //   if (that->mySMPMap[shapeEntry] != "__TO_DELETE__") {
+    // //             MESSAGE("Size map for shape with name(entry): "<< shapeName << "(" << entry << ")");
+    //     return false;
+    //   }
+    // }
     item = new QTreeWidgetItem();
     child = new QTreeWidgetItem();
     mySizeMapTable->addTopLevelItem(item);
     item->addChild(child);
+    myATTMap[shapeEntry].push_back( attParams );
   }
-  that->mySMPMap.insert(shapeEntry,sizeMap);
-  that->myATTMap.insert(shapeEntry,qAttEntry);
-  that->myAttDistMap.insert(shapeEntry,infDist);
-  that->myDistMap.insert(shapeEntry,constDist);
-  that->mySMPShapeTypeMap.insert(shapeEntry,shapeType);
+  mySMPMap.insert(shapeEntry,sizeMap);
+  mySMPShapeTypeMap.insert(shapeEntry,shapeType);
   item->setExpanded(true); 
   item->setData(SMP_ENTRY_COLUMN, Qt::EditRole, QVariant(shapeEntry) );
   item->setData(SMP_NAME_COLUMN, Qt::EditRole, QVariant(QString::fromStdString(faceName)) );

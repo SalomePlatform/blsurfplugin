@@ -114,7 +114,20 @@ struct TEnfVertex{
   TEnfVertexCoords coords;
   TEnfName grpName;
 };
-
+// Attractor
+struct TAttractor{
+  std::string attEntry;
+  double      startSize;
+  double      infDist;
+  double      constDist;
+  TAttractor( const char* theAttEntry, double theStartSize, double theInfDist, double theConstDist)
+    : attEntry( theAttEntry ),
+      startSize( theStartSize ),
+      infDist( theInfDist ),
+      constDist( theConstDist )
+  {}
+};
+typedef std::vector< TAttractor > TAttractorVec;
 
 struct CompareEnfVertices
 {
@@ -312,9 +325,9 @@ private:
 
   // map =  entry , size map
   QMap<QString, QString>          mySMPMap;           // Map <face entry, size>
-  QMap<QString, QString>          myATTMap;           // Map <face entry, att. entry>
-  QMap<QString, double>           myDistMap;          // Map <entry,distance with constant size> 
-  QMap<QString, double>           myAttDistMap;       // Map <entry, influence distance> 
+  QMap<QString, TAttractorVec >   myATTMap;           // Map <face entry, att. entry, etc>
+  // QMap<QString, double>           myDistMap;          // Map <entry,distance with constant size> 
+  // QMap<QString, double>           myAttDistMap;       // Map <entry, influence distance> 
   QMap<QString, TopAbs_ShapeEnum> mySMPShapeTypeMap;
   GeomSelectionTools*             GeomToolSelected;
   LightApp_SelectionMgr*          aSel;

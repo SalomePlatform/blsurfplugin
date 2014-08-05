@@ -994,8 +994,8 @@ void BLSURFPlugin_Hypothesis_i::SetClassAttractorEntry(const char* entry, const 
   }
   MESSAGE("ENGINE : SETATTRACTOR END ENTRY : " << entry);
   //if ( valueChanged )
-  SMESH::TPythonDump() << _this() << ".SetAttractorGeom("
-                       << entry << ", " << att_entry << ", "<<StartSize<<", "<<EndSize<<", "<<ActionRadius<<", "<<ConstantRadius<<" )";
+  SMESH::TPythonDump() << _this() << ".SetAttractorGeom( '"
+                       << entry << "', '" << att_entry << "', "<<StartSize<<", "<<EndSize<<", "<<ActionRadius<<", "<<ConstantRadius<<" )";
 }
 
 //=============================================================================
@@ -1274,31 +1274,43 @@ void BLSURFPlugin_Hypothesis_i::SetAttractorGeom(GEOM::GEOM_Object_ptr theFace, 
   SetClassAttractorEntry( theFaceEntry.c_str(), theAttEntry.c_str(), StartSize, EndSize, ActionRadius, ConstantRadius);
 }
 
-void BLSURFPlugin_Hypothesis_i::UnsetAttractorGeom(GEOM::GEOM_Object_ptr theFace)
+void BLSURFPlugin_Hypothesis_i::UnsetAttractorGeom(GEOM::GEOM_Object_ptr theFace,
+                                                   GEOM::GEOM_Object_ptr theAttractor)
 {
   ASSERT(myBaseImpl);
-  string theFaceEntry;
-  theFaceEntry = theFace->GetStudyEntry();
+  CORBA::String_var theFaceEntry = theFace->GetStudyEntry();
+  CORBA::String_var theAttrEntry = theAttractor->GetStudyEntry();
   
-  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
-  SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
-  string aName;
+  // GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+  // SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
+  // string aName;
   
-  if (theFaceEntry.empty()) {
-    aName = "Face_";
-    aName += theFace->GetEntry();
-    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
-    if (!theSFace->_is_nil())
-      theFaceEntry = theSFace->GetID();
-  }
-  if (theFaceEntry.empty())
+  // if (theFaceEntry.empty()) {
+  //   aName = "Face_";
+  //   aName += theFace->GetEntry();
+  //   SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+  //   if (!theSFace->_is_nil())
+  //     theFaceEntry = theSFace->GetID();
+  // }
+  if ( !theFaceEntry.in() || !theFaceEntry[0] ||
+       !theAttrEntry.in() || !theAttrEntry[0] )
     THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
   
   MESSAGE("IDL : GetName : " << theFace->GetName());
   MESSAGE("IDL : UNSETATTRACTOR ( "<< theFaceEntry << ")");
-  UnsetEntry( theFaceEntry.c_str());
-  SMESH::TPythonDump() << _this() << ".UnsetAttractorGeom( " << theFaceEntry.c_str() << " )";
+  GetImpl()->ClearEntry( theFaceEntry.in(), theAttrEntry.in() );
+  SMESH::TPythonDump() << _this() << ".UnsetAttractorGeom( "
+                       << theFace << ", " << theAttractor << " )";
 }
+
+void BLSURFPlugin_Hypothesis_i::UnsetAttractorEntry(const char* faceEntry,
+                                                    const char* attractorEntry)
+{
+  GetImpl()->ClearEntry( faceEntry, attractorEntry );
+  SMESH::TPythonDump() << _this() << ".UnsetAttractorEntry( '"
+                       << faceEntry << "', '" << attractorEntry << "' )";
+}
+
 
 /*
  void BLSURFPlugin_Hypothesis_i::SetCustomSizeMap(GEOM::GEOM_Object_ptr GeomObj, const char* sizeMap)

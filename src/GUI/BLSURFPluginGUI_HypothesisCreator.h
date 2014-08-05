@@ -126,6 +126,8 @@ struct TAttractor{
       infDist( theInfDist ),
       constDist( theConstDist )
   {}
+  void SetToDelete() { startSize = -1; }
+  bool IsToDelete() const { return startSize < 0; }
 };
 typedef std::vector< TAttractor > TAttractorVec;
 

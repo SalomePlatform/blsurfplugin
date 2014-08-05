@@ -361,7 +361,8 @@ module BLSURFPlugin
      * Set/unset an attractor given as geom object on another geom object
      */
     void         SetAttractorGeom(in GEOM::GEOM_Object GeomObj, in GEOM::GEOM_Object AttractorShape, in double StartSize, in double EndSize, in double ActionRadius, in double ConstantRadius);
-    void         UnsetAttractorGeom(in GEOM::GEOM_Object GeomObj);
+    void         UnsetAttractorGeom(in GEOM::GEOM_Object GeomObj, in GEOM::GEOM_Object AttractorShape);
+    void         UnsetAttractorEntry(in string entry, in string attractor);
 
     /*!
      * Set an attractor given by entry on a geom object given by entry

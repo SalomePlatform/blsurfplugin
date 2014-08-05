@@ -2342,12 +2342,16 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
           const TAttractorVec& attVec = myATTMap[entry];
           for ( size_t i = 0; i < attVec.size(); ++i )
           {
-            h->SetClassAttractorEntry( entry.toLatin1().constData(),
-                                       attVec[i].attEntry.c_str(),
-                                       attVec[i].startSize,
-                                       h->GetPhySize(),
-                                       attVec[i].infDist,
-                                       attVec[i].constDist );
+            if ( attVec[i].IsToDelete() )
+              h->UnsetAttractorEntry( entry.toLatin1().constData(),
+                                      attVec[i].attEntry.c_str() );
+            else
+              h->SetClassAttractorEntry( entry.toLatin1().constData(),
+                                         attVec[i].attEntry.c_str(),
+                                         attVec[i].startSize,
+                                         h->GetPhySize(),
+                                         attVec[i].infDist,
+                                         attVec[i].constDist );
           }
         }
         else {
@@ -2962,12 +2966,30 @@ void BLSURFPluginGUI_HypothesisCreator::onRemoveMap()
   while ( it.hasPrevious() ) {
       item = it.previous();
       QString entry = item->data(SMP_ENTRY_COLUMN, Qt::EditRole).toString();
+      QString parentEntry;
+      if ( QTreeWidgetItem* parent = item->parent() )
+        parentEntry = parent->data(SMP_ENTRY_COLUMN, Qt::EditRole).toString();
       if (that->mySMPMap.contains(entry))
+      {
         that->mySMPMap[entry] = "__TO_DELETE__";
+        if ( myATTMap.contains( entry ))
+        {
+          TAttractorVec& attVec = myATTMap[entry];
+          for ( size_t i = 0; i < attVec.size(); ++i )
+            attVec[i].SetToDelete();
+        }          
+      }
+      else if ( mySMPMap.contains( parentEntry ) && myATTMap.contains( parentEntry ))
+      {
+        TAttractorVec& attVec = myATTMap[parentEntry];
+        for ( size_t i = 0; i < attVec.size(); ++i )
+        {
+          if ( entry == attVec[i].attEntry.c_str() )
+            attVec[i].SetToDelete();
+        }
+      }
       if (that->mySMPShapeTypeMap.contains(entry))
         that->mySMPShapeTypeMap.remove(entry);
-      if (that->myATTMap.contains(entry))
-        that->myATTMap.remove(entry);
       // if (that->myDistMap.contains(entry))
       //   that->myDistMap.remove(entry);
       // if (that->myAttDistMap.contains(entry))
@@ -3226,11 +3248,28 @@ bool BLSURFPluginGUI_HypothesisCreator::insertAttractor(GEOM::GEOM_Object_var aF
     //     return false;
     //   }
     // }
-    item = new QTreeWidgetItem();
+    int rowToChange = findRowFromEntry(shapeEntry);
+    if ( rowToChange < mySizeMapTable->topLevelItemCount() )
+    {
+      item = mySizeMapTable->topLevelItem( rowToChange );
+    }
+    else {
+      item = new QTreeWidgetItem();
+      mySizeMapTable->addTopLevelItem(item);
+    }
     child = new QTreeWidgetItem();
-    mySizeMapTable->addTopLevelItem(item);
     item->addChild(child);
-    myATTMap[shapeEntry].push_back( attParams );
+    bool exists = false;
+    TAttractorVec & attVec = myATTMap[shapeEntry];
+    for ( size_t i = 0; i < attVec.size(); ++i )
+      if ( attVec[i].attEntry == attEntry )
+      {
+        attVec[i] = attParams;
+        exists = true;
+        break;
+      }
+    if ( !exists )
+      myATTMap[shapeEntry].push_back( attParams );
   }
   mySMPMap.insert(shapeEntry,sizeMap);
   mySMPShapeTypeMap.insert(shapeEntry,shapeType);
@@ -3420,13 +3459,13 @@ CORBA::Object_var BLSURFPluginGUI_HypothesisCreator::entryToObject(QString entry
 }
 
 int BLSURFPluginGUI_HypothesisCreator::findRowFromEntry(QString entry){
-  QString entryForChecking;
   int endRow = mySizeMapTable->topLevelItemCount()-1;
   int row = 0;
-  entryForChecking = mySizeMapTable->topLevelItem( row )->data( SMP_ENTRY_COLUMN, Qt::EditRole ).toString();
-  while (entry != entryForChecking && row <= endRow){
-    row++;
-    entryForChecking = mySizeMapTable->topLevelItem( row )->data( SMP_ENTRY_COLUMN, Qt::EditRole ).toString();
+  for ( ; row <= endRow; ++row )
+  {
+    QString entryForChecking = mySizeMapTable->topLevelItem( row )->data( SMP_ENTRY_COLUMN, Qt::EditRole ).toString();
+    if (entry == entryForChecking )
+      break;
   }
   MESSAGE("BLSURFPluginGUI_HypothesisCreator::findRowFromEntry; row = "<<row<<" , endRow ="<<endRow)
   return row;

@@ -3305,15 +3305,15 @@ status_t size_on_surface(integer face_id, real *uv, real *size, void *user_data)
     // MESSAGE("List of attractor is not empty")
     // MESSAGE("Attractor empty : "<< FaceIndex2ClassAttractor[face_id]->Empty())
     real result = 0;
-    //result = 1e100;
+    result = 1e100;
     std::vector< BLSURFPlugin_Attractor* > & attVec = f2attVec->second;
     for ( size_t i = 0; i < attVec.size(); ++i )
     {
-      result += attVec[i]->GetSize(uv[0],uv[1]);
-      //result = Min( result, attVec[i]->GetSize(uv[0],uv[1]));
+      //result += attVec[i]->GetSize(uv[0],uv[1]);
+      result = Min( result, attVec[i]->GetSize(uv[0],uv[1]));
     }
-    *size = result / attVec.size(); // mean of sizes defined by all attractors
-    //*size = result;
+    //*size = result / attVec.size(); // mean of sizes defined by all attractors
+    *size = result;
   }
   else {
     // MESSAGE("List of attractor is empty !!!")

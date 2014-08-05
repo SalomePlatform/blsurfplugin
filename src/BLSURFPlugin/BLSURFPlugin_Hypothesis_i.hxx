@@ -168,8 +168,10 @@ public:
   
   void SetAttractorGeom(GEOM::GEOM_Object_ptr GeomObj, GEOM::GEOM_Object_ptr Attractor, CORBA::Double StartSize, CORBA::Double EndSize, CORBA::Double ActionRadius, CORBA::Double ConstantRadius );
 
-  void UnsetAttractorGeom(GEOM::GEOM_Object_ptr GeomObj);
+  void UnsetAttractorGeom(GEOM::GEOM_Object_ptr GeomObj,
+                          GEOM::GEOM_Object_ptr theAttractor);
 
+  void UnsetAttractorEntry(const char* entry, const char* attractor);
   void SetClassAttractorEntry(const char* entry, const char* att_entry, CORBA::Double StartSize, CORBA::Double EndSize, CORBA::Double ActionRadius, CORBA::Double ConstantRadius)  throw (SALOME::SALOME_Exception);
 
   BLSURFPlugin::TAttParamsMap* GetAttractorParams();
@@ -294,7 +296,7 @@ public:
     throw (SALOME::SALOME_Exception);
 
   void AddEdgePeriodicity(GEOM::GEOM_Object_ptr theFace1, GEOM::GEOM_Object_ptr theEdge1,
-			  GEOM::GEOM_Object_ptr theFace2, GEOM::GEOM_Object_ptr theEdge2, CORBA::Long edge_orientation = 0)
+                          GEOM::GEOM_Object_ptr theFace2, GEOM::GEOM_Object_ptr theEdge2, CORBA::Long edge_orientation = 0)
       throw (SALOME::SALOME_Exception);
 
   void AddEdgePeriodicityWithoutFaces(GEOM::GEOM_Object_ptr theEdge1, GEOM::GEOM_Object_ptr theEdge2, CORBA::Long edge_orientation = 0)

@@ -681,7 +681,8 @@ BLSURFPlugin_Hypothesis::TAttractorMap BLSURFPlugin_Hypothesis::GetClassAttracto
 //=======================================================================
 //function : ClearEntry
 //=======================================================================
-void BLSURFPlugin_Hypothesis::ClearEntry(const std::string& entry)
+void BLSURFPlugin_Hypothesis::ClearEntry(const std::string& entry,
+                                         const char * attEntry/*=0*/)
 {
  TSizeMap::iterator it  = _sizeMap.find( entry );
  
@@ -699,8 +700,10 @@ void BLSURFPlugin_Hypothesis::ClearEntry(const std::string& entry)
      TAttractorMap::iterator it_clAt = _classAttractors.find( entry );
      if ( it_clAt != _classAttractors.end() ) {
        do {
-         _classAttractors.erase(it_clAt);
-         it_clAt = _classAttractors.find( entry );
+         if ( !attEntry || it_clAt->second->GetAttractorEntry() == attEntry )
+           _classAttractors.erase( it_clAt++ );
+         else
+           ++it_clAt;
        }
        while ( it_clAt != _classAttractors.end() );
        MESSAGE("_classAttractors.size() = "<<_classAttractors.size())

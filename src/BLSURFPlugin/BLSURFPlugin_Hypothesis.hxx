@@ -128,7 +128,7 @@ public:
   void SetVerbosity(int theVal);
   int GetVerbosity() const { return _verb; }
   
-  void ClearEntry(const std::string& entry);
+  void ClearEntry(const std::string& entry, const char * attEntry = 0);
   void ClearSizeMaps();
 
   void SetPreCADMergeEdges(bool theVal);

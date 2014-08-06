@@ -1292,8 +1292,8 @@ void BLSURFPlugin_Hypothesis_i::UnsetAttractorGeom(GEOM::GEOM_Object_ptr theFace
   //   if (!theSFace->_is_nil())
   //     theFaceEntry = theSFace->GetID();
   // }
-  if ( !theFaceEntry.in() || !theFaceEntry[0] ||
-       !theAttrEntry.in() || !theAttrEntry[0] )
+  if ( !theFaceEntry.in() || !theFaceEntry.in()[0] ||
+       !theAttrEntry.in() || !theAttrEntry.in()[0] )
     THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
   
   MESSAGE("IDL : GetName : " << theFace->GetName());

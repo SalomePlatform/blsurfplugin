@@ -332,7 +332,7 @@ bool BLSURFPlugin_BLSURF::CheckHypothesis
     return true;  // can work with no hypothesis
   }
 
-  for ( itl = hyps.begin(); itl != hyps.end(); ++itl )
+  for ( itl = hyps.begin(); itl != hyps.end() && ( aStatus == HYP_OK ); ++itl )
   {
     theHyp = *itl;
     string hypName = theHyp->GetName();
@@ -347,7 +347,11 @@ bool BLSURFPlugin_BLSURF::CheckHypothesis
     }
     else if ( hypName == StdMeshers_ViscousLayers2D::GetHypType() )
     {
-      _haveViscousLayers = true;
+      if ( !_haveViscousLayers )
+      {
+        if ( error( StdMeshers_ViscousLayers2D::CheckHypothesis( aMesh, aShape, aStatus )))
+          _haveViscousLayers = true;
+      }
     }
     else
     {

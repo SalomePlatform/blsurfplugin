@@ -31,8 +31,8 @@
                server-lib="BLSURFEngine"
                gui-lib="BLSURFPluginGUI">
   <hypotheses>
-    <hypothesis type="BLSURF_Parameters"
-		label-id="BLSURF Parameters"
+    <hypothesis type="MG_CADSurf_Parameters"
+		label-id="MG-CADSurf Parameters"
 		icon-id="mesh_hypo_BLSURF.png"
 		dim="2">
       <python-wrap>
@@ -65,15 +65,15 @@
   </hypotheses>
   <algorithms>
 
-    <algorithm type="BLSURF"
-               label-id="BLSURF"
+    <algorithm type="MG_CADSurf"
+               label-id="MG-CADSurf"
                icon-id="mesh_algo_BLSURF.png"
-               opt-hypos="BLSURF_Parameters,ViscousLayers2D"
+               opt-hypos="MG_CADSurf_Parameters,ViscousLayers2D"
                output="TRIA,QUAD"
                dim="2"
 	       support-submeshes="true">
       <python-wrap>
-        <algo>BLSURF=Triangle(algo=smeshBuilder.BLSURF)</algo>
+        <algo>BLSURF=Triangle(algo=smeshBuilder.MG_CADSurf)</algo>
         <hypo>BLSURF_Parameters=Parameters()</hypo>
         <hypo>ViscousLayers2D=ViscousLayers2D(SetTotalThickness(),SetNumberLayers(),SetStretchFactor(),SetIgnoreEdges())</hypo>
       </python-wrap>

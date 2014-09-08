@@ -1,6 +1,7 @@
 /*!
 
-\page blsurf_hypo_page BLSURF Parameters hypothesis
+\page blsurf_hypo_page MG-CADSurf Parameters hypothesis (former BLSURF
+Parameters)
 
 \anchor blsurf_top
 
@@ -10,7 +11,7 @@
 
 \image html blsurf_parameters.png
 
-- <b>Name</b> - allows defining the name of the hypothesis (BLSURF
+- <b>Name</b> - allows defining the name of the hypothesis (MG-CADSurf
 Parameters_n by default).
 
 - <b>Physical Mesh</b> - can be set to <em>None</em>, <em>Global size</em>
@@ -98,13 +99,13 @@ MeshGems-CADSurf and MeshGems-PreCAD [0-100].
 
 - <b>ExportGMF</b> - saves the computed mesh into a GMF file (.mesh or .meshb).
 
-- <b>Add option</b> - provides the choice of multiple PreCAD and BLSURF 
+- <b>Add option</b> - provides the choice of multiple PreCAD and MG-CADSurf 
 advanced options, which appear, if selected, in a table where it is 
 possible to input the value of the option and edit it later.
 
 - <b>Clear option</b> - removes the option selected in the table.
 
-The following BLSURF options are commonly usable:
+The following MG-CADSurf options are commonly usable:
 
 - \b frontal (integer)
 
@@ -297,7 +298,7 @@ not with an <i>attractor</i> size map described above.
   prescribed by the attractor function.
 
   - Else the growing is only controled by the standard arguments of
-  BLSURF (gradation ...).
+  MG-CADSurf (gradation ...).
 
 \image html blsurf_const_size_near_shape2.png "Example of size map with constant size option, the size is kept constant on the left side of the surface until a certain distance"
 
@@ -306,7 +307,7 @@ attractors are defined or the "constant size" option is used because a
 map of distances has to be built on the whole surface for each face
 where such a hypothesis has been defined.
 
-\sa Sample TUI Script of the \ref tui_blsurf "creation of a BLSurf hypothesis", including size map.
+\sa Sample TUI Script of the \ref tui_blsurf "creation of a MG-CADSurf hypothesis", including size map.
 
 \ref blsurf_local_size "Back to \"Local size\""\n
 \ref blsurf_top "Back to top"
@@ -334,7 +335,7 @@ shape. The distance is the geodesic distance (i.e. calculated by following the s
 
 \image html blsurf_parameters_enforced_vertices.png
 
-It is possible to define some enforced vertices to BLSurf algorithm.
+It is possible to define some enforced vertices to MG-CADSurf algorithm.
 An enforced vertex is defined on a Face or a Compound by
 
 - selecting an existing Vertex or Compound,
@@ -353,7 +354,7 @@ The enforced vertex is the projection of a point defined by its
 All the internal vertices of the faces can be considered as enforced vertices if the corresponding checkbox is checked.
 A group can optionnaly be defined on those enforced vertices.
 
-\sa Sample TUI Script of the \ref tui_blsurf "creation of a BLSurf hypothesis", including enforced vertices.
+\sa Sample TUI Script of the \ref tui_blsurf "creation of a MG-CADSurf hypothesis", including enforced vertices.
 
 \ref blsurf_top "Back to top"
 
@@ -365,7 +366,7 @@ A group can optionnaly be defined on those enforced vertices.
 Periodicity is used to have the same discretization on two faces (in 3D) or two edges (in 2D).
 This is useful for instance for a Representative Volume Element so that the translated meshes share the same nodes on the common faces.
 
-In GUI, periodicity association uses PreCAD (optional BLSURF add-on). Be sure to have a PreCAD license to be able to use it. Otherwise, use \ref periodicity_tui_basic_api_usage "the basic API in TUI" or the \ref periodicity_tui_advanced_api_usage "the advanced API in TUI".
+In GUI, periodicity association uses PreCAD (optional MG-CADSurf add-on). Be sure to have a PreCAD license to be able to use it. Otherwise, use \ref periodicity_tui_basic_api_usage "the basic API in TUI" or the \ref periodicity_tui_advanced_api_usage "the advanced API in TUI".
 
 \image html blsurf_periodicity_translation.png "Two periodic faces (translation)"
 
@@ -394,7 +395,7 @@ The two methods to define periodicity with PreCAD are:
 
 List of source and target vertices to define a transformation are optional.
 
-\sa Sample TUI Script of the definition of BLSurf periodicity \ref tui_blsurf_periodicity_preCAD "using preCAD".
+\sa Sample TUI Script of the definition of MG-CADSurf periodicity \ref tui_blsurf_periodicity_preCAD "using preCAD".
 
 \subsection periodicity_tui_basic_api_usage TUI Basic API usage
 
@@ -406,7 +407,7 @@ The methods are:
 - BLSURFPluginBuilder.BLSURF_Algorithm.AddEdgePeriodicityWithoutFaces
 - BLSURFPluginBuilder.BLSURF_Algorithm.AddVertexPeriodicity
 
-Sample TUI Script of the definition of BLSurf periodicity \ref tui_blsurf_periodicity_basic "using basic API (without preCAD)".
+Sample TUI Script of the definition of MG-CADSurf periodicity \ref tui_blsurf_periodicity_basic "using basic API (without preCAD)".
 
 \subsection periodicity_tui_advanced_api_usage TUI Advanced API usage
 
@@ -415,27 +416,8 @@ To ease the periodicity description, the basic API methods can be called through
 - BLSURFPluginBuilder.BLSURF_Algorithm.AddAdvancedFacesPeriodicity (in 3D)
 - BLSURFPluginBuilder.BLSURF_Algorithm.AddAdvancedEdgesPeriodicity (in 2D)
 
-Sample TUI Script of the definition of BLSurf periodicity \ref tui_blsurf_periodicity_advanced "using advanced API (without preCAD)".
+Sample TUI Script of the definition of MG-CADSurf periodicity \ref tui_blsurf_periodicity_advanced "using advanced API (without preCAD)".
 
-\ref blsurf_top "Back to top"
-
-\section blsurf_limitations Limitations
-
-Currently BLSURF plugin has the following limitations.
-
-- BLSURF algorithm cannot be used as a local algorithm (on
-sub-meshes) or as a provider of a low-level
-mesh for some 3D algorithms, because the BLSURF mesher (and
-consequently plugin) does not provide the information on node
-parameters on edges (U) and faces (U,V). For example the
-following combinations of algorithms are impossible:
-
-  - global MEFISTO or Quadrangle(mapping) + local BLSURF;
-
-  - BLSURF + Projection 2D from faces meshed by BLSURF;
-
-  - local BLSURF + Extrusion 3D;
-  
 \ref blsurf_top "Back to top"
 
 */

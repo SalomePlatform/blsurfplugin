@@ -45,7 +45,8 @@ except ImportError:
 #----------------------------
 
 ## Algorithm type: BLSurf triangle 2D algorithm, see BLSURF_Algorithm
-BLSURF = "BLSURF"
+BLSURF = "MG_CADSurf"
+MG_CADSurf = "MG_CADSurf"
 
 #----------------------
 # Algorithms
@@ -430,7 +431,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   #  @return hypothesis object
   def Parameters(self):
     if not self.params:
-      self.params = self.Hypothesis("BLSURF_Parameters", [],
+      self.params = self.Hypothesis("MG_CADSurf_Parameters", [],
                                     "libBLSURFEngine.so", UseExisting=0)
       pass
     return self.params

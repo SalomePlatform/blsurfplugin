@@ -10,10 +10,11 @@ Below you can see an example of usage of the BLSURFPluginBuilder Python API for 
 
 \anchor tui_blsurf
 
-\section blsurf_construct_mesh Construction of Mesh using BLSurf algorithm
+\section blsurf_construct_mesh Construction of Mesh using MG-CADSurf
+(former BLSURF) algorithm
 
 \anchor example_BLSURFPlugin
-<h2>Example of mesh generation with BLSurf algorithm:</h2>
+<h2>Example of mesh generation with MG-CADSurf algorithm:</h2>
 \tui_script{blsurfdemo.py}
 
 \anchor tui_blsurf_periodicity_preCAD

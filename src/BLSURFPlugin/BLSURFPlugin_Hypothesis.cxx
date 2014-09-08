@@ -82,7 +82,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   _preCadFacesPeriodicityVector(GetDefaultPreCadFacesPeriodicityVector()),
   _preCadEdgesPeriodicityVector(GetDefaultPreCadEdgesPeriodicityVector())
 {
-  _name = "BLSURF_Parameters";
+  _name = GetHypType();
   _param_algo_dim = 2;
   
 //   _GMFFileMode = false; // GMF ascii mode

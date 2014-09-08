@@ -241,7 +241,7 @@ BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF(int hypId, int studyId,
 {
   MESSAGE("BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF");
 
-  _name = "BLSURF";
+  _name = "MG_CADSurf";//"BLSURF";
   _shapeType = (1 << TopAbs_FACE); // 1 bit /shape type
   _compatibleHypothesis.push_back(BLSURFPlugin_Hypothesis::GetHypType());
   _compatibleHypothesis.push_back(StdMeshers_ViscousLayers2D::GetHypType());

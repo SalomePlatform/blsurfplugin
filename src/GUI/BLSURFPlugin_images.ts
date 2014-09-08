@@ -8,7 +8,7 @@
             <translation>mesh_select_BLSURF.png</translation>
         </message>
         <message>
-            <source>ICON_DLG_MG_CADSurf_PARAMETERS</source>
+            <source>ICON_DLG_BLSURF_PARAMETERS</source>
             <translation>mesh_hypo_BLSURF.png</translation>
         </message>
         <message>

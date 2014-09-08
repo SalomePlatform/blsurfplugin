@@ -156,7 +156,7 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
     </message>
     <message>
         <source>BLSURF_HYPOTHESIS</source>
-        <translation>BLSURF 2D</translation>
+        <translation>MG-CADSurf</translation>
     </message>
     <message>
         <source>BLSURF_ADV_ARGS</source>

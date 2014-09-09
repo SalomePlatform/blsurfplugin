@@ -95,7 +95,7 @@ two main goals:
     (useful for iges files). This option is unchecked by default.
 
 - <b>Verbosity level</b> - defines the percentage of "verbosity" of
-MeshGems-CADSurf and MeshGems-PreCAD [0-100].
+MeshGems-CADSurf and MeshGems-PreCAD [0-10].
 
 - <b>ExportGMF</b> - saves the computed mesh into a GMF file (.mesh or .meshb).
 

@@ -4,7 +4,7 @@
     <context>
         <name>@default</name>
         <message>
-            <source>MG_CADSurf_ICON_SELECT</source>
+            <source>MG-CADSurf_ICON_SELECT</source>
             <translation>mesh_select_BLSURF.png</translation>
         </message>
         <message>
@@ -12,11 +12,11 @@
             <translation>mesh_hypo_BLSURF.png</translation>
         </message>
         <message>
-            <source>ICON_SMESH_TREE_ALGO_MG_CADSurf</source>
+            <source>ICON_SMESH_TREE_ALGO_MG-CADSurf</source>
             <translation>mesh_tree_algo_BLSURF.png</translation>
         </message>
         <message>
-            <source>ICON_SMESH_TREE_HYPO_MG_CADSurf_Parameters</source>
+            <source>ICON_SMESH_TREE_HYPO_MG-CADSurf Parameters</source>
             <translation>mesh_tree_hypo_BLSURF.png</translation>
         </message>
     </context>

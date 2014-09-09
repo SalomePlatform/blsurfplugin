@@ -60,11 +60,11 @@ extern "C"
 
     // Algorithms
     if (strcmp(aHypName, "BLSURF") == 0 ||
-        strcmp(aHypName, "MG_CADSurf") == 0 )
+        strcmp(aHypName, "MG-CADSurf") == 0 )
       aCreator = new BLSURFPlugin_Creator_i<BLSURFPlugin_BLSURF_i>;
     // Hypotheses
     else if (strcmp(aHypName, "BLSURF_Parameters") == 0 ||
-             strcmp(aHypName, "MG_CADSurf_Parameters") == 0 )
+             strcmp(aHypName, "MG-CADSurf Parameters") == 0 )
       aCreator = new BLSURFPlugin_Creator_i<BLSURFPlugin_Hypothesis_i>;
     else ;
 

@@ -64,7 +64,7 @@ public:
     GeometricalLocalSize
   };
 
-  static const char* GetHypType() { return "MG_CADSurf_Parameters"; }
+  static const char* GetHypType() { return "MG-CADSurf Parameters"; }
   
   TopoDS_Shape entryToShape(std::string entry);
 

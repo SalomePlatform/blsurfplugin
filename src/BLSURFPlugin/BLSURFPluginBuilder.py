@@ -44,9 +44,9 @@ except ImportError:
 # Mesh algo type identifiers
 #----------------------------
 
-## Algorithm type: BLSurf triangle 2D algorithm, see BLSURF_Algorithm
-BLSURF = "MG_CADSurf"
-MG_CADSurf = "MG_CADSurf"
+## Algorithm type: MG-CADSurf triangle algorithm, see BLSURF_Algorithm
+MG_CADSurf = "MG-CADSurf"
+BLSURF = MG_CADSurf
 
 #----------------------
 # Algorithms
@@ -66,7 +66,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   algoType   = BLSURF
   ## doc string of the method
   #  @internal
-  docHelper  = "Creates triangle 2D algorithm for faces"
+  docHelper  = "Creates triangle algorithm for faces"
 
   _anisotropic_ratio = 0
   _bad_surface_element_aspect_ratio = 1000
@@ -431,7 +431,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   #  @return hypothesis object
   def Parameters(self):
     if not self.params:
-      self.params = self.Hypothesis("MG_CADSurf_Parameters", [],
+      self.params = self.Hypothesis("MG-CADSurf Parameters", [],
                                     "libBLSURFEngine.so", UseExisting=0)
       pass
     return self.params

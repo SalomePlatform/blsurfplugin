@@ -1,7 +1,6 @@
 /*!
 
-\page blsurf_hypo_page MG-CADSurf Parameters hypothesis (former BLSURF
-Parameters)
+\page blsurf_hypo_page MG-CADSurf Parameters hypothesis
 
 \anchor blsurf_top
 
@@ -389,7 +388,9 @@ Otherwise, for instance a rotation, the user has to define 3 non-colinear vertic
 
 \subsection periodicity_tui_precad_usage TUI PreCAD usage
 
-The two methods to define periodicity with PreCAD are:
+The two methods to define periodicity with PreCAD are
+(the former name of <em>MG-CADSurf</em> is \a BLSURF and names
+of the corresponding classes and modules still include \a "BLSURF"):
 - BLSURFPluginBuilder.BLSURF_Algorithm.AddPreCadFacesPeriodicity 
 - BLSURFPluginBuilder.BLSURF_Algorithm.AddPreCadEdgesPeriodicity
 

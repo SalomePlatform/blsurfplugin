@@ -183,7 +183,7 @@ typedef struct
 
 
 /*!
- * \brief Class for creation of BLSURF hypotheses
+ * \brief Class for creation of MG-CADSurf hypotheses
 */
 class BLSURFPLUGIN_GUI_EXPORT BLSURFPluginGUI_HypothesisCreator : public SMESHGUI_GenericHypothesisCreator
 {

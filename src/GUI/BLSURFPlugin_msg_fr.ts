@@ -160,7 +160,7 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
     </message>
     <message>
         <source>BLSURF_HYPOTHESIS</source>
-        <translation>BLSURF 2D</translation>
+        <translation>MG-CADSurf 2D</translation>
     </message>
     <message>
         <source>BLSURF_ADV_ARGS</source>
@@ -212,7 +212,7 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
     </message>
     <message>
         <source>OPTION_MENU_BLSURF</source>
-        <translation>BLSURF</translation>
+        <translation>MG-CADSurf</translation>
     </message>
     <message>
         <source>OPTION_MENU_PRECAD</source>

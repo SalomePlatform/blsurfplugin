@@ -211,7 +211,7 @@ double BLSURFPlugin_Attractor::_distanceFromPoint(double u, double v)
 
 double BLSURFPlugin_Attractor::_distanceFromMap(double u, double v){
   
-  //   BLSURF seems to perform a linear interpolation so it's sufficient to give it a non-continuous distance map
+  //   MG-CADSurf seems to perform a linear interpolation so it's sufficient to give it a non-continuous distance map
   int i = floor ( (u - _u1) * _gridU / (_u2 - _u1) + 0.5 );
   int j = floor ( (v - _v1) * _gridV / (_v2 - _v1) + 0.5 );
   

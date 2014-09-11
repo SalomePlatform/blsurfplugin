@@ -417,7 +417,7 @@ void BLSURFPlugin_Hypothesis::SetOptionValue(const std::string& optionName, cons
     throw (std::invalid_argument) {
   TOptionValues::iterator op_val = _option2value.find(optionName);
   if (op_val == _option2value.end()) {
-    std::string msg = "Unknown BLSURF option: '" + optionName + "'";
+    std::string msg = "Unknown MG-CADSurf option: '" + optionName + "'";
     throw std::invalid_argument(msg);
   }
   if (op_val->second != optionValue) {
@@ -462,7 +462,7 @@ void BLSURFPlugin_Hypothesis::SetPreCADOptionValue(const std::string& optionName
     throw (std::invalid_argument) {
   TOptionValues::iterator op_val = _preCADoption2value.find(optionName);
   if (op_val == _preCADoption2value.end()) {
-    std::string msg = "Unknown BLSURF option: '" + optionName + "'";
+    std::string msg = "Unknown MG-CADSurf option: '" + optionName + "'";
     throw std::invalid_argument(msg);
   }
   if (op_val->second != optionValue) {
@@ -506,7 +506,7 @@ void BLSURFPlugin_Hypothesis::SetPreCADOptionValue(const std::string& optionName
 std::string BLSURFPlugin_Hypothesis::GetOptionValue(const std::string& optionName) throw (std::invalid_argument) {
   TOptionValues::iterator op_val = _option2value.find(optionName);
   if (op_val == _option2value.end()) {
-    std::string msg = "Unknown BLSURF option: <";
+    std::string msg = "Unknown MG-CADSurf option: <";
     msg += optionName + ">";
     throw std::invalid_argument(msg);
   }
@@ -1342,7 +1342,7 @@ void BLSURFPlugin_Hypothesis::AddVertexPeriodicity(TEntry theEdge1Entry, TEntry 
 //=============================================================================
 std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save) {
    // We must keep at least the same number of arguments when increasing the SALOME version
-   // When BLSURF becomes CADMESH, some parameters were fused into a single one. Thus the same
+   // When MG-CADSurf becomes CADMESH, some parameters were fused into a single one. Thus the same
    // parameter can be written several times to keep the old global number of parameters.
 
    // Treat old options which are now in the advanced options

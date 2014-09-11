@@ -19,17 +19,17 @@
 
 ##
 # @package BLSURFPluginBuilder
-# Python API for the BLSURF meshing plug-in module.
+# Python API for the MG-CADSurf meshing plug-in module.
 
 from salome.smesh.smesh_algorithm import Mesh_Algorithm
 
-# Topology treatment way of BLSURF
+# Topology treatment way of MG-CADSurf
 FromCAD, PreProcess, PreProcessPlus, PreCAD = 0,1,2,3
 
-# Element size flag of BLSURF
-DefaultSize, DefaultGeom, BLSURF_GlobalSize, BLSURF_LocalSize = 0,0,1,2
+# Element size flag of MG-CADSurf
+DefaultSize, DefaultGeom, MG_CADSURF_GlobalSize, MG_CADSURF_LocalSize = 0,0,1,2
 # Retrocompatibility
-BLSURF_Custom, SizeMap = BLSURF_GlobalSize, BLSURF_LocalSize
+MG_CADSURF_Custom, SizeMap = MG_CADSURF_GlobalSize, MG_CADSURF_LocalSize
 
 
 # import BLSURFPlugin module if possible
@@ -52,9 +52,9 @@ BLSURF = MG_CADSurf
 # Algorithms
 #----------------------
 
-## BLSurf 2D algorithm.
+## MG-CADSurf 2D algorithm.
 #
-#  It can be created by calling smeshBuilder.Mesh.Triangle(smeshBuilder.BLSURF,geom=0)
+#  It can be created by calling smeshBuilder.Mesh.Triangle(smeshBuilder.MG-CADSurf,geom=0)
 #
 class BLSURF_Algorithm(Mesh_Algorithm):
 
@@ -63,7 +63,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   meshMethod = "Triangle"
   ## type of algorithm used with helper function in smeshBuilder.Mesh class
   #  @internal
-  algoType   = BLSURF
+  algoType   = MG_CADSurf
   ## doc string of the method
   #  @internal
   docHelper  = "Creates triangle algorithm for faces"
@@ -90,22 +90,22 @@ class BLSURF_Algorithm(Mesh_Algorithm):
     pass
 
   ## Sets a way to define size of mesh elements to generate.
-  #  @param thePhysicalMesh is: DefaultSize, BLSURF_Custom or SizeMap.
+  #  @param thePhysicalMesh is: DefaultSize, MG_CADSURF_Custom or SizeMap.
   def SetPhysicalMesh(self, thePhysicalMesh=DefaultSize):
     physical_size_mode = thePhysicalMesh
     if self.Parameters().GetGeometricMesh() == DefaultGeom:
       if physical_size_mode == DefaultSize:
-        physical_size_mode = BLSURF_GlobalSize
+        physical_size_mode = MG_CADSURF_GlobalSize
     self.Parameters().SetPhysicalMesh(physical_size_mode)
     pass
 
   ## Sets a way to define maximum angular deflection of mesh from CAD model.
-  #  @param theGeometricMesh is: DefaultGeom (0)) or BLSURF_GlobalSize (1))
+  #  @param theGeometricMesh is: DefaultGeom (0)) or MG_CADSURF_GlobalSize (1))
   def SetGeometricMesh(self, theGeometricMesh=DefaultGeom):
     geometric_size_mode = theGeometricMesh
     if self.Parameters().GetPhysicalMesh() == DefaultSize:
       if geometric_size_mode == DefaultGeom:
-        geometric_size_mode = BLSURF_GlobalSize
+        geometric_size_mode = MG_CADSURF_GlobalSize
     self.Parameters().SetGeometricMesh(geometric_size_mode)
     pass
 
@@ -114,7 +114,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   #  @param isRelative : if True, the value is relative to the length of the diagonal of the bounding box
   def SetPhySize(self, theVal, isRelative = False):
     if self.Parameters().GetPhysicalMesh() == DefaultSize:
-      self.SetPhysicalMesh(BLSURF_GlobalSize)
+      self.SetPhysicalMesh(MG_CADSURF_GlobalSize)
     if isRelative:
       self.Parameters().SetPhySizeRel(theVal)
     else:
@@ -145,7 +145,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   #  @param theVal value of angular deflection
   def SetAngleMesh(self, theVal=_geometric_approximation):
     if self.Parameters().GetGeometricMesh() == DefaultGeom:
-      self.SetGeometricMesh(BLSURF_GlobalSize)
+      self.SetGeometricMesh(MG_CADSURF_GlobalSize)
     self.Parameters().SetAngleMesh(theVal)
     pass
 
@@ -566,8 +566,8 @@ class BLSURF_Algorithm(Mesh_Algorithm):
 
   ## Define periodicity between two groups of edges, without faces, given a transformation function.
   #  This uses the basic BLSURF API for each edge and each vertex.
-  #  @param theFace1 : GEOM edge (or group, compound) to associate with theEdge2
-  #  @param theFace2 : GEOM edge (or group, compound) associated with theEdge1
+  #  @param theEdge1 : GEOM edge (or group, compound) to associate with theEdge2
+  #  @param theEdge2 : GEOM edge (or group, compound) associated with theEdge1
   #  @param f_transf : python function defining the transformation between an object of theEdge1
   # into an object of theFace2
   def AddAdvancedEdgesPeriodicity(self, theEdge1, theEdge2, f_transf):

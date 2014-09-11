@@ -38,7 +38,7 @@
 #include <utilities.h>
 #include "BLSURFPlugin_Attractor.hxx"
 
-//  Parameters for work of BLSURF
+//  Parameters for work of MG-CADSurf
 
 class BLSURFPlugin_Hypothesis: public SMESH_Hypothesis
 {

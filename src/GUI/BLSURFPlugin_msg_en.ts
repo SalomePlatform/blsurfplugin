@@ -208,7 +208,7 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
     </message>
     <message>
         <source>OPTION_MENU_BLSURF</source>
-        <translation>BLSURF</translation>
+        <translation>MG-CADSurf</translation>
     </message>
     <message>
         <source>OPTION_MENU_PRECAD</source>

@@ -27,6 +27,6 @@
     <parameter name="plugins" value="NETGENPlugin,GHS3DPlugin,BLSURFPlugin"/>
   </section>
   <section name="smesh_help" >
-    <parameter name="Plug-ins/BLSURF plugin User's Guide" value="${BLSURFPLUGIN_ROOT_DIR}/share/doc/salome/gui/BLSURFPLUGIN/index.html"/>
+    <parameter name="Plug-ins/MG-CADSurf plugin User's Guide" value="${BLSURFPLUGIN_ROOT_DIR}/share/doc/salome/gui/BLSURFPLUGIN/index.html"/>
   </section>
 </document>

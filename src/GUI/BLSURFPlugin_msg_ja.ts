@@ -145,7 +145,7 @@
     </message>
     <message>
       <source>BLSURF_HYPOTHESIS</source>
-      <translation>BLSURF 2次元</translation>
+      <translation>MG-CADSurf 2次元</translation>
     </message>
     <message>
       <source>BLSURF_ADV_ARGS</source>
@@ -197,7 +197,7 @@
     </message>
     <message>
       <source>OPTION_MENU_BLSURF</source>
-      <translation>BLSURF</translation>
+      <translation>MG-CADSurf</translation>
     </message>
     <message>
       <source>OPTION_MENU_PRECAD</source>

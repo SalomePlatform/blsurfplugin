@@ -363,7 +363,7 @@ bool BLSURFPlugin_BLSURF::CheckHypothesis
 
 //=============================================================================
 /*!
- * Pass parameters to BLSURF
+ * Pass parameters to MG-CADSurf
  */
 //=============================================================================
 
@@ -1521,7 +1521,7 @@ namespace
 {
   // --------------------------------------------------------------------------
   /*!
-   * \brief Class correctly terminating usage of BLSURF library at destruction
+   * \brief Class correctly terminating usage of MG-CADSurf library at destruction
    */
   class BLSURF_Cleaner
   {
@@ -1672,7 +1672,7 @@ namespace
             }
           }
           // make nodes created on the boundary of viscous layer replace nodes created
-          // by BLSURF as their SMDS_Position is more correct
+          // by MG-CADSurf as their SMDS_Position is more correct
           nodes.sort( ShapeTypeCompare() );
           nodeGroupsToMerge.push_back( nodes );
         }
@@ -1771,7 +1771,7 @@ namespace
       //_proxyFace = TopoDS::Face( fExp.Current() );
 
 
-      // Make input mesh for BLSURF: segments on EDGE's of newFace
+      // Make input mesh for MG-CADSurf: segments on EDGE's of newFace
 
       // make nodes and fill in _tmp2origNN
       //
@@ -1803,7 +1803,7 @@ namespace
 
     //--------------------------------------------------------------------------------
     /*!
-     * \brief Fill in the origMesh with faces computed by BLSURF in this tmp mesh
+     * \brief Fill in the origMesh with faces computed by MG-CADSurf in this tmp mesh
      */
     //--------------------------------------------------------------------------------
 
@@ -1903,7 +1903,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       if ( !viscousMesh )
         return false; // error in StdMeshers_ViscousLayers2D::Compute()
 
-      // Compute BLSURF mesh on viscous layers
+      // Compute MG-CADSurf mesh on viscous layers
 
       if ( viscousMesh->NbProxySubMeshes() > 0 )
       {
@@ -1915,7 +1915,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
       }
     }
 
-    // Re-compute BLSURF mesh on the rest faces if the mesh was cleared
+    // Re-compute MG-CADSurf mesh on the rest faces if the mesh was cleared
 
     for (TopExp_Explorer face_iter(aShape,TopAbs_FACE);face_iter.More();face_iter.Next())
     {
@@ -2356,7 +2356,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
       if (e.Orientation() == TopAbs_INTERNAL)
         cad_edge_set_property(edg, EDGE_PROPERTY_INTERNAL);
 
-      // pass existing nodes of sub-meshes to BLSURF
+      // pass existing nodes of sub-meshes to MG-CADSurf
       if ( nodeData )
       {
         const std::vector<UVPtStruct>& nodeDataVec = nodeData->GetUVPtStruct();
@@ -2719,7 +2719,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   }
 
   if (cleandc) {
-    cout << "Give the pre-processed dcad object to the current BLSurf session \n";
+    cout << "Give the pre-processed dcad object to the current MG-CADSurf session \n";
     cadsurf_data_set_dcad(css, cleandc);
   }
   else {
@@ -2728,8 +2728,8 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   }
 
   if (cleanc) {
-    // Give the pre-processed CAD object to the current BLSurf session
-    cout << "Give the pre-processed CAD object to the current BLSurf session \n";
+    // Give the pre-processed CAD object to the current MG-CADSurf session
+    cout << "Give the pre-processed CAD object to the current MG-CADSurf session \n";
     cadsurf_data_set_cad(css, cleanc);
   }
   else {
@@ -3029,7 +3029,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   /* release the mesh object, the rest is released by cleaner */
   cadsurf_data_regain_mesh(css, msh);
 
-  if ( needMerge ) // sew mesh computed by BLSURF with pre-existing mesh
+  if ( needMerge ) // sew mesh computed by MG-CADSurf with pre-existing mesh
   {
     SMESH_MeshEditor editor( &aMesh );
     SMESH_MeshEditor::TListOfListOfNodes nodeGroupsToMerge;
@@ -3037,7 +3037,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     TSubMeshSet::iterator smIt;
     SMESHDS_SubMesh* smDS;
 
-    // merge nodes on EDGE's with ones computed by BLSURF
+    // merge nodes on EDGE's with ones computed by MG-CADSurf
     for ( smIt = mergeSubmeshes.begin(); smIt != mergeSubmeshes.end(); ++smIt )
     {
       if (! (smDS = *smIt) ) continue;
@@ -3194,14 +3194,14 @@ void BLSURFPlugin_BLSURF::Set_NodeOnEdge(SMESHDS_Mesh* meshDS, const SMDS_MeshNo
 status_t curv_fun(real t, real *uv, real *dt, real *dtt, void *user_data)
 {
   /* t is given. It contains the t (time) 1D parametric coordintaes
-     of the point PreCAD/BLSurf is querying on the curve */
+     of the point PreCAD/MG-CADSurf is querying on the curve */
 
-  /* user_data identifies the edge PreCAD/BLSurf is querying
+  /* user_data identifies the edge PreCAD/MG-CADSurf is querying
    * (see cad_edge_new later in this example) */
   const Geom2d_Curve*pargeo = (const Geom2d_Curve*) user_data;
 
   if (uv){
-   /* BLSurf is querying the function evaluation */
+   /* MG-CADSurf is querying the function evaluation */
     gp_Pnt2d P;
     P=pargeo->Value(t);
     uv[0]=P.X(); uv[1]=P.Y();
@@ -3235,9 +3235,9 @@ status_t surf_fun(real *uv, real *xyz, real*du, real *dv,
                   real *duu, real *duv, real *dvv, void *user_data)
 {
   /* uv[2] is given. It contains the u,v coordinates of the point
-   * PreCAD/BLSurf is querying on the surface */
+   * PreCAD/MG-CADSurf is querying on the surface */
 
-  /* user_data identifies the face PreCAD/BLSurf is querying (see
+  /* user_data identifies the face PreCAD/MG-CADSurf is querying (see
    * cad_face_new later in this example)*/
   const Geom_Surface* geometry = (const Geom_Surface*) user_data;
 
@@ -3398,7 +3398,7 @@ status_t size_on_vertex(integer point_id, real *size, void *user_data)
 }
 
 /*
- * The following function will be called for PreCAD/BLSurf message
+ * The following function will be called for PreCAD/MG-CADSurf message
  * printing.  See context_set_message_callback (later in this
  * template) for how to set user_data.
  */
@@ -3430,7 +3430,7 @@ status_t message_cb(message_t *msg, void *user_data)
   return STATUS_OK;
 }
 
-/* This is the interrupt callback. PreCAD/BLSurf will call this
+/* This is the interrupt callback. PreCAD/MG-CADSurf will call this
  * function regularily. See the file meshgems/interrupt.h
  */
 status_t interrupt_cb(integer *interrupt_status, void *user_data)
@@ -3444,7 +3444,7 @@ status_t interrupt_cb(integer *interrupt_status, void *user_data)
     *interrupt_status = INTERRUPT_CONTINUE;
     return STATUS_OK;
   }
-  else /* you want to stop BLSurf */
+  else /* you want to stop MG-CADSurf */
   {
     *interrupt_status = INTERRUPT_STOP;
     return STATUS_ERROR;

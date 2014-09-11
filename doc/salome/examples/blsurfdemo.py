@@ -34,10 +34,10 @@ geompy.addToStudyInFather(box   ,Face_2, "Face_2")
 geompy.addToStudyInFather(Face_2,Wire_1, "Wire_1")
 
 # create a mesh on the box
-blsurfMesh = smesh.Mesh(box,"box: BLSurf mesh")
+cadsurfMesh = smesh.Mesh(box,"box: MG-CADSurf mesh")
 
 # create a BLSurf algorithm for faces
-algo2d = blsurfMesh.Triangle(algo=smeshBuilder.BLSURF)
+algo2d = cadsurfMesh.Triangle(algo=smeshBuilder.MG_CADSurf)
 
 # ----------------------------------------------
 # blsurf_construct_mesh_sizemaps Adding sizemaps
@@ -57,7 +57,7 @@ algo2d.SetSizeMap(Edge_1, 'def f(t): return 5' )
 algo2d.SetSizeMap(Vertex_1, 'def f(): return 2' )
 
 # compute the mesh
-blsurfMesh.Compute()
+cadsurfMesh.Compute()
 
 # ----------------------------------------------------------------
 # blsurf_construct_mesh_enforced_vertices Adding enforced vertices
@@ -76,7 +76,7 @@ print "List of enforced vertices for Face_1: "
 print enfList
 
 # compute the mesh
-blsurfMesh.Compute()
+cadsurfMesh.Compute()
 
 # Remove an enforced vertex and print the list
 algo2d.UnsetEnforcedVertex(Face_1, 50, 50, 50)
@@ -85,13 +85,13 @@ print "List of enforced vertices for Face_1: "
 print enfList
 
 # compute the mesh
-blsurfMesh.Compute()
+cadsurfMesh.Compute()
 
 # Remove all enforced vertices defined on Face_1
 algo2d.UnsetEnforcedVertices(Face_1)
 
 # compute the mesh
-blsurfMesh.Compute()
+cadsurfMesh.Compute()
 
 # ---------------------------------------------------
 # blsurf_construct_mesh_attractor Adding an attractor
@@ -109,7 +109,7 @@ algo2d.SetAttractorGeom(Face_2, Wire_1, 1, 36.641, 20, 10)
 algo2d.SetGradation( 2.5 )
 
 # compute the mesh
-blsurfMesh.Compute()
+cadsurfMesh.Compute()
 
 # ---------------------------------------------------------------
 # blsurf_construct_mesh_internal_vertices Using internal vertices
@@ -130,17 +130,17 @@ geompy.addToStudy( OY, 'OY' )
 geompy.addToStudy( Multi_Translation_1, 'Multi-Translation_1' )
 
 # The mesh on the geometry with internal vertices
-blsurfMesh_internal = smesh.Mesh(Multi_Translation_1, "blsurfMesh_internal")
-algo2d = blsurfMesh_internal.Triangle(algo=smeshBuilder.BLSURF)
+cadsurfMesh_internal = smesh.Mesh(Multi_Translation_1, "cadsurfMesh_internal")
+algo2d = cadsurfMesh_internal.Triangle(algo=smeshBuilder.MG_CADSurf)
 algo2d.SetPhySize( 0.1 )
 
-# Allows BLSURF to take into account internal vertices
+# Allow MG-CADSURF to take into account internal vertices
 algo2d.SetInternalEnforcedVertexAllFaces( True )
 
 # Add the created nodes into a group
 algo2d.SetInternalEnforcedVertexAllFacesGroup( "my group" )
 
 # compute the mesh
-blsurfMesh_internal.Compute()
+cadsurfMesh_internal.Compute()
 
 # End of script

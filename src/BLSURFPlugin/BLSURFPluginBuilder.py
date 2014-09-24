@@ -30,7 +30,7 @@ FromCAD, PreProcess, PreProcessPlus, PreCAD = 0,1,2,3
 DefaultSize, DefaultGeom, MG_CADSURF_GlobalSize, MG_CADSURF_LocalSize = 0,0,1,2
 # Retrocompatibility
 MG_CADSURF_Custom, SizeMap = MG_CADSURF_GlobalSize, MG_CADSURF_LocalSize
-
+BLSURF_Custom, BLSURF_GlobalSize, BLSURF_LocalSize = MG_CADSURF_Custom, MG_CADSURF_GlobalSize, MG_CADSURF_LocalSize
 
 # import BLSURFPlugin module if possible
 noBLSURFPlugin = 0

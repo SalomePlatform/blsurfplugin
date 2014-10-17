@@ -2216,21 +2216,22 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
           MESSAGE("Point is out of face: node is not created");
           if (EnfVertexCoords2ProjVertex.find(xyzCoords) != EnfVertexCoords2ProjVertex.end()) {
             EnfVertexCoords2ProjVertex.erase(xyzCoords);
-            EnfVertexCoords2EnfVertexList.erase(xyzCoords);
+            // isssue 22783. Do not erase as this point can be IN other face of a group
+            //EnfVertexCoords2EnfVertexList.erase(xyzCoords);
           }
         }
         if ( result == TopAbs_UNKNOWN ) {
           MESSAGE("Point position on face is unknown: node is not created");
           if (EnfVertexCoords2ProjVertex.find(xyzCoords) != EnfVertexCoords2ProjVertex.end()) {
             EnfVertexCoords2ProjVertex.erase(xyzCoords);
-            EnfVertexCoords2EnfVertexList.erase(xyzCoords);
+            //EnfVertexCoords2EnfVertexList.erase(xyzCoords);
           }
         }
         if ( result == TopAbs_ON ) {
           MESSAGE("Point is on border of face: node is not created");
           if (EnfVertexCoords2ProjVertex.find(xyzCoords) != EnfVertexCoords2ProjVertex.end()) {
             EnfVertexCoords2ProjVertex.erase(xyzCoords);
-            EnfVertexCoords2EnfVertexList.erase(xyzCoords);
+            //EnfVertexCoords2EnfVertexList.erase(xyzCoords);
           }
         }
         if ( result == TopAbs_IN )
@@ -2499,7 +2500,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
 
   MESSAGE("BEFORE PERIODICITY");
   MESSAGE("_preCadFacesIDsPeriodicityVector.size() = " << _preCadFacesIDsPeriodicityVector.size());
-  if (! _preCadFacesIDsPeriodicityVector.empty()){
+  if (! _preCadFacesIDsPeriodicityVector.empty()) {
     MESSAGE("INTO PRECAD FACES PERIODICITY");
     for (std::size_t i=0; i < _preCadFacesIDsPeriodicityVector.size(); i++){
       std::vector<int> theFace1_ids = _preCadFacesIDsPeriodicityVector[i].shape1IDs;
@@ -2549,7 +2550,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   }
 
   MESSAGE("_preCadEdgesIDsPeriodicityVector.size() = " << _preCadEdgesIDsPeriodicityVector.size());
-  if (! _preCadEdgesIDsPeriodicityVector.empty()){
+  if (! _preCadEdgesIDsPeriodicityVector.empty()) {
     MESSAGE("INTO PRECAD EDGES PERIODICITY");
     for (std::size_t i=0; i < _preCadEdgesIDsPeriodicityVector.size(); i++){
       std::vector<int> theEdge1_ids = _preCadEdgesIDsPeriodicityVector[i].shape1IDs;

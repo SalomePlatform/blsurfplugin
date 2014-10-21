@@ -69,7 +69,6 @@
 #include <LightApp_SelectionMgr.h>
 #include <SalomeApp_Application.h>
 #include <SALOME_ListIO.hxx>
-#include <SALOME_ListIteratorOfListIO.hxx>
 #include "SALOME_LifeCycleCORBA.hxx"
 
 #include <TopoDS_Shape.hxx>

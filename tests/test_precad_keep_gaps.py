@@ -47,12 +47,10 @@ Mesh_1 = smesh.Mesh(Partition_1)
 BLSURF_1 = Mesh_1.Triangle(algo=smeshBuilder.BLSURF)
 BLSURF_Parameters = BLSURF_1.Parameters()
 BLSURF_Parameters.SetPhySize( 5 )
-BLSURF_Parameters.SetPreCADMergeEdges( True )
-BLSURF_Parameters.SetPreCADProcess3DTopology( True )
 
 Mesh_1.Compute()
 
-# Check that vertices are merged by preCAD preprocessing
+# Check that vertices are not merged by preCAD preprocessing
 nodes = []
 for p in vertices:
     x, y, z = geompy.PointCoordinates(p)
@@ -61,7 +59,7 @@ for p in vertices:
 
 nodes = set(nodes)
 
-assert(len(nodes) == 1)
+assert(len(nodes) == 2)
 
 if salome.sg.hasDesktop():
   salome.sg.updateObjBrowser(1)

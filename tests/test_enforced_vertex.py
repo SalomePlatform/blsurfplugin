@@ -32,7 +32,7 @@ smesh = smeshBuilder.New(salome.myStudy)
 Mesh = smesh.Mesh(box, "Mesh")
 
 
-algo2d = Mesh.Triangle(algo=smeshBuilder.BLSURF)
+algo2d = Mesh.Triangle(algo=smeshBuilder.MG_CADSurf)
 algo2d.SetGeometricMesh( 1 )
 algo2d.SetAngleMesh( 4 )
 algo2d.SetPhySize( 8 )

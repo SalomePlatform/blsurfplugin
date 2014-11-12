@@ -363,10 +363,11 @@ public:
   static bool            GetDefaultQuadraticMesh() { return false; }
   
   static int             GetDefaultVerbosity() { return 3; }
-  static Topology        GetDefaultTopology() { return FromCAD; }
+  // Since Salome 7.5.0 and MeshGems 1.3, the default behaviour is to use PreCAD with all options at false
+  static Topology        GetDefaultTopology() { return PreCAD; }
   // PreCAD
-  static bool            GetDefaultPreCADMergeEdges() { return true; }
-  static bool            GetDefaultPreCADProcess3DTopology() { return true; }
+  static bool            GetDefaultPreCADMergeEdges() { return false; }
+  static bool            GetDefaultPreCADProcess3DTopology() { return false; }
   static bool            GetDefaultPreCADDiscardInput() { return false; }
   
   static TSizeMap        GetDefaultSizeMap() { return TSizeMap();}

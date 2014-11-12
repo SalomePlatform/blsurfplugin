@@ -56,9 +56,11 @@ import SMESH
 from salome.smesh import smeshBuilder
 smesh = smeshBuilder.New(salome.myStudy)
 
+from salome.BLSURFPlugin import BLSURFPluginBuilder
+
 Mesh = smesh.Mesh(part, "Mesh")
 
-algo2d = Mesh.Triangle(algo=smeshBuilder.BLSURF)
+algo2d = Mesh.Triangle(algo=smeshBuilder.MG_CADSurf)
 algo2d.SetVerbosity(10)
 #algo2d.SetTopology(smesh.PreCAD)
 algo2d.SetGeometricMesh( 1 )
@@ -66,6 +68,8 @@ algo2d.SetAngleMesh( 4 )
 algo2d.SetPhySize( 8 )
 #algo2d.SetGradation(1.05)
 algo2d.SetOptionValue( 'periodic_tolerance', '1e-2' )
+# Deactivate PreCAD
+algo2d.SetTopology(BLSURFPluginBuilder.FromCAD)
 
 # Periodicity
 

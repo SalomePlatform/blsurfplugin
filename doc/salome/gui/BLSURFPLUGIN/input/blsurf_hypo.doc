@@ -365,7 +365,9 @@ A group can optionnaly be defined on those enforced vertices.
 Periodicity is used to have the same discretization on two faces (in 3D) or two edges (in 2D).
 This is useful for instance for a Representative Volume Element so that the translated meshes share the same nodes on the common faces.
 
-In GUI, periodicity association uses PreCAD (optional MG-CADSurf add-on). Be sure to have a PreCAD license to be able to use it. Otherwise, use \ref periodicity_tui_basic_api_usage "the basic API in TUI" or the \ref periodicity_tui_advanced_api_usage "the advanced API in TUI".
+In GUI, periodicity association uses PreCAD (optional MG-CADSurf add-on). You must have a PreCAD license to be able to use it.
+
+In TUI, advanced users can use CADSurf periodicity via \ref periodicity_tui_basic_api_usage "the basic API" or \ref periodicity_tui_advanced_api_usage "the advanced API". It requires to disable PreCAD. We strongly advise to use PreCAD periodicity instead.
 
 \image html blsurf_periodicity_translation.png "Two periodic faces (translation)"
 
@@ -401,6 +403,8 @@ List of source and target vertices to define a transformation are optional.
 \subsection periodicity_tui_basic_api_usage TUI Basic API usage
 
 In the CADSurf basic API, only available in TUI, the periodicity must be defined face by face, edge by edge and vertex by vertex.
+
+You must disable PreCAD to use it. Hence, shapes with seam edges will not be meshed correctly.
 
 The methods are:
 - BLSURFPluginBuilder.BLSURF_Algorithm.AddFacePeriodicity

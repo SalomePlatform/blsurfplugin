@@ -31,7 +31,7 @@ smesh = smeshBuilder.New(salome.myStudy)
 
 Mesh_1 = smesh.Mesh(sphere)
 
-BLSURF_1 = Mesh_1.Triangle(algo=smeshBuilder.BLSURF)
+BLSURF_1 = Mesh_1.Triangle(algo=smeshBuilder.MG_CADSurf)
 BLSURF_Parameters = BLSURF_1.Parameters()
 BLSURF_Parameters.SetPhySize( 5 )
 BLSURF_Parameters.SetGeometricMesh( 1 )

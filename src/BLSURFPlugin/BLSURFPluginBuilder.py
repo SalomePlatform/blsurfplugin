@@ -162,7 +162,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   # <li>PreProcess or PreProcessPlus - by pre-processing a CAD model (OBSOLETE: FromCAD will be used)</li>
   # <li>PreCAD - by pre-processing with PreCAD a CAD model</li></ul>
   def SetTopology(self, way):
-    if way != PreCAD:
+    if way != PreCAD and way != FromCAD:
       print "Warning: topology mode %d is no longer supported. Mode FromCAD is used."%way
       way = FromCAD
     self.Parameters().SetTopology(way)

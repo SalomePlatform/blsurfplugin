@@ -367,6 +367,8 @@ This is useful for instance for a Representative Volume Element so that the tran
 
 In GUI, periodicity association uses PreCAD (optional MG-CADSurf add-on). Be sure to have a PreCAD license to be able to use it. Otherwise, use \ref periodicity_tui_basic_api_usage "the basic API in TUI" or the \ref periodicity_tui_advanced_api_usage "the advanced API in TUI".
 
+Remark: to use the basic API to define periodicity, you have to disable PreCAD.
+
 \image html blsurf_periodicity_translation.png "Two periodic faces (translation)"
 
 \image html blsurf_periodicity_reflexion.png "Two periodic faces (reflexion)"

@@ -30,6 +30,8 @@ SET(BLSURFPLUGIN_TEST_FILES
   test_periodicity_reflexion.py
   test_periodicity_with_points_2D_precad.py
   test_precad_intersections.py
+  test_sphere.py
+  test_precad_keep_gaps.py
 )
 
 INSTALL(FILES ${BLSURFPLUGIN_TEST_FILES} DESTINATION ${SALOME_BLSURFPLUGIN_INSTALL_TESTS})

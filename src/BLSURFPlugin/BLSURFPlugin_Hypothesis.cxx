@@ -108,6 +108,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   const char* doubleOptionNames[] = {       "surface_intersections_processing_max_cost",// default = 15
                                             "periodic_tolerance",                       // default = diag/100
                                             "prox_ratio",
+                                            "volume_gradation"
                                             "" // mark of end
       };
   const char* charOptionNames[] = {         "required_entities",                        // default = "respect"

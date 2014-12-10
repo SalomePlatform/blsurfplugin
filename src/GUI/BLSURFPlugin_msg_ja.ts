@@ -145,7 +145,7 @@
     </message>
     <message>
       <source>BLSURF_HYPOTHESIS</source>
-      <translation>MG-CADSurf 2次元</translation>
+      <translation>MG-CADSurf</translation>
     </message>
     <message>
       <source>BLSURF_ADV_ARGS</source>

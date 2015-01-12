@@ -1102,9 +1102,10 @@ void BLSURFPlugin_BLSURF::SetParameters(
      // - if maxsize is not explicitly specified, we pass default value computed automatically, in this case "relative" flag is ignored
      set_param(css, "max_size", _maxSizeRel ? to_string_rel(_maxSize).c_str() : to_string(_maxSize).c_str());
    }
-   if ( _quadAllowed )
-     useGradation = false; // limitation of V1.2
-  if ( useGradation )
+   // anisotropic and quadrangle mesh requires disabling gradation
+   if ( _anisotropic && _quadAllowed )
+     useGradation = false; // limitation of V1.3
+   if ( useGradation )
      set_param(css, "gradation",                         to_string(_gradation).c_str());
    set_param(css, "element_generation",                _quadAllowed ? "quad_dominant" : "triangle");
 

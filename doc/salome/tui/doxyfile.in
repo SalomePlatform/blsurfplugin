@@ -20,7 +20,7 @@
 #---------------------------------------------------------------------------
 # Project related configuration options
 #---------------------------------------------------------------------------
-PROJECT_NAME           = "BLSURFPLUGIN Module Programming Guide v.@SALOMEBLSURFPLUGIN_VERSION@"
+PROJECT_NAME           = "MG-CADSurf Module Programming Guide v.@SALOMEBLSURFPLUGIN_VERSION@"
 PROJECT_NUMBER         = 
 OUTPUT_DIRECTORY       = BLSURFPLUGIN
 CREATE_SUBDIRS         = NO

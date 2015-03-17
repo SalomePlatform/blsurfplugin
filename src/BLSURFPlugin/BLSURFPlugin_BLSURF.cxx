@@ -2101,7 +2101,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     else
       cad_face_set_orientation(fce, CAD_ORIENTATION_FORWARD);
 
-    if (HasSizeMapOnFace && !use_precad)
+    if (HasSizeMapOnFace /*&& !use_precad*/) //22903: use_precad seems not to interfere
     {
       // -----------------
       // Classic size map

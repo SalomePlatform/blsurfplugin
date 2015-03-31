@@ -889,6 +889,8 @@ void BLSURFPlugin_Hypothesis_i::SetSizeMapEntry(const char* entry, const char* s
     throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
   MESSAGE("ENGINE : SETSIZEMAP START ENTRY : " << entry);
+  if ( !entry || !entry[0] )
+    THROW_SALOME_CORBA_EXCEPTION( "SetSizeMapEntry(): empty geom entry", SALOME::BAD_PARAM );
   bool valueChanged = false;
   try {
     valueChanged = (this->GetImpl()->GetSizeMapEntry(entry) != sizeMap);
@@ -1176,7 +1178,9 @@ void BLSURFPlugin_Hypothesis_i::ClearSizeMaps() {
 
 //=============================================================================
 
-void BLSURFPlugin_Hypothesis_i::SetSizeMap(const GEOM::GEOM_Object_ptr GeomObj, const char* sizeMap) {
+void BLSURFPlugin_Hypothesis_i::SetSizeMap(const GEOM::GEOM_Object_ptr GeomObj, const char* sizeMap)
+  throw (SALOME::SALOME_Exception)
+{
   ASSERT(myBaseImpl);
   string entry;
   entry = GeomObj->GetStudyEntry();

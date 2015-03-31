@@ -318,13 +318,13 @@ module BLSURFPlugin
      * Set option values each in the form "option_name[:option_value]".
      * Note: the method is mostly for interaction with GUI.
      */
-    void SetOptionValues(in string_array options);
-    void SetPreCADOptionValues(in string_array options);
+    void SetOptionValues(in string_array options) raises (SALOME::SALOME_Exception);
+    void SetPreCADOptionValues(in string_array options) raises (SALOME::SALOME_Exception);
 
     /*!
      * SizeMap
      */
-    void SetSizeMapEntries(in string_array sizeMaps);
+    void SetSizeMapEntries(in string_array sizeMaps) raises (SALOME::SALOME_Exception);
     void ClearSizeMaps();
 
     void UnsetEntry(in string entry);
@@ -332,16 +332,16 @@ module BLSURFPlugin
     /*!
      * Set/unset a SizeMap on geom object
      */
-    void         SetSizeMap(in GEOM::GEOM_Object GeomObj, in string sizeMap);
+    void         SetSizeMap(in GEOM::GEOM_Object GeomObj, in string sizeMap) raises (SALOME::SALOME_Exception);
     void         SetConstantSizeMap(in GEOM::GEOM_Object GeomObj, in double sizeMap);
     void         UnsetSizeMap(in GEOM::GEOM_Object GeomObj);
     
     /*!
      * Set a SizeMap on geom object given by entry
      */
-    void         SetSizeMapEntry(in string entry, in string sizeMap);
-    void         SetConstantSizeMapEntry(in string entry, in GEOM::shape_type shapeType, in double sizeMap);
-    string       GetSizeMapEntry(in string entry);
+    void         SetSizeMapEntry(in string entry, in string sizeMap) raises (SALOME::SALOME_Exception);
+    void         SetConstantSizeMapEntry(in string entry, in GEOM::shape_type shapeType, in double sizeMap) raises (SALOME::SALOME_Exception);
+    string       GetSizeMapEntry(in string entry) raises (SALOME::SALOME_Exception);
     string_array GetSizeMapEntries();
 
     /*!
@@ -353,8 +353,8 @@ module BLSURFPlugin
     /*!
      * Set an attractor on geom object given by entry
      */
-    void         SetAttractorEntry(in string entry, in string attractor);
-    string       GetAttractorEntry(in string entry);
+    void         SetAttractorEntry(in string entry, in string attractor) raises (SALOME::SALOME_Exception);
+    string       GetAttractorEntry(in string entry) raises (SALOME::SALOME_Exception);
     string_array GetAttractorEntries();
 
     /*!
@@ -367,7 +367,7 @@ module BLSURFPlugin
     /*!
      * Set an attractor given by entry on a geom object given by entry
      */
-    void         SetClassAttractorEntry(in string entry, in string att_entry, in double StartSize, in double EndSize, in double ActionRadius, in double ConstantRadius );
+    void         SetClassAttractorEntry(in string entry, in string att_entry, in double StartSize, in double EndSize, in double ActionRadius, in double ConstantRadius ) raises (SALOME::SALOME_Exception);
     BLSURFPlugin::TAttParamsMap GetAttractorParams();
 
 /*

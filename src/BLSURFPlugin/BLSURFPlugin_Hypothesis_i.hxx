@@ -143,7 +143,7 @@ public:
 
   void SetSizeMapEntries(const BLSURFPlugin::string_array& sizeMaps) throw (SALOME::SALOME_Exception);
 
-  void SetSizeMap(GEOM::GEOM_Object_ptr GeomObj, const char* sizeMap);
+  void SetSizeMap(GEOM::GEOM_Object_ptr GeomObj, const char* sizeMap) throw (SALOME::SALOME_Exception);
 
   void SetConstantSizeMap(GEOM::GEOM_Object_ptr GeomObj, CORBA::Double sizeMap);
 

@@ -996,8 +996,8 @@ void BLSURFPlugin_Hypothesis_i::SetClassAttractorEntry(const char* entry, const 
   }
   MESSAGE("ENGINE : SETATTRACTOR END ENTRY : " << entry);
   //if ( valueChanged )
-  SMESH::TPythonDump() << _this() << ".SetAttractorGeom( '"
-                       << entry << "', '" << att_entry << "', "<<StartSize<<", "<<EndSize<<", "<<ActionRadius<<", "<<ConstantRadius<<" )";
+  SMESH::TPythonDump() << _this() << ".SetAttractorGeom( "
+                       << entry << ", " << att_entry << ", "<<StartSize<<", "<<EndSize<<", "<<ActionRadius<<", "<<ConstantRadius<<" )";
 }
 
 //=============================================================================

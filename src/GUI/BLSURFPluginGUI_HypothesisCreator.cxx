@@ -731,7 +731,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   // Standard size map tab
   mySmpStdGroup = new QWidget();
   QGridLayout* anSmpStdLayout = new QGridLayout(mySmpStdGroup);
-  myGeomSelWdg1 = new StdMeshersGUI_ObjectReferenceParamWdg( myFilter1, 0, /*multiSel=*/false,/*stretch=*/false);
+  myGeomSelWdg1 = new StdMeshersGUI_ObjectReferenceParamWdg( myFilter1, 0, /*multiSel=*/false);
   myGeomSelWdg1->SetDefaultText(tr("BLS_SEL_SHAPE"), "QLineEdit { color: grey }");
   mySmpSizeSpin = new SMESHGUI_SpinBox(mySmpStdGroup);
   mySmpSizeSpin->RangeStepAndValidator(0., COORD_MAX, 1.0, "length_precision");
@@ -740,7 +740,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   // Attractor tab
   myAttractorGroup = new QWidget();
   QGridLayout* anAttLayout = new QGridLayout(myAttractorGroup);
-  myGeomSelWdg2 = new StdMeshersGUI_ObjectReferenceParamWdg( myFilter3, 0, /*multiSel=*/false,/*stretch=*/false);
+  myGeomSelWdg2 = new StdMeshersGUI_ObjectReferenceParamWdg( myFilter3, 0, /*multiSel=*/false);
   myGeomSelWdg2->SetDefaultText(tr("BLS_SEL_FACE"), "QLineEdit { color: grey }");
   myGeomSelWdg2->AvoidSimultaneousSelection(myGeomSelWdg1);
   myAttractorCheck = new QCheckBox(tr("BLSURF_ATTRACTOR"),myAttractorGroup);
@@ -748,7 +748,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   QFrame* attLine  = new QFrame(myAttractorGroup);
   attLine->setFrameShape(QFrame::HLine);
   attLine->setFrameShadow(QFrame::Sunken);
-  myAttSelWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myFilter2, myAttractorGroup, /*multiSel=*/false,/*stretch=*/false);
+  myAttSelWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myFilter2, myAttractorGroup, /*multiSel=*/false);
   myAttSelWdg->SetDefaultText(tr("BLS_SEL_ATTRACTOR"), "QLineEdit { color: grey }"); 
   myAttSizeSpin = new SMESHGUI_SpinBox(myAttractorGroup);
   myAttSizeSpin->RangeStepAndValidator(0., COORD_MAX, 1.0, "length_precision");
@@ -859,11 +859,11 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   shapeTypes2.Add( TopAbs_COMPOUND );
 
   SMESH_NumberFilter* faceFilter = new SMESH_NumberFilter("GEOM", TopAbs_FACE, 0, shapeTypes1);
-  myEnfFaceWdg = new StdMeshersGUI_ObjectReferenceParamWdg( faceFilter, 0, /*multiSel=*/true, /*stretch=*/false);
+  myEnfFaceWdg = new StdMeshersGUI_ObjectReferenceParamWdg( faceFilter, 0, /*multiSel=*/true);
   myEnfFaceWdg->SetDefaultText(tr("BLS_SEL_FACES"), "QLineEdit { color: grey }");
 
   SMESH_NumberFilter* vertexFilter = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 1, shapeTypes2);
-  myEnfVertexWdg = new StdMeshersGUI_ObjectReferenceParamWdg( vertexFilter, 0, /*multiSel=*/true, /*stretch=*/false);
+  myEnfVertexWdg = new StdMeshersGUI_ObjectReferenceParamWdg( vertexFilter, 0, /*multiSel=*/true);
   myEnfVertexWdg->SetDefaultText(tr("BLS_SEL_VERTICES"), "QLineEdit { color: grey }");
 
   myEnfVertexWdg->AvoidSimultaneousSelection(myEnfFaceWdg);
@@ -999,11 +999,11 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   myPeriodicityGroupBox1Layout->addWidget(myPeriodicityMainSourceLabel, 1, 0, 1, 1);
 
   SMESH_NumberFilter* myPeriodicitySourceFaceFilter = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 0, shapeTypesFace);
-  myPeriodicitySourceFaceWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicitySourceFaceFilter, 0, /*multiSel=*/false, /*stretch=*/false);
+  myPeriodicitySourceFaceWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicitySourceFaceFilter, 0, /*multiSel=*/false);
 //  myPeriodicitySourceFaceWdg->SetDefaultText(tr("BLSURF_PERIODICITY_SELECT_FACE"), "QLineEdit { color: grey }");
   myPeriodicityGroupBox1Layout->addWidget(myPeriodicitySourceFaceWdg, 1, 1, 1, 1);
 
-//  myPeriodicitySourceEdgeWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityEdgeFilter, 0, /*multiSel=*/false, /*stretch=*/false);
+//  myPeriodicitySourceEdgeWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityEdgeFilter, 0, /*multiSel=*/false);
 //  myPeriodicitySourceEdgeWdg->SetDefaultText(tr("BLSURF_PERIODICITY_SELECT_EDGE"), "QLineEdit { color: grey }");
 //  myPeriodicitySourceEdgeWdg->hide();
 //  myPeriodicityGroupBox1Layout->addWidget(myPeriodicitySourceEdgeWdg, 1, 1, 1, 1);
@@ -1012,11 +1012,11 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   myPeriodicityGroupBox1Layout->addWidget(myPeriodicityMainTargetLabel, 1, 2, 1, 1);
 
   SMESH_NumberFilter* myPeriodicityTargetFaceFilter = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 0, shapeTypesFace);
-  myPeriodicityTargetFaceWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityTargetFaceFilter, 0, /*multiSel=*/false, /*stretch=*/false);
+  myPeriodicityTargetFaceWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityTargetFaceFilter, 0, /*multiSel=*/false);
 //  myPeriodicityTargetFaceWdg->SetDefaultText(tr("BLSURF_PERIODICITY_SELECT_FACE"), "QLineEdit { color: grey }");
   myPeriodicityGroupBox1Layout->addWidget(myPeriodicityTargetFaceWdg, 1, 3, 1, 1);
 
-//  myPeriodicityTargetEdgeWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityEdgeFilter, 0, /*multiSel=*/false, /*stretch=*/false);
+//  myPeriodicityTargetEdgeWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityEdgeFilter, 0, /*multiSel=*/false);
 //  myPeriodicityTargetEdgeWdg->SetDefaultText(tr("BLSURF_PERIODICITY_SELECT_EDGE"), "QLineEdit { color: grey }");
 //  myPeriodicityTargetEdgeWdg->hide();
 //  myPeriodicityGroupBox1Layout->addWidget(myPeriodicityTargetEdgeWdg, 1, 3, 1, 1);
@@ -1040,7 +1040,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 
 
   SMESH_NumberFilter* myPeriodicityP1SourceFilter = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 1, TopAbs_VERTEX);
-  myPeriodicityP1SourceWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityP1SourceFilter, 0, /*multiSel=*/false, /*stretch=*/false);
+  myPeriodicityP1SourceWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityP1SourceFilter, 0, /*multiSel=*/false);
   myPeriodicityGroupBox2Layout->addWidget(myPeriodicityP1SourceWdg, 1, 1, 1, 1);
 
   // P2
@@ -1048,7 +1048,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   myPeriodicityGroupBox2Layout->addWidget(myPeriodicityP2SourceLabel, 2, 0, 1, 1);
 
   SMESH_NumberFilter* myPeriodicityP2SourceFilter = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 1, TopAbs_VERTEX);
-  myPeriodicityP2SourceWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityP2SourceFilter, 0, /*multiSel=*/false, /*stretch=*/false);
+  myPeriodicityP2SourceWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityP2SourceFilter, 0, /*multiSel=*/false);
   myPeriodicityGroupBox2Layout->addWidget(myPeriodicityP2SourceWdg, 2, 1, 1, 1);
 
   // P3
@@ -1056,7 +1056,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   myPeriodicityGroupBox2Layout->addWidget(myPeriodicityP3SourceLabel, 3, 0, 1, 1);
 
   SMESH_NumberFilter* myPeriodicityP3SourceFilter = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 1, TopAbs_VERTEX);
-  myPeriodicityP3SourceWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityP3SourceFilter, 0, /*multiSel=*/false, /*stretch=*/false);
+  myPeriodicityP3SourceWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityP3SourceFilter, 0, /*multiSel=*/false);
   myPeriodicityGroupBox2Layout->addWidget(myPeriodicityP3SourceWdg, 3, 1, 1, 1);
 
   // P1
@@ -1064,7 +1064,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   myPeriodicityGroupBox2Layout->addWidget(myPeriodicityP1TargetLabel, 1, 2, 1, 1);
 
   SMESH_NumberFilter* myPeriodicityP1TargetFilter = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 1, TopAbs_VERTEX);
-  myPeriodicityP1TargetWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityP1TargetFilter, 0, /*multiSel=*/false, /*stretch=*/false);
+  myPeriodicityP1TargetWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityP1TargetFilter, 0, /*multiSel=*/false);
   myPeriodicityGroupBox2Layout->addWidget(myPeriodicityP1TargetWdg, 1, 3, 1, 1);
 
   // P2
@@ -1072,7 +1072,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   myPeriodicityGroupBox2Layout->addWidget(myPeriodicityP2TargetLabel, 2, 2, 1, 1);
 
   SMESH_NumberFilter* myPeriodicityP2TargetFilter = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 1, TopAbs_VERTEX);
-  myPeriodicityP2TargetWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityP2TargetFilter, 0, /*multiSel=*/false, /*stretch=*/false);
+  myPeriodicityP2TargetWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityP2TargetFilter, 0, /*multiSel=*/false);
   myPeriodicityGroupBox2Layout->addWidget(myPeriodicityP2TargetWdg, 2, 3, 1, 1);
 
   // P3
@@ -1080,7 +1080,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   myPeriodicityGroupBox2Layout->addWidget(myPeriodicityP3TargetLabel, 3, 2, 1, 1);
 
   SMESH_NumberFilter* myPeriodicityP3TargetFilter = new SMESH_NumberFilter("GEOM", TopAbs_SHAPE, 1, TopAbs_VERTEX);
-  myPeriodicityP3TargetWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityP3TargetFilter, 0, /*multiSel=*/false, /*stretch=*/false);
+  myPeriodicityP3TargetWdg = new StdMeshersGUI_ObjectReferenceParamWdg( myPeriodicityP3TargetFilter, 0, /*multiSel=*/false);
   myPeriodicityGroupBox2Layout->addWidget(myPeriodicityP3TargetWdg, 3, 3, 1, 1);
 
   myPeriodicityVerticalSpacer = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);

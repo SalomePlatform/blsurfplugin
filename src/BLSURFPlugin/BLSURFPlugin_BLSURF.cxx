@@ -1956,7 +1956,6 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   TSubMeshSet edgeSubmeshes;
   TSubMeshSet& mergeSubmeshes = edgeSubmeshes;
 
-  TopTools_IndexedMapOfShape fmap;
   TopTools_IndexedMapOfShape emap;
   TopTools_IndexedMapOfShape pmap;
 
@@ -2040,7 +2039,6 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   vector<Handle(Geom2d_Curve)> curves;
   vector<Handle(Geom_Surface)> surfaces;
 
-  fmap.Clear();
   emap.Clear();
   pmap.Clear();
   FaceId2PythonSmp.clear();
@@ -2073,9 +2071,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     if (f.Orientation() != TopAbs_FORWARD && f.Orientation() != TopAbs_REVERSED )
       f.Orientation(TopAbs_FORWARD);
 
-    if (fmap.FindIndex(f) > 0)
-      continue;
-    iface = fmap.Add(f);
+    iface = meshDS->ShapeToIndex(f);
 //    std::string aFileName = "fmap_face_";
 //    aFileName.append(to_string(iface));
 //    aFileName.append(".brep");
@@ -2938,30 +2934,31 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     mesh_get_triangle_vertices(msh, it, vtx);
     mesh_get_triangle_extra_vertices(msh, it, &type, evtri);
     mesh_get_triangle_tag(msh, it, &tag);
+    TopoDS_Face face = TopoDS::Face(meshDS->IndexToShape(tag));
     if (tags[vtx[0]]) {
-      meshDS->SetNodeOnFace(nodes[vtx[0]], TopoDS::Face(fmap(tag)));
+      meshDS->SetNodeOnFace(nodes[vtx[0]], face);
       tags[vtx[0]] = false;
     };
     if (tags[vtx[1]]) {
-      meshDS->SetNodeOnFace(nodes[vtx[1]], TopoDS::Face(fmap(tag)));
+      meshDS->SetNodeOnFace(nodes[vtx[1]], face);
       tags[vtx[1]] = false;
     };
     if (tags[vtx[2]]) {
-      meshDS->SetNodeOnFace(nodes[vtx[2]], TopoDS::Face(fmap(tag)));
+      meshDS->SetNodeOnFace(nodes[vtx[2]], face);
       tags[vtx[2]] = false;
     };
     if (type == MESHGEMS_MESH_ELEMENT_TYPE_TRIA6) {
       // QUADRATIC TRIANGLE
       if (tags[evtri[0]]) {
-        meshDS->SetNodeOnFace(nodes[evtri[0]], TopoDS::Face(fmap(tag)));
+        meshDS->SetNodeOnFace(nodes[evtri[0]], face);
         tags[evtri[0]] = false;
       }
       if (tags[evtri[1]]) {
-        meshDS->SetNodeOnFace(nodes[evtri[1]], TopoDS::Face(fmap(tag)));
+        meshDS->SetNodeOnFace(nodes[evtri[1]], face);
         tags[evtri[1]] = false;
       }
       if (tags[evtri[2]]) {
-        meshDS->SetNodeOnFace(nodes[evtri[2]], TopoDS::Face(fmap(tag)));
+        meshDS->SetNodeOnFace(nodes[evtri[2]], face);
         tags[evtri[2]] = false;
       }
       tri = meshDS->AddFace(nodes[vtx[0]], nodes[vtx[1]], nodes[vtx[2]],
@@ -2970,7 +2967,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     else {
       tri = helper.AddFace(nodes[vtx[0]], nodes[vtx[1]], nodes[vtx[2]]);
     }
-    meshDS->SetMeshElementOnShape(tri, TopoDS::Face(fmap(tag)));
+    meshDS->SetMeshElementOnShape(tri, face);
   }
 
   /* enumerate quadrangles */
@@ -2979,43 +2976,44 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     mesh_get_quadrangle_vertices(msh, it, vtx);
     mesh_get_quadrangle_extra_vertices(msh, it, &type, evquad);
     mesh_get_quadrangle_tag(msh, it, &tag);
+    TopoDS_Face face = TopoDS::Face(meshDS->IndexToShape(tag));
     if (tags[vtx[0]]) {
-      meshDS->SetNodeOnFace(nodes[vtx[0]], TopoDS::Face(fmap(tag)));
+      meshDS->SetNodeOnFace(nodes[vtx[0]], face);
       tags[vtx[0]] = false;
     };
     if (tags[vtx[1]]) {
-      meshDS->SetNodeOnFace(nodes[vtx[1]], TopoDS::Face(fmap(tag)));
+      meshDS->SetNodeOnFace(nodes[vtx[1]], face);
       tags[vtx[1]] = false;
     };
     if (tags[vtx[2]]) {
-      meshDS->SetNodeOnFace(nodes[vtx[2]], TopoDS::Face(fmap(tag)));
+      meshDS->SetNodeOnFace(nodes[vtx[2]], face);
       tags[vtx[2]] = false;
     };
     if (tags[vtx[3]]) {
-      meshDS->SetNodeOnFace(nodes[vtx[3]], TopoDS::Face(fmap(tag)));
+      meshDS->SetNodeOnFace(nodes[vtx[3]], face);
       tags[vtx[3]] = false;
     };
     if (type == MESHGEMS_MESH_ELEMENT_TYPE_QUAD9) {
       // QUADRATIC QUADRANGLE
       std::cout << "This is a quadratic quadrangle" << std::endl;
       if (tags[evquad[0]]) {
-        meshDS->SetNodeOnFace(nodes[evquad[0]], TopoDS::Face(fmap(tag)));
+        meshDS->SetNodeOnFace(nodes[evquad[0]], face);
         tags[evquad[0]] = false;
       }
       if (tags[evquad[1]]) {
-        meshDS->SetNodeOnFace(nodes[evquad[1]], TopoDS::Face(fmap(tag)));
+        meshDS->SetNodeOnFace(nodes[evquad[1]], face);
         tags[evquad[1]] = false;
       }
       if (tags[evquad[2]]) {
-        meshDS->SetNodeOnFace(nodes[evquad[2]], TopoDS::Face(fmap(tag)));
+        meshDS->SetNodeOnFace(nodes[evquad[2]], face);
         tags[evquad[2]] = false;
       }
       if (tags[evquad[3]]) {
-        meshDS->SetNodeOnFace(nodes[evquad[3]], TopoDS::Face(fmap(tag)));
+        meshDS->SetNodeOnFace(nodes[evquad[3]], face);
         tags[evquad[3]] = false;
       }
       if (tags[evquad[4]]) {
-        meshDS->SetNodeOnFace(nodes[evquad[4]], TopoDS::Face(fmap(tag)));
+        meshDS->SetNodeOnFace(nodes[evquad[4]], face);
         tags[evquad[4]] = false;
       }
       quad = meshDS->AddFace(nodes[vtx[0]], nodes[vtx[1]], nodes[vtx[2]], nodes[vtx[3]],
@@ -3025,7 +3023,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     else {
       quad = helper.AddFace(nodes[vtx[0]], nodes[vtx[1]], nodes[vtx[2]], nodes[vtx[3]]);
     }
-    meshDS->SetMeshElementOnShape(quad, TopoDS::Face(fmap(tag)));
+    meshDS->SetMeshElementOnShape(quad, face);
   }
 
   /* release the mesh object, the rest is released by cleaner */
@@ -3093,9 +3091,10 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     _comment = "No mesh elements assigned to a face";
   }
   bool badFaceFound = false;
-  for ( int i = 1; i <= fmap.Extent(); ++i )
+  for (TopExp_Explorer face_iter(aShape,TopAbs_FACE);face_iter.More();face_iter.Next())
   {
-    SMESH_subMesh* sm = aMesh.GetSubMesh( fmap(i) );
+    TopoDS_Face f = TopoDS::Face(face_iter.Current());
+    SMESH_subMesh* sm = aMesh.GetSubMesh( f );
     if ( !sm->GetSubMeshDS() || sm->GetSubMeshDS()->NbElements() == 0 )
     {
       sm->GetComputeError().reset( new SMESH_ComputeError( err, _comment, this ));

@@ -150,6 +150,33 @@ By default this option is 1.
 to lower the geometry accuracy in its patch independent process.
 By default this option is 1.
 
+- \b optimise_tiny_edges (bool) - This patch-independent correction option can be activated to remove the tiny
+edges (defined by the option tiny edge optimisation length) from the generated mesh when it improves
+the local mesh quality, without taking into account the tags (attributes) specifications.
+By default this option is 0.
+
+- \b remove_duplicate_cad_faces (bool) - Defines the behavior of MeshGems-PreCAD regarding the duplicate
+CAD faces. By default, MG-PreCAD merges the duplicate CAD faces. This behavior can be deactivated by using this option.
+By default this option is 1.
+
+- \b tiny_edge_avoid_surface_intersections (bool) - This option defines the priority between the tiny feature
+suppression and the surface intersection prevention. By default, MeshGems-CADSurf gives the priority
+to the surface intersection prevention rather than to tiny edge or bad surface element removal. These
+mesh features are then removed only if it does not lead to surface intersections. This behaviour can be
+deactivated by setting this parameter to 0, giving priority to the tiny edge or bad surface element
+removal.
+By default this option is 1.
+
+- \b tiny_edge_optimisation_length (double) - This parameter defines the minimal length under which an edge is
+considered to be a tiny one to be optimised out by the optimise tiny edges option.
+By default this option is \f$\mathrm{diag} \times 10^{-6}\f$.
+
+- \b tiny_edge_respect_geometry (bool) - This option defines the behaviour of the tiny edge removal algorithm
+regarding volume collapse. By default, all tiny edges will be removed, regardless of any potential
+volume collapse. When this option is activated, it will prevent volume from being collapsed during the
+tiny edge removal process.
+By default this option is 0.
+
 - \b max_number_of_points_per_patch (int) - This parameter controls the maximum amount of points MeshGems-CADSurf
 is allowed to generate on a single CAD patch. For an automatic gestion of the memory, one can set this parameter to ”0”.
 By default this option is 100000.

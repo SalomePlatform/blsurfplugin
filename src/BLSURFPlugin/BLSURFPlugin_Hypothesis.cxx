@@ -96,6 +96,10 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
                                             "proximity",                                // default = 0
                                             "rectify_jacobian",                         // default = 1
                                             "respect_geometry",                         // default = 1
+                                            "optimise_tiny_edges",                      // default = 0
+                                            "remove_duplicate_cad_faces",               // default = 1
+                                            "tiny_edge_avoid_surface_intersections",    // default = 1
+                                            "tiny_edge_respect_geometry",               // default = 0
                                             "" // mark of end
       };
 
@@ -108,7 +112,8 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   const char* doubleOptionNames[] = {       "surface_intersections_processing_max_cost",// default = 15
                                             "periodic_tolerance",                       // default = diag/100
                                             "prox_ratio",
-                                            "volume_gradation"
+                                            "volume_gradation",
+                                            "tiny_edge_optimisation_length",            // default = diag * 1e-6
                                             "" // mark of end
       };
   const char* charOptionNames[] = {         "required_entities",                        // default = "respect"

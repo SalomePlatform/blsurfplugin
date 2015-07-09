@@ -23,6 +23,8 @@
 
 from salome.smesh.smesh_algorithm import Mesh_Algorithm
 
+LIBRARY = "libBLSURFEngine.so"
+
 # Topology treatment way of MG-CADSurf
 FromCAD, PreProcess, PreProcessPlus, PreCAD = 0,1,2,3
 
@@ -83,7 +85,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
     Mesh_Algorithm.__init__(self)
     if noBLSURFPlugin:
       print "Warning: BLSURFPlugin module unavailable"
-    self.Create(mesh, geom, BLSURF, "libBLSURFEngine.so")
+    self.Create(mesh, geom, BLSURF, LIBRARY)
     self.params=None
     self.geompyD = mesh.geompyD
     #self.SetPhysicalMesh() - PAL19680
@@ -432,7 +434,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   def Parameters(self):
     if not self.params:
       self.params = self.Hypothesis("MG-CADSurf Parameters", [],
-                                    "libBLSURFEngine.so", UseExisting=0)
+                                    LIBRARY, UseExisting=0)
       pass
     return self.params
 

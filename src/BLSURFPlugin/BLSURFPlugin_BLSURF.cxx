@@ -1004,7 +1004,7 @@ void BLSURFPlugin_BLSURF::SetParameters(
      _precadProcess3DTopology = hyp->GetPreCADProcess3DTopology();
      _precadDiscardInput = hyp->GetPreCADDiscardInput();
 
-    const BLSURFPlugin_Hypothesis::TOptionValues & opts = hyp->GetOptionValues();
+    const BLSURFPlugin_Hypothesis::TOptionValues& opts = hyp->GetOptionValues();
     BLSURFPlugin_Hypothesis::TOptionValues::const_iterator opIt;
     for ( opIt = opts.begin(); opIt != opts.end(); ++opIt )
       if ( !opIt->second.empty() ) {
@@ -1012,8 +1012,23 @@ void BLSURFPlugin_BLSURF::SetParameters(
         set_param(css, opIt->first.c_str(), opIt->second.c_str());
       }
       
-    const BLSURFPlugin_Hypothesis::TOptionValues & preCADopts = hyp->GetPreCADOptionValues();
+    const BLSURFPlugin_Hypothesis::TOptionValues& custom_opts = hyp->GetCustomOptionValues();
+    for ( opIt = custom_opts.begin(); opIt != custom_opts.end(); ++opIt )
+      if ( !opIt->second.empty() ) {
+        MESSAGE("cadsurf_set_param(): " << opIt->first << " = " << opIt->second);
+        set_param(css, opIt->first.c_str(), opIt->second.c_str());
+     }
+
+    const BLSURFPlugin_Hypothesis::TOptionValues& preCADopts = hyp->GetPreCADOptionValues();
     for ( opIt = preCADopts.begin(); opIt != preCADopts.end(); ++opIt )
+      if ( !opIt->second.empty() ) {
+        *use_precad = true;
+        MESSAGE("precad_set_param(): " << opIt->first << " = " << opIt->second);
+        precad_set_param(pcs, opIt->first.c_str(), opIt->second.c_str());
+      }
+
+    const BLSURFPlugin_Hypothesis::TOptionValues& custom_preCADopts = hyp->GetCustomPreCADOptionValues();
+    for ( opIt = custom_preCADopts.begin(); opIt != custom_preCADopts.end(); ++opIt )
       if ( !opIt->second.empty() ) {
         *use_precad = true;
         MESSAGE("precad_set_param(): " << opIt->first << " = " << opIt->second);

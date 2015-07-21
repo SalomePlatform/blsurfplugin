@@ -212,6 +212,10 @@
       <translation>オプションを削除します。</translation>
     </message>
     <message>
+        <source>BLSURF_OTHER_OPTION</source>
+        <translation type="unfinished">Other option</translation>
+    </message>
+    <message>
       <source>BLSURF_GMF_FILE</source>
       <translation>エクスポート グループ</translation>
     </message>

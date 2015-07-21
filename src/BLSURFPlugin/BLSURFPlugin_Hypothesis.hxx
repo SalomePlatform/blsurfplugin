@@ -435,6 +435,13 @@ public:
   void ClearPreCADOption(const std::string& optionName);
   const TOptionValues& GetOptionValues() const { return _option2value; }
   const TOptionValues& GetPreCADOptionValues() const { return _preCADoption2value; }
+  const TOptionValues& GetCustomOptionValues() const { return _customOption2value; }
+  const TOptionValues& GetCustomPreCADOptionValues() const { return _customPreCADOption2value; }
+
+  void AddOption(const std::string& optionName, const std::string& optionValue);
+  void AddPreCADOption(const std::string& optionName, const std::string& optionValue);
+  std::string GetOption(const std::string& optionName);
+  std::string GetPreCADOption(const std::string& optionName);
 
   /*!
     * Sets the file for export resulting mesh in GMF format
@@ -494,6 +501,7 @@ private:
   double          _preCADEpsNano;
   
   TOptionValues   _option2value, _preCADoption2value;
+  TOptionValues   _customOption2value, _customPreCADOption2value;
   TOptionNames    _doubleOptions, _charOptions;
   TOptionNames    _preCADdoubleOptions, _preCADcharOptions;
   TSizeMap        _sizeMap;

@@ -240,6 +240,22 @@ class BLSURF_Algorithm(Mesh_Algorithm):
       self.SetTopology(PreCAD)
     self.Parameters().SetPreCADOptionValue(optionName,optionValue)
     pass
+  
+  ## Adds custom advanced option value.
+  #  @param optionName custom advanced option name
+  #  @param level custom advanced option value
+  def AddOption(self, optionName, level):
+    self.Parameters().AddOption(optionName,level)
+    pass
+
+  ## Adds custom advanced PreCAD option value.
+  #  @param optionName custom name of the option
+  #  @param optionValue value of the option
+  def AddPreCADOption(self, optionName, optionValue):
+    if self.Parameters().GetTopology() != PreCAD:
+      self.SetTopology(PreCAD)
+    self.Parameters().AddPreCADOption(optionName,optionValue)
+    pass
 
   ## Sets GMF file for export at computation
   #  @param fileName GMF file name

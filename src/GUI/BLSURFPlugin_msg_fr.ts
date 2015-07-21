@@ -227,6 +227,10 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
         <translation>Effacer l&apos;option</translation>
     </message>
     <message>
+        <source>BLSURF_OTHER_OPTION</source>
+        <translation>L&apos;autre option</translation>
+    </message>
+    <message>
         <source>BLSURF_GMF_FILE</source>
         <translation>Export GMF</translation>
     </message>

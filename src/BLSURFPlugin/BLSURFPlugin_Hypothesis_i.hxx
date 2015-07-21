@@ -131,6 +131,11 @@ public:
   void SetOptionValues(const BLSURFPlugin::string_array& options) throw (SALOME::SALOME_Exception);
   void SetPreCADOptionValues(const BLSURFPlugin::string_array& options) throw (SALOME::SALOME_Exception);
 
+  void AddOption(const char* optionName, const char* optionValue);
+  void AddPreCADOption(const char* optionName, const char* optionValue);
+  char* GetOption(const char* optionName);
+  char* GetPreCADOption(const char* optionName);
+
   void SetSizeMapEntry(const char* entry, const char* sizeMap) throw (SALOME::SALOME_Exception);
 
   void SetConstantSizeMapEntry(const char* entry, GEOM::shape_type shapeType, CORBA::Double sizeMap) throw (SALOME::SALOME_Exception);

@@ -532,16 +532,82 @@ std::string BLSURFPlugin_Hypothesis::GetPreCADOptionValue(const std::string& opt
 
 //=============================================================================
 void BLSURFPlugin_Hypothesis::ClearOption(const std::string& optionName) {
-  TOptionValues::iterator op_val = _option2value.find(optionName);
-  if (op_val != _option2value.end())
-    op_val->second.clear();
+  TOptionValues::iterator op_val = _customOption2value.find(optionName);
+  if (op_val != _customOption2value.end())
+   _customOption2value.erase(op_val);
+  else {
+    op_val = _option2value.find(optionName);
+    if (op_val != _option2value.end())
+      op_val->second.clear();
+  }
 }
 
 //=============================================================================
 void BLSURFPlugin_Hypothesis::ClearPreCADOption(const std::string& optionName) {
+  TOptionValues::iterator op_val = _customPreCADOption2value.find(optionName);
+  if (op_val != _customPreCADOption2value.end())
+    _customPreCADOption2value.erase(op_val);
+  else {
+    op_val = _preCADoption2value.find(optionName);
+    if (op_val != _preCADoption2value.end())
+      op_val->second.clear();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::AddOption(const std::string& optionName, const std::string& optionValue)
+{
+  TOptionValues::iterator op_val = _option2value.find(optionName);
+  if (op_val != _option2value.end()) {
+    if (op_val->second != optionValue)
+      op_val->second = optionValue;
+  }
+  else {
+    op_val = _customOption2value.find(optionName);
+    if (op_val == _customOption2value.end())
+      _customOption2value[optionName] = optionValue;
+    else if (op_val->second != optionValue)
+      op_val->second = optionValue;
+  }
+  NotifySubMeshesHypothesisModification();
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::AddPreCADOption(const std::string& optionName, const std::string& optionValue)
+{
   TOptionValues::iterator op_val = _preCADoption2value.find(optionName);
-  if (op_val != _preCADoption2value.end())
-    op_val->second.clear();
+  if (op_val != _preCADoption2value.end()) {
+    if (op_val->second != optionValue)
+      op_val->second = optionValue;
+  }
+  else {
+    op_val = _customPreCADOption2value.find(optionName);
+    if (op_val == _customPreCADOption2value.end())
+      _customPreCADOption2value[optionName] = optionValue;
+    else if (op_val->second != optionValue)
+      op_val->second = optionValue;
+  }
+  NotifySubMeshesHypothesisModification();
+}
+
+//=============================================================================
+std::string BLSURFPlugin_Hypothesis::GetOption(const std::string& optionName)
+{
+  TOptionValues::iterator op_val = _customOption2value.find(optionName);
+  if (op_val != _customOption2value.end())
+    return op_val->second;
+  else
+    return "";
+}
+
+//=============================================================================
+std::string BLSURFPlugin_Hypothesis::GetPreCADOption(const std::string& optionName)
+{
+  TOptionValues::iterator op_val = _customPreCADOption2value.find(optionName);
+  if (op_val != _customPreCADOption2value.end())
+    return op_val->second;
+  else
+    return "";
 }
 
 //=======================================================================
@@ -1395,6 +1461,16 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save) {
     save << " " << "__OPTIONS_END__";
   }
   
+  op_val = _customOption2value.begin();
+  if (op_val != _customOption2value.end()) {
+    save << " " << "__CUSTOM_OPTIONS_BEGIN__";
+    for (; op_val != _customOption2value.end(); ++op_val) {
+      if (!op_val->second.empty())
+        save << " " << op_val->first << " " << op_val->second << "%#"; // "%#" is a mark of value end
+    }
+    save << " " << "__CUSTOM_OPTIONS_END__";
+  }
+
   op_val = _preCADoption2value.begin();
   if (op_val != _preCADoption2value.end()) {
     save << " " << "__PRECAD_OPTIONS_BEGIN__";
@@ -1403,6 +1479,16 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save) {
         save << " " << op_val->first << " " << op_val->second << "%#"; // "%#" is a mark of value end
     }
     save << " " << "__PRECAD_OPTIONS_END__";
+  }
+
+  op_val = _customPreCADOption2value.begin();
+  if (op_val != _customPreCADOption2value.end()) {
+    save << " " << "__CUSTOM_PRECAD_OPTIONS_BEGIN__";
+    for (; op_val != _customPreCADOption2value.end(); ++op_val) {
+      if (!op_val->second.empty())
+        save << " " << op_val->first << " " << op_val->second << "%#"; // "%#" is a mark of value end
+    }
+    save << " " << "__CUSTOM_PRECAD_OPTIONS_END__";
   }
 
   TSizeMap::iterator it_sm = _sizeMap.begin();
@@ -1781,7 +1867,9 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
 
   bool hasCADSurfOptions = false;
   bool hasOptions = false;
+  bool hasCustomOptions = false;
   bool hasPreCADOptions = false;
+  bool hasCustomPreCADOptions = false;
   bool hasSizeMap = false;
   bool hasAttractor = false;
   bool hasNewAttractor = false;
@@ -1801,8 +1889,12 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
     }
     if (option_or_sm == "__OPTIONS_BEGIN__")
       hasOptions = true;
+    else if (option_or_sm == "__CUSTOM_OPTIONS_BEGIN__")
+      hasCustomOptions = true;
     else if (option_or_sm == "__PRECAD_OPTIONS_BEGIN__")
       hasPreCADOptions = true;
+    else if (option_or_sm == "__CUSTOM_PRECAD_OPTIONS_BEGIN__")
+      hasCustomPreCADOptions = true;
     else if (option_or_sm == "__SIZEMAP_BEGIN__")
       hasSizeMap = true;
     else if (option_or_sm == "__ATTRACTORS_BEGIN__")
@@ -1903,8 +1995,12 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
     if (isOK)
       if (option_or_sm == "__OPTIONS_BEGIN__")
         hasOptions = true;
+      else if (option_or_sm == "__CUSTOM_OPTIONS_BEGIN__")
+        hasCustomOptions = true;
       else if (option_or_sm == "__PRECAD_OPTIONS_BEGIN__")
         hasPreCADOptions = true;
+      else if (option_or_sm == "__CUSTOM_PRECAD_OPTIONS_BEGIN__")
+        hasCustomPreCADOptions = true;
       else if (option_or_sm == "__SIZEMAP_BEGIN__")
         hasSizeMap = true;
       else if (option_or_sm == "__ATTRACTORS_BEGIN__")
@@ -1955,8 +2051,65 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   if (hasOptions) {
     isOK = (load >> option_or_sm);
     if (isOK)
+      if (option_or_sm == "__CUSTOM_OPTIONS_BEGIN__")
+        hasCustomOptions = true;
+      else if (option_or_sm == "__PRECAD_OPTIONS_BEGIN__")
+        hasPreCADOptions = true;
+      else if (option_or_sm == "__CUSTOM_PRECAD_OPTIONS_BEGIN__")
+        hasCustomPreCADOptions = true;
+      else if (option_or_sm == "__SIZEMAP_BEGIN__")
+        hasSizeMap = true;
+      else if (option_or_sm == "__ATTRACTORS_BEGIN__")
+        hasAttractor = true;
+      else if (option_or_sm == "__NEW_ATTRACTORS_BEGIN__")
+        hasNewAttractor = true;
+      else if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
+        hasEnforcedVertex = true;
+      else if (option_or_sm == "__PRECAD_FACES_PERIODICITY_BEGIN__")
+        hasPreCADFacesPeriodicity = true;
+      else if (option_or_sm == "__PRECAD_EDGES_PERIODICITY_BEGIN__")
+        hasPreCADEdgesPeriodicity = true;
+      else if (option_or_sm == "__FACES_PERIODICITY_BEGIN__")
+        hasFacesPeriodicity = true;
+      else if (option_or_sm == "__EDGES_PERIODICITY_BEGIN__")
+        hasEdgesPeriodicity = true;
+      else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
+        hasVerticesPeriodicity = true;
+  }
+
+  while (isOK && hasCustomOptions) {
+    isOK = (load >> optName);
+    if (isOK) {
+      if (optName == "__CUSTOM_OPTIONS_END__")
+        break;
+      isOK = (load >> optValue);
+    }
+    if (isOK) {
+      std::string& value = optValue;
+      int len = value.size();
+      // continue reading until "%#" encountered
+      while (value[len - 1] != '#' || value[len - 2] != '%') {
+        isOK = (load >> optValue);
+        if (isOK) {
+          value += " ";
+          value += optValue;
+          len = value.size();
+        } else {
+          break;
+        }
+      }
+      _customOption2value[optName] = value.substr(0,len-2);
+      value[len - 2] = '\0'; //cut off "%#"
+    }
+  }
+
+  if (hasCustomOptions) {
+    isOK = (load >> option_or_sm);
+    if (isOK)
       if (option_or_sm == "__PRECAD_OPTIONS_BEGIN__")
         hasPreCADOptions = true;
+      else if (option_or_sm == "__CUSTOM_PRECAD_OPTIONS_BEGIN__")
+        hasCustomPreCADOptions = true;
       else if (option_or_sm == "__SIZEMAP_BEGIN__")
         hasSizeMap = true;
       else if (option_or_sm == "__ATTRACTORS_BEGIN__")
@@ -2004,6 +2157,57 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   }
 
   if (hasPreCADOptions) {
+    isOK = (load >> option_or_sm);
+    if (isOK)
+      if (option_or_sm == "__CUSTOM_PRECAD_OPTIONS_BEGIN__")
+        hasCustomPreCADOptions = true;
+      else if (option_or_sm == "__SIZEMAP_BEGIN__")
+        hasSizeMap = true;
+      else if (option_or_sm == "__ATTRACTORS_BEGIN__")
+        hasAttractor = true;
+      else if (option_or_sm == "__NEW_ATTRACTORS_BEGIN__")
+        hasNewAttractor = true;
+      else if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
+        hasEnforcedVertex = true;
+      else if (option_or_sm == "__PRECAD_FACES_PERIODICITY_BEGIN__")
+        hasPreCADFacesPeriodicity = true;
+      else if (option_or_sm == "__PRECAD_EDGES_PERIODICITY_BEGIN__")
+        hasPreCADEdgesPeriodicity = true;
+      else if (option_or_sm == "__FACES_PERIODICITY_BEGIN__")
+        hasFacesPeriodicity = true;
+      else if (option_or_sm == "__EDGES_PERIODICITY_BEGIN__")
+        hasEdgesPeriodicity = true;
+      else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
+        hasVerticesPeriodicity = true;
+  }
+
+  while (isOK && hasCustomPreCADOptions) {
+    isOK = (load >> optName);
+    if (isOK) {
+      if (optName == "__CUSTOM_PRECAD_OPTIONS_END__")
+        break;
+      isOK = (load >> optValue);
+    }
+    if (isOK) {
+      std::string& value = optValue;
+      int len = value.size();
+      // continue reading until "%#" encountered
+      while (value[len - 1] != '#' || value[len - 2] != '%') {
+        isOK = (load >> optValue);
+        if (isOK) {
+          value += " ";
+          value += optValue;
+          len = value.size();
+        } else {
+          break;
+        }
+      }
+      _customPreCADOption2value[optName] = value.substr(0,len-2);
+      value[len - 2] = '\0'; //cut off "%#"
+    }
+  }
+
+  if (hasCustomPreCADOptions) {
     isOK = (load >> option_or_sm);
     if (isOK)
       if (option_or_sm == "__SIZEMAP_BEGIN__")

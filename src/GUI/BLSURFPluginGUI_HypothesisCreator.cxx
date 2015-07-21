@@ -529,7 +529,8 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams(QString& msg) const
     {
       QString name  = myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->text();
       QString value = myAdvWidget->myOptionTable->item( row, OPTION_VALUE_COLUMN )->text().trimmed();
-      if ( !value.isEmpty() ) {
+      bool custom = myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->data(Qt::UserRole).toBool();
+      if ( !value.isEmpty() && !custom ) {
         try {
           QString optionType = myAdvWidget->myOptionTable->item( row, OPTION_TYPE_COLUMN )->text().trimmed();
           if (optionType == "PRECAD")
@@ -1115,10 +1116,12 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 
   myTabWidget->setCurrentIndex( STD_TAB );
 
-  connect( myAdvWidget->addBtn->menu(), SIGNAL( aboutToShow() ),         this, SLOT( onAddOption() ) );
-  connect( myAdvWidget->addBtn->menu(), SIGNAL( triggered( QAction* ) ), this, SLOT( onOptionChosenInPopup( QAction* ) ) );
-  connect( myAdvWidget->rmBtn,          SIGNAL( clicked()),              this, SLOT( onDeleteOption() ) );
-  connect( myStdWidget->myAllowQuadrangles, SIGNAL( stateChanged( int )),this, SLOT( onStateChange() ));
+  connect( myAdvWidget->addBtn->menu(), SIGNAL( aboutToShow() ),           this, SLOT( onAddOption() ) );
+  connect( myAdvWidget->addBtn->menu(), SIGNAL( triggered( QAction* ) ),   this, SLOT( onOptionChosenInPopup( QAction* ) ) );
+  connect( myAdvWidget->rmBtn,          SIGNAL( clicked()),                this, SLOT( onDeleteOption() ) );
+  connect( myAdvWidget->myOptionTable,  SIGNAL( cellPressed( int, int ) ), this, SLOT( onEditOption( int, int ) ) );
+  connect( myAdvWidget->myOptionTable,  SIGNAL( cellChanged( int, int ) ), this, SLOT( onChangeOptionName( int, int ) ) );
+  connect( myStdWidget->myAllowQuadrangles, SIGNAL( stateChanged( int ) ), this, SLOT( onStateChange() ));
 
   // Size Maps
   connect( addMapButton,        SIGNAL( clicked()),                    this,         SLOT( onAddMap() ) );
@@ -1830,8 +1833,9 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
 //     MESSAGE("retrieveParams():myOptions->length() = " << myOptions->length());
     for ( int i = 0, nb = myOptions->length(); i < nb; ++i ) {
       QString option = that->myOptions[i].in();
-      QStringList name_value = option.split( ":", QString::KeepEmptyParts );
-      if ( name_value.count() > 1 ) {
+      QStringList name_value_type = option.split( ":", QString::KeepEmptyParts );
+      bool custom = ( name_value_type.size() == 3 ) ? name_value_type[2].toInt() : false;
+      if ( name_value_type.count() > 1 ) {
         QString idStr = QString("%1").arg( i );
         int row = myAdvWidget->myOptionTable->rowCount();
         myAdvWidget->myOptionTable->setRowCount( row+1 );
@@ -1839,9 +1843,16 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
         myAdvWidget->myOptionTable->item( row, OPTION_ID_COLUMN )->setFlags( 0 );
         myAdvWidget->myOptionTable->setItem( row, OPTION_TYPE_COLUMN, new QTableWidgetItem( "BLSURF" ) );
         myAdvWidget->myOptionTable->item( row, OPTION_TYPE_COLUMN )->setFlags( 0 );
-        myAdvWidget->myOptionTable->setItem( row, OPTION_NAME_COLUMN, new QTableWidgetItem( name_value[0] ) );
-        myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( 0 );
-        myAdvWidget->myOptionTable->setItem( row, OPTION_VALUE_COLUMN, new QTableWidgetItem( name_value[1] ) );
+        myAdvWidget->myOptionTable->setItem( row, OPTION_NAME_COLUMN, new QTableWidgetItem( name_value_type[0] ) );
+        if ( custom ) {
+          myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( Qt::ItemIsSelectable |
+                                                                                 Qt::ItemIsEditable   |
+                                                                                 Qt::ItemIsEnabled );
+          myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->setData( Qt::UserRole, QVariant(true) );
+        }
+        else
+          myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( 0 );
+        myAdvWidget->myOptionTable->setItem( row, OPTION_VALUE_COLUMN, new QTableWidgetItem( name_value_type[1] ) );
         myAdvWidget->myOptionTable->item( row, OPTION_VALUE_COLUMN )->setFlags( Qt::ItemIsSelectable |
                                                                                 Qt::ItemIsEditable   |
                                                                                 Qt::ItemIsEnabled );
@@ -1852,8 +1863,9 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
 //     MESSAGE("retrieveParams():myPreCADOptions->length() = " << myPreCADOptions->length());
     for ( int i = 0, nb = myPreCADOptions->length(); i < nb; ++i ) {
       QString option = that->myPreCADOptions[i].in();
-      QStringList name_value = option.split( ":", QString::KeepEmptyParts );
-      if ( name_value.count() > 1 ) {
+      QStringList name_value_type = option.split( ":", QString::KeepEmptyParts );
+      bool custom = ( name_value_type.size() == 3 ) ? name_value_type[2].toInt() : false;
+      if ( name_value_type.count() > 1 ) {
         QString idStr = QString("%1").arg( i );
         int row = myAdvWidget->myOptionTable->rowCount();
         myAdvWidget->myOptionTable->setRowCount( row+1 );
@@ -1861,9 +1873,16 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
         myAdvWidget->myOptionTable->item( row, OPTION_ID_COLUMN )->setFlags( 0 );
         myAdvWidget->myOptionTable->setItem( row, OPTION_TYPE_COLUMN, new QTableWidgetItem( "PRECAD" ) );
         myAdvWidget->myOptionTable->item( row, OPTION_TYPE_COLUMN )->setFlags( 0 );
-        myAdvWidget->myOptionTable->setItem( row, OPTION_NAME_COLUMN, new QTableWidgetItem( name_value[0] ) );
-        myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( 0 );
-        myAdvWidget->myOptionTable->setItem( row, OPTION_VALUE_COLUMN, new QTableWidgetItem( name_value[1] ) );
+        myAdvWidget->myOptionTable->setItem( row, OPTION_NAME_COLUMN, new QTableWidgetItem( name_value_type[0] ) );
+        if ( custom ) {
+          myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( Qt::ItemIsSelectable |
+                                                                                 Qt::ItemIsEditable   |
+                                                                                 Qt::ItemIsEnabled );
+          myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->setData( Qt::UserRole, QVariant(true) );
+        }
+        else
+          myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( 0 );
+        myAdvWidget->myOptionTable->setItem( row, OPTION_VALUE_COLUMN, new QTableWidgetItem( name_value_type[1] ) );
         myAdvWidget->myOptionTable->item( row, OPTION_VALUE_COLUMN )->setFlags( Qt::ItemIsSelectable |
                                                                                 Qt::ItemIsEditable   |
                                                                                 Qt::ItemIsEnabled );
@@ -2539,16 +2558,25 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
   {
     int id = myAdvWidget->myOptionTable->item( row, OPTION_ID_COLUMN )->text().toInt();
     std::string optionType = myAdvWidget->myOptionTable->item( row, OPTION_TYPE_COLUMN )->text().toStdString();
-    if ( id >= 0 && ( ( optionType == "BLSURF" && id < myOptions->length() ) || ( optionType == "PRECAD" && id < myPreCADOptions->length() ) ) )
+    bool custom = myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->data(Qt::UserRole).toBool();
+    if ( optionType == "BLSURF" && custom ) {
+      id = that->myOptions->length();
+      that->myOptions->length( that->myOptions->length() + 1 );
+    }
+    if ( optionType == "PRECAD" && custom ) {
+      id = that->myPreCADOptions->length();
+      that->myPreCADOptions->length( that->myPreCADOptions->length() + 1 );
+    }
+    if ( custom || ( id >= 0 && ( ( optionType == "BLSURF" && id < myOptions->length() ) || ( optionType == "PRECAD" && id < myPreCADOptions->length() ) ) ) )
     {
       QString name  = myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->text();
       QString value = myAdvWidget->myOptionTable->item( row, OPTION_VALUE_COLUMN )->text().trimmed();
       if ( value.isNull() )
         value = "";
       if (optionType == "PRECAD")
-        that->myPreCADOptions[ id ] = ( name + ":" + value).toLatin1().constData();
+        that->myPreCADOptions[ id ] = ( name + ":" + value  + ":" + ( custom ? "1" : "0" ) ).toLatin1().constData();
       else
-        that->myOptions[ id ] = ( name + ":" + value).toLatin1().constData();
+        that->myOptions[ id ] = ( name + ":" + value + ":" + ( custom ? "1" : "0" ) ).toLatin1().constData();
 
       if ( value != "" ) {
         if (optionType == "PRECAD")
@@ -2657,22 +2685,28 @@ void BLSURFPluginGUI_HypothesisCreator::onAddOption()
   QMenu* menu = (QMenu*)sender();
   // fill popup with option names
   menu->clear();
-  QString name_value, name;
+  QStringList name_value_type;
   if ( myOptions.operator->() ) {
     QMenu* blsurfMenu = menu->addMenu(tr("OPTION_MENU_BLSURF"));
     for ( int i = 0, nb = myOptions->length(); i < nb; ++i ) {
-      name_value = myOptions[i].in();
-      name = name_value.split( ":", QString::KeepEmptyParts )[0];
-      blsurfMenu->addAction( name );
+      name_value_type = QString( myOptions[i].in() ).split( ":", QString::KeepEmptyParts );
+      bool custom = ( name_value_type.size() == 3 ) ? name_value_type[2].toInt() : false;
+      if ( !custom && !name_value_type[0].isEmpty() )
+        blsurfMenu->addAction( name_value_type[0] );
     }
+    // this user-customized action must be last in the menu
+    blsurfMenu->addAction( QString( "<" + tr("BLSURF_OTHER_OPTION") + ">" ) );
   }
   if ( myPreCADOptions.operator->() ) {
     QMenu* preCADmenu = menu->addMenu(tr("OPTION_MENU_PRECAD"));
     for ( int i = 0, nb = myPreCADOptions->length(); i < nb; ++i ) {
-      name_value = myPreCADOptions[i].in();
-      name = name_value.split( ":", QString::KeepEmptyParts )[0];
-      preCADmenu->addAction( name );
+      name_value_type = QString( myPreCADOptions[i].in() ).split( ":", QString::KeepEmptyParts );
+      bool custom = ( name_value_type.size() == 3 ) ? name_value_type[2].toInt() : false;
+      if ( !custom && !name_value_type[0].isEmpty() )
+        preCADmenu->addAction( name_value_type[0] );
     }
+    // this user-customized action must be last in the menu
+    preCADmenu->addAction( QString( "<" + tr("BLSURF_OTHER_OPTION") + ">" ) );
   }
 }
 
@@ -2682,14 +2716,18 @@ void BLSURFPluginGUI_HypothesisCreator::onOptionChosenInPopup( QAction* a )
   QMenu* menu = (QMenu*)( a->parent() );
 
   int idx = menu->actions().indexOf( a );
+  bool custom = menu->actions().last() == a;
+
   QString idStr = QString("%1").arg( idx );
   QString option, optionType;
   if (menu->title() == tr("OPTION_MENU_BLSURF")) {
-    option = myOptions[idx].in();
+    if (idx < myOptions->length())
+      option = myOptions[idx].in();
     optionType = "BLSURF";
   }
   else if (menu->title() == tr("OPTION_MENU_PRECAD")) {
-    option = myPreCADOptions[idx].in();
+    if (idx < myPreCADOptions->length())
+      option = myPreCADOptions[idx].in();
     optionType = "PRECAD";
   }
   QString optionName = option.split( ":", QString::KeepEmptyParts )[0];
@@ -2700,6 +2738,8 @@ void BLSURFPluginGUI_HypothesisCreator::onOptionChosenInPopup( QAction* a )
     if ( myAdvWidget->myOptionTable->item( row, OPTION_ID_COLUMN )->text() == idStr )
       if ( myAdvWidget->myOptionTable->item( row, OPTION_TYPE_COLUMN )->text() == optionType )
         break;
+  if (custom)
+    row = nbRows;
   // add a row if not found
   if ( row == nbRows ) {
     myAdvWidget->myOptionTable->setRowCount( row+1 );
@@ -2707,8 +2747,17 @@ void BLSURFPluginGUI_HypothesisCreator::onOptionChosenInPopup( QAction* a )
     myAdvWidget->myOptionTable->item( row, OPTION_ID_COLUMN )->setFlags( 0 );
     myAdvWidget->myOptionTable->setItem( row, OPTION_TYPE_COLUMN, new QTableWidgetItem( optionType ) );
     myAdvWidget->myOptionTable->item( row, OPTION_TYPE_COLUMN )->setFlags( 0 );
-    myAdvWidget->myOptionTable->setItem( row, OPTION_NAME_COLUMN, new QTableWidgetItem( optionName ) );
-    myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( 0 );
+    if (custom) {
+      myAdvWidget->myOptionTable->setItem( row, OPTION_NAME_COLUMN, new QTableWidgetItem( "" ) );
+      myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( Qt::ItemIsSelectable |
+                                                                             Qt::ItemIsEditable   |
+                                                                             Qt::ItemIsEnabled );
+      myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->setData( Qt::UserRole, QVariant(true) );
+    }
+    else {
+      myAdvWidget->myOptionTable->setItem( row, OPTION_NAME_COLUMN, new QTableWidgetItem( optionName ) );
+      myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( 0 );
+    }
     myAdvWidget->myOptionTable->setItem( row, OPTION_VALUE_COLUMN, new QTableWidgetItem( "" ) );
     myAdvWidget->myOptionTable->item( row, OPTION_VALUE_COLUMN )->setFlags( Qt::ItemIsSelectable |
                                                                             Qt::ItemIsEditable   |
@@ -2716,14 +2765,17 @@ void BLSURFPluginGUI_HypothesisCreator::onOptionChosenInPopup( QAction* a )
     myAdvWidget->myOptionTable->resizeColumnToContents( OPTION_NAME_COLUMN );
   }
   myAdvWidget->myOptionTable->clearSelection();
-  myAdvWidget->myOptionTable->scrollToItem( myAdvWidget->myOptionTable->item( row, OPTION_VALUE_COLUMN ) );
-  //myAdvWidget->myOptionTable->item( row, OPTION_VALUE_COLUMN )->setSelected( true );
-  myAdvWidget->myOptionTable->setCurrentCell( row, OPTION_VALUE_COLUMN );
-  //myAdvWidget->myOptionTable->openPersistentEditor( myOptionTable->item( row, OPTION_VALUE_COLUMN ) );
+  int activeColumn = custom ? OPTION_NAME_COLUMN : OPTION_VALUE_COLUMN;
+  myAdvWidget->myOptionTable->scrollToItem( myAdvWidget->myOptionTable->item( row, activeColumn ) );
+  //myAdvWidget->myOptionTable->item( row, activeColumn )->setSelected( true );
+  myAdvWidget->myOptionTable->setCurrentCell( row, activeColumn );
+  //myAdvWidget->myOptionTable->openPersistentEditor( myOptionTable->item( row, activeColumn ) );
 }
 
 void BLSURFPluginGUI_HypothesisCreator::onDeleteOption()
 {
+  BLSURFPlugin::BLSURFPlugin_Hypothesis_var h =
+    BLSURFPlugin::BLSURFPlugin_Hypothesis::_narrow( hypothesis() );
   // clear option values and remember selected row
   QList<int> selectedRows;
   QList<QTableWidgetItem*> selected = myAdvWidget->myOptionTable->selectedItems();
@@ -2734,11 +2786,23 @@ void BLSURFPluginGUI_HypothesisCreator::onDeleteOption()
       selectedRows.append( row );
       int id = myAdvWidget->myOptionTable->item( row, OPTION_ID_COLUMN )->text().toInt();
       QString optionType = myAdvWidget->myOptionTable->item( row, OPTION_TYPE_COLUMN )->text();
+      bool custom = myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->data(Qt::UserRole).toBool();
+      QString name = myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->text();
       if ( id >= 0 )
-        if (optionType == "BLSURF" && id < myOptions->length() )
-          myOptions[ id ] = myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->text().toLatin1().constData();
-        else if (optionType == "PRECAD" && id < myPreCADOptions->length() )
-          myPreCADOptions[ id ] = myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->text().toLatin1().constData();
+        if ( optionType == "BLSURF" && id < myOptions->length() )
+          if ( custom ) {
+            h->UnsetOption( name.toLatin1().constData() );
+            myOptions[id] = "";
+          }
+          else
+            myOptions[id] = name.toLatin1().constData();
+        else if ( optionType == "PRECAD" && id < myPreCADOptions->length() )
+          if ( custom ) {
+            h->UnsetPreCADOption( name.toLatin1().constData() );
+            myPreCADOptions[id] = "";
+          }
+          else
+            myPreCADOptions[id] = name.toLatin1().constData();
     }
   }
   qSort( selectedRows );
@@ -2748,6 +2812,36 @@ void BLSURFPluginGUI_HypothesisCreator::onDeleteOption()
     myAdvWidget->myOptionTable->removeRow( it.previous() );
 }
 
+void BLSURFPluginGUI_HypothesisCreator::onEditOption( int row, int column )
+{
+  if ( column != OPTION_NAME_COLUMN )
+    return;
+  bool custom = myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->data(Qt::UserRole).toBool();
+  if ( !custom )
+    return;
+
+  BLSURFPlugin::BLSURFPlugin_Hypothesis_var h =
+    BLSURFPlugin::BLSURFPlugin_Hypothesis::_narrow( hypothesis() );
+
+  int id = myAdvWidget->myOptionTable->item( row, OPTION_ID_COLUMN )->text().toInt();
+  QString optionType = myAdvWidget->myOptionTable->item( row, OPTION_TYPE_COLUMN )->text().trimmed();
+  QString name = myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->text();
+  if ( optionType == "PRECAD"  && id < myPreCADOptions->length() ) {
+    h->UnsetPreCADOption(name.toLatin1().constData());
+    myPreCADOptions[id] = "";
+  }
+  else if ( optionType == "BLSURF" && id < myOptions->length() ) {
+    h->UnsetOption(name.toLatin1().constData());
+    myOptions[id] = "";
+  }
+}
+
+void BLSURFPluginGUI_HypothesisCreator::onChangeOptionName( int row, int column )
+{
+  if ( column != OPTION_NAME_COLUMN )
+    return;
+  myAdvWidget->myOptionTable->resizeColumnToContents( OPTION_NAME_COLUMN );
+}
 // **********************
 // *** BEGIN SIZE MAP ***
 // **********************

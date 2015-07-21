@@ -223,6 +223,10 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
         <translation>Clear option</translation>
     </message>
     <message>
+        <source>BLSURF_OTHER_OPTION</source>
+        <translation>Other option</translation>
+    </message>
+    <message>
         <source>BLSURF_GMF_FILE</source>
         <translation>Export GMF</translation>
     </message>

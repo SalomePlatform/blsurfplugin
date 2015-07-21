@@ -210,6 +210,8 @@ protected slots:
   // Advanced tab
   void                onAddOption();
   void                onDeleteOption();
+  void                onEditOption( int, int );
+  void                onChangeOptionName( int, int );
   void                onOptionChosenInPopup( QAction* );
   // Sizemap tab
   void                onMapGeomContentModified();

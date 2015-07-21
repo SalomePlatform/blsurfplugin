@@ -268,6 +268,9 @@ By default this option is \f$\mathrm{diag} \times 5 \cdot 10^{-4}\f$.
 - \b tiny_edge_length (real) -  the length below which en edge is considered as nano for the topology processing.
 By default this option is \f$10^{-5}\f$.
 
+\note Moreover, user can choose "<Other option>" item in these two pop-up menus 
+(MG-CADSurf and PreCAD) to be able to specify both the option name and the option value. 
+
 \ref blsurf_top "Back to top"
 
 \section blsurf_local_size Local size

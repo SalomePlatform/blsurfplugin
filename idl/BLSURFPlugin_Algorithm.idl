@@ -306,8 +306,16 @@ module BLSURFPlugin
     void UnsetPreCADOption(in string optionName);
 
     /*!
+     * Adds custom advanced option and its value
+     */
+    void AddOption(in string optionName, in string optionValue);
+    void AddPreCADOption(in string optionName, in string optionValue);
+    string GetOption(in string optionName);
+    string GetPreCADOption(in string optionName);
+
+    /*!
      * Return array of strings each of which is option name concatenated
-     * with option value devided by semicolon - "option_name:option_value".
+     * with option value devided by semicolon - "option_name:option_value:option_type".
      * Option value is empty if an option is not set.
      * Note: the method is mostly for interaction with GUI.
      */
@@ -315,7 +323,7 @@ module BLSURFPlugin
     string_array GetPreCADOptionValues();
 
     /*!
-     * Set option values each in the form "option_name[:option_value]".
+     * Set option values each in the form "option_name[:option_value][:option_type]".
      * Note: the method is mostly for interaction with GUI.
      */
     void SetOptionValues(in string_array options) raises (SALOME::SALOME_Exception);

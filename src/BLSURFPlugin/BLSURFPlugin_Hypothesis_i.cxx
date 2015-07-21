@@ -808,16 +808,30 @@ BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetOptionValues() {
   BLSURFPlugin::string_array_var result = new BLSURFPlugin::string_array();
 
   const ::BLSURFPlugin_Hypothesis::TOptionValues & opts = this->GetImpl()->GetOptionValues();
-  result->length(opts.size());
+  const ::BLSURFPlugin_Hypothesis::TOptionValues & custom_opts = this->GetImpl()->GetCustomOptionValues();
+  result->length(opts.size()+custom_opts.size());
+  int i=0;
 
   ::BLSURFPlugin_Hypothesis::TOptionValues::const_iterator opIt = opts.begin();
-  for (int i = 0; opIt != opts.end(); ++opIt, ++i) {
-    string name_value = opIt->first;
+  for (; opIt != opts.end(); ++opIt, ++i) {
+    string name_value_type = opIt->first;
     if (!opIt->second.empty()) {
-      name_value += ":";
-      name_value += opIt->second;
+      name_value_type += ":";
+      name_value_type += opIt->second;
+      name_value_type += ":0";
     }
-    result[i] = CORBA::string_dup(name_value.c_str());
+    result[i] = CORBA::string_dup(name_value_type.c_str());
+  }
+
+  opIt = custom_opts.begin();
+  for (; opIt != custom_opts.end(); ++opIt,++i) {
+    string name_value_type = opIt->first;
+    if (!opIt->second.empty()) {
+      name_value_type += ":";
+      name_value_type += opIt->second;
+      name_value_type += ":1";
+    }
+    result[i] = CORBA::string_dup(name_value_type.c_str());
   }
   return result._retn();
 }
@@ -829,16 +843,30 @@ BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetPreCADOptionValues() {
   BLSURFPlugin::string_array_var result = new BLSURFPlugin::string_array();
 
   const ::BLSURFPlugin_Hypothesis::TOptionValues & opts = this->GetImpl()->GetPreCADOptionValues();
-  result->length(opts.size());
+  const ::BLSURFPlugin_Hypothesis::TOptionValues & custom_opts = this->GetImpl()->GetCustomPreCADOptionValues();
+  result->length(opts.size()+custom_opts.size());
+  int i=0;
 
   ::BLSURFPlugin_Hypothesis::TOptionValues::const_iterator opIt = opts.begin();
-  for (int i = 0; opIt != opts.end(); ++opIt, ++i) {
-    string name_value = opIt->first;
+  for (; opIt != opts.end(); ++opIt, ++i) {
+    string name_value_type = opIt->first;
     if (!opIt->second.empty()) {
-      name_value += ":";
-      name_value += opIt->second;
+      name_value_type += ":";
+      name_value_type += opIt->second;
+      name_value_type += ":0";
     }
-    result[i] = CORBA::string_dup(name_value.c_str());
+    result[i] = CORBA::string_dup(name_value_type.c_str());
+  }
+
+  opIt = custom_opts.begin();
+  for (; opIt != custom_opts.end(); ++opIt,++i) {
+    string name_value_type = opIt->first;
+    if (!opIt->second.empty()) {
+      name_value_type += ":";
+      name_value_type += opIt->second;
+      name_value_type += ":1";
+    }
+    result[i] = CORBA::string_dup(name_value_type.c_str());
   }
   return result._retn();
 }
@@ -849,17 +877,25 @@ void BLSURFPlugin_Hypothesis_i::SetOptionValues(const BLSURFPlugin::string_array
     throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
   for (int i = 0; i < options.length(); ++i) {
-    string name_value = options[i].in();
-    int colonPos = name_value.find(':');
+    string name_value_type = options[i].in();
+    if(name_value_type.empty())
+      continue;
+    int colonPos = name_value_type.find(':');
     string name, value;
+    bool custom = false;
     if (colonPos == string::npos) // ':' not found
-      name = name_value;
+      name = name_value_type;
     else {
-      name = name_value.substr(0, colonPos);
-      if (colonPos < name_value.size() - 1 && name_value[colonPos] != ' ')
-        value = name_value.substr(colonPos + 1);
+      name = name_value_type.substr(0, colonPos);
+      if (colonPos < name_value_type.size() - 1 && name_value_type[colonPos] != ' ') {
+        string value_type = name_value_type.substr(colonPos + 1);
+        colonPos = value_type.find(':');
+        value = value_type.substr(0, colonPos);
+        if (colonPos < value_type.size() - 1 && value_type[colonPos] != ' ')
+          custom = atoi((value_type.substr(colonPos + 1)).c_str());
+      }
     }
-    SetOptionValue(name.c_str(), value.c_str());
+    custom ? AddOption(name.c_str(), value.c_str()) : SetOptionValue(name.c_str(), value.c_str());
   }
 }
 
@@ -869,18 +905,66 @@ void BLSURFPlugin_Hypothesis_i::SetPreCADOptionValues(const BLSURFPlugin::string
     throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
   for (int i = 0; i < options.length(); ++i) {
-    string name_value = options[i].in();
-    int colonPos = name_value.find(':');
+    string name_value_type = options[i].in();
+    if(name_value_type.empty())
+      continue;
+    int colonPos = name_value_type.find(':');
     string name, value;
+    bool custom = false;
     if (colonPos == string::npos) // ':' not found
-      name = name_value;
+      name = name_value_type;
     else {
-      name = name_value.substr(0, colonPos);
-      if (colonPos < name_value.size() - 1 && name_value[colonPos] != ' ')
-        value = name_value.substr(colonPos + 1);
+      name = name_value_type.substr(0, colonPos);
+      if (colonPos < name_value_type.size() - 1 && name_value_type[colonPos] != ' ') {
+        string value_type = name_value_type.substr(colonPos + 1);
+        colonPos = value_type.find(':');
+        value = value_type.substr(0, colonPos);
+        if (colonPos < value_type.size() - 1 && value_type[colonPos] != ' ')
+          custom = atoi((value_type.substr(colonPos + 1)).c_str());
+      }
     }
-    SetPreCADOptionValue(name.c_str(), value.c_str());
+    custom ? AddPreCADOption(name.c_str(), value.c_str()) : SetPreCADOptionValue(name.c_str(), value.c_str());
   }
+}
+
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::AddOption(const char* optionName, const char* optionValue)
+{
+  ASSERT(myBaseImpl);
+  bool valueChanged = (this->GetImpl()->GetOption(optionName) != optionValue);
+  if (valueChanged) {
+    this->GetImpl()->AddOption(optionName, optionValue);
+    SMESH::TPythonDump() << _this() << ".AddOption( '" << optionName << "', '" << optionValue << "' )";
+  }
+}
+
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::AddPreCADOption(const char* optionName, const char* optionValue)
+{
+  ASSERT(myBaseImpl);
+  bool valueChanged = (this->GetImpl()->GetPreCADOption(optionName) != optionValue);
+  if (valueChanged) {
+    this->GetImpl()->AddPreCADOption(optionName, optionValue);
+    SMESH::TPythonDump() << _this() << ".AddPreCADOption( '" << optionName << "', '" << optionValue << "' )";
+  }
+}
+
+//=============================================================================
+
+char* BLSURFPlugin_Hypothesis_i::GetOption(const char* optionName)
+{
+  ASSERT(myBaseImpl);
+  return CORBA::string_dup(this->GetImpl()->GetOption(optionName).c_str());
+}
+
+//=============================================================================
+
+char* BLSURFPlugin_Hypothesis_i::GetPreCADOption(const char* optionName)
+{
+  ASSERT(myBaseImpl);
+  return CORBA::string_dup(this->GetImpl()->GetPreCADOption(optionName).c_str());
 }
 
 //=============================================================================

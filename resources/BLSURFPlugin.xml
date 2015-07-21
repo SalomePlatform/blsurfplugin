@@ -41,6 +41,8 @@
           SetPreCADOptionValue,
           UnsetOption,
           UnsetPreCADOption,
+          AddOption,
+          AddPreCADOption,
           SetSizeMap,
           SetConstantSizeMap,
           UnsetSizeMap,

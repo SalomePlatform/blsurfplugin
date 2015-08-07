@@ -398,12 +398,6 @@ inline std::string to_string_rel(int i)
 }
 
 double _smp_phy_size;
-// #if BLSURF_VERSION_LONG >= "3.1.1"
-// //   sizemap_t *geo_sizemap_e, *geo_sizemap_f;
-//   sizemap_t *iso_sizemap_p, *iso_sizemap_e, *iso_sizemap_f;
-// //   sizemap_t *clean_geo_sizemap_e, *clean_geo_sizemap_f;
-//   sizemap_t *clean_iso_sizemap_p, *clean_iso_sizemap_e, *clean_iso_sizemap_f;
-// #endif
 status_t size_on_surface(integer face_id, real *uv, real *size, void *user_data);
 status_t size_on_edge(integer edge_id, real t, real *size, void *user_data);
 status_t size_on_vertex(integer vertex_id, real *size, void *user_data);
@@ -721,6 +715,23 @@ BLSURFPlugin_BLSURF::TListOfIDs _getSubShapeIDsInMainShape(TopoDS_Shape theMainS
   return face_ids;
 }
 
+BLSURFPlugin_BLSURF::TListOfIDs _getSubShapeIDsInMainShape(SMESH_Mesh*      theMesh,
+                                                           TopoDS_Shape     theSubShape,
+                                                           TopAbs_ShapeEnum theShapeType)
+{
+  BLSURFPlugin_BLSURF::TListOfIDs face_ids;
+
+  for (TopExp_Explorer face_iter(theSubShape,theShapeType);face_iter.More();face_iter.Next())
+  {
+    int face_id = theMesh->GetMeshDS()->ShapeToIndex(face_iter.Current());
+    if (face_id == 0)
+      throw SALOME_Exception ( SMESH_Comment("Sub_shape not found in main_shape"));
+    face_ids.push_back(face_id);
+  }
+
+  return face_ids;
+}
+
 void BLSURFPlugin_BLSURF::addCoordsFromVertices(const std::vector<std::string> &theVerticesEntries, std::vector<double> &theVerticesCoords)
 {
   for (std::vector<std::string>::const_iterator it = theVerticesEntries.begin(); it != theVerticesEntries.end(); it++)
@@ -885,7 +896,7 @@ void BLSURFPlugin_BLSURF::createEdgesPeriodicity(TopoDS_Shape theGeomShape, BLSU
 
 /////////////////////////////////////////////////////////
 void BLSURFPlugin_BLSURF::createVerticesPeriodicity(TopoDS_Shape theGeomShape, BLSURFPlugin_Hypothesis::TEntry theEdge1, BLSURFPlugin_Hypothesis::TEntry theVertex1,
-    BLSURFPlugin_Hypothesis::TEntry theEdge2, BLSURFPlugin_Hypothesis::TEntry theVertex2)
+                                                    BLSURFPlugin_Hypothesis::TEntry theEdge2, BLSURFPlugin_Hypothesis::TEntry theVertex2)
 {
   MESSAGE("BLSURFPlugin_BLSURF::createVerticesPeriodicity");
 
@@ -914,50 +925,46 @@ void BLSURFPlugin_BLSURF::createVerticesPeriodicity(TopoDS_Shape theGeomShape, B
 
 /////////////////////////////////////////////////////////
 
-void BLSURFPlugin_BLSURF::SetParameters(
-// #if BLSURF_VERSION_LONG >= "3.1.1"
-//                                         cad_t *                          c,
-// #endif
-                                        const BLSURFPlugin_Hypothesis* hyp,
+void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
                                         cadsurf_session_t *            css,
                                         precad_session_t *             pcs,
                                         const TopoDS_Shape&            theGeomShape,
-                                        bool *                  use_precad
-                                       )
+                                        bool *                         use_precad
+                                        )
 {
   // rnc : Bug 1457
   // Clear map so that it is not stored in the algorithm with old enforced vertices in it
   EnfVertexCoords2EnfVertexList.clear();
-  
-   double diagonal               = SMESH_Mesh::GetShapeDiagonalSize( theGeomShape );
-   double bbSegmentation         = _gen->GetBoundaryBoxSegmentation();
-   int    _physicalMesh          = BLSURFPlugin_Hypothesis::GetDefaultPhysicalMesh();
-   int    _geometricMesh         = BLSURFPlugin_Hypothesis::GetDefaultGeometricMesh();
-   double _phySize               = BLSURFPlugin_Hypothesis::GetDefaultPhySize(diagonal, bbSegmentation);
-   bool   _phySizeRel            = BLSURFPlugin_Hypothesis::GetDefaultPhySizeRel();
-   double _minSize               = BLSURFPlugin_Hypothesis::GetDefaultMinSize(diagonal);
-   bool   _minSizeRel            = BLSURFPlugin_Hypothesis::GetDefaultMinSizeRel();
-   double _maxSize               = BLSURFPlugin_Hypothesis::GetDefaultMaxSize(diagonal);
-   bool   _maxSizeRel            = BLSURFPlugin_Hypothesis::GetDefaultMaxSizeRel();
-   double _gradation             = BLSURFPlugin_Hypothesis::GetDefaultGradation();
-   bool   _quadAllowed           = BLSURFPlugin_Hypothesis::GetDefaultQuadAllowed();
-   double _angleMesh             = BLSURFPlugin_Hypothesis::GetDefaultAngleMesh();
-   double _chordalError          = BLSURFPlugin_Hypothesis::GetDefaultChordalError(diagonal);
-   bool   _anisotropic           = BLSURFPlugin_Hypothesis::GetDefaultAnisotropic();
-   double _anisotropicRatio      = BLSURFPlugin_Hypothesis::GetDefaultAnisotropicRatio();
-   bool   _removeTinyEdges       = BLSURFPlugin_Hypothesis::GetDefaultRemoveTinyEdges();
-   double _tinyEdgeLength        = BLSURFPlugin_Hypothesis::GetDefaultTinyEdgeLength(diagonal);
-   bool   _badElementRemoval     = BLSURFPlugin_Hypothesis::GetDefaultBadElementRemoval();
-   double _badElementAspectRatio = BLSURFPlugin_Hypothesis::GetDefaultBadElementAspectRatio();
-   bool   _optimizeMesh          = BLSURFPlugin_Hypothesis::GetDefaultOptimizeMesh();
-   bool   _quadraticMesh         = BLSURFPlugin_Hypothesis::GetDefaultQuadraticMesh();
-   int    _verb                  = BLSURFPlugin_Hypothesis::GetDefaultVerbosity();
-   int    _topology              = BLSURFPlugin_Hypothesis::GetDefaultTopology();
+
+  double diagonal               = SMESH_Mesh::GetShapeDiagonalSize( theGeomShape );
+  double bbSegmentation         = _gen->GetBoundaryBoxSegmentation();
+  int    _physicalMesh          = BLSURFPlugin_Hypothesis::GetDefaultPhysicalMesh();
+  int    _geometricMesh         = BLSURFPlugin_Hypothesis::GetDefaultGeometricMesh();
+  double _phySize               = BLSURFPlugin_Hypothesis::GetDefaultPhySize(diagonal, bbSegmentation);
+  bool   _phySizeRel            = BLSURFPlugin_Hypothesis::GetDefaultPhySizeRel();
+  double _minSize               = BLSURFPlugin_Hypothesis::GetDefaultMinSize(diagonal);
+  bool   _minSizeRel            = BLSURFPlugin_Hypothesis::GetDefaultMinSizeRel();
+  double _maxSize               = BLSURFPlugin_Hypothesis::GetDefaultMaxSize(diagonal);
+  bool   _maxSizeRel            = BLSURFPlugin_Hypothesis::GetDefaultMaxSizeRel();
+  double _gradation             = BLSURFPlugin_Hypothesis::GetDefaultGradation();
+  bool   _quadAllowed           = BLSURFPlugin_Hypothesis::GetDefaultQuadAllowed();
+  double _angleMesh             = BLSURFPlugin_Hypothesis::GetDefaultAngleMesh();
+  double _chordalError          = BLSURFPlugin_Hypothesis::GetDefaultChordalError(diagonal);
+  bool   _anisotropic           = BLSURFPlugin_Hypothesis::GetDefaultAnisotropic();
+  double _anisotropicRatio      = BLSURFPlugin_Hypothesis::GetDefaultAnisotropicRatio();
+  bool   _removeTinyEdges       = BLSURFPlugin_Hypothesis::GetDefaultRemoveTinyEdges();
+  double _tinyEdgeLength        = BLSURFPlugin_Hypothesis::GetDefaultTinyEdgeLength(diagonal);
+  bool   _badElementRemoval     = BLSURFPlugin_Hypothesis::GetDefaultBadElementRemoval();
+  double _badElementAspectRatio = BLSURFPlugin_Hypothesis::GetDefaultBadElementAspectRatio();
+  bool   _optimizeMesh          = BLSURFPlugin_Hypothesis::GetDefaultOptimizeMesh();
+  bool   _quadraticMesh         = BLSURFPlugin_Hypothesis::GetDefaultQuadraticMesh();
+  int    _verb                  = BLSURFPlugin_Hypothesis::GetDefaultVerbosity();
+  int    _topology              = BLSURFPlugin_Hypothesis::GetDefaultTopology();
 
   // PreCAD
-   int _precadMergeEdges         = BLSURFPlugin_Hypothesis::GetDefaultPreCADMergeEdges();
-   int _precadProcess3DTopology  = BLSURFPlugin_Hypothesis::GetDefaultPreCADProcess3DTopology();
-   int _precadDiscardInput       = BLSURFPlugin_Hypothesis::GetDefaultPreCADDiscardInput();
+  int _precadMergeEdges         = BLSURFPlugin_Hypothesis::GetDefaultPreCADMergeEdges();
+  int _precadProcess3DTopology  = BLSURFPlugin_Hypothesis::GetDefaultPreCADProcess3DTopology();
+  int _precadDiscardInput       = BLSURFPlugin_Hypothesis::GetDefaultPreCADDiscardInput();
 
 
   if (hyp) {
@@ -981,28 +988,28 @@ void BLSURFPlugin_BLSURF::SetParameters(
     }
     if (hyp->GetGradation() > 0)
       _gradation     = hyp->GetGradation();
-    _quadAllowed   = hyp->GetQuadAllowed();
-     if (hyp->GetAngleMesh() > 0)
-     _angleMesh     = hyp->GetAngleMesh();
-     if (hyp->GetChordalError() > 0)
-       _chordalError           = hyp->GetChordalError();
-     _anisotropic            = hyp->GetAnisotropic();
-     if (hyp->GetAnisotropicRatio() >= 0)
-       _anisotropicRatio       = hyp->GetAnisotropicRatio();
-     _removeTinyEdges        = hyp->GetRemoveTinyEdges();
-     if (hyp->GetTinyEdgeLength() > 0)
-       _tinyEdgeLength         = hyp->GetTinyEdgeLength();
-     _badElementRemoval      = hyp->GetBadElementRemoval();
-     if (hyp->GetBadElementAspectRatio() >= 0)
-       _badElementAspectRatio  = hyp->GetBadElementAspectRatio();
-     _optimizeMesh  = hyp->GetOptimizeMesh();
-     _quadraticMesh = hyp->GetQuadraticMesh();
+    _quadAllowed     = hyp->GetQuadAllowed();
+    if (hyp->GetAngleMesh() > 0)
+      _angleMesh     = hyp->GetAngleMesh();
+    if (hyp->GetChordalError() > 0)
+      _chordalError          = hyp->GetChordalError();
+    _anisotropic             = hyp->GetAnisotropic();
+    if (hyp->GetAnisotropicRatio() >= 0)
+      _anisotropicRatio      = hyp->GetAnisotropicRatio();
+    _removeTinyEdges         = hyp->GetRemoveTinyEdges();
+    if (hyp->GetTinyEdgeLength() > 0)
+      _tinyEdgeLength        = hyp->GetTinyEdgeLength();
+    _badElementRemoval       = hyp->GetBadElementRemoval();
+    if (hyp->GetBadElementAspectRatio() >= 0)
+      _badElementAspectRatio = hyp->GetBadElementAspectRatio();
+    _optimizeMesh  = hyp->GetOptimizeMesh();
+    _quadraticMesh = hyp->GetQuadraticMesh();
     _verb          = hyp->GetVerbosity();
-     _topology      = (int) hyp->GetTopology();
-     // PreCAD
-     _precadMergeEdges = hyp->GetPreCADMergeEdges();
-     _precadProcess3DTopology = hyp->GetPreCADProcess3DTopology();
-     _precadDiscardInput = hyp->GetPreCADDiscardInput();
+    _topology      = (int) hyp->GetTopology();
+    // PreCAD
+    _precadMergeEdges        = hyp->GetPreCADMergeEdges();
+    _precadProcess3DTopology = hyp->GetPreCADProcess3DTopology();
+    _precadDiscardInput      = hyp->GetPreCADDiscardInput();
 
     const BLSURFPlugin_Hypothesis::TOptionValues& opts = hyp->GetOptionValues();
     BLSURFPlugin_Hypothesis::TOptionValues::const_iterator opIt;
@@ -1011,7 +1018,7 @@ void BLSURFPlugin_BLSURF::SetParameters(
         MESSAGE("cadsurf_set_param(): " << opIt->first << " = " << opIt->second);
         set_param(css, opIt->first.c_str(), opIt->second.c_str());
       }
-      
+
     const BLSURFPlugin_Hypothesis::TOptionValues& custom_opts = hyp->GetCustomOptionValues();
     for ( opIt = custom_opts.begin(); opIt != custom_opts.end(); ++opIt )
       if ( !opIt->second.empty() ) {
@@ -1960,6 +1967,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   /* create a distene context (generic object) */
   status_t status = STATUS_ERROR;
 
+  myMesh = &aMesh;
   SMESHDS_Mesh* meshDS = aMesh.GetMeshDS();
   SMESH_MesherHelper helper( aMesh );
   // do not call helper.IsQuadraticSubMesh() because sub-meshes
@@ -1971,8 +1979,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   TSubMeshSet edgeSubmeshes;
   TSubMeshSet& mergeSubmeshes = edgeSubmeshes;
 
-  TopTools_IndexedMapOfShape emap;
-  TopTools_IndexedMapOfShape pmap;
+  TopTools_IndexedMapOfShape pmap, emap, fmap;
 
   // Issue 0019864. On DebianSarge, FE signals do not obey to OSD::SetSignal(false)
 #ifndef WIN32
@@ -2028,11 +2035,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
 
   MESSAGE("BEGIN SetParameters");
   bool use_precad = false;
-  SetParameters(
-                // #if BLSURF_VERSION_LONG >= "3.1.1"
-                //     c,
-                // #endif
-                _hypothesis, css, pcs, aShape, &use_precad);
+  SetParameters(_hypothesis, css, pcs, aShape, &use_precad);
   MESSAGE("END SetParameters");
 
   MESSAGE("_preCadFacesIDsPeriodicityVector.size() = " << _preCadFacesIDsPeriodicityVector.size());
@@ -2086,7 +2089,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     if (f.Orientation() != TopAbs_FORWARD && f.Orientation() != TopAbs_REVERSED )
       f.Orientation(TopAbs_FORWARD);
 
-    iface = meshDS->ShapeToIndex(f);
+    iface = fmap.Add(f);
 //    std::string aFileName = "fmap_face_";
 //    aFileName.append(to_string(iface));
 //    aFileName.append(".brep");
@@ -2103,8 +2106,9 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     cad_face_t *fce = cad_face_new(c, iface, surf_fun, surfaces.back());
 
     /* by default a face has no tag (color).
-       The following call sets it to the same value as the face_id : */
-    cad_face_set_tag(fce, iface);
+       The following call sets it to the same value as the Geom module ID : */
+    const int faceTag = meshDS->ShapeToIndex(f);
+    cad_face_set_tag(fce, faceTag);
 
     /* Set face orientation (optional if you want a well oriented output mesh)*/
     if(f.Orientation() != TopAbs_FORWARD)
@@ -2121,8 +2125,8 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
 
 
       if (FaceId2SizeMap.find(faceKey)!=FaceId2SizeMap.end()) {
-        MESSAGE("A size map is defined on face :"<<faceKey)
-          theSizeMapStr = FaceId2SizeMap[faceKey];
+        MESSAGE("A size map is defined on face :"<<faceKey);
+        theSizeMapStr = FaceId2SizeMap[faceKey];
         // check if function ends with "return"
         if (theSizeMapStr.find(bad_end) == (theSizeMapStr.size()-bad_end.size()-1))
           continue;
@@ -2792,7 +2796,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     GMFFileName = _hypothesis->GetGMFFile();
   if (GMFFileName != "") {
     //     bool GMFFileMode = _hypothesis->GetGMFFileMode();
-    bool asciiFound = (GMFFileName.find(".mesh",GMFFileName.length()-5) != std::string::npos);
+    bool asciiFound  = (GMFFileName.find(".mesh", GMFFileName.length()-5) != std::string::npos);
     bool binaryFound = (GMFFileName.find(".meshb",GMFFileName.length()-6) != std::string::npos);
     if (!asciiFound && !binaryFound)
       GMFFileName.append(".mesh");

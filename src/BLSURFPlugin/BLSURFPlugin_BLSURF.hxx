@@ -167,6 +167,7 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
   private:
       PyObject *          main_mod;
       PyObject *          main_dict;
+      SMESH_Mesh*         myMesh;
       SALOMEDS::Study_var myStudy;
       SMESH_Gen_i*        smeshGen_i;
 

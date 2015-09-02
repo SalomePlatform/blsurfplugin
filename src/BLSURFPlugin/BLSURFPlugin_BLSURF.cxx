@@ -49,6 +49,7 @@ extern "C"{
 #include <SMESH_MesherHelper.hxx>
 #include <StdMeshers_FaceSide.hxx>
 #include <StdMeshers_ViscousLayers2D.hxx>
+#include <SMESH_File.hxx>
 
 #include <utilities.h>
 
@@ -2801,6 +2802,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     if (!asciiFound && !binaryFound)
       GMFFileName.append(".mesh");
     mesh_write_mesh(msh, GMFFileName.c_str());
+    cout << GMFFileName << " created = " << SMESH_File(GMFFileName).exists() << endl;
   }
 
   /* retrieve mesh data (see meshgems/mesh.h) */

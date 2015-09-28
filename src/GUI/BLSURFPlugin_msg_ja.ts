@@ -212,8 +212,8 @@
       <translation>オプションを削除します。</translation>
     </message>
     <message>
-        <source>BLSURF_OTHER_OPTION</source>
-        <translation type="unfinished">Other option</translation>
+      <source>BLSURF_OTHER_OPTION</source>
+      <translation>その他のオプション</translation>
     </message>
     <message>
       <source>BLSURF_GMF_FILE</source>

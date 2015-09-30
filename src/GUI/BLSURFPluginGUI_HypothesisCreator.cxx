@@ -1184,12 +1184,12 @@ This method stop the selection of the widgets StdMeshersGUI_ObjectReferenceParam
 
 void BLSURFPluginGUI_HypothesisCreator::onStateChange()
 {
-  myStdWidget->myGradation->setEnabled( !myStdWidget->myAllowQuadrangles->isChecked() );
+  myStdWidget->onPhysicalMeshChanged();
 }
 
-/** 
+/**
  * This method resets the content of the X, Y, Z widgets;
-**/
+ **/
 void BLSURFPluginGUI_HypothesisCreator::clearEnforcedVertexWidgets()
 {
   myXCoord->setCleared(true);

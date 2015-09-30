@@ -64,11 +64,12 @@ BLSURFPluginGUI_StdWidget::~BLSURFPluginGUI_StdWidget()
 
 void BLSURFPluginGUI_StdWidget::onPhysicalMeshChanged() {
   bool isPhysicalGlobalSize = (myPhysicalMesh->currentIndex() == PhysicalGlobalSize);
-  bool isPhysicalLocalSize = (myPhysicalMesh->currentIndex() == PhysicalLocalSize);
-  bool isCustom = (isPhysicalGlobalSize || isPhysicalLocalSize) ;
-  bool geomIsCustom = (myGeometricMesh->currentIndex() != DefaultGeom);
+  bool isPhysicalLocalSize  = (myPhysicalMesh->currentIndex() == PhysicalLocalSize);
+  bool isCustom             = (isPhysicalGlobalSize || isPhysicalLocalSize) ;
+  bool geomIsCustom         = (myGeometricMesh->currentIndex() != DefaultGeom);
+  bool isQuadAllowed        = (myAllowQuadrangles->isChecked() );
 
-  myGradation->setEnabled(!isPhysicalGlobalSize || geomIsCustom);
+  myGradation->setEnabled( !isQuadAllowed && ( !isPhysicalGlobalSize || geomIsCustom ));
   myPhySize->setEnabled(isCustom);
   myPhySizeRel->setEnabled(isCustom);
 
@@ -81,11 +82,12 @@ void BLSURFPluginGUI_StdWidget::onPhysicalMeshChanged() {
 }
 
 void BLSURFPluginGUI_StdWidget::onGeometricMeshChanged() {
-  bool isCustom = (myGeometricMesh->currentIndex() != DefaultGeom);
+  bool isCustom            = (myGeometricMesh->currentIndex() != DefaultGeom);
   bool isPhysicalLocalSize = (myPhysicalMesh->currentIndex() == PhysicalLocalSize);
+  bool isQuadAllowed       = (myAllowQuadrangles->isChecked() );
 
   GeomParamsGroupBox->setEnabled(isCustom);
-  myGradation->setEnabled(isCustom || isPhysicalLocalSize);
+  myGradation->setEnabled( !isQuadAllowed && ( isCustom || isPhysicalLocalSize ));
 
   if ( ! isCustom ) {
     //  hphy_flag = 0 and hgeo_flag = 0 is not allowed (spec)

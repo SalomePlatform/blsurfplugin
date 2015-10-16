@@ -368,14 +368,14 @@ bool BLSURFPlugin_BLSURF::CheckHypothesis
  */
 //=============================================================================
 
-inline std::string to_string(double d)
+inline std::string val_to_string(double d)
 {
    std::ostringstream o;
    o << d;
    return o.str();
 }
 
-inline std::string to_string_rel(double d)
+inline std::string val_to_string_rel(double d)
 {
    std::ostringstream o;
    o << d;
@@ -383,14 +383,14 @@ inline std::string to_string_rel(double d)
    return o.str();
 }
 
-inline std::string to_string(int i)
+inline std::string val_to_string(int i)
 {
    std::ostringstream o;
    o << i;
    return o.str();
 }
 
-inline std::string to_string_rel(int i)
+inline std::string val_to_string_rel(int i)
 {
    std::ostringstream o;
    o << i;
@@ -1058,7 +1058,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
   // PreCAD
   if (_topology == BLSURFPlugin_Hypothesis::PreCAD) {
     *use_precad = true;
-    precad_set_param(pcs, "verbose",                to_string(_verb).c_str());
+    precad_set_param(pcs, "verbose",                val_to_string(_verb).c_str());
     precad_set_param(pcs, "merge_edges",            _precadMergeEdges ? "1" : "0");
     precad_set_param(pcs, "process_3d_topology",    _precadProcess3DTopology ? "1" : "0");
     precad_set_param(pcs, "discard_input_topology", _precadDiscardInput ? "1" : "0");
@@ -1071,11 +1071,11 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
    {
      case BLSURFPlugin_Hypothesis::PhysicalGlobalSize:
        set_param(css, "physical_size_mode", "global");
-       set_param(css, "global_physical_size", _phySizeRel ? to_string_rel(_phySize).c_str() : to_string(_phySize).c_str());
+       set_param(css, "global_physical_size", _phySizeRel ? val_to_string_rel(_phySize).c_str() : val_to_string(_phySize).c_str());
        break;
      case BLSURFPlugin_Hypothesis::PhysicalLocalSize:
        set_param(css, "physical_size_mode", "local");
-       set_param(css, "global_physical_size", _phySizeRel ? to_string_rel(_phySize).c_str() : to_string(_phySize).c_str());
+       set_param(css, "global_physical_size", _phySizeRel ? val_to_string_rel(_phySize).c_str() : val_to_string(_phySize).c_str());
        useGradation = true;
        break;
      default:
@@ -1086,14 +1086,14 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
    {
      case BLSURFPlugin_Hypothesis::GeometricalGlobalSize:
        set_param(css, "geometric_size_mode", "global");
-       set_param(css, "geometric_approximation", to_string(_angleMesh).c_str());
-       set_param(css, "chordal_error", to_string(_chordalError).c_str());
+       set_param(css, "geometric_approximation", val_to_string(_angleMesh).c_str());
+       set_param(css, "chordal_error", val_to_string(_chordalError).c_str());
        useGradation = true;
        break;
      case BLSURFPlugin_Hypothesis::GeometricalLocalSize:
        set_param(css, "geometric_size_mode", "local");
-       set_param(css, "geometric_approximation", to_string(_angleMesh).c_str());
-       set_param(css, "chordal_error", to_string(_chordalError).c_str());
+       set_param(css, "geometric_approximation", val_to_string(_angleMesh).c_str());
+       set_param(css, "chordal_error", val_to_string(_chordalError).c_str());
        useGradation = true;
        break;
      default:
@@ -1107,44 +1107,44 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
      double mins = _minSizeRel ? _minSize * diagonal : _minSize;
      // - min size should not be greater than user size
      if ( _phySize < mins )
-       set_param(css, "min_size", _phySizeRel ? to_string_rel(_phySize).c_str() : to_string(_phySize).c_str());
+       set_param(css, "min_size", _phySizeRel ? val_to_string_rel(_phySize).c_str() : val_to_string(_phySize).c_str());
      else
-       set_param(css, "min_size", _minSizeRel ? to_string_rel(_minSize).c_str() : to_string(_minSize).c_str());
+       set_param(css, "min_size", _minSizeRel ? val_to_string_rel(_minSize).c_str() : val_to_string(_minSize).c_str());
      // - compute absolute max size
      double maxs = _maxSizeRel ? _maxSize * diagonal : _maxSize;
      // - max size should not be less than user size
      if ( _phySize > maxs )
-       set_param(css, "max_size", _phySizeRel ? to_string_rel(_phySize).c_str() : to_string(_phySize).c_str());
+       set_param(css, "max_size", _phySizeRel ? val_to_string_rel(_phySize).c_str() : val_to_string(_phySize).c_str());
      else
-       set_param(css, "max_size", _maxSizeRel ? to_string_rel(_maxSize).c_str() : to_string(_maxSize).c_str());
+       set_param(css, "max_size", _maxSizeRel ? val_to_string_rel(_maxSize).c_str() : val_to_string(_maxSize).c_str());
    }
    else {
      // user size is not explicitly specified
      // - if minsize is not explicitly specified, we pass default value computed automatically, in this case "relative" flag is ignored
-     set_param(css, "min_size", _minSizeRel ? to_string_rel(_minSize).c_str() : to_string(_minSize).c_str());
+     set_param(css, "min_size", _minSizeRel ? val_to_string_rel(_minSize).c_str() : val_to_string(_minSize).c_str());
      // - if maxsize is not explicitly specified, we pass default value computed automatically, in this case "relative" flag is ignored
-     set_param(css, "max_size", _maxSizeRel ? to_string_rel(_maxSize).c_str() : to_string(_maxSize).c_str());
+     set_param(css, "max_size", _maxSizeRel ? val_to_string_rel(_maxSize).c_str() : val_to_string(_maxSize).c_str());
    }
    // anisotropic and quadrangle mesh requires disabling gradation
    if ( _anisotropic && _quadAllowed )
      useGradation = false; // limitation of V1.3
    if ( useGradation )
-     set_param(css, "gradation",                         to_string(_gradation).c_str());
+     set_param(css, "gradation",                         val_to_string(_gradation).c_str());
    set_param(css, "element_generation",                _quadAllowed ? "quad_dominant" : "triangle");
 
 
    set_param(css, "metric",                            _anisotropic ? "anisotropic" : "isotropic");
    if ( _anisotropic )
-     set_param(css, "anisotropic_ratio",                 to_string(_anisotropicRatio).c_str());
+     set_param(css, "anisotropic_ratio",                 val_to_string(_anisotropicRatio).c_str());
    set_param(css, "remove_tiny_edges",                 _removeTinyEdges ? "1" : "0");
    if ( _removeTinyEdges )
-     set_param(css, "tiny_edge_length",                  to_string(_tinyEdgeLength).c_str());
+     set_param(css, "tiny_edge_length",                  val_to_string(_tinyEdgeLength).c_str());
    set_param(css, "force_bad_surface_element_removal", _badElementRemoval ? "1" : "0");
    if ( _badElementRemoval )
-     set_param(css, "bad_surface_element_aspect_ratio",  to_string(_badElementAspectRatio).c_str());
+     set_param(css, "bad_surface_element_aspect_ratio",  val_to_string(_badElementAspectRatio).c_str());
    set_param(css, "optimisation",                      _optimizeMesh ? "yes" : "no");
    set_param(css, "element_order",                     _quadraticMesh ? "quadratic" : "linear");
-   set_param(css, "verbose",                           to_string(_verb).c_str());
+   set_param(css, "verbose",                           val_to_string(_verb).c_str());
 
    _smp_phy_size = _phySizeRel ? _phySize*diagonal : _phySize;
    if ( _verb > 0 )
@@ -1478,7 +1478,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
     {
       MESSAGE("USING PRECAD FOR PERIODICITY")
       *use_precad = true;
-      precad_set_param(pcs, "verbose",                to_string(_verb).c_str());
+      precad_set_param(pcs, "verbose",                val_to_string(_verb).c_str());
     }
 
   MESSAGE("SetParameters facesPeriodicityVector");
@@ -2092,7 +2092,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
 
     iface = fmap.Add(f);
 //    std::string aFileName = "fmap_face_";
-//    aFileName.append(to_string(iface));
+//    aFileName.append(val_to_string(iface));
 //    aFileName.append(".brep");
 //    BRepTools::Write(f,aFileName.c_str());
 
@@ -2297,7 +2297,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
         ic = emap.Add(e);
 
 //      std::string aFileName = "fmap_edge_";
-//      aFileName.append(to_string(ic));
+//      aFileName.append(val_to_string(ic));
 //      aFileName.append(".brep");
 //      BRepTools::Write(e,aFileName.c_str());
 
@@ -2431,7 +2431,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
         }
 
 //        std::string aFileName = "fmap_vertex_";
-//        aFileName.append(to_string(*ip));
+//        aFileName.append(val_to_string(*ip));
 //        aFileName.append(".brep");
 //        BRepTools::Write(v,aFileName.c_str());
 

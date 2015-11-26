@@ -845,7 +845,11 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   myEnforcedTreeWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
   myEnforcedTreeWidget->setSelectionBehavior(QAbstractItemView::SelectItems);
   for (int column = 0; column < ENF_VER_NB_COLUMNS; ++column) {
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
     myEnforcedTreeWidget->header()->setResizeMode(column,QHeaderView::Interactive);
+#else
+    myEnforcedTreeWidget->header()->setSectionResizeMode(column,QHeaderView::Interactive);
+#endif
     myEnforcedTreeWidget->resizeColumnToContents(column);
   }
   myEnforcedTreeWidget->hideColumn(ENF_VER_FACE_ENTRY_COLUMN);
@@ -962,7 +966,11 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   
   int periodicityVisibleColumns = 2;
   for (size_t column = 0; column < periodicityVisibleColumns; ++column) {
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
       myPeriodicityTreeWidget->header()->setResizeMode(column,QHeaderView::Interactive);
+#else
+      myPeriodicityTreeWidget->header()->setSectionResizeMode(column,QHeaderView::Interactive);
+#endif
       myPeriodicityTreeWidget->resizeColumnToContents(column);
   }
   myPeriodicityTreeWidget->header()->setStretchLastSection(true);

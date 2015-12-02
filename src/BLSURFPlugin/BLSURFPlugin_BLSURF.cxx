@@ -100,102 +100,103 @@ extern "C"{
  * ===========  PYTHON ==============
  * ==================================*/
 
-typedef struct {
-  PyObject_HEAD
-  int softspace;
-  std::string *out;
-  } PyStdOut;
-
-static void
-PyStdOut_dealloc(PyStdOut *self)
+namespace
 {
-  PyObject_Del(self);
-}
+  typedef struct {
+    PyObject_HEAD
+    int softspace;
+    std::string *out;
+    } PyStdOut;
 
-static PyObject *
-PyStdOut_write(PyStdOut *self, PyObject *args)
-{
-  char *c;
-  int l;
-  if (!PyArg_ParseTuple(args, "t#:write",&c, &l))
-    return NULL;
+  static void
+  PyStdOut_dealloc(PyStdOut *self)
+  {
+    PyObject_Del(self);
+  }
 
-  //std::cerr << c ;
-  *(self->out)=*(self->out)+c;
+  static PyObject *
+  PyStdOut_write(PyStdOut *self, PyObject *args)
+  {
+    char *c;
+    int l;
+    if (!PyArg_ParseTuple(args, "t#:write",&c, &l))
+      return NULL;
 
-  Py_INCREF(Py_None);
-  return Py_None;
-}
+    *(self->out)=*(self->out)+c;
 
-static PyMethodDef PyStdOut_methods[] = {
-  {"write",  (PyCFunction)PyStdOut_write,  METH_VARARGS,
-    PyDoc_STR("write(string) -> None")},
-  {NULL,    NULL}   /* sentinel */
-};
+    Py_INCREF(Py_None);
+    return Py_None;
+  }
 
-static PyMemberDef PyStdOut_memberlist[] = {
-  {(char*)"softspace", T_INT,  offsetof(PyStdOut, softspace), 0,
-   (char*)"flag indicating that a space needs to be printed; used by print"},
-  {NULL} /* Sentinel */
-};
+  static PyMethodDef PyStdOut_methods[] = {
+    {"write",  (PyCFunction)PyStdOut_write,  METH_VARARGS,
+      PyDoc_STR("write(string) -> None")},
+    {NULL,    NULL}   /* sentinel */
+  };
 
-static PyTypeObject PyStdOut_Type = {
-  /* The ob_type field must be initialized in the module init function
-   * to be portable to Windows without using C++. */
-  PyObject_HEAD_INIT(NULL)
-  0,                            /*ob_size*/
-  "PyOut",                      /*tp_name*/
-  sizeof(PyStdOut),             /*tp_basicsize*/
-  0,                            /*tp_itemsize*/
-  /* methods */
-  (destructor)PyStdOut_dealloc, /*tp_dealloc*/
-  0,                            /*tp_print*/
-  0,                            /*tp_getattr*/
-  0,                            /*tp_setattr*/
-  0,                            /*tp_compare*/
-  0,                            /*tp_repr*/
-  0,                            /*tp_as_number*/
-  0,                            /*tp_as_sequence*/
-  0,                            /*tp_as_mapping*/
-  0,                            /*tp_hash*/
-  0,                            /*tp_call*/
-  0,                            /*tp_str*/
-  PyObject_GenericGetAttr,      /*tp_getattro*/
-  /* softspace is writable:  we must supply tp_setattro */
-  PyObject_GenericSetAttr,      /* tp_setattro */
-  0,                            /*tp_as_buffer*/
-  Py_TPFLAGS_DEFAULT,           /*tp_flags*/
-  0,                            /*tp_doc*/
-  0,                            /*tp_traverse*/
-  0,                            /*tp_clear*/
-  0,                            /*tp_richcompare*/
-  0,                            /*tp_weaklistoffset*/
-  0,                            /*tp_iter*/
-  0,                            /*tp_iternext*/
-  PyStdOut_methods,             /*tp_methods*/
-  PyStdOut_memberlist,          /*tp_members*/
-  0,                            /*tp_getset*/
-  0,                            /*tp_base*/
-  0,                            /*tp_dict*/
-  0,                            /*tp_descr_get*/
-  0,                            /*tp_descr_set*/
-  0,                            /*tp_dictoffset*/
-  0,                            /*tp_init*/
-  0,                            /*tp_alloc*/
-  0,                            /*tp_new*/
-  0,                            /*tp_free*/
-  0,                            /*tp_is_gc*/
-};
+  static PyMemberDef PyStdOut_memberlist[] = {
+    {(char*)"softspace", T_INT,  offsetof(PyStdOut, softspace), 0,
+     (char*)"flag indicating that a space needs to be printed; used by print"},
+    {NULL} /* Sentinel */
+  };
 
-PyObject * newPyStdOut( std::string& out )
-{
-  PyStdOut *self;
-  self = PyObject_New(PyStdOut, &PyStdOut_Type);
-  if (self == NULL)
-    return NULL;
-  self->softspace = 0;
-  self->out=&out;
-  return (PyObject*)self;
+  static PyTypeObject PyStdOut_Type = {
+    /* The ob_type field must be initialized in the module init function
+     * to be portable to Windows without using C++. */
+    PyObject_HEAD_INIT(NULL)
+    0,                            /*ob_size*/
+    "PyOut",                      /*tp_name*/
+    sizeof(PyStdOut),             /*tp_basicsize*/
+    0,                            /*tp_itemsize*/
+    /* methods */
+    (destructor)PyStdOut_dealloc, /*tp_dealloc*/
+    0,                            /*tp_print*/
+    0,                            /*tp_getattr*/
+    0,                            /*tp_setattr*/
+    0,                            /*tp_compare*/
+    0,                            /*tp_repr*/
+    0,                            /*tp_as_number*/
+    0,                            /*tp_as_sequence*/
+    0,                            /*tp_as_mapping*/
+    0,                            /*tp_hash*/
+    0,                            /*tp_call*/
+    0,                            /*tp_str*/
+    PyObject_GenericGetAttr,      /*tp_getattro*/
+    /* softspace is writable:  we must supply tp_setattro */
+    PyObject_GenericSetAttr,      /* tp_setattro */
+    0,                            /*tp_as_buffer*/
+    Py_TPFLAGS_DEFAULT,           /*tp_flags*/
+    0,                            /*tp_doc*/
+    0,                            /*tp_traverse*/
+    0,                            /*tp_clear*/
+    0,                            /*tp_richcompare*/
+    0,                            /*tp_weaklistoffset*/
+    0,                            /*tp_iter*/
+    0,                            /*tp_iternext*/
+    PyStdOut_methods,             /*tp_methods*/
+    PyStdOut_memberlist,          /*tp_members*/
+    0,                            /*tp_getset*/
+    0,                            /*tp_base*/
+    0,                            /*tp_dict*/
+    0,                            /*tp_descr_get*/
+    0,                            /*tp_descr_set*/
+    0,                            /*tp_dictoffset*/
+    0,                            /*tp_init*/
+    0,                            /*tp_alloc*/
+    0,                            /*tp_new*/
+    0,                            /*tp_free*/
+    0,                            /*tp_is_gc*/
+  };
+
+  PyObject * newPyStdOut( std::string& out )
+  {
+    PyStdOut* self = PyObject_New(PyStdOut, &PyStdOut_Type);
+    if (self) {
+      self->softspace = 0;
+      self->out=&out;
+    }
+    return (PyObject*)self;
+  }
 }
 
 
@@ -3294,16 +3295,12 @@ status_t surf_fun(real *uv, real *xyz, real*du, real *dv,
 
 status_t size_on_surface(integer face_id, real *uv, real *size, void *user_data)
 {
-  //MESSAGE("size_on_surface")
   TId2ClsAttractorVec::iterator f2attVec;
   if (FaceId2PythonSmp.count(face_id) != 0){
-    //MESSAGE("A size map is used to calculate size on face : "<<face_id)
-    PyObject * pyresult = NULL;
-    PyObject* new_stderr = NULL;
     assert(Py_IsInitialized());
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
-    pyresult = PyObject_CallFunction(FaceId2PythonSmp[face_id],(char*)"(f,f)",uv[0],uv[1]);
+    PyObject* pyresult = PyObject_CallFunction(FaceId2PythonSmp[face_id],(char*)"(f,f)",uv[0],uv[1]);
     real result;
     if ( pyresult != NULL) {
       result = PyFloat_AsDouble(pyresult);
@@ -3313,10 +3310,12 @@ status_t size_on_surface(integer face_id, real *uv, real *size, void *user_data)
     else{
       fflush(stderr);
       string err_description="";
-      new_stderr = newPyStdOut(err_description);
+      PyObject* new_stderr = newPyStdOut(err_description);
+      PyObject* old_stderr = PySys_GetObject((char*)"stderr");
+      Py_INCREF(old_stderr);
       PySys_SetObject((char*)"stderr", new_stderr);
       PyErr_Print();
-      PySys_SetObject((char*)"stderr", PySys_GetObject((char*)"__stderr__"));
+      PySys_SetObject((char*)"stderr", old_stderr);
       Py_DECREF(new_stderr);
       MESSAGE("Can't evaluate f(" << uv[0] << "," << uv[1] << ")" << " error is " << err_description);
       result = *((real*)user_data);
@@ -3350,12 +3349,10 @@ status_t size_on_surface(integer face_id, real *uv, real *size, void *user_data)
 status_t size_on_edge(integer edge_id, real t, real *size, void *user_data)
 {
   if (EdgeId2PythonSmp.count(edge_id) != 0){
-    PyObject * pyresult = NULL;
-    PyObject* new_stderr = NULL;
     assert(Py_IsInitialized());
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
-    pyresult = PyObject_CallFunction(EdgeId2PythonSmp[edge_id],(char*)"(f)",t);
+    PyObject* pyresult = PyObject_CallFunction(EdgeId2PythonSmp[edge_id],(char*)"(f)",t);
     real result;
     if ( pyresult != NULL) {
       result = PyFloat_AsDouble(pyresult);
@@ -3365,10 +3362,12 @@ status_t size_on_edge(integer edge_id, real t, real *size, void *user_data)
     else{
       fflush(stderr);
       string err_description="";
-      new_stderr = newPyStdOut(err_description);
+      PyObject* new_stderr = newPyStdOut(err_description);
+      PyObject* old_stderr = PySys_GetObject((char*)"stderr");
+      Py_INCREF(old_stderr);
       PySys_SetObject((char*)"stderr", new_stderr);
       PyErr_Print();
-      PySys_SetObject((char*)"stderr", PySys_GetObject((char*)"__stderr__"));
+      PySys_SetObject((char*)"stderr", old_stderr);
       Py_DECREF(new_stderr);
       MESSAGE("Can't evaluate f(" << t << ")" << " error is " << err_description);
       result = *((real*)user_data);
@@ -3385,12 +3384,10 @@ status_t size_on_edge(integer edge_id, real t, real *size, void *user_data)
 status_t size_on_vertex(integer point_id, real *size, void *user_data)
 {
   if (VertexId2PythonSmp.count(point_id) != 0){
-    PyObject * pyresult = NULL;
-    PyObject* new_stderr = NULL;
     assert(Py_IsInitialized());
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
-    pyresult = PyObject_CallFunction(VertexId2PythonSmp[point_id],(char*)"");
+    PyObject* pyresult = PyObject_CallFunction(VertexId2PythonSmp[point_id],(char*)"");
     real result;
     if ( pyresult != NULL) {
       result = PyFloat_AsDouble(pyresult);
@@ -3400,10 +3397,12 @@ status_t size_on_vertex(integer point_id, real *size, void *user_data)
     else {
       fflush(stderr);
       string err_description="";
-      new_stderr = newPyStdOut(err_description);
+      PyObject* new_stderr = newPyStdOut(err_description);
+      PyObject* old_stderr = PySys_GetObject((char*)"stderr");
+      Py_INCREF(old_stderr);
       PySys_SetObject((char*)"stderr", new_stderr);
       PyErr_Print();
-      PySys_SetObject((char*)"stderr", PySys_GetObject((char*)"__stderr__"));
+      PySys_SetObject((char*)"stderr", old_stderr);
       Py_DECREF(new_stderr);
       MESSAGE("Can't evaluate f()" << " error is " << err_description);
       result = *((real*)user_data);

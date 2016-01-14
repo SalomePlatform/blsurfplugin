@@ -998,15 +998,16 @@ void BLSURFPlugin_Hypothesis_i::SetSizeMapEntry(const char* entry, const char* s
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis_i::SetConstantSizeMapEntry(const char* entry, GEOM::shape_type shapeType, CORBA::Double sizeMap)
-    throw (SALOME::SALOME_Exception) {
+  throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
   MESSAGE("ENGINE : SETSIZEMAP START ENTRY : " << entry);
   bool valueChanged = false;
   std::ostringstream sizeMapFunction;
   switch (shapeType) {
-    case GEOM::FACE:   sizeMapFunction << "def f(u,v): return " << sizeMap ; break;
-    case GEOM::EDGE:   sizeMapFunction << "def f(t): return " << sizeMap ; break;
-    case GEOM::VERTEX: sizeMapFunction << "def f(): return " << sizeMap ; break;
+  case GEOM::FACE:   sizeMapFunction << "def f(u,v): return " << sizeMap ; break;
+  case GEOM::EDGE:   sizeMapFunction << "def f(t): return " << sizeMap ; break;
+  case GEOM::VERTEX: sizeMapFunction << "def f(): return " << sizeMap ; break;
+  default:;
   }
   try {
     valueChanged = (this->GetImpl()->GetSizeMapEntry(entry) != sizeMapFunction.str());
@@ -1064,7 +1065,7 @@ void BLSURFPlugin_Hypothesis_i::SetClassAttractorEntry(const char* entry, const 
 {
   ASSERT(myBaseImpl);
   MESSAGE("ENGINE : SETATTRACTOR START ENTRY : " << entry);
-  bool valueChanged = false;
+  //bool valueChanged = false;
   try {
     this->GetImpl()->SetClassAttractorEntry(entry, att_entry, StartSize, EndSize, ActionRadius, ConstantRadius);
   }
@@ -2299,7 +2300,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexEntry(const char* theFaceEntry,
   if (string(theVertexEntry).empty()) {
     try {
       ::BLSURFPlugin_Hypothesis::TEnfVertexCoordsList coordsList =
-          this->GetImpl()->GetEnfVertexCoordsList(theFaceEntry);
+        this->GetImpl()->GetEnfVertexCoordsList(theFaceEntry);
       ::BLSURFPlugin_Hypothesis::TEnfVertexCoords coords;
       coords.push_back(x);
       coords.push_back(y);
@@ -2312,7 +2313,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexEntry(const char* theFaceEntry,
         ::BLSURFPlugin_Hypothesis::TEnfVertex *enfVertex = this->GetImpl()->GetEnfVertex(coords);
         if ((enfVertex->name != theVertexName) || (enfVertex->grpName != theGroupName)) {
           MESSAGE("The names are different: update");
-//          this->GetImpl()->ClearEnforcedVertex(theFaceEntry, x, y, z);
+          //          this->GetImpl()->ClearEnforcedVertex(theFaceEntry, x, y, z);
           newValue = true;
         }
         else {
@@ -2324,18 +2325,21 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexEntry(const char* theFaceEntry,
       MESSAGE("Face entry not found : add it to the list");
       newValue = true;
     }
-    if (newValue)
-      if (string(theVertexName).empty())
+    if (newValue) {
+      if (string(theVertexName).empty()) {
         if (string(theGroupName).empty())
           SMESH::TPythonDump() << _this() << ".SetEnforcedVertex(" << theFaceEntry << ", " << x << ", " << y << ", " << z << ")";
         else
           SMESH::TPythonDump() << _this() << ".SetEnforcedVertexWithGroup(" << theFaceEntry << ", " << x << ", " << y << ", " << z << ", \"" << theGroupName << "\")";
-      else
+      }
+      else {
         if (string(theGroupName).empty())
           SMESH::TPythonDump() << _this() << ".SetEnforcedVertexNamed(" << theFaceEntry << ", " << x << ", " << y << ", " << z << ", \"" << theVertexName << "\")";
         else
-          SMESH::TPythonDump() << _this() << ".SetEnforcedVertexNamedWithGroup(" << theFaceEntry << ", " << x << ", " << y << ", " << z << ", \"" 
-                                          << theVertexName << "\", \"" << theGroupName << "\")";
+          SMESH::TPythonDump() << _this() << ".SetEnforcedVertexNamedWithGroup(" << theFaceEntry << ", " << x << ", " << y << ", " << z << ", \""
+                               << theVertexName << "\", \"" << theGroupName << "\")";
+      }
+    }
   } else {
     try {
       ::BLSURFPlugin_Hypothesis::TEntryList enfVertexEntryList = this->GetImpl()->GetEnfVertexEntryList(theFaceEntry);
@@ -2361,11 +2365,12 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexEntry(const char* theFaceEntry,
       MESSAGE("Face entry not found : add it to the list");
       newValue = true;
     }
-    if (newValue)
-        if (string(theGroupName).empty())
-          SMESH::TPythonDump() << _this() << ".SetEnforcedVertexGeom(" << theFaceEntry << ", " << theVertexEntry << ")";
-        else
-          SMESH::TPythonDump() << _this() << ".SetEnforcedVertexGeomWithGroup(" << theFaceEntry << ", " << theVertexEntry << ", \"" << theGroupName << "\")";
+    if (newValue) {
+      if (string(theGroupName).empty())
+        SMESH::TPythonDump() << _this() << ".SetEnforcedVertexGeom(" << theFaceEntry << ", " << theVertexEntry << ")";
+      else
+        SMESH::TPythonDump() << _this() << ".SetEnforcedVertexGeomWithGroup(" << theFaceEntry << ", " << theVertexEntry << ", \"" << theGroupName << "\")";
+    }
   }
 
   if (newValue)
@@ -2410,7 +2415,7 @@ BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVerticesEntr
       // Coords
       BLSURFPlugin::TEnfVertexCoords_var coords = new BLSURFPlugin::TEnfVertexCoords();
       coords->length(_enfVertex->coords.size());
-      for (int ind=0;ind<coords->length();ind++)
+      for ( CORBA::ULong ind = 0; ind < coords->length(); ind++ )
         coords[ind] = _enfVertex->coords[ind];
       enfVertex->coords = coords;
       // Group Name
@@ -2720,7 +2725,7 @@ void BLSURFPlugin_Hypothesis_i::CheckShapeTypes(GEOM::GEOM_Object_ptr shape, std
     }
   if (!ok){
     std::stringstream msg;
-    msg << "shape shape type is not in" << typesTxt;
+    msg << "shape shape type is not in" << typesTxt.str();
     MESSAGE(msg);
     THROW_SALOME_CORBA_EXCEPTION(msg.str().c_str(), SALOME::BAD_PARAM);
   }

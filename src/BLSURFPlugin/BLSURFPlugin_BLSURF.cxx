@@ -2797,13 +2797,11 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   if (_hypothesis)
     GMFFileName = _hypothesis->GetGMFFile();
   if (GMFFileName != "") {
-    //     bool GMFFileMode = _hypothesis->GetGMFFileMode();
     bool asciiFound  = (GMFFileName.find(".mesh", GMFFileName.length()-5) != std::string::npos);
     bool binaryFound = (GMFFileName.find(".meshb",GMFFileName.length()-6) != std::string::npos);
     if (!asciiFound && !binaryFound)
       GMFFileName.append(".mesh");
     mesh_write_mesh(msh, GMFFileName.c_str());
-    //cout << GMFFileName << " created = " << SMESH_File(GMFFileName).exists() << endl;
   }
 
   /* retrieve mesh data (see meshgems/mesh.h) */

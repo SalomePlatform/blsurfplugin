@@ -47,8 +47,8 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   _phySize(GetDefaultPhySize()),
   _phySizeRel(GetDefaultPhySizeRel()),
   _minSize(GetDefaultMinSize()),
-  _minSizeRel(GetDefaultMinSizeRel()),
   _maxSize(GetDefaultMaxSize()),
+  _minSizeRel(GetDefaultMinSizeRel()),
   _maxSizeRel(GetDefaultMaxSizeRel()),
   _gradation(GetDefaultGradation()),
   _quadAllowed(GetDefaultQuadAllowed()),
@@ -77,10 +77,10 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   _faceEntryEnfVertexEntryListMap(GetDefaultFaceEntryEnfVertexEntryListMap()),
   _enfVertexEntryEnfVertexMap(GetDefaultEnfVertexEntryEnfVertexMap()),
   _groupNameNodeIDMap(GetDefaultGroupNameNodeIDMap()),
-  _GMFFileName(GetDefaultGMFFile()),
   _enforcedInternalVerticesAllFaces(GetDefaultInternalEnforcedVertex()),
   _preCadFacesPeriodicityVector(GetDefaultPreCadFacesPeriodicityVector()),
-  _preCadEdgesPeriodicityVector(GetDefaultPreCadEdgesPeriodicityVector())
+  _preCadEdgesPeriodicityVector(GetDefaultPreCadEdgesPeriodicityVector()),
+  _GMFFileName(GetDefaultGMFFile())
 {
   _name = GetHypType();
   _param_algo_dim = 2;
@@ -1555,7 +1555,7 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save) {
       }
       if (enfVertex->coords.size()) {
         save << " " << "__BEGIN_COORDS__";
-        for (int i=0;i<enfVertex->coords.size();i++)
+        for ( size_t i = 0; i < enfVertex->coords.size(); i++ )
           save << " " << enfVertex->coords[i];
         save << " " << "__END_COORDS__";
       }
@@ -1673,7 +1673,7 @@ void BLSURFPlugin_Hypothesis::SaveVerticesPeriodicity(std::ostream & save){
 
 void BLSURFPlugin_Hypothesis::SavePreCADPeriodicity(std::ostream & save, const char* shapeType) {
   TPreCadPeriodicityVector precad_periodicity;
-  if (shapeType == "FACES")
+  if ( shapeType  &&  strcmp( shapeType, "FACES" ) == 0 )
     precad_periodicity = _preCadFacesPeriodicityVector;
   else
     precad_periodicity = _preCadEdgesPeriodicityVector;
@@ -1730,49 +1730,49 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   double val;
   std::string option_or_sm;
 
-  isOK = (load >> i);
+  isOK = static_cast<bool>(load >> i);
   if (isOK)
     _topology = (Topology) i;
   else
     load.clear(std::ios::badbit | load.rdstate());
 
-  isOK = (load >> i);
+  isOK = static_cast<bool>(load >> i);
   if (isOK)
     _physicalMesh = (PhysicalMesh) i;
   else
     load.clear(std::ios::badbit | load.rdstate());
 
-  isOK = (load >> i);
+  isOK = static_cast<bool>(load >> i);
   if (isOK)
     _geometricMesh = (GeometricMesh) i;
   else
     load.clear(std::ios::badbit | load.rdstate());
 
-  isOK = (load >> val);
+  isOK = static_cast<bool>(load >> val);
   if (isOK)
     _phySize = val;
   else
     load.clear(std::ios::badbit | load.rdstate());
 
-  isOK = (load >> val);
+  isOK = static_cast<bool>(load >> val);
   if (isOK)
     _angleMesh = val;
   else
     load.clear(std::ios::badbit | load.rdstate());
 
-  isOK = (load >> val);
+  isOK = static_cast<bool>(load >> val);
   if (isOK)
     _gradation = val;
   else
     load.clear(std::ios::badbit | load.rdstate());
 
-  isOK = (load >> i);
+  isOK = static_cast<bool>(load >> i);
   if (isOK)
     _quadAllowed = (bool) i;
   else
     load.clear(std::ios::badbit | load.rdstate());
 
-  isOK = (load >> i);
+  isOK = static_cast<bool>(load >> i);
   if (isOK) {
     if ( i != -1) { // if value is -1, then this is no longer a standard option
       std::string & value = _option2value["respect_geometry"];
@@ -1783,52 +1783,52 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   else
     load.clear(std::ios::badbit | load.rdstate());
 
-  isOK = (load >> val);
+  isOK = static_cast<bool>(load >> val);
   if (isOK)
     _minSize = val;
   else
     load.clear(std::ios::badbit | load.rdstate());
 
-  isOK = (load >> val);
+  isOK = static_cast<bool>(load >> val);
   if (isOK)
     _maxSize = val;
   else
     load.clear(std::ios::badbit | load.rdstate());
 
-  isOK = (load >> val);
+  isOK = static_cast<bool>(load >> val);
   if (isOK)
     // former parameter: get min value
     _angleMesh = min(val,_angleMesh);
   else
     load.clear(std::ios::badbit | load.rdstate());
 
-  isOK = (load >> val);
+  isOK = static_cast<bool>(load >> val);
   if (isOK)
     // former parameter: get min value
     _minSize = min(val,_minSize);
   else
     load.clear(std::ios::badbit | load.rdstate());
 
-  isOK = (load >> val);
+  isOK = static_cast<bool>(load >> val);
   if (isOK)
     // former parameter: get max value
     _maxSize = max(val,_maxSize);
   else
     load.clear(std::ios::badbit | load.rdstate());
 
-  isOK = (load >> i);
+  isOK = static_cast<bool>(load >> i);
   if (isOK)
     _verb = i;
   else
     load.clear(std::ios::badbit | load.rdstate());
 
-  isOK = (load >> i);
+  isOK = static_cast<bool>(load >> i);
   if (isOK)
     _preCADMergeEdges = (bool) i;
   else
     load.clear(std::ios::badbit | load.rdstate());
 
-  isOK = (load >> i);
+  isOK = static_cast<bool>(load >> i);
   if (isOK) {
     if ( i != -1) { // if value is -1, then this is no longer a standard option
       std::string & value = _preCADoption2value["remove_tiny_edges"];
@@ -1839,13 +1839,13 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   else
     load.clear(std::ios::badbit | load.rdstate());
 
-  isOK = (load >> i);
+  isOK = static_cast<bool>(load >> i);
   if (isOK)
     _preCADDiscardInput = (bool) i;
   else
     load.clear(std::ios::badbit | load.rdstate());
 
-  isOK = (load >> val);
+  isOK = static_cast<bool>(load >> val);
   if (isOK) { // _preCADEpsNano
     if ( (i + 1.0) < 1e-6 ) { // if value is -1, then this is no longer a standard option: get optional value "tiny_edge_length" instead
       std::string & value = _preCADoption2value["tiny_edge_length"];
@@ -1857,7 +1857,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   else
     load.clear(std::ios::badbit | load.rdstate());
 
-  isOK = (load >> i);
+  isOK = static_cast<bool>(load >> i);
   if (isOK)
     _enforcedInternalVerticesAllFaces = (bool) i;
   else
@@ -1880,7 +1880,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   bool hasEdgesPeriodicity = false;
   bool hasVerticesPeriodicity = false;
 
-  isOK = (load >> option_or_sm);
+  isOK = static_cast<bool>(load >> option_or_sm);
   if (isOK)
     if ( (option_or_sm == "1")||(option_or_sm == "0") ) {
       i = atoi(option_or_sm.c_str());
@@ -1915,73 +1915,73 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
       hasVerticesPeriodicity = true;
 
   if (isOK && hasCADSurfOptions) {
-    isOK = (load >> i);
+    isOK = static_cast<bool>(load >> i);
     if (isOK)
       _minSizeRel = (bool) i;
     else
       load.clear(std::ios::badbit | load.rdstate());
 
-    isOK = (load >> i);
+    isOK = static_cast<bool>(load >> i);
     if (isOK)
       _maxSizeRel = (bool) i;
     else
       load.clear(std::ios::badbit | load.rdstate());
 
-    isOK = (load >> val);
+    isOK = static_cast<bool>(load >> val);
     if (isOK)
       _chordalError = val;
     else
       load.clear(std::ios::badbit | load.rdstate());
 
-    isOK = (load >> i);
+    isOK = static_cast<bool>(load >> i);
     if (isOK)
       _anisotropic = (bool) i;
     else
       load.clear(std::ios::badbit | load.rdstate());
 
-    isOK = (load >> val);
+    isOK = static_cast<bool>(load >> val);
     if (isOK)
       _anisotropicRatio = val;
     else
       load.clear(std::ios::badbit | load.rdstate());
 
-    isOK = (load >> i);
+    isOK = static_cast<bool>(load >> i);
     if (isOK)
       _removeTinyEdges = (bool) i;
     else
       load.clear(std::ios::badbit | load.rdstate());
 
-    isOK = (load >> val);
+    isOK = static_cast<bool>(load >> val);
     if (isOK)
       _tinyEdgeLength = val;
     else
       load.clear(std::ios::badbit | load.rdstate());
 
-    isOK = (load >> i);
+    isOK = static_cast<bool>(load >> i);
     if (isOK)
       _badElementRemoval = (bool) i;
     else
       load.clear(std::ios::badbit | load.rdstate());
 
-    isOK = (load >> val);
+    isOK = static_cast<bool>(load >> val);
     if (isOK)
       _badElementAspectRatio = val;
     else
       load.clear(std::ios::badbit | load.rdstate());
 
-    isOK = (load >> i);
+    isOK = static_cast<bool>(load >> i);
     if (isOK)
       _optimizeMesh = (bool) i;
     else
       load.clear(std::ios::badbit | load.rdstate());
 
-    isOK = (load >> i);
+    isOK = static_cast<bool>(load >> i);
     if (isOK)
       _quadraticMesh = (bool) i;
     else
       load.clear(std::ios::badbit | load.rdstate());
 
-    isOK = (load >> i);
+    isOK = static_cast<bool>(load >> i);
     if (isOK)
       _preCADProcess3DTopology = (bool) i;
     else
@@ -1991,8 +1991,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   
 
   if (hasCADSurfOptions) {
-    isOK = (load >> option_or_sm);
-    if (isOK)
+    isOK = static_cast<bool>(load >> option_or_sm);
+    if (isOK) {
       if (option_or_sm == "__OPTIONS_BEGIN__")
         hasOptions = true;
       else if (option_or_sm == "__CUSTOM_OPTIONS_BEGIN__")
@@ -2019,15 +2019,16 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         hasEdgesPeriodicity = true;
       else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
         hasVerticesPeriodicity = true;
+    }
   }
   
   std::string optName, optValue;
   while (isOK && hasOptions) {
-    isOK = (load >> optName);
+    isOK = static_cast<bool>(load >> optName);
     if (isOK) {
       if (optName == "__OPTIONS_END__")
         break;
-      isOK = (load >> optValue);
+      isOK = static_cast<bool>(load >> optValue);
     }
     if (isOK) {
       std::string & value = _option2value[optName];
@@ -2035,7 +2036,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
       int len = value.size();
       // continue reading until "%#" encountered
       while (value[len - 1] != '#' || value[len - 2] != '%') {
-        isOK = (load >> optValue);
+        isOK = static_cast<bool>(load >> optValue);
         if (isOK) {
           value += " ";
           value += optValue;
@@ -2049,8 +2050,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   }
 
   if (hasOptions) {
-    isOK = (load >> option_or_sm);
-    if (isOK)
+    isOK = static_cast<bool>(load >> option_or_sm);
+    if (isOK) {
       if (option_or_sm == "__CUSTOM_OPTIONS_BEGIN__")
         hasCustomOptions = true;
       else if (option_or_sm == "__PRECAD_OPTIONS_BEGIN__")
@@ -2075,21 +2076,22 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         hasEdgesPeriodicity = true;
       else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
         hasVerticesPeriodicity = true;
+    }
   }
 
   while (isOK && hasCustomOptions) {
-    isOK = (load >> optName);
+    isOK = static_cast<bool>(load >> optName);
     if (isOK) {
       if (optName == "__CUSTOM_OPTIONS_END__")
         break;
-      isOK = (load >> optValue);
+      isOK = static_cast<bool>(load >> optValue);
     }
     if (isOK) {
       std::string& value = optValue;
       int len = value.size();
       // continue reading until "%#" encountered
       while (value[len - 1] != '#' || value[len - 2] != '%') {
-        isOK = (load >> optValue);
+        isOK = static_cast<bool>(load >> optValue);
         if (isOK) {
           value += " ";
           value += optValue;
@@ -2104,8 +2106,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   }
 
   if (hasCustomOptions) {
-    isOK = (load >> option_or_sm);
-    if (isOK)
+    isOK = static_cast<bool>(load >> option_or_sm);
+    if (isOK) {
       if (option_or_sm == "__PRECAD_OPTIONS_BEGIN__")
         hasPreCADOptions = true;
       else if (option_or_sm == "__CUSTOM_PRECAD_OPTIONS_BEGIN__")
@@ -2128,14 +2130,15 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         hasEdgesPeriodicity = true;
       else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
         hasVerticesPeriodicity = true;
+    }
   }
 
   while (isOK && hasPreCADOptions) {
-    isOK = (load >> optName);
+    isOK = static_cast<bool>(load >> optName);
     if (isOK) {
       if (optName == "__PRECAD_OPTIONS_END__")
         break;
-      isOK = (load >> optValue);
+      isOK = static_cast<bool>(load >> optValue);
     }
     if (isOK) {
       std::string & value = _preCADoption2value[optName];
@@ -2143,7 +2146,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
       int len = value.size();
       // continue reading until "%#" encountered
       while (value[len - 1] != '#' || value[len - 2] != '%') {
-        isOK = (load >> optValue);
+        isOK = static_cast<bool>(load >> optValue);
         if (isOK) {
           value += " ";
           value += optValue;
@@ -2157,8 +2160,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   }
 
   if (hasPreCADOptions) {
-    isOK = (load >> option_or_sm);
-    if (isOK)
+    isOK = static_cast<bool>(load >> option_or_sm);
+    if (isOK) {
       if (option_or_sm == "__CUSTOM_PRECAD_OPTIONS_BEGIN__")
         hasCustomPreCADOptions = true;
       else if (option_or_sm == "__SIZEMAP_BEGIN__")
@@ -2179,21 +2182,22 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         hasEdgesPeriodicity = true;
       else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
         hasVerticesPeriodicity = true;
+    }
   }
 
   while (isOK && hasCustomPreCADOptions) {
-    isOK = (load >> optName);
+    isOK = static_cast<bool>(load >> optName);
     if (isOK) {
       if (optName == "__CUSTOM_PRECAD_OPTIONS_END__")
         break;
-      isOK = (load >> optValue);
+      isOK = static_cast<bool>(load >> optValue);
     }
     if (isOK) {
       std::string& value = optValue;
       int len = value.size();
       // continue reading until "%#" encountered
       while (value[len - 1] != '#' || value[len - 2] != '%') {
-        isOK = (load >> optValue);
+        isOK = static_cast<bool>(load >> optValue);
         if (isOK) {
           value += " ";
           value += optValue;
@@ -2208,8 +2212,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   }
 
   if (hasCustomPreCADOptions) {
-    isOK = (load >> option_or_sm);
-    if (isOK)
+    isOK = static_cast<bool>(load >> option_or_sm);
+    if (isOK) {
       if (option_or_sm == "__SIZEMAP_BEGIN__")
         hasSizeMap = true;
       else if (option_or_sm == "__ATTRACTORS_BEGIN__")
@@ -2228,15 +2232,16 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         hasEdgesPeriodicity = true;
       else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
         hasVerticesPeriodicity = true;
+    }
   }
   
   std::string smEntry, smValue;
   while (isOK && hasSizeMap) {
-    isOK = (load >> smEntry);
+    isOK = static_cast<bool>(load >> smEntry);
     if (isOK) {
       if (smEntry == "__SIZEMAP_END__")
         break;
-      isOK = (load >> smValue);
+      isOK = static_cast<bool>(load >> smValue);
     }
     if (isOK) {
       std::string & value2 = _sizeMap[smEntry];
@@ -2244,7 +2249,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
       int len2 = value2.size();
       // continue reading until "%#" encountered
       while (value2[len2 - 1] != '#' || value2[len2 - 2] != '%') {
-        isOK = (load >> smValue);
+        isOK = static_cast<bool>(load >> smValue);
         if (isOK) {
           value2 += " ";
           value2 += smValue;
@@ -2258,7 +2263,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   }
 
   if (hasSizeMap) {
-    isOK = (load >> option_or_sm);
+    isOK = static_cast<bool>(load >> option_or_sm);
     if (isOK)
       if (option_or_sm == "__ATTRACTORS_BEGIN__")
         hasAttractor = true;
@@ -2280,11 +2285,11 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
 
   std::string atEntry, atValue;
   while (isOK && hasAttractor) {
-    isOK = (load >> atEntry);
+    isOK = static_cast<bool>(load >> atEntry);
     if (isOK) {
       if (atEntry == "__ATTRACTORS_END__")
         break;
-      isOK = (load >> atValue);
+      isOK = static_cast<bool>(load >> atValue);
     }
     if (isOK) {
       std::string & value3 = _attractors[atEntry];
@@ -2292,7 +2297,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
       int len3 = value3.size();
       // continue reading until "%#" encountered
       while (value3[len3 - 1] != '#' || value3[len3 - 2] != '%') {
-        isOK = (load >> atValue);
+        isOK = static_cast<bool>(load >> atValue);
         if (isOK) {
           value3 += " ";
           value3 += atValue;
@@ -2306,8 +2311,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   }
 
   if (hasAttractor) {
-    isOK = (load >> option_or_sm);
-    if (isOK)
+    isOK = static_cast<bool>(load >> option_or_sm);
+    if (isOK) {
       if (option_or_sm == "__NEW_ATTRACTORS_BEGIN__")
         hasNewAttractor = true;
       else if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
@@ -2322,22 +2327,23 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         hasEdgesPeriodicity = true;
       else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
         hasVerticesPeriodicity = true;
+    }
   }
 
   std::string newAtFaceEntry, atTestString;
   std::string newAtShapeEntry;
   double attParams[4];
-  double step;
+  //double step;
   while (isOK && hasNewAttractor) {
     //std::cout<<"Load new attractor"<<std::endl;
-    isOK = (load >> newAtFaceEntry);
+    isOK = static_cast<bool>(load >> newAtFaceEntry);
     if (isOK) {
       if (newAtFaceEntry == "__NEW_ATTRACTORS_END__")
         break;
-      isOK = (load >> newAtShapeEntry);
+      isOK = static_cast<bool>(load >> newAtShapeEntry);
       if (!isOK)
     break;
-      isOK = (load >> attParams[0]>>attParams[1]>>attParams[2]>>attParams[3]); //>>step);
+      isOK = static_cast<bool>(load >> attParams[0]>>attParams[1]>>attParams[2]>>attParams[3]); //>>step);
     }
     if (isOK) {
       MESSAGE(" LOADING ATTRACTOR HYPOTHESIS ")
@@ -2352,8 +2358,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   
   
   if (hasNewAttractor) {
-    isOK = (load >> option_or_sm);
-    if (isOK)
+    isOK = static_cast<bool>(load >> option_or_sm);
+    if (isOK) {
       if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
         hasEnforcedVertex = true;
       else if (option_or_sm == "__PRECAD_FACES_PERIODICITY_BEGIN__")
@@ -2366,6 +2372,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         hasEdgesPeriodicity = true;
       else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
         hasVerticesPeriodicity = true;
+    }
   }
 
 
@@ -2403,7 +2410,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   
   
   while (isOK && hasEnforcedVertex) {
-    isOK = (load >> enfSeparator); // __BEGIN_VERTEX__
+    isOK = static_cast<bool>(load >> enfSeparator); // __BEGIN_VERTEX__
     TEnfVertex *enfVertex = new TEnfVertex();
 //     MESSAGE("enfSeparator: " <<enfSeparator);
     if (enfSeparator == "__ENFORCED_VERTICES_END__")
@@ -2412,7 +2419,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
       throw std::exception();
     
     while (isOK) {
-      isOK = (load >> enfSeparator);
+      isOK = static_cast<bool>(load >> enfSeparator);
       MESSAGE("enfSeparator: " <<enfSeparator);
       if (enfSeparator == "__END_VERTEX__") {
         
@@ -2451,7 +2458,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         
       if (enfSeparator == "__BEGIN_NAME__") {  // __BEGIN_NAME__
         while (isOK && (enfSeparator != "__END_NAME__")) {
-          isOK = (load >> enfSeparator);
+          isOK = static_cast<bool>(load >> enfSeparator);
           if (enfSeparator != "__END_NAME__") {
             if (!enfName.empty())
               enfName += " ";
@@ -2462,8 +2469,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
       }
         
       if (enfSeparator == "__BEGIN_ENTRY__") {  // __BEGIN_ENTRY__
-        isOK = (load >> enfGeomEntry);
-        isOK = (load >> enfSeparator); // __END_ENTRY__
+        isOK = static_cast<bool>(load >> enfGeomEntry);
+        isOK = static_cast<bool>(load >> enfSeparator); // __END_ENTRY__
         if (enfSeparator != "__END_ENTRY__")
           throw std::exception();
         MESSAGE("enfGeomEntry: " <<enfGeomEntry);
@@ -2471,7 +2478,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         
       if (enfSeparator == "__BEGIN_GROUP__") {  // __BEGIN_GROUP__
         while (isOK && (enfSeparator != "__END_GROUP__")) {
-          isOK = (load >> enfSeparator);
+          isOK = static_cast<bool>(load >> enfSeparator);
           if (enfSeparator != "__END_GROUP__") {
             if (!enfGroup.empty())
               enfGroup += " ";
@@ -2483,8 +2490,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         
       if (enfSeparator == "__BEGIN_COORDS__") {  // __BEGIN_COORDS__
         hasCoords = true;
-        isOK = (load >> enfCoords[0] >> enfCoords[1] >> enfCoords[2]);
-        isOK = (load >> enfSeparator); // __END_COORDS__
+        isOK = static_cast<bool>(load >> enfCoords[0] >> enfCoords[1] >> enfCoords[2]);
+        isOK = static_cast<bool>(load >> enfSeparator); // __END_COORDS__
         if (enfSeparator != "__END_COORDS__")
           throw std::exception();
         MESSAGE("enfCoords: " << enfCoords[0] <<","<< enfCoords[1] <<","<< enfCoords[2]);
@@ -2492,7 +2499,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         
       if (enfSeparator == "__BEGIN_FACELIST__") {  // __BEGIN_FACELIST__
         while (isOK && (enfSeparator != "__END_FACELIST__")) {
-          isOK = (load >> enfSeparator);
+          isOK = static_cast<bool>(load >> enfSeparator);
           if (enfSeparator != "__END_FACELIST__") {
             enfFaceEntryList.insert(enfSeparator);
             MESSAGE(enfSeparator << " was inserted into enfFaceEntryList");
@@ -2507,8 +2514,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   if (hasPreCADFacesPeriodicity){
     LoadPreCADPeriodicity(load, "FACES");
 
-    isOK = (load >> option_or_sm);
-    if (isOK)
+    isOK = static_cast<bool>(load >> option_or_sm);
+    if (isOK) {
       if (option_or_sm == "__PRECAD_EDGES_PERIODICITY_BEGIN__")
         hasPreCADEdgesPeriodicity = true;
       else if (option_or_sm == "__FACES_PERIODICITY_BEGIN__")
@@ -2517,36 +2524,39 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         hasEdgesPeriodicity = true;
       else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
         hasVerticesPeriodicity = true;
+    }
   }
 
   if (hasPreCADEdgesPeriodicity){
     LoadPreCADPeriodicity(load, "EDGES");
 
-    isOK = (load >> option_or_sm);
-    if (isOK)
+    isOK = static_cast<bool>(load >> option_or_sm);
+    if (isOK) {
       if (option_or_sm == "__FACES_PERIODICITY_BEGIN__")
         hasFacesPeriodicity = true;
       else if (option_or_sm == "__EDGES_PERIODICITY_BEGIN__")
         hasEdgesPeriodicity = true;
       else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
         hasVerticesPeriodicity = true;
+    }
   }
 
   if (hasFacesPeriodicity){
       LoadFacesPeriodicity(load);
 
-    isOK = (load >> option_or_sm);
-    if (isOK)
+    isOK = static_cast<bool>(load >> option_or_sm);
+    if (isOK) {
       if (option_or_sm == "__EDGES_PERIODICITY_BEGIN__")
         hasEdgesPeriodicity = true;
       else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
         hasVerticesPeriodicity = true;
+    }
   }
 
   if (hasEdgesPeriodicity){
       LoadEdgesPeriodicity(load);
 
-    isOK = (load >> option_or_sm);
+    isOK = static_cast<bool>(load >> option_or_sm);
     if (isOK)
       if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
         hasVerticesPeriodicity = true;
@@ -2569,7 +2579,7 @@ void BLSURFPlugin_Hypothesis::LoadFacesPeriodicity(std::istream & load){
   _facesPeriodicityVector.clear();
 
   while (isOK) {
-    isOK = (load >> periodicitySeparator); // __BEGIN_PERIODICITY_DESCRIPTION__
+    isOK = static_cast<bool>(load >> periodicitySeparator); // __BEGIN_PERIODICITY_DESCRIPTION__
     MESSAGE("periodicitySeparator 1: " <<periodicitySeparator);
     TFacesPeriodicity *periodicity_i = new TFacesPeriodicity();
     if (periodicitySeparator == "__FACES_PERIODICITY_END__")
@@ -2580,7 +2590,7 @@ void BLSURFPlugin_Hypothesis::LoadFacesPeriodicity(std::istream & load){
     }
 
     while (isOK) {
-      isOK = (load >> periodicitySeparator);
+      isOK = static_cast<bool>(load >> periodicitySeparator);
       MESSAGE("periodicitySeparator 2: " <<periodicitySeparator);
       if (periodicitySeparator == "__END_PERIODICITY_DESCRIPTION__") {
 
@@ -2593,16 +2603,16 @@ void BLSURFPlugin_Hypothesis::LoadFacesPeriodicity(std::istream & load){
       }
 
       if (periodicitySeparator == "__BEGIN_ENTRY1__") {  // __BEGIN_ENTRY1__
-        isOK = (load >> shape1Entry);
-        isOK = (load >> periodicitySeparator); // __END_ENTRY1__
+        isOK = static_cast<bool>(load >> shape1Entry);
+        isOK = static_cast<bool>(load >> periodicitySeparator); // __END_ENTRY1__
         if (periodicitySeparator != "__END_ENTRY1__")
           throw std::exception();
         MESSAGE("shape1Entry: " <<shape1Entry);
       }
 
       if (periodicitySeparator == "__BEGIN_ENTRY2__") {  // __BEGIN_ENTRY2__
-        isOK = (load >> shape2Entry);
-        isOK = (load >> periodicitySeparator); // __END_ENTRY2__
+        isOK = static_cast<bool>(load >> shape2Entry);
+        isOK = static_cast<bool>(load >> periodicitySeparator); // __END_ENTRY2__
         if (periodicitySeparator != "__END_ENTRY2__")
           throw std::exception();
         MESSAGE("shape2Entry: " <<shape2Entry);
@@ -2626,7 +2636,7 @@ void BLSURFPlugin_Hypothesis::LoadEdgesPeriodicity(std::istream & load){
   _edgesPeriodicityVector.clear();
 
   while (isOK) {
-    isOK = (load >> periodicitySeparator); // __BEGIN_PERIODICITY_DESCRIPTION__
+    isOK = static_cast<bool>(load >> periodicitySeparator); // __BEGIN_PERIODICITY_DESCRIPTION__
     MESSAGE("periodicitySeparator 1: " <<periodicitySeparator);
     TEdgePeriodicity *periodicity_i = new TEdgePeriodicity();
     if (periodicitySeparator == "__EDGES_PERIODICITY_END__")
@@ -2637,7 +2647,7 @@ void BLSURFPlugin_Hypothesis::LoadEdgesPeriodicity(std::istream & load){
     }
 
     while (isOK) {
-      isOK = (load >> periodicitySeparator);
+      isOK = static_cast<bool>(load >> periodicitySeparator);
       MESSAGE("periodicitySeparator 2: " <<periodicitySeparator);
       if (periodicitySeparator == "__END_PERIODICITY_DESCRIPTION__") {
 
@@ -2653,9 +2663,9 @@ void BLSURFPlugin_Hypothesis::LoadEdgesPeriodicity(std::istream & load){
       }
 
       if (periodicitySeparator == "__BEGIN_FACE1__") {  // __BEGIN_FACE1__
-        isOK = (load >> theFace1Entry);
+        isOK = static_cast<bool>(load >> theFace1Entry);
         MESSAGE("//" << theFace1Entry << "//");
-        isOK = (load >> periodicitySeparator); // __END_FACE1__
+        isOK = static_cast<bool>(load >> periodicitySeparator); // __END_FACE1__
         if (periodicitySeparator != "__END_FACE1__"){
           MESSAGE("//" << periodicitySeparator << "//");
           throw std::exception();
@@ -2664,32 +2674,32 @@ void BLSURFPlugin_Hypothesis::LoadEdgesPeriodicity(std::istream & load){
       }
 
       if (periodicitySeparator == "__BEGIN_EDGE1__") {  // __BEGIN_EDGE1__
-        isOK = (load >> theEdge1Entry);
-        isOK = (load >> periodicitySeparator); // __END_EDGE1__
+        isOK = static_cast<bool>(load >> theEdge1Entry);
+        isOK = static_cast<bool>(load >> periodicitySeparator); // __END_EDGE1__
         if (periodicitySeparator != "__END_EDGE1__")
           throw std::exception();
         MESSAGE("theEdge1Entry: " <<theEdge1Entry);
       }
 
       if (periodicitySeparator == "__BEGIN_FACE2__") {  // __BEGIN_FACE2__
-        isOK = (load >> theFace2Entry);
-        isOK = (load >> periodicitySeparator); // __END_FACE2__
+        isOK = static_cast<bool>(load >> theFace2Entry);
+        isOK = static_cast<bool>(load >> periodicitySeparator); // __END_FACE2__
         if (periodicitySeparator != "__END_FACE2__")
           throw std::exception();
         MESSAGE("theFace2Entry: " <<theFace2Entry);
       }
 
       if (periodicitySeparator == "__BEGIN_EDGE2__") {  // __BEGIN_EDGE2__
-        isOK = (load >> theEdge2Entry);
-        isOK = (load >> periodicitySeparator); // __END_EDGE2__
+        isOK = static_cast<bool>(load >> theEdge2Entry);
+        isOK = static_cast<bool>(load >> periodicitySeparator); // __END_EDGE2__
         if (periodicitySeparator != "__END_EDGE2__")
           throw std::exception();
         MESSAGE("theEdge2Entry: " <<theEdge2Entry);
       }
 
       if (periodicitySeparator == "__BEGIN_EDGE_ORIENTATION__") {  // __BEGIN_EDGE_ORIENTATION__
-        isOK = (load >> edge_orientation);
-        isOK = (load >> periodicitySeparator); // __END_EDGE_ORIENTATION__
+        isOK = static_cast<bool>(load >> edge_orientation);
+        isOK = static_cast<bool>(load >> periodicitySeparator); // __END_EDGE_ORIENTATION__
         if (periodicitySeparator != "__END_EDGE_ORIENTATION__")
           throw std::exception();
         MESSAGE("edge_orientation: " <<edge_orientation);
@@ -2711,7 +2721,7 @@ void BLSURFPlugin_Hypothesis::LoadVerticesPeriodicity(std::istream & load){
   _verticesPeriodicityVector.clear();
 
   while (isOK) {
-    isOK = (load >> periodicitySeparator); // __BEGIN_PERIODICITY_DESCRIPTION__
+    isOK = static_cast<bool>(load >> periodicitySeparator); // __BEGIN_PERIODICITY_DESCRIPTION__
     MESSAGE("periodicitySeparator 1: " <<periodicitySeparator);
     TVertexPeriodicity *periodicity_i = new TVertexPeriodicity();
     if (periodicitySeparator == "__VERTICES_PERIODICITY_END__")
@@ -2722,7 +2732,7 @@ void BLSURFPlugin_Hypothesis::LoadVerticesPeriodicity(std::istream & load){
     }
 
     while (isOK) {
-      isOK = (load >> periodicitySeparator);
+      isOK = static_cast<bool>(load >> periodicitySeparator);
       MESSAGE("periodicitySeparator 2: " <<periodicitySeparator);
       if (periodicitySeparator == "__END_PERIODICITY_DESCRIPTION__") {
 
@@ -2737,32 +2747,32 @@ void BLSURFPlugin_Hypothesis::LoadVerticesPeriodicity(std::istream & load){
       }
 
       if (periodicitySeparator == "__BEGIN_EDGE1__") {  // __BEGIN_EDGE1__
-        isOK = (load >> theEdge1Entry);
-        isOK = (load >> periodicitySeparator); // __END_EDGE1__
+        isOK = static_cast<bool>(load >> theEdge1Entry);
+        isOK = static_cast<bool>(load >> periodicitySeparator); // __END_EDGE1__
         if (periodicitySeparator != "__END_EDGE1__")
           throw std::exception();
         MESSAGE("theEdge1Entry: " <<theEdge1Entry);
       }
 
       if (periodicitySeparator == "__BEGIN_VERTEX1__") {  // __BEGIN_VERTEX1__
-        isOK = (load >> theVertex1Entry);
-        isOK = (load >> periodicitySeparator); // __END_VERTEX1__
+        isOK = static_cast<bool>(load >> theVertex1Entry);
+        isOK = static_cast<bool>(load >> periodicitySeparator); // __END_VERTEX1__
         if (periodicitySeparator != "__END_VERTEX1__")
           throw std::exception();
         MESSAGE("theVertex1Entry: " <<theVertex1Entry);
       }
 
       if (periodicitySeparator == "__BEGIN_EDGE2__") {  // __BEGIN_EDGE2__
-        isOK = (load >> theEdge2Entry);
-        isOK = (load >> periodicitySeparator); // __END_EDGE2__
+        isOK = static_cast<bool>(load >> theEdge2Entry);
+        isOK = static_cast<bool>(load >> periodicitySeparator); // __END_EDGE2__
         if (periodicitySeparator != "__END_EDGE2__")
           throw std::exception();
         MESSAGE("theEdge2Entry: " <<theEdge2Entry);
       }
 
       if (periodicitySeparator == "__BEGIN_VERTEX2__") {  // __BEGIN_VERTEX2__
-        isOK = (load >> theVertex2Entry);
-        isOK = (load >> periodicitySeparator); // __END_VERTEX2__
+        isOK = static_cast<bool>(load >> theVertex2Entry);
+        isOK = static_cast<bool>(load >> periodicitySeparator); // __END_VERTEX2__
         if (periodicitySeparator != "__END_VERTEX2__")
           throw std::exception();
         MESSAGE("theVertex2Entry: " <<theVertex2Entry);
@@ -2784,14 +2794,14 @@ void BLSURFPlugin_Hypothesis::LoadPreCADPeriodicity(std::istream & load, const c
   bool hasSourceVertices = false;
   bool hasTargetVertices = false;
 
-  if (shapeType == "FACES")
+  if ( shapeType  &&  strcmp( shapeType, "FACES") == 0 )
     _preCadFacesPeriodicityVector.clear();
   else
     _preCadEdgesPeriodicityVector.clear();
 
 
   while (isOK) {
-    isOK = (load >> periodicitySeparator); // __BEGIN_PERIODICITY_DESCRIPTION__
+    isOK = static_cast<bool>(load >> periodicitySeparator); // __BEGIN_PERIODICITY_DESCRIPTION__
     MESSAGE("periodicitySeparator 1: " <<periodicitySeparator);
     TPreCadPeriodicity *periodicity_i = new TPreCadPeriodicity();
 //     MESSAGE("periodicitySeparator: " <<periodicitySeparator);
@@ -2805,7 +2815,7 @@ void BLSURFPlugin_Hypothesis::LoadPreCADPeriodicity(std::istream & load, const c
     }
 
     while (isOK) {
-      isOK = (load >> periodicitySeparator);
+      isOK = static_cast<bool>(load >> periodicitySeparator);
       MESSAGE("periodicitySeparator 2: " <<periodicitySeparator);
       if (periodicitySeparator == "__END_PERIODICITY_DESCRIPTION__") {
 
@@ -2820,7 +2830,7 @@ void BLSURFPlugin_Hypothesis::LoadPreCADPeriodicity(std::istream & load, const c
         if (hasTargetVertices)
           periodicity_i->theTargetVerticesEntries = theTargetVerticesEntries;
 
-        if (shapeType == "FACES")
+        if ( shapeType  &&  strcmp( shapeType, "FACES" ))
           _preCadFacesPeriodicityVector.push_back(*periodicity_i);
         else
           _preCadEdgesPeriodicityVector.push_back(*periodicity_i);
@@ -2833,16 +2843,16 @@ void BLSURFPlugin_Hypothesis::LoadPreCADPeriodicity(std::istream & load, const c
       }
 
       if (periodicitySeparator == "__BEGIN_ENTRY1__") {  // __BEGIN_ENTRY1__
-        isOK = (load >> shape1Entry);
-        isOK = (load >> periodicitySeparator); // __END_ENTRY1__
+        isOK = static_cast<bool>(load >> shape1Entry);
+        isOK = static_cast<bool>(load >> periodicitySeparator); // __END_ENTRY1__
         if (periodicitySeparator != "__END_ENTRY1__")
           throw std::exception();
         MESSAGE("shape1Entry: " <<shape1Entry);
       }
 
       if (periodicitySeparator == "__BEGIN_ENTRY2__") {  // __BEGIN_ENTRY2__
-        isOK = (load >> shape2Entry);
-        isOK = (load >> periodicitySeparator); // __END_ENTRY2__
+        isOK = static_cast<bool>(load >> shape2Entry);
+        isOK = static_cast<bool>(load >> periodicitySeparator); // __END_ENTRY2__
         if (periodicitySeparator != "__END_ENTRY2__")
           throw std::exception();
         MESSAGE("shape2Entry: " <<shape2Entry);
@@ -2851,7 +2861,7 @@ void BLSURFPlugin_Hypothesis::LoadPreCADPeriodicity(std::istream & load, const c
       if (periodicitySeparator == "__BEGIN_SOURCE_VERTICES_LIST__") {  // __BEGIN_SOURCE_VERTICES_LIST__
         hasSourceVertices = true;
         while (isOK && (periodicitySeparator != "__END_SOURCE_VERTICES_LIST__")) {
-          isOK = (load >> periodicitySeparator);
+          isOK = static_cast<bool>(load >> periodicitySeparator);
           if (periodicitySeparator != "__END_SOURCE_VERTICES_LIST__") {
             theSourceVerticesEntries.push_back(periodicitySeparator);
             MESSAGE("theSourceVerticesEntries: " <<periodicitySeparator);
@@ -2862,7 +2872,7 @@ void BLSURFPlugin_Hypothesis::LoadPreCADPeriodicity(std::istream & load, const c
       if (periodicitySeparator == "__BEGIN_TARGET_VERTICES_LIST__") {  // __BEGIN_TARGET_VERTICES_LIST__
         hasTargetVertices = true;
         while (isOK && (periodicitySeparator != "__END_TARGET_VERTICES_LIST__")) {
-          isOK = (load >> periodicitySeparator);
+          isOK = static_cast<bool>(load >> periodicitySeparator);
           if (periodicitySeparator != "__END_TARGET_VERTICES_LIST__") {
             theTargetVerticesEntries.push_back(periodicitySeparator);
             MESSAGE("theTargetVerticesEntries: " <<periodicitySeparator);

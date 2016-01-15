@@ -151,6 +151,12 @@ class BLSURF_Algorithm(Mesh_Algorithm):
     self.Parameters().SetAngleMesh(theVal)
     pass
 
+  ## Sets the maximum desired distance between a triangle and its supporting CAD surface
+  #  @param distance the distance between a triangle and a surface
+  def SetChordalError(self, distance):
+    self.Parameters().SetChordalError(distance)
+    pass
+
   ## Sets maximal allowed ratio between the lengths of two adjacent edges.
   #  @param theVal value of maximal length ratio
   def SetGradation(self, theVal=_gradation):

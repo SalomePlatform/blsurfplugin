@@ -578,7 +578,7 @@ void createAttractorOnFace(TopoDS_Shape GeomShape, std::string AttractorFunction
   double a, b;       // Attractor parameter
   double d = 0.;
   bool createNode=false; // To create a node on attractor projection
-  int pos1, pos2;
+  size_t pos1, pos2;
   const char *sep = ";";
   // atIt->second has the following pattern:
   // ATTRACTOR(xa;ya;za;a;b;True|False;d)
@@ -1169,7 +1169,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
         MESSAGE("Geomtype is " << GeomType);
         int key = -1;
         // Group Management
-        if (GeomType == TopAbs_COMPOUND){
+        if (GeomType == TopAbs_COMPOUND) {
           for (TopoDS_Iterator it (GeomShape); it.More(); it.Next()){
             // Group of faces
             if (it.Value().ShapeType() == TopAbs_FACE){
@@ -3092,7 +3092,6 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   }
 
   // SetIsAlwaysComputed( true ) to sub-meshes of EDGEs w/o mesh
-  TopLoc_Location loc; double f,l;
   for (int i = 1; i <= emap.Extent(); i++)
     if ( SMESH_subMesh* sm = aMesh.GetSubMeshContaining( emap( i )))
       sm->SetIsAlwaysComputed( true );

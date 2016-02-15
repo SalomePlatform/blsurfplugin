@@ -1280,7 +1280,7 @@ void BLSURFPlugin_Hypothesis::SetInternalEnforcedVertexAllFaces(bool toEnforceIn
 
 //=============================================================================
 void BLSURFPlugin_Hypothesis::SetInternalEnforcedVertexAllFacesGroup(BLSURFPlugin_Hypothesis::TEnfGroupName theGroupName) {
-  if (string(theGroupName) != string(_enforcedInternalVerticesAllFacesGroup)) {
+  if (std::string(theGroupName) != std::string(_enforcedInternalVerticesAllFacesGroup)) {
     _enforcedInternalVerticesAllFacesGroup = theGroupName;
     NotifySubMeshesHypothesisModification();
   }
@@ -1329,7 +1329,7 @@ void BLSURFPlugin_Hypothesis::ClearPreCadPeriodicityVectors() {
 //function : AddPreCadFacesPeriodicity
 //=======================================================================
 void BLSURFPlugin_Hypothesis::AddPreCadFacesPeriodicity(TEntry theFace1Entry, TEntry theFace2Entry,
-    vector<string> &theSourceVerticesEntries, vector<string> &theTargetVerticesEntries) {
+    std::vector<std::string> &theSourceVerticesEntries, std::vector<std::string> &theTargetVerticesEntries) {
 
   TPreCadPeriodicity preCadFacesPeriodicity;
   preCadFacesPeriodicity.shape1Entry = theFace1Entry;
@@ -1346,7 +1346,7 @@ void BLSURFPlugin_Hypothesis::AddPreCadFacesPeriodicity(TEntry theFace1Entry, TE
 //function : AddPreCadEdgesPeriodicity
 //=======================================================================
 void BLSURFPlugin_Hypothesis::AddPreCadEdgesPeriodicity(TEntry theEdge1Entry, TEntry theEdge2Entry,
-    vector<string> &theSourceVerticesEntries, vector<string> &theTargetVerticesEntries) {
+    std::vector<std::string> &theSourceVerticesEntries, std::vector<std::string> &theTargetVerticesEntries) {
 
   TPreCadPeriodicity preCadEdgesPeriodicity;
   preCadEdgesPeriodicity.shape1Entry = theEdge1Entry;
@@ -1798,21 +1798,21 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   isOK = static_cast<bool>(load >> val);
   if (isOK)
     // former parameter: get min value
-    _angleMesh = min(val,_angleMesh);
+    _angleMesh = std::min(val,_angleMesh);
   else
     load.clear(std::ios::badbit | load.rdstate());
 
   isOK = static_cast<bool>(load >> val);
   if (isOK)
     // former parameter: get min value
-    _minSize = min(val,_minSize);
+    _minSize = std::min(val,_minSize);
   else
     load.clear(std::ios::badbit | load.rdstate());
 
   isOK = static_cast<bool>(load >> val);
   if (isOK)
     // former parameter: get max value
-    _maxSize = max(val,_maxSize);
+    _maxSize = std::max(val,_maxSize);
   else
     load.clear(std::ios::badbit | load.rdstate());
 

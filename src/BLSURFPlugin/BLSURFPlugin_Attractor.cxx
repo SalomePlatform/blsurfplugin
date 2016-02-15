@@ -44,13 +44,14 @@ BLSURFPlugin_Attractor::BLSURFPlugin_Attractor ()
   : _face(),
   _attractorShape(),
   _attEntry(),
-  _gridU(0),
-  _gridV(0),
   _vectU(),
   _vectV(),
   _DMap(),
   _known(),
   _trial(),
+  _type(-1),
+  _gridU(0),
+  _gridV(0),
   _u1 (0.),
   _u2 (0.),
   _v1 (0.),
@@ -59,7 +60,6 @@ BLSURFPlugin_Attractor::BLSURFPlugin_Attractor ()
   _endSize(-1),
   _actionRadius(-1),
   _constantRadius(-1),
-  _type(-1),
   _isMapBuilt(false),
   _isEmpty(true){ MESSAGE("construction of a void attractor"); }
 
@@ -67,13 +67,14 @@ BLSURFPlugin_Attractor::BLSURFPlugin_Attractor (const TopoDS_Face& Face, const T
   : _face(),
   _attractorShape(),
   _attEntry(attEntry),
-  _gridU(),
-  _gridV(),
   _vectU(),
   _vectV(),
   _DMap(),
   _known(),
   _trial(),
+  _type(0),
+  _gridU(),
+  _gridV(),
   _u1 (0.),
   _u2 (0.),
   _v1 (0.),
@@ -82,7 +83,6 @@ BLSURFPlugin_Attractor::BLSURFPlugin_Attractor (const TopoDS_Face& Face, const T
   _endSize(-1),
   _actionRadius(-1),
   _constantRadius(-1),
-  _type(0),
   _isMapBuilt(false),
   _isEmpty(false)
 {
@@ -175,7 +175,7 @@ void BLSURFPlugin_Attractor::edgeInit(Handle(Geom_Surface) theSurf, const TopoDS
   gp_Pnt2d P2;
   double first;
   double last;
-  int i,j,i0,j0;
+  int i,i0,j0;
   Trial_Pnt TPnt(3,0);
   Handle(Geom2d_Curve) aCurve2d; 
   Handle(Geom_Curve) aCurve3d = BRep_Tool::Curve (anEdge, first, last);
@@ -241,6 +241,7 @@ double BLSURFPlugin_Attractor::GetSize(double u, double v)
         return _startSize + ( 0.5 * (attrDist - _constantRadius + abs(attrDist - _constantRadius)) ) ;
       break;
   }
+  return -1;
 }
 
 
@@ -248,7 +249,7 @@ void BLSURFPlugin_Attractor::BuildMap() {
   
   MESSAGE("building the map");
   int i, j, k, n;  
-  int count = 0;
+  //int count = 0;
   int ip, jp, kp, np;
   int i0, j0;
   gp_Pnt P;

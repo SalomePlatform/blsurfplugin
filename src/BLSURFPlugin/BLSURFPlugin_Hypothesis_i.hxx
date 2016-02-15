@@ -364,7 +364,7 @@ private:
   void CheckShapeType(GEOM::GEOM_Object_ptr shape, GEOM::shape_type theShapeType);
   void CheckShapeTypes(GEOM::GEOM_Object_ptr shape, std::vector<GEOM::shape_type> theShapeTypes);
   std::string PublishIfNeeded(GEOM::GEOM_Object_ptr shape, GEOM::shape_type theShapeType, std::string prefix);
-  std::string FormatVerticesEntries(vector<string> &theSourceVerticesEntries, vector<string> &theTargetVerticesEntries);
+  std::string FormatVerticesEntries(std::vector<std::string> &theSourceVerticesEntries, std::vector<std::string> &theTargetVerticesEntries);
 
 };
 

@@ -37,6 +37,8 @@
 #include <cstring>
 #include <boost/regex.hpp>
 
+using namespace std;
+
 //=============================================================================
 /*!
  *  BLSURFPlugin_Hypothesis_i::BLSURFPlugin_Hypothesis_i
@@ -876,11 +878,11 @@ BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetPreCADOptionValues() {
 void BLSURFPlugin_Hypothesis_i::SetOptionValues(const BLSURFPlugin::string_array& options)
     throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
-  for (int i = 0; i < options.length(); ++i) {
+  for (CORBA::ULong i = 0; i < options.length(); ++i) {
     string name_value_type = options[i].in();
     if(name_value_type.empty())
       continue;
-    int colonPos = name_value_type.find(':');
+    size_t colonPos = name_value_type.find(':');
     string name, value;
     bool custom = false;
     if (colonPos == string::npos) // ':' not found
@@ -904,11 +906,11 @@ void BLSURFPlugin_Hypothesis_i::SetOptionValues(const BLSURFPlugin::string_array
 void BLSURFPlugin_Hypothesis_i::SetPreCADOptionValues(const BLSURFPlugin::string_array& options)
     throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
-  for (int i = 0; i < options.length(); ++i) {
+  for ( CORBA::ULong i = 0; i < options.length(); ++i) {
     string name_value_type = options[i].in();
     if(name_value_type.empty())
       continue;
-    int colonPos = name_value_type.find(':');
+    size_t colonPos = name_value_type.find(':');
     string name, value;
     bool custom = false;
     if (colonPos == string::npos) // ':' not found
@@ -1239,9 +1241,9 @@ BLSURFPlugin::TAttParamsMap* BLSURFPlugin_Hypothesis_i::GetAttractorParams()
 void BLSURFPlugin_Hypothesis_i::SetSizeMapEntries(const BLSURFPlugin::string_array& sizeMaps)
     throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
-  for (int i = 0; i < sizeMaps.length(); ++i) {
+  for ( CORBA::ULong i = 0; i < sizeMaps.length(); ++i) {
     string entry_sizemap = sizeMaps[i].in();
-    int colonPos = entry_sizemap.find('|');
+    size_t colonPos = entry_sizemap.find('|');
     string entry, sizemap;
     if (colonPos == string::npos) // '|' separator not found
       entry = entry_sizemap;
@@ -1477,7 +1479,7 @@ BLSURFPlugin::TFaceEntryEnfVertexListMap* BLSURFPlugin_Hypothesis_i::GetAllEnfor
       // Coords
       BLSURFPlugin::TEnfVertexCoords_var coords = new BLSURFPlugin::TEnfVertexCoords();
       coords->length(currentEnfVertex->coords.size());
-      for (int i=0;i<coords->length();i++)
+      for (CORBA::ULong i=0;i<coords->length();i++)
         coords[i] = currentEnfVertex->coords[i];
       enfVertex->coords = coords;
 
@@ -1537,7 +1539,7 @@ BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetAllEnforcedVertices(
     // Coords
     BLSURFPlugin::TEnfVertexCoords_var coords = new BLSURFPlugin::TEnfVertexCoords();
     coords->length(currentEnfVertex->coords.size());
-    for (int ind = 0; ind < coords->length(); ind++)
+    for (CORBA::ULong ind = 0; ind < coords->length(); ind++)
       coords[ind] = currentEnfVertex->coords[ind];
     enfVertex->coords = coords;
     // Group name
@@ -1597,7 +1599,7 @@ BLSURFPlugin::TFaceEntryCoordsListMap* BLSURFPlugin_Hypothesis_i::GetAllCoordsBy
     for (int j = 0; it_coords != _coordsList.end(); ++it_coords, ++j) {
       BLSURFPlugin::TEnfVertexCoords_var coords = new BLSURFPlugin::TEnfVertexCoords();
       coords->length((*it_coords).size());
-      for (int i=0;i<coords->length();i++)
+      for (CORBA::ULong i=0;i<coords->length();i++)
         coords[i] = (*it_coords)[i];
       coordsList[j] = coords;
       MESSAGE("Coords #" << j << ": " << coords[0] << ", " << coords[1] << ", " << coords[2]);
@@ -1632,7 +1634,7 @@ BLSURFPlugin::TCoordsEnfVertexMap* BLSURFPlugin_Hypothesis_i::GetAllEnforcedVert
     BLSURFPlugin::TCoordsEnfVertexElement_var mapElement = new BLSURFPlugin::TCoordsEnfVertexElement();
     BLSURFPlugin::TEnfVertexCoords_var coords = new BLSURFPlugin::TEnfVertexCoords();
     coords->length(it_coords->first.size());
-    for (int ind=0;ind<coords->length();ind++)
+    for (CORBA::ULong ind=0;ind<coords->length();ind++)
       coords[ind] = it_coords->first[ind];
     mapElement->coords = coords;
     MESSAGE("Coords: " << mapElement->coords[0] << ", " << mapElement->coords[1] << ", " << mapElement->coords[2]);
@@ -1645,7 +1647,7 @@ BLSURFPlugin::TCoordsEnfVertexMap* BLSURFPlugin_Hypothesis_i::GetAllEnforcedVert
     // Coords
     BLSURFPlugin::TEnfVertexCoords_var coords2 = new BLSURFPlugin::TEnfVertexCoords();
     coords2->length(currentEnfVertex->coords.size());
-    for (int ind=0;ind<coords2->length();ind++)
+    for (CORBA::ULong ind=0;ind<coords2->length();ind++)
       coords2[ind] = currentEnfVertex->coords[ind];
     enfVertex->coords = coords2;
     // Group name
@@ -1748,7 +1750,7 @@ BLSURFPlugin::TEnfVertexEntryEnfVertexMap* BLSURFPlugin_Hypothesis_i::GetAllEnfo
     // Coords
     BLSURFPlugin::TEnfVertexCoords_var coords = new BLSURFPlugin::TEnfVertexCoords();
     coords->length(currentEnfVertex->coords.size());
-    for (int ind=0;ind<coords->length();ind++)
+    for (CORBA::ULong ind=0;ind<coords->length();ind++)
       coords[ind] = currentEnfVertex->coords[ind];
     enfVertex->coords = coords;
     // Group name

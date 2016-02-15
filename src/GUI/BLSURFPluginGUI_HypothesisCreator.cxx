@@ -80,6 +80,7 @@
 #include <stdexcept>
 #include <algorithm>
 
+using namespace std;
 
 enum {
   STD_TAB = 0,
@@ -960,7 +961,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   myPeriodicityTreeWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
   myPeriodicityTreeWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
   
-  int periodicityVisibleColumns = 2;
+  size_t periodicityVisibleColumns = 2;
   for (size_t column = 0; column < periodicityVisibleColumns; ++column) {
       myPeriodicityTreeWidget->header()->setResizeMode(column,QHeaderView::Interactive);
       myPeriodicityTreeWidget->resizeColumnToContents(column);
@@ -1589,7 +1590,7 @@ void BLSURFPluginGUI_HypothesisCreator::onAddPeriodicity() {
       int P2Ssel = myPeriodicityP2SourceWdg->NbObjects();
       int P3Ssel = myPeriodicityP3SourceWdg->NbObjects();
       int P1Tsel = myPeriodicityP1TargetWdg->NbObjects();
-      int P2Tsel = myPeriodicityP2TargetWdg->NbObjects();
+      //int P2Tsel = myPeriodicityP2TargetWdg->NbObjects();
       int P3Tsel = myPeriodicityP3TargetWdg->NbObjects();
 
       if (P1Ssel!=1 || P2Ssel!=1 || P3Ssel!=1 || P1Tsel!=1 || P3Tsel!=1 || P3Tsel!=1)
@@ -1902,7 +1903,7 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
     const QString entry = i.key();
     const QString sizeMap = i.value();
     string shapeName = myGeomToolSelected->getNameFromEntry(entry.toStdString());
-    int row = mySizeMapTable->topLevelItemCount();
+    //int row = mySizeMapTable->topLevelItemCount();
     QTreeWidgetItem* item = new QTreeWidgetItem();
     mySizeMapTable->addTopLevelItem( item );
     item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled );
@@ -2078,7 +2079,7 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   QString fullSizeMaps;
   QStringList fullSizeMapList;
   GeomSelectionTools* myGeomToolSelected = that->getGeomSelectionTool();
-  for ( int i = 0;i<mySizeMaps->length(); ++i ) {
+  for ( CORBA::ULong i = 0;i<mySizeMaps->length(); ++i ) {
     fullSizeMaps =  mySizeMaps[i].in();
 //     MESSAGE("fullSizeMaps: " << fullSizeMaps.toStdString());
     fullSizeMapList = fullSizeMaps.split( "|", QString::KeepEmptyParts );
@@ -3277,8 +3278,6 @@ bool BLSURFPluginGUI_HypothesisCreator::insertAttractor(GEOM::GEOM_Object_var aF
   MESSAGE("BLSURFPluginGUI_HypothesisCreator::insertAttractor()");
   BLSURFPlugin::BLSURFPlugin_Hypothesis_var h =
     BLSURFPlugin::BLSURFPlugin_Hypothesis::_narrow( initParamsHypothesis());
-
-  BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
 
   TopAbs_ShapeEnum shapeType;
   string entry, attEntry, faceName, attName;

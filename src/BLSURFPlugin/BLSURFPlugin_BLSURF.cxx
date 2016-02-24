@@ -2111,7 +2111,11 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
      * (For this face, it will be called by cadsurf with your_face_object_ptr
      * as last parameter.
      */
+#if OCC_VERSION_MAJOR < 7
     cad_face_t *fce = cad_face_new(c, iface, surf_fun, surfaces.back());
+#else
+    cad_face_t *fce = cad_face_new(c, iface, surf_fun, surfaces.back().get());
+#endif
 
     /* by default a face has no tag (color).
        The following call sets it to the same value as the Geom module ID : */
@@ -2366,7 +2370,11 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
       }
 
       /* attach the edge to the current cadsurf face */
+#if OCC_VERSION_MAJOR < 7
       cad_edge_t *edg = cad_edge_new(fce, ic, tmin, tmax, curv_fun, curves.back());
+#else
+      cad_edge_t *edg = cad_edge_new(fce, ic, tmin, tmax, curv_fun, curves.back().get());
+#endif
 
       /* by default an edge has no tag (color).
          The following call sets it to the same value as the edge_id : */

@@ -48,12 +48,8 @@
 #include <NCollection_Map.hxx>
 
 #include <Geom_Surface.hxx>
-#include <Handle_Geom_Surface.hxx>
 #include <Geom2d_Curve.hxx>
-#include <Handle_Geom2d_Curve.hxx>
 #include <Geom_Curve.hxx>
-#include <Handle_Geom_Curve.hxx>
-#include <Handle_AIS_InteractiveObject.hxx>
 #include <TopoDS_Vertex.hxx>
 #include <TopoDS_Edge.hxx>
 #include <TopoDS_Wire.hxx>

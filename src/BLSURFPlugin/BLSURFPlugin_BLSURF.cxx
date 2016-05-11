@@ -1771,7 +1771,7 @@ namespace
 
         BRepBuilderAPI_MakePolygon wire;
         const size_t i0 = tmpVertex.size();
-        for ( size_t iN = 1; iN < wirePoints.size(); ++iN )
+        for ( size_t iN = 0; iN < wirePoints.size(); ++iN )
         {
           wire.Add( SMESH_TNodeXYZ( wirePoints[ iN ].node ));
           origNodes.push_back( wirePoints[ iN ].node );
@@ -1844,6 +1844,19 @@ namespace
       SMESH_MesherHelper tmpHelper( *this );
       tmpHelper.SetSubShape( _proxyFace );
 
+      // remove the faces made by the mesher
+      {
+        SMESHDS_Mesh* meshDS = helper.GetMeshDS();
+        SMESH_subMesh*    sm = origMesh.GetSubMesh( origFace );
+        if ( SMESHDS_SubMesh* smDS = sm->GetSubMeshDS() )
+        {
+          SMDS_ElemIteratorPtr eIt = smDS->GetElements();
+          while ( eIt->more() ) meshDS->RemoveFreeElement( eIt->next(), smDS );
+          SMDS_NodeIteratorPtr nIt = smDS->GetNodes();
+          while ( nIt->more() ) meshDS->RemoveFreeNode( nIt->next(), smDS );
+        }
+      }
+
       // iterate over tmp faces and copy them in origMesh
       const SMDS_MeshNode* nodes[27];
       const SMDS_MeshNode* nullNode = 0;
@@ -1857,7 +1870,7 @@ namespace
         for ( ; nIt->more(); ++nbN )
         {
           const SMDS_MeshNode* n = static_cast<const SMDS_MeshNode*>( nIt->next() );
-          TN2NMap::iterator n2nIt = 
+          TN2NMap::iterator n2nIt =
             _tmp2origNN.insert( _tmp2origNN.end(), make_pair( n, nullNode ));
           if ( !n2nIt->second ) {
             n->GetXYZ( xyz );
@@ -1868,8 +1881,8 @@ namespace
         }
         switch( nbN ) {
         case 3: helper.AddFace( nodes[0], nodes[1], nodes[2] ); break;
-        // case 6: helper.AddFace( nodes[0], nodes[1], nodes[2],
-        //                         nodes[3], nodes[4], nodes[5]); break;
+          // case 6: helper.AddFace( nodes[0], nodes[1], nodes[2],
+          //                         nodes[3], nodes[4], nodes[5]); break;
         case 4: helper.AddFace( nodes[0], nodes[1], nodes[2], nodes[3] ); break;
         // case 9: helper.AddFace( nodes[0], nodes[1], nodes[2], nodes[3],
         //                         nodes[4], nodes[5], nodes[6], nodes[7], nodes[8]); break;
@@ -1889,7 +1902,6 @@ namespace
     int           _verbosity;
     double *      _progress;
   };
-
 
 } // namespace
 
@@ -1914,10 +1926,15 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
 
   this->SMESH_Algo::_progress = 1e-3; // prevent progress advancment while computing attractors
 
-  if ( !compute( aMesh, aShape, /*allowSubMeshClearing=*/true ))
-    return false;
+  bool viscousLayersMade =
+    ( aShape.ShapeType() == TopAbs_FACE &&
+      StdMeshers_ViscousLayers2D::HasProxyMesh( TopoDS::Face( aShape ), aMesh ));
 
-  if ( _haveViscousLayers )
+  if ( !viscousLayersMade )
+    if ( !compute( aMesh, aShape, /*allowSubMeshClearing=*/true ))
+      return false;
+
+  if ( _haveViscousLayers || viscousLayersMade )
   {
     // Compute viscous layers
 

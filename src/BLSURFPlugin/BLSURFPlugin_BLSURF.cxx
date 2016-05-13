@@ -1844,19 +1844,6 @@ namespace
       SMESH_MesherHelper tmpHelper( *this );
       tmpHelper.SetSubShape( _proxyFace );
 
-      // remove the faces made by the mesher
-      {
-        SMESHDS_Mesh* meshDS = helper.GetMeshDS();
-        SMESH_subMesh*    sm = origMesh.GetSubMesh( origFace );
-        if ( SMESHDS_SubMesh* smDS = sm->GetSubMeshDS() )
-        {
-          SMDS_ElemIteratorPtr eIt = smDS->GetElements();
-          while ( eIt->more() ) meshDS->RemoveFreeElement( eIt->next(), smDS );
-          SMDS_NodeIteratorPtr nIt = smDS->GetNodes();
-          while ( nIt->more() ) meshDS->RemoveFreeNode( nIt->next(), smDS );
-        }
-      }
-
       // iterate over tmp faces and copy them in origMesh
       const SMDS_MeshNode* nodes[27];
       const SMDS_MeshNode* nullNode = 0;

@@ -646,6 +646,34 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADMergeEdges() {
 
 //=============================================================================
 /*!
+ *  BLSURFPlugin_Hypothesis_i::SetPreCADRemoveDuplicateCADFaces
+ *
+ *  Set true or false
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetPreCADRemoveDuplicateCADFaces(CORBA::Boolean theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetPreCADRemoveDuplicateCADFaces");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetPreCADRemoveDuplicateCADFaces(theValue);
+  std::string theValueStr = theValue ? "True" : "False";
+  SMESH::TPythonDump() << _this() << ".SetPreCADRemoveDuplicateCADFaces( " << theValueStr.c_str() << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetPreCADRemoveDuplicateCADFaces
+ *
+ *  Get true or false
+ */
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADRemoveDuplicateCADFaces() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCADRemoveDuplicateCADFaces");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetPreCADRemoveDuplicateCADFaces();
+}
+
+//=============================================================================
+/*!
  *  BLSURFPlugin_Hypothesis_i::SetPreCADProcess3DTopology
  *
  *  Set true or false
@@ -3068,165 +3096,6 @@ void BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicityEntry(const char* theEd
     pd << _this() << ".AddPreCadEdgesPeriodicity(" << theEdge1Entry << ", " << theEdge2Entry << ")";
 
   MESSAGE("IDL : AddPreCadEdgesPeriodicityEntry END");
-}
-
-void BLSURFPlugin_Hypothesis_i::AddFacePeriodicity(GEOM::GEOM_Object_ptr theFace1, GEOM::GEOM_Object_ptr theFace2)
-    throw (SALOME::SALOME_Exception)
-{
-  ASSERT(myBaseImpl);
-
-  string prefix1 = "Source_face_";
-  CheckShapeType(theFace1, GEOM::FACE);
-  string theFace1Entry = PublishIfNeeded(theFace1, GEOM::FACE, prefix1);
-  string prefix2 = "Target_face_";
-  CheckShapeType(theFace2, GEOM::FACE);
-  string theFace2Entry = PublishIfNeeded(theFace2, GEOM::FACE, prefix2);
-
-  MESSAGE("IDL : theFace1->GetName : " << theFace1->GetName());
-  MESSAGE("IDL : theFace2->GetName : " << theFace2->GetName());
-  MESSAGE("IDL : AddFacePeriodicity( "<< theFace1Entry << ", " << theFace2Entry << ")");
-  try {
-      AddFacePeriodicityEntry(theFace1Entry.c_str(), theFace2Entry.c_str());
-  } catch (SALOME_Exception& ex) {
-    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
-  }
-
-
-}
-
-void BLSURFPlugin_Hypothesis_i::AddFacePeriodicityEntry(const char* theFace1Entry, const char* theFace2Entry)
-    throw (SALOME::SALOME_Exception){
-
-  ASSERT(myBaseImpl);
-
-  MESSAGE("IDL : AddFacePeriodicityEntry(" << theFace1Entry << ", " << theFace2Entry << ")");
-  this->GetImpl()->AddFacePeriodicity(theFace1Entry, theFace2Entry);
-  SMESH::TPythonDump pd;
-  pd << _this() << ".AddFacePeriodicity(" << theFace1Entry << ", " << theFace2Entry << ")";
-  MESSAGE("IDL : AddFacePeriodicityEntry END");
-}
-
-
-void BLSURFPlugin_Hypothesis_i::AddEdgePeriodicity(GEOM::GEOM_Object_ptr theFace1, GEOM::GEOM_Object_ptr theEdge1,
-                                                   GEOM::GEOM_Object_ptr theFace2, GEOM::GEOM_Object_ptr theEdge2,
-                                                   CORBA::Long edge_orientation)
-    throw (SALOME::SALOME_Exception){
-  ASSERT(myBaseImpl);
-
-  string prefix_theFace1 = "Source_face_";
-  CheckShapeType(theFace1, GEOM::FACE);
-  string theFace1Entry = PublishIfNeeded(theFace1, GEOM::FACE, prefix_theFace1);
-  string prefix_theFace2 = "Target_face_";
-  CheckShapeType(theFace2, GEOM::FACE);
-  string theFace2Entry = PublishIfNeeded(theFace2, GEOM::FACE, prefix_theFace2);
-
-  string prefix_theEdge1 = "Source_edge_";
-  CheckShapeType(theEdge1, GEOM::EDGE);
-  string theEdge1Entry = PublishIfNeeded(theEdge1, GEOM::EDGE, prefix_theEdge1);
-  string prefix_theEdge2 = "Target_edge_";
-  CheckShapeType(theEdge2, GEOM::EDGE);
-  string theEdge2Entry = PublishIfNeeded(theEdge2, GEOM::EDGE, prefix_theEdge2);
-
-  MESSAGE("IDL : theFace1->GetName : " << theFace1->GetName());
-  MESSAGE("IDL : theEdge1->GetName : " << theEdge1->GetName());
-  MESSAGE("IDL : theFace2->GetName : " << theFace2->GetName());
-  MESSAGE("IDL : theEdge2->GetName : " << theEdge2->GetName());
-  MESSAGE("IDL : AddEdgePeriodicity( "<< theFace1Entry << ", " << theEdge1Entry << ", " << theFace2Entry << ", "  << theEdge2Entry << ", " << edge_orientation << ")");
-  try {
-      AddEdgePeriodicityEntry(theFace1Entry.c_str(), theEdge1Entry.c_str(), theFace2Entry.c_str(), theEdge2Entry.c_str(), edge_orientation);
-  } catch (SALOME_Exception& ex) {
-    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
-  }
-
-
-}
-
-void BLSURFPlugin_Hypothesis_i::AddEdgePeriodicityWithoutFaces(GEOM::GEOM_Object_ptr theEdge1,
-                                                               GEOM::GEOM_Object_ptr theEdge2,
-                                                               CORBA::Long edge_orientation)
-    throw (SALOME::SALOME_Exception){
-  ASSERT(myBaseImpl);
-
-  string theFace1Entry = "";
-  string theFace2Entry = "";
-
-  string prefix_theEdge1 = "Source_edge_";
-  CheckShapeType(theEdge1, GEOM::EDGE);
-  string theEdge1Entry = PublishIfNeeded(theEdge1, GEOM::EDGE, prefix_theEdge1);
-  string prefix_theEdge2 = "Target_edge_";
-  CheckShapeType(theEdge2, GEOM::EDGE);
-  string theEdge2Entry = PublishIfNeeded(theEdge2, GEOM::EDGE, prefix_theEdge2);
-
-  MESSAGE("IDL : theEdge1->GetName : " << theEdge1->GetName());
-  MESSAGE("IDL : theEdge2->GetName : " << theEdge2->GetName());
-  MESSAGE("IDL : AddEdgePeriodicity( "<< theFace1Entry << ", " << theEdge1Entry << ", " << theFace2Entry << ", "  << theEdge2Entry << ", " << edge_orientation << ")");
-  try {
-      AddEdgePeriodicityEntry(theFace1Entry.c_str(), theEdge1Entry.c_str(), theFace2Entry.c_str(), theEdge2Entry.c_str(), edge_orientation);
-  } catch (SALOME_Exception& ex) {
-    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
-  }
-
-
-}
-
-void BLSURFPlugin_Hypothesis_i::AddEdgePeriodicityEntry(const char* theFace1Entry, const char* theEdge1Entry, const char* theFace2Entry, const char* theEdge2Entry, const long edge_orientation)
-    throw (SALOME::SALOME_Exception){
-
-  ASSERT(myBaseImpl);
-
-  MESSAGE("IDL : AddEdgePeriodicityEntry(" << theFace1Entry << ", " << theEdge1Entry << ", " << theFace2Entry << ", "  << theEdge2Entry << ", " << edge_orientation << ")");
-  this->GetImpl()->AddEdgePeriodicity(theFace1Entry, theEdge1Entry, theFace2Entry, theEdge2Entry, edge_orientation);
-  SMESH::TPythonDump pd;
-  if (theFace1Entry)
-    pd << _this() << ".AddEdgePeriodicity(" << theFace1Entry << ", " << theEdge1Entry << ", " << theFace2Entry << ", "  << theEdge2Entry << ", " << edge_orientation <<")";
-  else
-    pd << _this() << ".AddEdgePeriodicityWithoutFaces(" << theEdge1Entry << ", " << theEdge2Entry << ", " << edge_orientation <<")";
-  MESSAGE("IDL : AddEdgePeriodicityEntry END");
-}
-
-void BLSURFPlugin_Hypothesis_i::AddVertexPeriodicity(GEOM::GEOM_Object_ptr theEdge1, GEOM::GEOM_Object_ptr theVertex1,
-    GEOM::GEOM_Object_ptr theEdge2, GEOM::GEOM_Object_ptr theVertex2)
-    throw (SALOME::SALOME_Exception){
-  ASSERT(myBaseImpl);
-
-  string prefix_theEdge1 = "Source_edge_";
-  CheckShapeType(theEdge1, GEOM::EDGE);
-  string theEdge1Entry = PublishIfNeeded(theEdge1, GEOM::EDGE, prefix_theEdge1);
-  string prefix_theEdge2 = "Target_edge_";
-  CheckShapeType(theEdge2, GEOM::EDGE);
-  string theEdge2Entry = PublishIfNeeded(theEdge2, GEOM::EDGE, prefix_theEdge2);
-
-  string prefix_theVertex1 = "Source_vertex_";
-  CheckShapeType(theVertex1, GEOM::VERTEX);
-  string theVertex1Entry = PublishIfNeeded(theVertex1, GEOM::VERTEX, prefix_theVertex1);
-  string prefix_theVertex2 = "Target_vertex_";
-  CheckShapeType(theVertex2, GEOM::VERTEX);
-  string theVertex2Entry = PublishIfNeeded(theVertex2, GEOM::VERTEX, prefix_theVertex2);
-
-  MESSAGE("IDL : theEdge1->GetName : " << theEdge1->GetName());
-  MESSAGE("IDL : theVertex1->GetName : " << theVertex1->GetName());
-  MESSAGE("IDL : theEdge2->GetName : " << theEdge2->GetName());
-  MESSAGE("IDL : theVertex2->GetName : " << theVertex2->GetName());
-  MESSAGE("IDL : AddVertexPeriodicity( "<< theEdge1Entry << ", " << theVertex1Entry << ", " << theEdge2Entry << ", "  << theVertex2Entry << ")");
-  try {
-      AddVertexPeriodicityEntry(theEdge1Entry.c_str(), theVertex1Entry.c_str(), theEdge2Entry.c_str(), theVertex2Entry.c_str());
-  } catch (SALOME_Exception& ex) {
-    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
-  }
-
-
-}
-
-void BLSURFPlugin_Hypothesis_i::AddVertexPeriodicityEntry(const char* theEdge1Entry, const char* theVertex1Entry, const char* theEdge2Entry, const char* theVertex2Entry)
-    throw (SALOME::SALOME_Exception){
-
-  ASSERT(myBaseImpl);
-
-  MESSAGE("IDL : AddVertexPeriodicityEntry(" << theEdge1Entry << ", " << theVertex1Entry << ", " << theEdge2Entry << ", "  << theVertex2Entry << ")");
-  this->GetImpl()->AddVertexPeriodicity(theEdge1Entry, theVertex1Entry, theEdge2Entry, theVertex2Entry);
-  SMESH::TPythonDump pd;
-  pd << _this() << ".AddVertexPeriodicity(" << theEdge1Entry << ", " << theVertex1Entry << ", " << theEdge2Entry << ", "  << theVertex2Entry << ")";
-  MESSAGE("IDL : AddVertexPeriodicityEntry END");
 }
 
 

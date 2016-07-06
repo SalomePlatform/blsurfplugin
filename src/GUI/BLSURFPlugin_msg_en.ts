@@ -251,6 +251,10 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
         <translation>Merge edges</translation>
     </message>
     <message>
+        <source>BLSURF_PRECAD_REMOVE_DUPLICATE_CAD_FACES</source>
+        <translation>Remove duplicate CAD Faces</translation>
+    </message>
+    <message>
         <source>BLSURF_PRECAD_PROCESS_3D_TOPOLOGY</source>
         <translation>Process 3D topology</translation>
     </message>

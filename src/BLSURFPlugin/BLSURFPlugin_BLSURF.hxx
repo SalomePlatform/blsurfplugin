@@ -62,7 +62,6 @@
 extern "C"{
 #include <meshgems/meshgems.h>
 #include <meshgems/cadsurf.h>
-#include <meshgems/precad.h>
 }
 
 #include <BRepClass_FaceClassifier.hxx>
@@ -84,7 +83,7 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
                                  const TopoDS_Shape&                  aShape,
                                  SMESH_Hypothesis::Hypothesis_Status& aStatus);
 
-    void SetParameters(const BLSURFPlugin_Hypothesis* hyp, blsurf_session_t *bls, precad_session_t *pcs, const TopoDS_Shape& shape, bool *use_precad);
+    void SetParameters(const BLSURFPlugin_Hypothesis* hyp, cadsurf_session_t *css, const TopoDS_Shape& shape);
 
     virtual bool Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape);
 
@@ -137,10 +136,6 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
     TPreCadIDsPeriodicityVector _preCadFacesIDsPeriodicityVector;
     TPreCadIDsPeriodicityVector _preCadEdgesIDsPeriodicityVector;
 
-    TShapesIDsPeriodicityVector _facesIDsPeriodicityVector;
-    TEdgesIDsPeriodicityVector _edgesIDsPeriodicityVector;
-    TVerticesIDsPeriodicityVector _verticesIDsPeriodicityVector;
-
   private:
     bool compute(SMESH_Mesh&          aMesh,
                  const TopoDS_Shape&  aShape,
@@ -156,11 +151,6 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
     void createEnforcedVertexOnFace(TopoDS_Shape FaceShape, BLSURFPlugin_Hypothesis::TEnfVertexList enfVertexList);
     void createPreCadFacesPeriodicity(TopoDS_Shape theGeomShape, const BLSURFPlugin_Hypothesis::TPreCadPeriodicity &preCadPeriodicity);
     void createPreCadEdgesPeriodicity(TopoDS_Shape theGeomShape, const BLSURFPlugin_Hypothesis::TPreCadPeriodicity &preCadPeriodicity);
-    void createFacesPeriodicity(TopoDS_Shape theGeomShape, BLSURFPlugin_Hypothesis::TEntry theFace1,  BLSURFPlugin_Hypothesis::TEntry theFace2);
-    void createEdgesPeriodicity(TopoDS_Shape theGeomShape, BLSURFPlugin_Hypothesis::TEntry theFace1, BLSURFPlugin_Hypothesis::TEntry theEdge1,
-        BLSURFPlugin_Hypothesis::TEntry theFace2, BLSURFPlugin_Hypothesis::TEntry theEdge2, int edge_orientation = 0);
-    void createVerticesPeriodicity(TopoDS_Shape theGeomShape, BLSURFPlugin_Hypothesis::TEntry theEdge1, BLSURFPlugin_Hypothesis::TEntry theVertex1,
-        BLSURFPlugin_Hypothesis::TEntry theEdge2, BLSURFPlugin_Hypothesis::TEntry theVertex2);
     void Set_NodeOnEdge(SMESHDS_Mesh* meshDS, const SMDS_MeshNode* node, const TopoDS_Shape& ed);
     void BRepClass_FaceClassifierPerform(BRepClass_FaceClassifier* fc, const TopoDS_Face& face, const gp_Pnt& P, const Standard_Real Tol);
 

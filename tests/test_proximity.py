@@ -78,14 +78,11 @@ gr_mesh_box = Mesh_1.Group(gr_box_faces)
 gr_mesh_spheres = Mesh_1.Group(gr_spheres_faces)
 
 # Check the minimal area of the box faces to check the proximity
-box_ids = gr_mesh_box.GetIDs()
-box_areas = [Mesh_1.GetArea(i) for i in box_ids]
-
-min_area = min(box_areas)
+min_area, max_area = Mesh_1.GetMinMax(SMESH.FT_Area, gr_mesh_box)
 
 print "min_area: ", min_area
 
-if min_area > 1:
+if min_area > 1.5:
     raise Exception("Wrong minimal area on box. Proximity has not worked.")
 
 if salome.sg.hasDesktop():

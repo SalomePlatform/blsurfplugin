@@ -111,6 +111,9 @@ public:
   void SetPreCADMergeEdges(CORBA::Boolean theValue);
   CORBA::Boolean GetPreCADMergeEdges();
 
+  void SetPreCADRemoveDuplicateCADFaces(CORBA::Boolean theValue);
+  CORBA::Boolean GetPreCADRemoveDuplicateCADFaces();
+
   void SetPreCADProcess3DTopology(CORBA::Boolean theValue);
   CORBA::Boolean GetPreCADProcess3DTopology();
 
@@ -293,29 +296,6 @@ public:
   void AddPreCadEdgesPeriodicityEntry(const char* theEdge1Entry, const char* theEdge2Entry,
       const BLSURFPlugin::TEntryList& theSourceVerticesEntries, const BLSURFPlugin::TEntryList& theTargetVerticesEntries)
       throw (SALOME::SALOME_Exception);
-
-  void AddFacePeriodicity(GEOM::GEOM_Object_ptr theFace1, GEOM::GEOM_Object_ptr theFace2)
-      throw (SALOME::SALOME_Exception);
-
-  void AddFacePeriodicityEntry(const char* theFace1Entry, const char* theFace2Entry)
-    throw (SALOME::SALOME_Exception);
-
-  void AddEdgePeriodicity(GEOM::GEOM_Object_ptr theFace1, GEOM::GEOM_Object_ptr theEdge1,
-                          GEOM::GEOM_Object_ptr theFace2, GEOM::GEOM_Object_ptr theEdge2, CORBA::Long edge_orientation = 0)
-      throw (SALOME::SALOME_Exception);
-
-  void AddEdgePeriodicityWithoutFaces(GEOM::GEOM_Object_ptr theEdge1, GEOM::GEOM_Object_ptr theEdge2, CORBA::Long edge_orientation = 0)
-      throw (SALOME::SALOME_Exception);
-
-  void AddEdgePeriodicityEntry(const char* theFace1Entry, const char* theEdge1Entry, const char* theFace2Entry, const char* theEdge2Entry, const long edge_orientation = 0)
-    throw (SALOME::SALOME_Exception);
-
-  void AddVertexPeriodicity(GEOM::GEOM_Object_ptr theEdge1, GEOM::GEOM_Object_ptr theVertex1,
-      GEOM::GEOM_Object_ptr theEdge2, GEOM::GEOM_Object_ptr theVertex2)
-      throw (SALOME::SALOME_Exception);
-
-  void AddVertexPeriodicityEntry(const char* theEdge1Entry, const char* theVertex1Entry, const char* theEdge2Entry, const char* theVertex2Entry)
-    throw (SALOME::SALOME_Exception);
 
   ///////////////////////
   

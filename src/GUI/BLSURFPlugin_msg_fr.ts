@@ -255,6 +255,10 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
         <translation>Fusionner des arêtes</translation>
     </message>
     <message>
+        <source>BLSURF_PRECAD_REMOVE_DUPLICATE_CAD_FACES</source>
+        <translation>Supprime les faces CAO en double</translation>
+    </message>
+    <message>
         <source>BLSURF_PRECAD_PROCESS_3D_TOPOLOGY</source>
         <translation>Nettoyer la CAO</translation>
     </message>

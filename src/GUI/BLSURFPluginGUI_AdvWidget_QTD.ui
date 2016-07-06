@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>646</width>
+    <width>653</width>
     <height>226</height>
    </rect>
   </property>
@@ -16,7 +16,7 @@
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <layout class="QGridLayout" name="gridLayout_3">
        <item row="0" column="0" colspan="2">
         <widget class="QTableWidget" name="myOptionTable">
@@ -70,7 +70,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <layout class="QGridLayout" name="gridLayout_2">
        <property name="topMargin">
         <number>0</number>
@@ -81,7 +81,7 @@
           <string>BLSURF_PRECAD_GROUP</string>
          </property>
          <property name="checkable">
-          <bool>true</bool>
+          <bool>false</bool>
          </property>
          <property name="checked">
           <bool>false</bool>
@@ -111,6 +111,16 @@
            <widget class="QCheckBox" name="myPreCADDiscardInput">
             <property name="text">
              <string>BLSURF_PRECAD_DISCARD_INPUT</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0" colspan="2">
+           <widget class="QCheckBox" name="myPreCADRemoveDuplicateCADFaces">
+            <property name="text">
+             <string>BLSURF_PRECAD_REMOVE_DUPLICATE_CAD_FACES</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -169,6 +179,7 @@
   <tabstop>rmBtn</tabstop>
   <tabstop>myPreCADGroupBox</tabstop>
   <tabstop>myPreCADMergeEdges</tabstop>
+  <tabstop>myPreCADRemoveDuplicateCADFaces</tabstop>
   <tabstop>myPreCADProcess3DTopology</tabstop>
   <tabstop>myPreCADDiscardInput</tabstop>
   <tabstop>myVerbosity</tabstop>

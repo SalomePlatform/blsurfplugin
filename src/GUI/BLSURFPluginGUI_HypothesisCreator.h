@@ -169,7 +169,7 @@ typedef struct
   double  myAnisotropicRatio, myTinyEdgeLength, myBadElementAspectRatio;
   bool    myOptimizeMesh, myQuadraticMesh;
   bool    myAllowQuadrangles, mySmpsurface,mySmpedge,mySmppoint,myEnforcedVertex,myInternalEnforcedVerticesAllFaces;
-  bool    myPreCADMergeEdges, myPreCADProcess3DTopology, myPreCADDiscardInput;
+  bool    myPreCADMergeEdges, myPreCADRemoveDuplicateCADFaces, myPreCADProcess3DTopology, myPreCADDiscardInput;
 //   bool    myGMFFileMode;
   std::string myGMFFileName, myInternalEnforcedVerticesAllFacesGroup;
   TEnfVertexList enfVertexList;

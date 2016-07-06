@@ -59,7 +59,9 @@ for p in vertices:
     id_node = Mesh_1.FindNodeClosestTo(x, y, z)
     nodes.append(id_node)
 
-nodes = set(nodes)
+nodes = list(set(nodes))
+
+Mesh_1.MakeGroupByIds("nodes", SMESH.NODE, nodes)
 
 assert(len(nodes) == 1)
 

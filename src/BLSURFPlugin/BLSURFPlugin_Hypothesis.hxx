@@ -134,6 +134,9 @@ public:
   void SetPreCADMergeEdges(bool theVal);
   bool GetPreCADMergeEdges() const { return _preCADMergeEdges; }
 
+  void SetPreCADRemoveDuplicateCADFaces(bool theVal);
+  bool GetPreCADRemoveDuplicateCADFaces() const { return _preCADRemoveDuplicateCADFaces; }
+
   void SetPreCADProcess3DTopology(bool theVal);
   bool GetPreCADProcess3DTopology() const { return _preCADProcess3DTopology; }
 
@@ -365,8 +368,9 @@ public:
   static int             GetDefaultVerbosity() { return 3; }
   static Topology        GetDefaultTopology() { return FromCAD; }
   // PreCAD
-  static bool            GetDefaultPreCADMergeEdges() { return true; }
-  static bool            GetDefaultPreCADProcess3DTopology() { return true; }
+  static bool            GetDefaultPreCADMergeEdges() { return false; }
+  static bool            GetDefaultPreCADRemoveDuplicateCADFaces() { return false; }
+  static bool            GetDefaultPreCADProcess3DTopology() { return false; }
   static bool            GetDefaultPreCADDiscardInput() { return false; }
   
   static TSizeMap        GetDefaultSizeMap() { return TSizeMap();}
@@ -415,10 +419,6 @@ public:
       std::vector<std::string> &theSourceVerticesEntries, std::vector<std::string> &theTargetVerticesEntries);
   void AddPreCadEdgesPeriodicity(TEntry theEdge1Entry, TEntry theEdge2Entry,
       std::vector<std::string> &theSourceVerticesEntries, std::vector<std::string> &theTargetVerticesEntries);
-
-  void AddFacePeriodicity(TEntry theFace1Entry, TEntry theFace2Entry);
-  void AddEdgePeriodicity(TEntry theFace1Entry, TEntry theEdge1Entry, TEntry theFace2Entry, TEntry theEdge2Entry, int edge_orientation = 0);
-  void AddVertexPeriodicity(TEntry theEdge1Entry, TEntry theVertex1Entry, TEntry theEdge2Entry, TEntry theVertex2Entry);
 
   static double undefinedDouble() { return -1.0; }
 
@@ -496,6 +496,7 @@ private:
   Topology        _topology;
   
   bool            _preCADMergeEdges;
+  bool            _preCADRemoveDuplicateCADFaces;
   bool            _preCADProcess3DTopology;
   bool            _preCADDiscardInput;
   double          _preCADEpsNano;

@@ -444,9 +444,7 @@ A group can optionnaly be defined on those enforced vertices.
 Periodicity is used to have the same discretization on two faces (in 3D) or two edges (in 2D).
 This is useful for instance for a Representative Volume Element so that the translated meshes share the same nodes on the common faces.
 
-In GUI, periodicity association uses PreCAD (optional MG-CADSurf add-on). You must have a PreCAD license to be able to use it.
-
-In TUI, advanced users can use CADSurf periodicity via \ref periodicity_tui_basic_api_usage "the basic API" or \ref periodicity_tui_advanced_api_usage "the advanced API". It requires to disable PreCAD. We strongly advise to use PreCAD periodicity instead.
+Periodicity association uses PreCAD (MG-CADSurf preprocessor). You don't need an extra PreCAD license. It is included in MG-CADSurf since MeshGems V2.2.
 
 \image html blsurf_periodicity_translation.png "Two periodic faces (translation)"
 
@@ -472,35 +470,12 @@ Otherwise, for instance a rotation, the user has to define 3 non-colinear vertic
 The two methods to define periodicity with PreCAD are
 (the former name of <em>MG-CADSurf</em> is \a BLSURF and names
 of the corresponding classes and modules still include \a "BLSURF"):
-- BLSURFPluginBuilder.BLSURF_Algorithm.AddPreCadFacesPeriodicity 
+- BLSURFPluginBuilder.BLSURF_Algorithm.AddPreCadFacesPeriodicity
 - BLSURFPluginBuilder.BLSURF_Algorithm.AddPreCadEdgesPeriodicity
 
 List of source and target vertices to define a transformation are optional.
 
 \sa Sample TUI Script of the definition of MG-CADSurf periodicity \ref tui_blsurf_periodicity_preCAD "using preCAD".
-
-\subsection periodicity_tui_basic_api_usage TUI Basic API usage
-
-In the CADSurf basic API, only available in TUI, the periodicity must be defined face by face, edge by edge and vertex by vertex.
-
-You must disable PreCAD to use it. Hence, shapes with seam edges will not be meshed correctly.
-
-The methods are:
-- BLSURFPluginBuilder.BLSURF_Algorithm.AddFacePeriodicity
-- BLSURFPluginBuilder.BLSURF_Algorithm.AddEdgePeriodicity
-- BLSURFPluginBuilder.BLSURF_Algorithm.AddEdgePeriodicityWithoutFaces
-- BLSURFPluginBuilder.BLSURF_Algorithm.AddVertexPeriodicity
-
-Sample TUI Script of the definition of MG-CADSurf periodicity \ref tui_blsurf_periodicity_basic "using basic API (without preCAD)".
-
-\subsection periodicity_tui_advanced_api_usage TUI Advanced API usage
-
-To ease the periodicity description, the basic API methods can be called through two advanced methods, given two geom groups and a python geom transformation:
-
-- BLSURFPluginBuilder.BLSURF_Algorithm.AddAdvancedFacesPeriodicity (in 3D)
-- BLSURFPluginBuilder.BLSURF_Algorithm.AddAdvancedEdgesPeriodicity (in 2D)
-
-Sample TUI Script of the definition of MG-CADSurf periodicity \ref tui_blsurf_periodicity_advanced "using advanced API (without preCAD)".
 
 \ref blsurf_top "Back to top"
 

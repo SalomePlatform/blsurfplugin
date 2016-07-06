@@ -74,7 +74,7 @@ if test "$with-meshgems" != "no" ; then
     if test $archtest = "x86_64" ; then
         LOCAL_LIBS="-L$MESHGEMS_CADSURF_HOME/lib/Linux_64"
     fi
-    LOCAL_LIBS="${LOCAL_LIBS} -lmeshgems -lmg-cadsurf -lmg-precad"
+    LOCAL_LIBS="${LOCAL_LIBS} -lmeshgems -lmg-cadsurf"
 
     CPPFLAGS_old="$CPPFLAGS"
     CXXFLAGS_old="$CXXFLAGS"

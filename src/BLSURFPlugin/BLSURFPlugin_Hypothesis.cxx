@@ -65,6 +65,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   _verb(GetDefaultVerbosity()),
   _topology(GetDefaultTopology()),
   _preCADMergeEdges(GetDefaultPreCADMergeEdges()),
+  _preCADRemoveDuplicateCADFaces(GetDefaultPreCADRemoveDuplicateCADFaces()),
   _preCADProcess3DTopology(GetDefaultPreCADProcess3DTopology()),
   _preCADDiscardInput(GetDefaultPreCADDiscardInput()),
   _sizeMap(GetDefaultSizeMap()),
@@ -387,6 +388,15 @@ void BLSURFPlugin_Hypothesis::SetPreCADMergeEdges(bool theVal) {
   if (theVal != _preCADMergeEdges) {
 //     SetTopology(PreCAD);
     _preCADMergeEdges = theVal;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetPreCADRemoveDuplicateCADFaces(bool theVal) {
+  if (theVal != _preCADRemoveDuplicateCADFaces) {
+//     SetTopology(PreCAD);
+    _preCADRemoveDuplicateCADFaces = theVal;
     NotifySubMeshesHypothesisModification();
   }
 }
@@ -1359,58 +1369,6 @@ void BLSURFPlugin_Hypothesis::AddPreCadEdgesPeriodicity(TEntry theEdge1Entry, TE
   NotifySubMeshesHypothesisModification();
 }
 
-//=======================================================================
-//function : AddFacePeriodicity
-//=======================================================================
-void BLSURFPlugin_Hypothesis::AddFacePeriodicity(TEntry theFace1Entry, TEntry theFace2Entry) {
-
-  std::pair< TEntry, TEntry > pairOfFacesEntries = std::make_pair(theFace1Entry, theFace2Entry);
-
-  _facesPeriodicityVector.push_back(pairOfFacesEntries);
-
-  // Removed for performance reason since AddFacePeriodicity is called multiple times (one time for each face)
-  // Does not affect the behaviour since it is only called via python, not via GUI.
-  //NotifySubMeshesHypothesisModification();
-}
-
-
-//=======================================================================
-//function : AddEdgePeriodicity
-//=======================================================================
-void BLSURFPlugin_Hypothesis::AddEdgePeriodicity(TEntry theFace1Entry, TEntry theEdge1Entry, TEntry theFace2Entry, TEntry theEdge2Entry, int edge_orientation) {
-
-  TEdgePeriodicity edgePeriodicity;
-  edgePeriodicity.theFace1Entry = theFace1Entry;
-  edgePeriodicity.theEdge1Entry = theEdge1Entry;
-  edgePeriodicity.theFace2Entry = theFace2Entry;
-  edgePeriodicity.theEdge2Entry = theEdge2Entry;
-  edgePeriodicity.edge_orientation = edge_orientation;
-
-  _edgesPeriodicityVector.push_back(edgePeriodicity);
-
-  // Removed for performance reason since AddEdgePeriodicity is called multiple times (one time for each edge)
-  // Does not affect the behaviour since it is only called via python, not via GUI.
-  //NotifySubMeshesHypothesisModification();
-}
-
-//=======================================================================
-//function : AddVertexPeriodicity
-//=======================================================================
-void BLSURFPlugin_Hypothesis::AddVertexPeriodicity(TEntry theEdge1Entry, TEntry theVertex1Entry, TEntry theEdge2Entry, TEntry theVertex2Entry) {
-
-  TVertexPeriodicity vertexPeriodicity;
-  vertexPeriodicity.theEdge1Entry = theEdge1Entry;
-  vertexPeriodicity.theVertex1Entry = theVertex1Entry;
-  vertexPeriodicity.theEdge2Entry = theEdge2Entry;
-  vertexPeriodicity.theVertex2Entry = theVertex2Entry;
-
-  _verticesPeriodicityVector.push_back(vertexPeriodicity);
-
-  // Removed for performance reason since AddVertexPeriodicity is called multiple times (one time for each vertex)
-  // Does not affect the behaviour since it is only called via python, not via GUI.
-  //NotifySubMeshesHypothesisModification();
-}
-
 //=============================================================================
 std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save) {
    // We must keep at least the same number of arguments when increasing the SALOME version
@@ -1449,7 +1407,7 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save) {
   save << " " << (int) _phySizeRel << " " << (int) _minSizeRel << " " << (int) _maxSizeRel << " " << _chordalError ;
   save << " " << (int) _anisotropic << " " << _anisotropicRatio << " " << (int) _removeTinyEdges << " " << _tinyEdgeLength ;
   save << " " << (int) _badElementRemoval << " " << _badElementAspectRatio << " " << (int) _optimizeMesh << " " << (int) _quadraticMesh ;
-  save << " " << (int) _preCADProcess3DTopology;
+  save << " " << (int) _preCADProcess3DTopology << " " << (int) _preCADRemoveDuplicateCADFaces;
 
   op_val = _option2value.begin();
   if (op_val != _option2value.end()) {
@@ -1984,6 +1942,12 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
     isOK = static_cast<bool>(load >> i);
     if (isOK)
       _preCADProcess3DTopology = (bool) i;
+    else
+      load.clear(std::ios::badbit | load.rdstate());
+
+    isOK = static_cast<bool>(load >> i);
+    if (isOK)
+      _preCADRemoveDuplicateCADFaces = (bool) i;
     else
       load.clear(std::ios::badbit | load.rdstate());
 

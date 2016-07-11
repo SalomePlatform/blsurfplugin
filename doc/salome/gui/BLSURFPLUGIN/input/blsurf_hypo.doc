@@ -72,29 +72,35 @@ The notion of <i>diag</i> used in the descriptions means the diagonal of the bou
 
 \image html blsurf_parameters_advanced.png
 
-- <b>PreCAD options</b> -if checked, the PreCAD module will be used. This module has
-two main goals:
+- <b>CAD preprocessor options</b>. The CAD preprocessor (formerly known as PreCAD) has two main goals:
 
   - Complete missing or inadequate CAD descriptions.
 
   - Perform topology reconstruction and specific geometry
   enhancement for mesh generation.
 
-  \n This module requires a specific licence. The following PreCAD
-  options are the most significant and important ones:
+  \n The following preprocessor options are the most significant and important ones.
+  All options are unchecked by default. No cleanup is made by default so that the mesh matches the shape.
+  If the user has a bad shape (e.g. imported shape), he can activate some options to improve the mesh.
 
-    - <b>Merge Edges</b> - allows PreCAD to optimize the geometry by merging some
-    edges. This option is checked by default.
+    - <b>Merge Edges</b> - optimize the geometry by merging some
+    edges. This option is unchecked by default.
 
-    - <b>Process 3D topology</b> - allows PreCAD to perform the cleanup processing.
-    This option is checked by default.
+    - <b>Remove tiny UV edges</b> - optimize the geometry by removing small
+    tiny edges on the UV face. This option is unchecked by default.
 
-    - <b>Discard input topology</b> - computes the CAD topology from scratch, 
+    - <b>Process 3D topology</b> - perform the cleanup processing.
+    This option is unchecked by default.
+
+    - <b>Discard input topology</b> - compute the CAD topology from scratch,
     without considering the topological information contained in the original CAD
     (useful for iges files). This option is unchecked by default.
 
+    - <b>Remove duplicate CAD faces</b> - optimize the geometry by merging the
+    duplicate CAD faces. This option is unchecked by default.
+
 - <b>Verbosity level</b> - defines the percentage of "verbosity" of
-MeshGems-CADSurf and MeshGems-PreCAD [0-10].
+MeshGems-CADSurf [0-10].
 
 - <b>ExportGMF</b> - saves the computed mesh into a GMF file (.mesh or .meshb).
 
@@ -154,10 +160,6 @@ By default this option is 1.
 edges (defined by the option tiny edge optimisation length) from the generated mesh when it improves
 the local mesh quality, without taking into account the tags (attributes) specifications.
 By default this option is 0.
-
-- \b remove_duplicate_cad_faces (bool) - Defines the behavior of MeshGems-PreCAD regarding the duplicate
-CAD faces. By default, MG-PreCAD merges the duplicate CAD faces. This behavior can be deactivated by using this option.
-By default this option is 1.
 
 - \b tiny_edge_avoid_surface_intersections (bool) - This option defines the priority between the tiny feature
 suppression and the surface intersection prevention. By default, MeshGems-CADSurf gives the priority

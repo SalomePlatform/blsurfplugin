@@ -21,13 +21,9 @@ SET(BLSURFPLUGIN_TEST_FILES
   test_enforced_internal_vertex.py
   test_enforced_vertex.py
   test_periodicity_2D_precad.py
-  test_periodicity_2D.py
   test_periodicity_precad.py
-  test_periodicity.py
   test_periodicity_reflexion_2D_precad.py
-  test_periodicity_reflexion_2D.py
   test_periodicity_reflexion_precad.py
-  test_periodicity_reflexion.py
   test_periodicity_with_points_2D_precad.py
   test_precad_intersections.py
   test_sphere.py

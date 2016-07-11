@@ -97,7 +97,17 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
+          <item row="1" column="0" colspan="2">
+           <widget class="QCheckBox" name="myPreCADRemoveTinyUVEdges">
+            <property name="text">
+             <string>BLSURF_PRECAD_REMOVE_TINY_UV_EDGES</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
            <widget class="QCheckBox" name="myPreCADProcess3DTopology">
             <property name="text">
              <string>BLSURF_PRECAD_PROCESS_3D_TOPOLOGY</string>
@@ -107,14 +117,14 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="0" colspan="2">
+          <item row="3" column="0" colspan="2">
            <widget class="QCheckBox" name="myPreCADDiscardInput">
             <property name="text">
              <string>BLSURF_PRECAD_DISCARD_INPUT</string>
             </property>
            </widget>
           </item>
-          <item row="3" column="0" colspan="2">
+          <item row="4" column="0" colspan="2">
            <widget class="QCheckBox" name="myPreCADRemoveDuplicateCADFaces">
             <property name="text">
              <string>BLSURF_PRECAD_REMOVE_DUPLICATE_CAD_FACES</string>
@@ -179,6 +189,7 @@
   <tabstop>rmBtn</tabstop>
   <tabstop>myPreCADGroupBox</tabstop>
   <tabstop>myPreCADMergeEdges</tabstop>
+  <tabstop>myPreCADRemoveTinyUVEdges</tabstop>
   <tabstop>myPreCADRemoveDuplicateCADFaces</tabstop>
   <tabstop>myPreCADProcess3DTopology</tabstop>
   <tabstop>myPreCADDiscardInput</tabstop>

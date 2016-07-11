@@ -1835,6 +1835,7 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
   myAdvWidget->myVerbosity->setValue( data.myVerbosity );
   myAdvWidget->myPreCADGroupBox->setChecked(data.myTopology == PreCAD);
   myAdvWidget->myPreCADMergeEdges->setChecked( data.myPreCADMergeEdges );
+  myAdvWidget->myPreCADRemoveTinyUVEdges->setChecked( data.myPreCADRemoveTinyUVEdges );
   myAdvWidget->myPreCADRemoveDuplicateCADFaces->setChecked( data.myPreCADRemoveDuplicateCADFaces );
   myAdvWidget->myPreCADProcess3DTopology->setChecked( data.myPreCADProcess3DTopology );
   myAdvWidget->myPreCADDiscardInput->setChecked( data.myPreCADDiscardInput );
@@ -2066,6 +2067,7 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   h_data.myVerbosity              = h->GetVerbosity();
   h_data.myTopology               = (int) h->GetTopology();
   h_data.myPreCADMergeEdges       = h->GetPreCADMergeEdges();
+  h_data.myPreCADRemoveTinyUVEdges       = h->GetPreCADRemoveTinyUVEdges();
   h_data.myPreCADRemoveDuplicateCADFaces = h->GetPreCADRemoveDuplicateCADFaces();
   h_data.myPreCADProcess3DTopology  = h->GetPreCADProcess3DTopology();
   h_data.myPreCADDiscardInput     = h->GetPreCADDiscardInput();
@@ -2334,6 +2336,8 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
       h->SetTopology( (int) h_data.myTopology );
     if ( h->GetPreCADMergeEdges() != h_data.myPreCADMergeEdges )
       h->SetPreCADMergeEdges( h_data.myPreCADMergeEdges );
+    if ( h->GetPreCADRemoveTinyUVEdges() != h_data.myPreCADRemoveTinyUVEdges )
+      h->SetPreCADRemoveTinyUVEdges( h_data.myPreCADRemoveTinyUVEdges );
     if ( h->GetPreCADRemoveDuplicateCADFaces() != h_data.myPreCADRemoveDuplicateCADFaces )
       h->SetPreCADRemoveDuplicateCADFaces( h_data.myPreCADRemoveDuplicateCADFaces );
     if ( h->GetPreCADProcess3DTopology() != h_data.myPreCADProcess3DTopology )
@@ -2532,6 +2536,7 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
   h_data.myVerbosity             = myAdvWidget->myVerbosity->value();
   h_data.myTopology              = myAdvWidget->myPreCADGroupBox->isChecked() ? PreCAD : FromCAD;
   h_data.myPreCADMergeEdges      = myAdvWidget->myPreCADMergeEdges->isChecked();
+  h_data.myPreCADRemoveTinyUVEdges = myAdvWidget->myPreCADRemoveTinyUVEdges->isChecked();
   h_data.myPreCADRemoveDuplicateCADFaces = myAdvWidget->myPreCADRemoveDuplicateCADFaces->isChecked();
   h_data.myPreCADProcess3DTopology = myAdvWidget->myPreCADProcess3DTopology->isChecked();
   h_data.myPreCADDiscardInput    = myAdvWidget->myPreCADDiscardInput->isChecked();
@@ -2563,6 +2568,7 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
   
   guiHyp += tr("BLSURF_TOPOLOGY") + " = " + QString::number( h_data.myTopology ) + "; ";
   guiHyp += tr("BLSURF_PRECAD_MERGE_EDGES") + " = " + QString(h_data.myPreCADMergeEdges ? "yes" : "no") + "; ";
+  guiHyp += tr("BLSURF_PRECAD_REMOVE_TINY_UV_EDGES") + " = " + QString(h_data.myPreCADRemoveTinyUVEdges ? "yes" : "no") + "; ";
   guiHyp += tr("BLSURF_PRECAD_REMOVE_DUPLICATE_CAD_FACES") + " = " + QString(h_data.myPreCADRemoveDuplicateCADFaces ? "yes" : "no") + "; ";
   guiHyp += tr("BLSURF_PRECAD_REMOVE_NANO_EDGES") + " = " + QString(h_data.myPreCADProcess3DTopology ? "yes" : "no") + "; ";
   guiHyp += tr("BLSURF_PRECAD_DISCARD_INPUT") + " = " + QString(h_data.myPreCADDiscardInput ? "yes" : "no") + "; ";

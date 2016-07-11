@@ -248,11 +248,15 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
     </message>
     <message>
         <source>BLSURF_PRECAD_GROUP</source>
-        <translation>Options PreCAD</translation>
+        <translation>Options du préprocesseur CAO</translation>
     </message>
     <message>
         <source>BLSURF_PRECAD_MERGE_EDGES</source>
         <translation>Fusionner des arêtes</translation>
+    </message>
+    <message>
+        <source>BLSURF_PRECAD_REMOVE_TINY_UV_EDGES</source>
+        <translation>Supprime les petites arêtes UV</translation>
     </message>
     <message>
         <source>BLSURF_PRECAD_REMOVE_DUPLICATE_CAD_FACES</source>

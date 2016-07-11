@@ -65,6 +65,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   _verb(GetDefaultVerbosity()),
   _topology(GetDefaultTopology()),
   _preCADMergeEdges(GetDefaultPreCADMergeEdges()),
+  _preCADRemoveTinyUVEdges(GetDefaultPreCADRemoveTinyUVEdges()),
   _preCADRemoveDuplicateCADFaces(GetDefaultPreCADRemoveDuplicateCADFaces()),
   _preCADProcess3DTopology(GetDefaultPreCADProcess3DTopology()),
   _preCADDiscardInput(GetDefaultPreCADDiscardInput()),
@@ -98,7 +99,6 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
                                             "rectify_jacobian",                         // default = 1
                                             "respect_geometry",                         // default = 1
                                             "optimise_tiny_edges",                      // default = 0
-                                            "remove_duplicate_cad_faces",               // default = 1
                                             "tiny_edge_avoid_surface_intersections",    // default = 1
                                             "tiny_edge_respect_geometry",               // default = 0
                                             "" // mark of end
@@ -388,6 +388,15 @@ void BLSURFPlugin_Hypothesis::SetPreCADMergeEdges(bool theVal) {
   if (theVal != _preCADMergeEdges) {
 //     SetTopology(PreCAD);
     _preCADMergeEdges = theVal;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetPreCADRemoveTinyUVEdges(bool theVal) {
+  if (theVal != _preCADRemoveTinyUVEdges) {
+//     SetTopology(PreCAD);
+    _preCADRemoveTinyUVEdges = theVal;
     NotifySubMeshesHypothesisModification();
   }
 }
@@ -1407,7 +1416,7 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save) {
   save << " " << (int) _phySizeRel << " " << (int) _minSizeRel << " " << (int) _maxSizeRel << " " << _chordalError ;
   save << " " << (int) _anisotropic << " " << _anisotropicRatio << " " << (int) _removeTinyEdges << " " << _tinyEdgeLength ;
   save << " " << (int) _badElementRemoval << " " << _badElementAspectRatio << " " << (int) _optimizeMesh << " " << (int) _quadraticMesh ;
-  save << " " << (int) _preCADProcess3DTopology << " " << (int) _preCADRemoveDuplicateCADFaces;
+  save << " " << (int) _preCADProcess3DTopology << " " << (int) _preCADRemoveDuplicateCADFaces << " " << (int) _preCADRemoveTinyUVEdges;
 
   op_val = _option2value.begin();
   if (op_val != _option2value.end()) {
@@ -1948,6 +1957,12 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
     isOK = static_cast<bool>(load >> i);
     if (isOK)
       _preCADRemoveDuplicateCADFaces = (bool) i;
+    else
+      load.clear(std::ios::badbit | load.rdstate());
+
+    isOK = static_cast<bool>(load >> i);
+    if (isOK)
+      _preCADRemoveTinyUVEdges = (bool) i;
     else
       load.clear(std::ios::badbit | load.rdstate());
 

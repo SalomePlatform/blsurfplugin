@@ -244,11 +244,15 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
     </message>
     <message>
         <source>BLSURF_PRECAD_GROUP</source>
-        <translation>PreCAD options</translation>
+        <translation>CAD preprocessor options</translation>
     </message>
     <message>
         <source>BLSURF_PRECAD_MERGE_EDGES</source>
         <translation>Merge edges</translation>
+    </message>
+    <message>
+        <source>BLSURF_PRECAD_REMOVE_TINY_UV_EDGES</source>
+        <translation>Remove tiny UV edges</translation>
     </message>
     <message>
         <source>BLSURF_PRECAD_REMOVE_DUPLICATE_CAD_FACES</source>

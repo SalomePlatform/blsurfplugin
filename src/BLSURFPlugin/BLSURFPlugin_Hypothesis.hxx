@@ -134,6 +134,9 @@ public:
   void SetPreCADMergeEdges(bool theVal);
   bool GetPreCADMergeEdges() const { return _preCADMergeEdges; }
 
+  void SetPreCADRemoveTinyUVEdges(bool theVal);
+  bool GetPreCADRemoveTinyUVEdges() const { return _preCADRemoveTinyUVEdges; }
+
   void SetPreCADRemoveDuplicateCADFaces(bool theVal);
   bool GetPreCADRemoveDuplicateCADFaces() const { return _preCADRemoveDuplicateCADFaces; }
 
@@ -369,6 +372,7 @@ public:
   static Topology        GetDefaultTopology() { return FromCAD; }
   // PreCAD
   static bool            GetDefaultPreCADMergeEdges() { return false; }
+  static bool            GetDefaultPreCADRemoveTinyUVEdges() { return false; }
   static bool            GetDefaultPreCADRemoveDuplicateCADFaces() { return false; }
   static bool            GetDefaultPreCADProcess3DTopology() { return false; }
   static bool            GetDefaultPreCADDiscardInput() { return false; }
@@ -496,6 +500,7 @@ private:
   Topology        _topology;
   
   bool            _preCADMergeEdges;
+  bool            _preCADRemoveTinyUVEdges;
   bool            _preCADRemoveDuplicateCADFaces;
   bool            _preCADProcess3DTopology;
   bool            _preCADDiscardInput;

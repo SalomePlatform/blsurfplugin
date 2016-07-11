@@ -111,6 +111,9 @@ public:
   void SetPreCADMergeEdges(CORBA::Boolean theValue);
   CORBA::Boolean GetPreCADMergeEdges();
 
+  void SetPreCADRemoveTinyUVEdges(CORBA::Boolean theValue);
+  CORBA::Boolean GetPreCADRemoveTinyUVEdges();
+
   void SetPreCADRemoveDuplicateCADFaces(CORBA::Boolean theValue);
   CORBA::Boolean GetPreCADRemoveDuplicateCADFaces();
 

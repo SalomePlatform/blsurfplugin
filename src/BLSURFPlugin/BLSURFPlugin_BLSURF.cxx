@@ -857,6 +857,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
 
   // PreCAD
   int _precadMergeEdges         = BLSURFPlugin_Hypothesis::GetDefaultPreCADMergeEdges();
+  int _precadRemoveTinyUVEdges  = BLSURFPlugin_Hypothesis::GetDefaultPreCADRemoveTinyUVEdges();
   int _precadRemoveDuplicateCADFaces = BLSURFPlugin_Hypothesis::GetDefaultPreCADRemoveDuplicateCADFaces();
   int _precadProcess3DTopology  = BLSURFPlugin_Hypothesis::GetDefaultPreCADProcess3DTopology();
   int _precadDiscardInput       = BLSURFPlugin_Hypothesis::GetDefaultPreCADDiscardInput();
@@ -903,6 +904,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
     _topology      = (int) hyp->GetTopology();
     // PreCAD
     _precadMergeEdges        = hyp->GetPreCADMergeEdges();
+    _precadRemoveTinyUVEdges = hyp->GetPreCADRemoveTinyUVEdges();
     _precadRemoveDuplicateCADFaces = hyp->GetPreCADRemoveDuplicateCADFaces();
     _precadProcess3DTopology = hyp->GetPreCADProcess3DTopology();
     _precadDiscardInput      = hyp->GetPreCADDiscardInput();
@@ -950,6 +952,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
 
   // PreProcessor (formerly PreCAD)
   set_param(css, "merge_edges",            _precadMergeEdges ? "yes" : "no");
+  set_param(css, "remove_tiny_uv_edges",   _precadRemoveTinyUVEdges ? "yes" : "no");
   set_param(css, "remove_duplicate_cad_faces", _precadRemoveDuplicateCADFaces ? "yes" : "no");
   set_param(css, "process_3d_topology",    _precadProcess3DTopology ? "1" : "0");
   set_param(css, "discard_input_topology", _precadDiscardInput ? "1" : "0");

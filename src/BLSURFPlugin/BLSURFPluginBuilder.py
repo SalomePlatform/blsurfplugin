@@ -194,24 +194,24 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   ## To optimize merges edges.
   #  @param toMergeEdges "merge edges" flag value
   def SetPreCADMergeEdges(self, toMergeEdges=False):
-    if self.Parameters().GetTopology() != PreCAD:
-      self.SetTopology(PreCAD)
     self.Parameters().SetPreCADMergeEdges(toMergeEdges)
     pass
 
+  ## To remove tiny UV edges.
+  #  @param toRemoveTinyUVEdges "remove_tiny_uv_edges" flag value
+  def SetPreCADRemoveTinyUVEdges(self, toRemoveTinyUVEdges=False):
+    self.Parameters().SetPreCADRemoveTinyUVEdges(toRemoveTinyUVEdges)
+    pass
+
   ## To remove duplicate CAD Faces
-  #  @param toRemoveDuplicateCADFaces "merge edges" flag value
+  #  @param toRemoveDuplicateCADFaces "remove_duplicate_cad_faces" flag value
   def SetPreCADRemoveDuplicateCADFaces(self, toRemoveDuplicateCADFaces=False):
-    if self.Parameters().GetTopology() != PreCAD:
-      self.SetTopology(PreCAD)
     self.Parameters().SetPreCADRemoveDuplicateCADFaces(toRemoveDuplicateCADFaces)
     pass
 
   ## To process 3D topology.
   #  @param toProcess "PreCAD process 3D" flag value
   def SetPreCADProcess3DTopology(self, toProcess=False):
-    if self.Parameters().GetTopology() != PreCAD:
-      self.SetTopology(PreCAD)
     self.Parameters().SetPreCADProcess3DTopology(toProcess)
     pass
 
@@ -227,8 +227,6 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   ## To compute topology from scratch
   #  @param toDiscardInput "discard input" flag value
   def SetPreCADDiscardInput(self, toDiscardInput=False):
-    if self.Parameters().GetTopology() != PreCAD:
-      self.SetTopology(PreCAD)
     self.Parameters().SetPreCADDiscardInput(toDiscardInput)
     pass
 
@@ -250,8 +248,6 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   #  @param optionName name of the option
   #  @param optionValue value of the option
   def SetPreCADOptionValue(self, optionName, optionValue):
-    if self.Parameters().GetTopology() != PreCAD:
-      self.SetTopology(PreCAD)
     self.Parameters().SetPreCADOptionValue(optionName,optionValue)
     pass
   
@@ -266,8 +262,6 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   #  @param optionName custom name of the option
   #  @param optionValue value of the option
   def AddPreCADOption(self, optionName, optionValue):
-    if self.Parameters().GetTopology() != PreCAD:
-      self.SetTopology(PreCAD)
     self.Parameters().AddPreCADOption(optionName,optionValue)
     pass
 

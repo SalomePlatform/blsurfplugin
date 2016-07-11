@@ -646,6 +646,34 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADMergeEdges() {
 
 //=============================================================================
 /*!
+ *  BLSURFPlugin_Hypothesis_i::SetPreCADRemoveTinyUVEdges
+ *
+ *  Set true or false
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetPreCADRemoveTinyUVEdges(CORBA::Boolean theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetPreCADRemoveTinyUVEdges");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetPreCADRemoveTinyUVEdges(theValue);
+  std::string theValueStr = theValue ? "True" : "False";
+  SMESH::TPythonDump() << _this() << ".SetPreCADRemoveTinyUVEdges( " << theValueStr.c_str() << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetPreCADRemoveTinyUVEdges
+ *
+ *  Get true or false
+ */
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADRemoveTinyUVEdges() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCADRemoveTinyUVEdges");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetPreCADRemoveTinyUVEdges();
+}
+
+//=============================================================================
+/*!
  *  BLSURFPlugin_Hypothesis_i::SetPreCADRemoveDuplicateCADFaces
  *
  *  Set true or false

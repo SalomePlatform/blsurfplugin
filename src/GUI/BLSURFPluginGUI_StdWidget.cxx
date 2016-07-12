@@ -43,7 +43,7 @@ BLSURFPluginGUI_StdWidget::BLSURFPluginGUI_StdWidget( QWidget* parent, Qt::Windo
   myPhySize->RangeStepAndValidator(0, COORD_MAX, 10.0, "length_precision");
   myMinSize->RangeStepAndValidator(0, COORD_MAX, 10.0, "length_precision");
   myMaxSize->RangeStepAndValidator(0, COORD_MAX, 10.0, "length_precision");
-  myGradation->RangeStepAndValidator(1.1, COORD_MAX, 0.1, "length_precision");
+  myGradation->RangeStepAndValidator(1.0, COORD_MAX, 0.1, "length_precision");
   myAngleMesh->RangeStepAndValidator(0, 90, 0.5, "angular_precision");
   myChordalError->RangeStepAndValidator(0, COORD_MAX, 0.1, "length_precision");
   myAnisotropicRatio->RangeStepAndValidator(0, COORD_MAX, 0.1, "length_precision");

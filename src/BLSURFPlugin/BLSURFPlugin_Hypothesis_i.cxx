@@ -2728,7 +2728,7 @@ void BLSURFPlugin_Hypothesis_i::CheckShapeTypes(GEOM::GEOM_Object_ptr shape, std
   if (!ok){
     std::stringstream msg;
     msg << "shape shape type is not in" << typesTxt.str();
-    MESSAGE(msg);
+    MESSAGE(msg.str());
     THROW_SALOME_CORBA_EXCEPTION(msg.str().c_str(), SALOME::BAD_PARAM);
   }
 }
@@ -2739,7 +2739,7 @@ void BLSURFPlugin_Hypothesis_i::CheckShapeType(GEOM::GEOM_Object_ptr shape, GEOM
   if (shape->GetShapeType() != theShapeType) {
     std::stringstream msg;
     msg << "shape shape type is not " << ShapeTypeToString(theShapeType);
-    MESSAGE(msg);
+    MESSAGE(msg.str());
     THROW_SALOME_CORBA_EXCEPTION(msg.str().c_str(), SALOME::BAD_PARAM);
   }
 }

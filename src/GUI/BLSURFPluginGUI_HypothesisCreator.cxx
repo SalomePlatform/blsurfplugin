@@ -93,7 +93,11 @@ enum {
   SMP_ENTRY_COLUMN,
 //  SMP_DIST_COLUMN,
   SMP_NB_COLUMNS,
-// Enforced vertices array columns
+
+  // Adv tables
+  TBL_MESHING = 0, TBL_PRECAD, TBL_CUSTOM,
+
+  // Enforced vertices array columns
   ENF_VER_NAME_COLUMN = 0,
   ENF_VER_FACE_ENTRY_COLUMN,
   ENF_VER_X_COLUMN,
@@ -525,24 +529,43 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams(QString& msg) const
     myAdvWidget->myOptionTable->setFocus();
     QApplication::instance()->processEvents();
 
-    int row = 0, nbRows = myAdvWidget->myOptionTable->rowCount();
-    for ( ; row < nbRows; ++row )
+    QString name, value;
+    bool isDefault;
+    int iTbl = 0, nbTbl = myAdvWidget->myOptionTable->topLevelItemCount();
+    for ( ; iTbl < nbTbl; ++iTbl )
     {
-      QString name  = myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->text();
-      QString value = myAdvWidget->myOptionTable->item( row, OPTION_VALUE_COLUMN )->text().trimmed();
-      bool custom = myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->data(Qt::UserRole).toBool();
-      if ( !value.isEmpty() && !custom ) {
+      QTreeWidgetItem* table = myAdvWidget->myOptionTable->topLevelItem( iTbl );
+      int nbRows = table->childCount();
+      for ( int iRow = 0; iRow < nbRows; ++iRow )
+      {
+        QTreeWidgetItem* row = table->child( iRow );
+        myAdvWidget->GetOptionAndValue( row, name, value, isDefault );
+
+        if ( name.simplified().isEmpty() )
+          continue; // invalid custom option
+
+        if ( isDefault ) // not selected option
+          value.clear();
+
         try {
-          QString optionType = myAdvWidget->myOptionTable->item( row, OPTION_TYPE_COLUMN )->text().trimmed();
-          if (optionType == "PRECAD")
-            h->SetPreCADOptionValue( name.toLatin1().constData(), value.toLatin1().constData() );
-          else if (optionType == "BLSURF")
+          switch ( iTbl )
+          {
+          case TBL_MESHING:
             h->SetOptionValue( name.toLatin1().constData(), value.toLatin1().constData() );
+            break;
+          case TBL_PRECAD:
+            h->SetPreCADOptionValue( name.toLatin1().constData(), value.toLatin1().constData() );
+            break;
+          case TBL_CUSTOM:
+            h->AddOption( name.toLatin1().constData(), value.toLatin1().constData() );
+            break;
+          }
         }
         catch ( const SALOME::SALOME_Exception& ex )
         {
           msg = ex.details.text.in();
           ok = false;
+          break;
         }
       }
     }
@@ -551,6 +574,7 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams(QString& msg) const
   {
     h->SetOptionValues( myOptions ); // restore values
     h->SetPreCADOptionValues( myPreCADOptions ); // restore values
+    return ok;
   }
 
   // SizeMap and attractors
@@ -668,14 +692,14 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   }
   aStdLayout->addWidget( myStdWidget,                                   row++, 0, 1, 4 );
   
-  int maxrow = row;
+  //int maxrow = row;
   row = 0;
   if( isCreation() )
     row = 1;
 //   row = max(row,maxrow)+1;
   aStdLayout->setRowStretch(row,1);
   aStdLayout->setColumnStretch(1,1);
-  maxrow = row;
+  //maxrow = row;
 
   
   // advanced parameters
@@ -684,8 +708,8 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   anAdvLayout->setSpacing( 6 );
   anAdvLayout->setMargin( 11 );  
   myAdvWidget = new BLSURFPluginGUI_AdvWidget(myAdvGroup);
-  myAdvWidget->addBtn->setMenu( new QMenu() );
-  anAdvLayout->addWidget( myAdvWidget);
+  //myAdvWidget->addBtn->setMenu( new QMenu() );
+  anAdvLayout->addWidget( myAdvWidget );
 
 
   // Size Maps parameters
@@ -1125,11 +1149,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 
   myTabWidget->setCurrentIndex( STD_TAB );
 
-  connect( myAdvWidget->addBtn->menu(), SIGNAL( aboutToShow() ),           this, SLOT( onAddOption() ) );
-  connect( myAdvWidget->addBtn->menu(), SIGNAL( triggered( QAction* ) ),   this, SLOT( onOptionChosenInPopup( QAction* ) ) );
-  connect( myAdvWidget->rmBtn,          SIGNAL( clicked()),                this, SLOT( onDeleteOption() ) );
-  connect( myAdvWidget->myOptionTable,  SIGNAL( cellPressed( int, int ) ), this, SLOT( onEditOption( int, int ) ) );
-  connect( myAdvWidget->myOptionTable,  SIGNAL( cellChanged( int, int ) ), this, SLOT( onChangeOptionName( int, int ) ) );
+  connect( myAdvWidget->addBtn, SIGNAL( clicked() ),           this, SLOT( onAddOption() ) );
   connect( myStdWidget->myAllowQuadrangles, SIGNAL( stateChanged( int ) ), this, SLOT( onStateChange() ));
 
   // Size Maps
@@ -1672,7 +1692,7 @@ void BLSURFPluginGUI_HypothesisCreator::onPeriodicityByVerticesChecked(bool chec
 {
   if (! checked)
     {
-      for (size_t k=2; k<myPeriodicitySelectionWidgets.size(); k++)
+      for (int k=2; k<myPeriodicitySelectionWidgets.size(); k++)
         {
           StdMeshersGUI_ObjectReferenceParamWdg * w1 = ( StdMeshersGUI_ObjectReferenceParamWdg* ) ( myPeriodicitySelectionWidgets[k] );
           w1->deactivateSelection();
@@ -1744,7 +1764,7 @@ void BLSURFPluginGUI_HypothesisCreator::onPeriodicityContentModified()
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
 
   ListOfWidgets::const_iterator anIt = myPeriodicitySelectionWidgets.begin();
-  size_t k=0;
+  int k=0;
   // find wich selection widget is activated
   for (; anIt != myPeriodicitySelectionWidgets.end(); anIt++, k++)
     {
@@ -1798,10 +1818,16 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
   else
     myStdWidget->myMaxSize->SetValue( data.myMaxSize );
   myStdWidget->myMaxSizeRel->setChecked( data.myMaxSizeRel );
-  if (data.myGradation <= 0)
+  myStdWidget->myUseGradation->setChecked( data.myUseGradation );
+  if (data.myGradation <= 0 || !data.myUseGradation )
     myStdWidget->myGradation->setText("");
   else
     myStdWidget->myGradation->SetValue( data.myGradation );
+  myStdWidget->myUseVolumeGradation->setChecked( data.myUseVolumeGradation );
+  if (data.myVolumeGradation <= 0 || !data.myUseVolumeGradation )
+    myStdWidget->myVolumeGradation->setText("");
+  else
+    myStdWidget->myVolumeGradation->SetValue( data.myVolumeGradation );
   myStdWidget->myAllowQuadrangles->setChecked( data.myAllowQuadrangles );
   
   if (data.myAngleMesh < 0)
@@ -1822,6 +1848,16 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
     myStdWidget->myTinyEdgeLength->setText("");
   else
     myStdWidget->myTinyEdgeLength->SetValue( data.myTinyEdgeLength );
+  myStdWidget->myOptimiseTinyEdges->setChecked( data.myOptimiseTinyEdges );
+  if (data.myTinyEdgeOptimisLength <= 0)
+    myStdWidget->myTinyEdgeOptimisLength->setText("");
+  else
+    myStdWidget->myTinyEdgeOptimisLength->SetValue( data.myTinyEdgeOptimisLength );
+  myStdWidget->myCorrectSurfaceIntersection->setChecked( data.myCorrectSurfaceIntersection );
+  if (data.myCorrectSurfaceIntersectionMaxCost <= 0)
+    myStdWidget->myCorrectSurfaceIntersectionMaxCost->setText("");
+  else
+    myStdWidget->myCorrectSurfaceIntersectionMaxCost->SetValue( data.myCorrectSurfaceIntersectionMaxCost );
   myStdWidget->myForceBadElementRemoval->setChecked( data.myForceBadElementRemoval );
   if (data.myBadElementAspectRatio <= 0)
     myStdWidget->myBadElementAspectRatio->setText("");
@@ -1833,72 +1869,18 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
   myStdWidget->resizeWidgets();  
   
   myAdvWidget->myVerbosity->setValue( data.myVerbosity );
-  myAdvWidget->myPreCADGroupBox->setChecked(data.myTopology == PreCAD);
-  myAdvWidget->myPreCADMergeEdges->setChecked( data.myPreCADMergeEdges );
-  myAdvWidget->myPreCADRemoveTinyUVEdges->setChecked( data.myPreCADRemoveTinyUVEdges );
-  myAdvWidget->myPreCADRemoveDuplicateCADFaces->setChecked( data.myPreCADRemoveDuplicateCADFaces );
-  myAdvWidget->myPreCADProcess3DTopology->setChecked( data.myPreCADProcess3DTopology );
-  myAdvWidget->myPreCADDiscardInput->setChecked( data.myPreCADDiscardInput );
 
   if ( myOptions.operator->() ) {
-//     MESSAGE("retrieveParams():myOptions->length() = " << myOptions->length());
-    for ( int i = 0, nb = myOptions->length(); i < nb; ++i ) {
-      QString option = that->myOptions[i].in();
-      QStringList name_value_type = option.split( ":", QString::KeepEmptyParts );
-      bool custom = ( name_value_type.size() == 3 ) ? name_value_type[2].toInt() : false;
-      if ( name_value_type.count() > 1 ) {
-        QString idStr = QString("%1").arg( i );
-        int row = myAdvWidget->myOptionTable->rowCount();
-        myAdvWidget->myOptionTable->setRowCount( row+1 );
-        myAdvWidget->myOptionTable->setItem( row, OPTION_ID_COLUMN, new QTableWidgetItem( idStr ) );
-        myAdvWidget->myOptionTable->item( row, OPTION_ID_COLUMN )->setFlags( 0 );
-        myAdvWidget->myOptionTable->setItem( row, OPTION_TYPE_COLUMN, new QTableWidgetItem( "BLSURF" ) );
-        myAdvWidget->myOptionTable->item( row, OPTION_TYPE_COLUMN )->setFlags( 0 );
-        myAdvWidget->myOptionTable->setItem( row, OPTION_NAME_COLUMN, new QTableWidgetItem( name_value_type[0] ) );
-        if ( custom ) {
-          myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( Qt::ItemIsSelectable |
-                                                                                 Qt::ItemIsEditable   |
-                                                                                 Qt::ItemIsEnabled );
-          myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->setData( Qt::UserRole, QVariant(true) );
-        }
-        else
-          myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( 0 );
-        myAdvWidget->myOptionTable->setItem( row, OPTION_VALUE_COLUMN, new QTableWidgetItem( name_value_type[1] ) );
-        myAdvWidget->myOptionTable->item( row, OPTION_VALUE_COLUMN )->setFlags( Qt::ItemIsSelectable |
-                                                                                Qt::ItemIsEditable   |
-                                                                                Qt::ItemIsEnabled );
-      }
-    }
+    for ( int i = 0, nb = myOptions->length(); i < nb; ++i )
+      myAdvWidget->AddOption( TBL_MESHING, that->myOptions[i].in() );
   }
   if ( myPreCADOptions.operator->() ) {
-//     MESSAGE("retrieveParams():myPreCADOptions->length() = " << myPreCADOptions->length());
-    for ( int i = 0, nb = myPreCADOptions->length(); i < nb; ++i ) {
-      QString option = that->myPreCADOptions[i].in();
-      QStringList name_value_type = option.split( ":", QString::KeepEmptyParts );
-      bool custom = ( name_value_type.size() == 3 ) ? name_value_type[2].toInt() : false;
-      if ( name_value_type.count() > 1 ) {
-        QString idStr = QString("%1").arg( i );
-        int row = myAdvWidget->myOptionTable->rowCount();
-        myAdvWidget->myOptionTable->setRowCount( row+1 );
-        myAdvWidget->myOptionTable->setItem( row, OPTION_ID_COLUMN, new QTableWidgetItem( idStr ) );
-        myAdvWidget->myOptionTable->item( row, OPTION_ID_COLUMN )->setFlags( 0 );
-        myAdvWidget->myOptionTable->setItem( row, OPTION_TYPE_COLUMN, new QTableWidgetItem( "PRECAD" ) );
-        myAdvWidget->myOptionTable->item( row, OPTION_TYPE_COLUMN )->setFlags( 0 );
-        myAdvWidget->myOptionTable->setItem( row, OPTION_NAME_COLUMN, new QTableWidgetItem( name_value_type[0] ) );
-        if ( custom ) {
-          myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( Qt::ItemIsSelectable |
-                                                                                 Qt::ItemIsEditable   |
-                                                                                 Qt::ItemIsEnabled );
-          myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->setData( Qt::UserRole, QVariant(true) );
-        }
-        else
-          myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( 0 );
-        myAdvWidget->myOptionTable->setItem( row, OPTION_VALUE_COLUMN, new QTableWidgetItem( name_value_type[1] ) );
-        myAdvWidget->myOptionTable->item( row, OPTION_VALUE_COLUMN )->setFlags( Qt::ItemIsSelectable |
-                                                                                Qt::ItemIsEditable   |
-                                                                                Qt::ItemIsEnabled );
-      }
-    }
+    for ( int i = 0, nb = myPreCADOptions->length(); i < nb; ++i )
+      myAdvWidget->AddOption( TBL_PRECAD, that->myPreCADOptions[i].in() );
+  }
+  if ( myCustomOptions.operator->() ) {
+    for ( int i = 0, nb = myCustomOptions->length(); i < nb; ++i )
+      myAdvWidget->AddOption( TBL_CUSTOM, that->myCustomOptions[i].in() );
   }
   myAdvWidget->myOptionTable->resizeColumnToContents( OPTION_NAME_COLUMN );
   myAdvWidget->myGMFFileName->setText(QString(data.myGMFFileName.c_str()));
@@ -2047,7 +2029,10 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   h_data.myMinSizeRel             = h->IsMinSizeRel();
   h_data.myMaxSize                = maxSize > 0 ? maxSize : -1.0;
   h_data.myMaxSizeRel             = h->IsMaxSizeRel();
+  h_data.myUseGradation           = h->GetUseGradation();
   h_data.myGradation              = h->GetGradation();
+  h_data.myUseVolumeGradation     = h->GetUseVolumeGradation();
+  h_data.myVolumeGradation        = h->GetVolumeGradation();
   h_data.myAllowQuadrangles       = h->GetQuadAllowed();
   double angle                    = h->GetAngleMesh();
   h_data.myAngleMesh              = angle > 0 ? angle : -1.0;
@@ -2059,24 +2044,29 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   h_data.myRemoveTinyEdges        = h->GetRemoveTinyEdges();
   double myTinyEdgeLength         = h->GetTinyEdgeLength();
   h_data.myTinyEdgeLength         = myTinyEdgeLength > 0 ? myTinyEdgeLength : -1.0;
+  h_data.myOptimiseTinyEdges      = h->GetOptimiseTinyEdges();
+  double myTinyEdgeOptimisLength  = h->GetTinyEdgeOptimisationLength();
+  h_data.myTinyEdgeOptimisLength  = myTinyEdgeOptimisLength > 0 ? myTinyEdgeOptimisLength : -1.0;
+  h_data.myCorrectSurfaceIntersection = h->GetCorrectSurfaceIntersection();
+  double corrSurfaceIntersMaxCost = h->GetCorrectSurfaceIntersectionMaxCost();
+  h_data.myCorrectSurfaceIntersectionMaxCost  = corrSurfaceIntersMaxCost > 0 ? corrSurfaceIntersMaxCost : -1.0;
   h_data.myForceBadElementRemoval = h->GetBadElementRemoval();
   double myBadElementAspectRatio  = h->GetBadElementAspectRatio();
   h_data.myBadElementAspectRatio  = myBadElementAspectRatio > 0 ? myBadElementAspectRatio : -1.0;
   h_data.myOptimizeMesh           = h->GetOptimizeMesh();
   h_data.myQuadraticMesh          = h->GetQuadraticMesh();
   h_data.myVerbosity              = h->GetVerbosity();
-  h_data.myTopology               = (int) h->GetTopology();
+  //h_data.myTopology               = (int) h->GetTopology();
   h_data.myPreCADMergeEdges       = h->GetPreCADMergeEdges();
-  h_data.myPreCADRemoveTinyUVEdges       = h->GetPreCADRemoveTinyUVEdges();
-  h_data.myPreCADRemoveDuplicateCADFaces = h->GetPreCADRemoveDuplicateCADFaces();
   h_data.myPreCADProcess3DTopology  = h->GetPreCADProcess3DTopology();
   h_data.myPreCADDiscardInput     = h->GetPreCADDiscardInput();
 
 
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
-  that->myOptions = h->GetOptionValues();
+  that->myOptions       = h->GetOptionValues();
   that->myPreCADOptions = h->GetPreCADOptionValues();
-  
+  that->myCustomOptions = h->GetAdvancedOptionValues();
+
   h_data.myGMFFileName = h->GetGMFFile();
 //   h_data.myGMFFileMode = h->GetGMFFileMode();
 
@@ -2133,7 +2123,7 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   BLSURFPlugin::string_array_var allMyAttractors = h->GetAttractorEntries();
 //   MESSAGE("myAttractors->length() = " << allMyAttractors->length());
 
-  for ( int i = 0;i<allMyAttractors->length(); ++i ) {
+  for ( CORBA::ULong i = 0;i<allMyAttractors->length(); ++i ) {
     QString myAttractors =  allMyAttractors[i].in();
     QStringList myAttractorList = myAttractors.split( "|", QString::KeepEmptyParts );
     if ( myAttractorList.count() > 1 ) {
@@ -2147,7 +2137,7 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   // attractor new version
   MESSAGE("readParamsFromHypo, Attractors")
   BLSURFPlugin::TAttParamsMap_var allMyAttractorParams = h->GetAttractorParams();
-  for ( int i = 0;i<allMyAttractorParams->length(); ++i ) {
+  for ( CORBA::ULong i = 0;i<allMyAttractorParams->length(); ++i ) {
     BLSURFPlugin::TAttractorParams myAttractorParams =  allMyAttractorParams[i];
     QString faceEntry = myAttractorParams.faceEntry.in();
     QString attEntry  = myAttractorParams.attEntry.in();
@@ -2170,7 +2160,7 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   BLSURFPlugin::TFaceEntryEnfVertexListMap_var faceEntryEnfVertexListMap = h->GetAllEnforcedVerticesByFace();
   MESSAGE("faceEntryEnfVertexListMap->length() = " << faceEntryEnfVertexListMap->length());
 
-  for ( int i = 0;i<faceEntryEnfVertexListMap->length(); ++i ) {
+  for ( CORBA::ULong i = 0;i<faceEntryEnfVertexListMap->length(); ++i ) {
     std::string entry =  faceEntryEnfVertexListMap[i].faceEntry.in();
 //     BLSURFPlugin::TEnfVertexList vertexList = faceEntryEnfVertexListMap[i].enfVertexList.in();
     BLSURFPlugin::TEnfVertexList vertexList = faceEntryEnfVertexListMap[i].enfVertexList;
@@ -2178,13 +2168,13 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
 
 //     TEnfVertexList& enfVertexList = h_data.faceEntryEnfVertexListMap[entry];
 
-    for (int j=0 ; j<vertexList.length(); ++j) {
+    for (CORBA::ULong j=0 ; j<vertexList.length(); ++j) {
       TEnfVertex *enfVertex = new TEnfVertex();
       
       enfVertex->name = CORBA::string_dup(vertexList[j].name.in());
       enfVertex->geomEntry = CORBA::string_dup(vertexList[j].geomEntry.in());
       enfVertex->grpName = CORBA::string_dup(vertexList[j].grpName.in());
-      for (int k=0 ; k< vertexList[j].coords.length();k++)
+      for (CORBA::ULong k=0 ; k< vertexList[j].coords.length();k++)
         enfVertex->coords.push_back(vertexList[j].coords[k]);
 
       h_data.faceEntryEnfVertexListMap[entry].insert(enfVertex);
@@ -2297,8 +2287,15 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
       else
         h->SetMaxSize( h_data.myMaxSize <= 0 ? -1 : h_data.myMaxSize );
     }
+    if ( h->GetUseGradation() !=  h_data.myUseGradation )
+      h->SetUseGradation( h_data.myUseGradation );
     if ( h->GetGradation() !=  h_data.myGradation )
       h->SetGradation( h_data.myGradation <= 0 ? -1 : h_data.myGradation );
+    if ( h->GetUseVolumeGradation() !=  h_data.myUseVolumeGradation )
+      h->SetUseVolumeGradation( h_data.myUseVolumeGradation );
+    if ( h->GetVolumeGradation() !=  h_data.myVolumeGradation )
+      h->SetVolumeGradation( h_data.myVolumeGradation <= 0 ? -1 : h_data.myVolumeGradation );
+
     if ( h->GetQuadAllowed() != h_data.myAllowQuadrangles )
       h->SetQuadAllowed( h_data.myAllowQuadrangles );
     
@@ -2319,6 +2316,15 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
     if ( h_data.myRemoveTinyEdges && ( h->GetTinyEdgeLength() != h_data.myTinyEdgeLength ) )
       h->SetTinyEdgeLength( h_data.myTinyEdgeLength <= 0 ? -1 :h_data.myTinyEdgeLength );
     
+    if ( h->GetOptimiseTinyEdges() != h_data.myOptimiseTinyEdges )
+      h->SetOptimiseTinyEdges( h_data.myOptimiseTinyEdges );
+    if ( h_data.myOptimiseTinyEdges && ( h->GetTinyEdgeOptimisationLength() != h_data.myTinyEdgeOptimisLength ) )
+      h->SetTinyEdgeOptimisationLength( h_data.myTinyEdgeOptimisLength <= 0 ? -1 :h_data.myTinyEdgeOptimisLength );
+    if ( h->GetCorrectSurfaceIntersection() != h_data.myCorrectSurfaceIntersection )
+      h->SetCorrectSurfaceIntersection( h_data.myCorrectSurfaceIntersection );
+    if ( h_data.myCorrectSurfaceIntersection && ( h->GetCorrectSurfaceIntersectionMaxCost() != h_data.myCorrectSurfaceIntersectionMaxCost ) )
+      h->SetCorrectSurfaceIntersectionMaxCost( h_data.myCorrectSurfaceIntersectionMaxCost <= 0 ? -1 :h_data.myCorrectSurfaceIntersectionMaxCost );
+    
     if ( h->GetBadElementRemoval() != h_data.myForceBadElementRemoval )
       h->SetBadElementRemoval( h_data.myForceBadElementRemoval );
     if ( h_data.myForceBadElementRemoval && ( h->GetBadElementAspectRatio() != h_data.myBadElementAspectRatio ) )
@@ -2332,21 +2338,18 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
 
     if ( h->GetVerbosity() != h_data.myVerbosity )
       h->SetVerbosity( h_data.myVerbosity );
-    if ( h->GetTopology() != h_data.myTopology )
-      h->SetTopology( (int) h_data.myTopology );
+    // if ( h->GetTopology() != h_data.myTopology )
+    //   h->SetTopology( (int) h_data.myTopology );
     if ( h->GetPreCADMergeEdges() != h_data.myPreCADMergeEdges )
       h->SetPreCADMergeEdges( h_data.myPreCADMergeEdges );
-    if ( h->GetPreCADRemoveTinyUVEdges() != h_data.myPreCADRemoveTinyUVEdges )
-      h->SetPreCADRemoveTinyUVEdges( h_data.myPreCADRemoveTinyUVEdges );
-    if ( h->GetPreCADRemoveDuplicateCADFaces() != h_data.myPreCADRemoveDuplicateCADFaces )
-      h->SetPreCADRemoveDuplicateCADFaces( h_data.myPreCADRemoveDuplicateCADFaces );
     if ( h->GetPreCADProcess3DTopology() != h_data.myPreCADProcess3DTopology )
       h->SetPreCADProcess3DTopology( h_data.myPreCADProcess3DTopology );
     if ( h->GetPreCADDiscardInput() != h_data.myPreCADDiscardInput )
       h->SetPreCADDiscardInput( h_data.myPreCADDiscardInput );
 
-    h->SetOptionValues( myOptions ); // is set in checkParams()
-    h->SetPreCADOptionValues( myPreCADOptions ); // is set in checkParams()
+    // options are set in checkParams()
+    //h->SetOptionValues( myOptions ); // is set in readParamsFromWidgets()
+    //h->SetPreCADOptionValues( myPreCADOptions ); // is set in readParamsFromWidgets()
     
     if ( h->GetGMFFile() != h_data.myGMFFileName )
 //       || ( h->GetGMFFileMode() != h_data.myGMFFileMode ) )
@@ -2405,7 +2408,7 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
     }
 
     // Enforced vertices
-    bool ret;
+    //bool ret;
     double x, y, z = 0;
     std::string enfName;
     /* TODO GROUPS
@@ -2435,7 +2438,8 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
           y = (*evsIt)->coords[1];
           z = (*evsIt)->coords[2];
         }
-        ret = h->SetEnforcedVertexEntry( faceEntry.c_str(), x, y, z, (*evsIt)->name.c_str(), (*evsIt)->geomEntry.c_str(), (*evsIt)->grpName.c_str());
+        //ret =
+        h->SetEnforcedVertexEntry( faceEntry.c_str(), x, y, z, (*evsIt)->name.c_str(), (*evsIt)->geomEntry.c_str(), (*evsIt)->grpName.c_str());
       } // for
     } // for
 
@@ -2521,7 +2525,10 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
   h_data.myMinSizeRel            = myStdWidget->myMinSizeRel->isChecked();
   h_data.myMaxSize               = myStdWidget->myMaxSize->text().isEmpty() ? -1.0 : myStdWidget->myMaxSize->GetValue();
   h_data.myMaxSizeRel            = myStdWidget->myMaxSizeRel->isChecked();
+  h_data.myUseGradation          = myStdWidget->myUseGradation->isChecked();
   h_data.myGradation             = myStdWidget->myGradation->text().isEmpty() ? -1.0 : myStdWidget->myGradation->GetValue();
+  h_data.myUseVolumeGradation    = myStdWidget->myUseVolumeGradation->isChecked();
+  h_data.myVolumeGradation       = myStdWidget->myVolumeGradation->text().isEmpty() ? -1.0 : myStdWidget->myVolumeGradation->GetValue();
   h_data.myAllowQuadrangles      = myStdWidget->myAllowQuadrangles->isChecked();
   h_data.myAngleMesh             = myStdWidget->myAngleMesh->text().isEmpty() ? -1.0 : myStdWidget->myAngleMesh->GetValue();
   h_data.myChordalError          = myStdWidget->myChordalError->text().isEmpty() ? -1.0 : myStdWidget->myChordalError->GetValue();
@@ -2529,17 +2536,19 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
   h_data.myAnisotropicRatio      = myStdWidget->myAnisotropicRatio->text().isEmpty() ? -1.0 : myStdWidget->myAnisotropicRatio->GetValue();
   h_data.myRemoveTinyEdges       = myStdWidget->myRemoveTinyEdges->isChecked();
   h_data.myTinyEdgeLength        = myStdWidget->myTinyEdgeLength->text().isEmpty() ? -1.0 : myStdWidget->myTinyEdgeLength->GetValue();
+  h_data.myOptimiseTinyEdges     = myStdWidget->myOptimiseTinyEdges->isChecked();
+  h_data.myTinyEdgeOptimisLength = myStdWidget->myTinyEdgeOptimisLength->text().isEmpty() ? -1.0 : myStdWidget->myTinyEdgeOptimisLength->GetValue();
+  h_data.myCorrectSurfaceIntersection = myStdWidget->myCorrectSurfaceIntersection->isChecked();
+  h_data.myCorrectSurfaceIntersectionMaxCost = myStdWidget->myCorrectSurfaceIntersectionMaxCost->text().isEmpty() ? -1.0 : myStdWidget->myCorrectSurfaceIntersectionMaxCost->GetValue();
   h_data.myForceBadElementRemoval= myStdWidget->myForceBadElementRemoval->isChecked();
   h_data.myBadElementAspectRatio = myStdWidget->myBadElementAspectRatio->text().isEmpty() ? -1.0 : myStdWidget->myBadElementAspectRatio->GetValue();
   h_data.myOptimizeMesh          = myStdWidget->myOptimizeMesh->isChecked();
   h_data.myQuadraticMesh         = myStdWidget->myQuadraticMesh->isChecked();
   h_data.myVerbosity             = myAdvWidget->myVerbosity->value();
-  h_data.myTopology              = myAdvWidget->myPreCADGroupBox->isChecked() ? PreCAD : FromCAD;
-  h_data.myPreCADMergeEdges      = myAdvWidget->myPreCADMergeEdges->isChecked();
-  h_data.myPreCADRemoveTinyUVEdges = myAdvWidget->myPreCADRemoveTinyUVEdges->isChecked();
-  h_data.myPreCADRemoveDuplicateCADFaces = myAdvWidget->myPreCADRemoveDuplicateCADFaces->isChecked();
-  h_data.myPreCADProcess3DTopology = myAdvWidget->myPreCADProcess3DTopology->isChecked();
-  h_data.myPreCADDiscardInput    = myAdvWidget->myPreCADDiscardInput->isChecked();
+  //h_data.myTopology              = myAdvWidget->myPreCADGroupBox->isChecked() ? PreCAD : FromCAD;
+  //h_data.myPreCADMergeEdges      = myAdvWidget->myPreCADMergeEdges->isChecked();
+  //h_data.myPreCADProcess3DTopology = myAdvWidget->myPreCADProcess3DTopology->isChecked();
+  //h_data.myPreCADDiscardInput    = myAdvWidget->myPreCADDiscardInput->isChecked();
 
   QString guiHyp;
   guiHyp += tr("BLSURF_PHY_MESH") + " = " + QString::number( h_data.myPhysicalMesh ) + "; ";
@@ -2568,50 +2577,15 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
   
   guiHyp += tr("BLSURF_TOPOLOGY") + " = " + QString::number( h_data.myTopology ) + "; ";
   guiHyp += tr("BLSURF_PRECAD_MERGE_EDGES") + " = " + QString(h_data.myPreCADMergeEdges ? "yes" : "no") + "; ";
-  guiHyp += tr("BLSURF_PRECAD_REMOVE_TINY_UV_EDGES") + " = " + QString(h_data.myPreCADRemoveTinyUVEdges ? "yes" : "no") + "; ";
-  guiHyp += tr("BLSURF_PRECAD_REMOVE_DUPLICATE_CAD_FACES") + " = " + QString(h_data.myPreCADRemoveDuplicateCADFaces ? "yes" : "no") + "; ";
   guiHyp += tr("BLSURF_PRECAD_REMOVE_NANO_EDGES") + " = " + QString(h_data.myPreCADProcess3DTopology ? "yes" : "no") + "; ";
   guiHyp += tr("BLSURF_PRECAD_DISCARD_INPUT") + " = " + QString(h_data.myPreCADDiscardInput ? "yes" : "no") + "; ";
-
-  BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
-  int row = 0, nbRows = myAdvWidget->myOptionTable->rowCount();
-  for ( ; row < nbRows; ++row )
-  {
-    int id = myAdvWidget->myOptionTable->item( row, OPTION_ID_COLUMN )->text().toInt();
-    std::string optionType = myAdvWidget->myOptionTable->item( row, OPTION_TYPE_COLUMN )->text().toStdString();
-    bool custom = myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->data(Qt::UserRole).toBool();
-    if ( optionType == "BLSURF" && custom ) {
-      id = that->myOptions->length();
-      that->myOptions->length( that->myOptions->length() + 1 );
-    }
-    if ( optionType == "PRECAD" && custom ) {
-      id = that->myPreCADOptions->length();
-      that->myPreCADOptions->length( that->myPreCADOptions->length() + 1 );
-    }
-    if ( custom || ( id >= 0 && ( ( optionType == "BLSURF" && id < myOptions->length() ) || ( optionType == "PRECAD" && id < myPreCADOptions->length() ) ) ) )
-    {
-      QString name  = myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->text();
-      QString value = myAdvWidget->myOptionTable->item( row, OPTION_VALUE_COLUMN )->text().trimmed();
-      if ( value.isNull() )
-        value = "";
-      if (optionType == "PRECAD")
-        that->myPreCADOptions[ id ] = ( name + ":" + value  + ":" + ( custom ? "1" : "0" ) ).toLatin1().constData();
-      else
-        that->myOptions[ id ] = ( name + ":" + value + ":" + ( custom ? "1" : "0" ) ).toLatin1().constData();
-
-      if ( value != "" ) {
-        if (optionType == "PRECAD")
-          guiHyp += "PRECAD_";
-        guiHyp += name + " = " + value + "; ";
-      }
-    }
-  }
-  
+ 
   h_data.myGMFFileName = myAdvWidget->myGMFFileName->text().toStdString();
 //   h_data.myGMFFileMode = myGMFFileMode->isChecked();
 
   // SizeMap
-  row = 0, nbRows = mySizeMapTable->topLevelItemCount();
+  BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
+  int row = 0, nbRows = mySizeMapTable->topLevelItemCount();
   for ( ; row < nbRows; ++row )
   {
       QString entry   = mySizeMapTable->topLevelItem(row)->data(SMP_ENTRY_COLUMN ,Qt::EditRole).toString();
@@ -2681,11 +2655,11 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
   h_data.preCadPeriodicityVector.clear();
   // For each tree item, store each value. Shapes are stored as entries.
   int nbPeriodicityDescriptions = myPeriodicityTreeWidget->topLevelItemCount();
-  for (size_t i=0 ; i<nbPeriodicityDescriptions ; i++) {
+  for (int i=0 ; i<nbPeriodicityDescriptions ; i++) {
     QTreeWidgetItem* item = myPeriodicityTreeWidget->topLevelItem(i);
     TPreCadPeriodicity periodicity_i;
     if (item) {
-        for (size_t k=0; k<myPeriodicityTreeWidget->columnCount(); ++k)
+        for (int k=0; k<myPeriodicityTreeWidget->columnCount(); ++k)
           {
             MESSAGE(k);
             std::string entry = item->data(k, Qt::UserRole).toString().toStdString();
@@ -2703,166 +2677,16 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
 
 void BLSURFPluginGUI_HypothesisCreator::onAddOption()
 {
-  QMenu* menu = (QMenu*)sender();
-  // fill popup with option names
-  menu->clear();
-  QStringList name_value_type;
-  if ( myOptions.operator->() ) {
-    QMenu* blsurfMenu = menu->addMenu(tr("OPTION_MENU_BLSURF"));
-    for ( int i = 0, nb = myOptions->length(); i < nb; ++i ) {
-      name_value_type = QString( myOptions[i].in() ).split( ":", QString::KeepEmptyParts );
-      bool custom = ( name_value_type.size() == 3 ) ? name_value_type[2].toInt() : false;
-      if ( !custom && !name_value_type[0].isEmpty() )
-        blsurfMenu->addAction( name_value_type[0] );
-    }
-    // this user-customized action must be last in the menu
-    blsurfMenu->addAction( QString( "<" + tr("BLSURF_OTHER_OPTION") + ">" ) );
-  }
-  if ( myPreCADOptions.operator->() ) {
-    QMenu* preCADmenu = menu->addMenu(tr("OPTION_MENU_PRECAD"));
-    for ( int i = 0, nb = myPreCADOptions->length(); i < nb; ++i ) {
-      name_value_type = QString( myPreCADOptions[i].in() ).split( ":", QString::KeepEmptyParts );
-      bool custom = ( name_value_type.size() == 3 ) ? name_value_type[2].toInt() : false;
-      if ( !custom && !name_value_type[0].isEmpty() )
-        preCADmenu->addAction( name_value_type[0] );
-    }
-    // this user-customized action must be last in the menu
-    preCADmenu->addAction( QString( "<" + tr("BLSURF_OTHER_OPTION") + ">" ) );
-  }
-}
-
-void BLSURFPluginGUI_HypothesisCreator::onOptionChosenInPopup( QAction* a )
-{
-  myAdvWidget->myOptionTable->setFocus();
-  QMenu* menu = (QMenu*)( a->parent() );
-
-  int idx = menu->actions().indexOf( a );
-  bool custom = menu->actions().last() == a;
-
-  QString idStr = QString("%1").arg( idx );
-  QString option, optionType;
-  if (menu->title() == tr("OPTION_MENU_BLSURF")) {
-    if (idx < myOptions->length())
-      option = myOptions[idx].in();
-    optionType = "BLSURF";
-  }
-  else if (menu->title() == tr("OPTION_MENU_PRECAD")) {
-    if (idx < myPreCADOptions->length())
-      option = myPreCADOptions[idx].in();
-    optionType = "PRECAD";
-  }
-  QString optionName = option.split( ":", QString::KeepEmptyParts )[0];
-
-  // look for a row with optionName
-  int row = 0, nbRows = myAdvWidget->myOptionTable->rowCount();
-  for ( ; row < nbRows; ++row )
-    if ( myAdvWidget->myOptionTable->item( row, OPTION_ID_COLUMN )->text() == idStr )
-      if ( myAdvWidget->myOptionTable->item( row, OPTION_TYPE_COLUMN )->text() == optionType )
-        break;
-  if (custom)
-    row = nbRows;
-  // add a row if not found
-  if ( row == nbRows ) {
-    myAdvWidget->myOptionTable->setRowCount( row+1 );
-    myAdvWidget->myOptionTable->setItem( row, OPTION_ID_COLUMN, new QTableWidgetItem( idStr ) );
-    myAdvWidget->myOptionTable->item( row, OPTION_ID_COLUMN )->setFlags( 0 );
-    myAdvWidget->myOptionTable->setItem( row, OPTION_TYPE_COLUMN, new QTableWidgetItem( optionType ) );
-    myAdvWidget->myOptionTable->item( row, OPTION_TYPE_COLUMN )->setFlags( 0 );
-    if (custom) {
-      myAdvWidget->myOptionTable->setItem( row, OPTION_NAME_COLUMN, new QTableWidgetItem( "" ) );
-      myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( Qt::ItemIsSelectable |
-                                                                             Qt::ItemIsEditable   |
-                                                                             Qt::ItemIsEnabled );
-      myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->setData( Qt::UserRole, QVariant(true) );
-    }
-    else {
-      myAdvWidget->myOptionTable->setItem( row, OPTION_NAME_COLUMN, new QTableWidgetItem( optionName ) );
-      myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->setFlags( 0 );
-    }
-    myAdvWidget->myOptionTable->setItem( row, OPTION_VALUE_COLUMN, new QTableWidgetItem( "" ) );
-    myAdvWidget->myOptionTable->item( row, OPTION_VALUE_COLUMN )->setFlags( Qt::ItemIsSelectable |
-                                                                            Qt::ItemIsEditable   |
-                                                                            Qt::ItemIsEnabled );
-    myAdvWidget->myOptionTable->resizeColumnToContents( OPTION_NAME_COLUMN );
-  }
-  myAdvWidget->myOptionTable->clearSelection();
-  int activeColumn = custom ? OPTION_NAME_COLUMN : OPTION_VALUE_COLUMN;
-  myAdvWidget->myOptionTable->scrollToItem( myAdvWidget->myOptionTable->item( row, activeColumn ) );
-  //myAdvWidget->myOptionTable->item( row, activeColumn )->setSelected( true );
-  myAdvWidget->myOptionTable->setCurrentCell( row, activeColumn );
-  //myAdvWidget->myOptionTable->openPersistentEditor( myOptionTable->item( row, activeColumn ) );
-}
-
-void BLSURFPluginGUI_HypothesisCreator::onDeleteOption()
-{
-  BLSURFPlugin::BLSURFPlugin_Hypothesis_var h =
-    BLSURFPlugin::BLSURFPlugin_Hypothesis::_narrow( hypothesis() );
-  // clear option values and remember selected row
-  QList<int> selectedRows;
-  QList<QTableWidgetItem*> selected = myAdvWidget->myOptionTable->selectedItems();
-  QTableWidgetItem* item;
-  foreach( item, selected ) {
-    int row = item->row();
-    if ( !selectedRows.contains( row ) ) {
-      selectedRows.append( row );
-      int id = myAdvWidget->myOptionTable->item( row, OPTION_ID_COLUMN )->text().toInt();
-      QString optionType = myAdvWidget->myOptionTable->item( row, OPTION_TYPE_COLUMN )->text();
-      bool custom = myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->data(Qt::UserRole).toBool();
-      QString name = myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->text();
-      if ( id >= 0 )
-        if ( optionType == "BLSURF" && id < myOptions->length() )
-          if ( custom ) {
-            h->UnsetOption( name.toLatin1().constData() );
-            myOptions[id] = "";
-          }
-          else
-            myOptions[id] = name.toLatin1().constData();
-        else if ( optionType == "PRECAD" && id < myPreCADOptions->length() )
-          if ( custom ) {
-            h->UnsetPreCADOption( name.toLatin1().constData() );
-            myPreCADOptions[id] = "";
-          }
-          else
-            myPreCADOptions[id] = name.toLatin1().constData();
-    }
-  }
-  qSort( selectedRows );
-  QListIterator<int> it( selectedRows );
-  it.toBack();
-  while ( it.hasPrevious() )
-    myAdvWidget->myOptionTable->removeRow( it.previous() );
-}
-
-void BLSURFPluginGUI_HypothesisCreator::onEditOption( int row, int column )
-{
-  if ( column != OPTION_NAME_COLUMN )
-    return;
-  bool custom = myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->data(Qt::UserRole).toBool();
-  if ( !custom )
-    return;
-
-  BLSURFPlugin::BLSURFPlugin_Hypothesis_var h =
-    BLSURFPlugin::BLSURFPlugin_Hypothesis::_narrow( hypothesis() );
-
-  int id = myAdvWidget->myOptionTable->item( row, OPTION_ID_COLUMN )->text().toInt();
-  QString optionType = myAdvWidget->myOptionTable->item( row, OPTION_TYPE_COLUMN )->text().trimmed();
-  QString name = myAdvWidget->myOptionTable->item( row, OPTION_NAME_COLUMN )->text();
-  if ( optionType == "PRECAD"  && id < myPreCADOptions->length() ) {
-    h->UnsetPreCADOption(name.toLatin1().constData());
-    myPreCADOptions[id] = "";
-  }
-  else if ( optionType == "BLSURF" && id < myOptions->length() ) {
-    h->UnsetOption(name.toLatin1().constData());
-    myOptions[id] = "";
-  }
+  myAdvWidget->AddOption( TBL_CUSTOM, NULL );
 }
 
 void BLSURFPluginGUI_HypothesisCreator::onChangeOptionName( int row, int column )
 {
-  if ( column != OPTION_NAME_COLUMN )
-    return;
-  myAdvWidget->myOptionTable->resizeColumnToContents( OPTION_NAME_COLUMN );
+  // if ( column != OPTION_NAME_COLUMN )
+  //   return;
+  // myAdvWidget->myOptionTable->resizeColumnToContents( OPTION_NAME_COLUMN );
 }
+
 // **********************
 // *** BEGIN SIZE MAP ***
 // **********************

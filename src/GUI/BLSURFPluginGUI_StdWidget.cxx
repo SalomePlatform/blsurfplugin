@@ -44,10 +44,13 @@ BLSURFPluginGUI_StdWidget::BLSURFPluginGUI_StdWidget( QWidget* parent, Qt::Windo
   myMinSize->RangeStepAndValidator(0, COORD_MAX, 10.0, "length_precision");
   myMaxSize->RangeStepAndValidator(0, COORD_MAX, 10.0, "length_precision");
   myGradation->RangeStepAndValidator(1.0, COORD_MAX, 0.1, "length_precision");
+  myVolumeGradation->RangeStepAndValidator(1.0, COORD_MAX, 0.1, "length_precision");
   myAngleMesh->RangeStepAndValidator(0, 90, 0.5, "angular_precision");
   myChordalError->RangeStepAndValidator(0, COORD_MAX, 0.1, "length_precision");
   myAnisotropicRatio->RangeStepAndValidator(0, COORD_MAX, 0.1, "length_precision");
-  myTinyEdgeLength->RangeStepAndValidator(COORD_MIN, COORD_MAX, 0.1, "length_precision");
+  myTinyEdgeLength->RangeStepAndValidator(0, COORD_MAX, 0.1, "length_precision");
+  myTinyEdgeOptimisLength->RangeStepAndValidator(0, COORD_MAX, 0.1, "length_precision");
+  myCorrectSurfaceIntersectionMaxCost->RangeStepAndValidator(0, COORD_MAX, 1);
   myBadElementAspectRatio->RangeStepAndValidator(0, COORD_MAX, 1000, "length_precision");
   myMinSize->setText("");
   myMaxSize->setText("");
@@ -55,6 +58,8 @@ BLSURFPluginGUI_StdWidget::BLSURFPluginGUI_StdWidget( QWidget* parent, Qt::Windo
   myChordalError->setText("");
   myAnisotropicRatio->setText("");
   myTinyEdgeLength->setText("");
+  myTinyEdgeOptimisLength->setText("");
+  myCorrectSurfaceIntersectionMaxCost->setText("");
   myBadElementAspectRatio->setText("");
 }
 
@@ -66,36 +71,17 @@ void BLSURFPluginGUI_StdWidget::onPhysicalMeshChanged() {
   bool isPhysicalGlobalSize = (myPhysicalMesh->currentIndex() == PhysicalGlobalSize);
   bool isPhysicalLocalSize  = (myPhysicalMesh->currentIndex() == PhysicalLocalSize);
   bool isCustom             = (isPhysicalGlobalSize || isPhysicalLocalSize) ;
-  bool geomIsCustom         = (myGeometricMesh->currentIndex() != DefaultGeom);
-  bool isQuadAllowed        = (myAllowQuadrangles->isChecked() );
 
-  myGradation->setEnabled( !isQuadAllowed && ( !isPhysicalGlobalSize || geomIsCustom ));
   myPhySize->setEnabled(isCustom);
   myPhySizeRel->setEnabled(isCustom);
-
-  if ( !isCustom ) {
-    if ( myGeometricMesh->currentIndex() == DefaultGeom ) {
-      myGeometricMesh->setCurrentIndex( GeometricalGlobalSize );
-      onGeometricMeshChanged();
-    }
-  }
 }
 
 void BLSURFPluginGUI_StdWidget::onGeometricMeshChanged() {
   bool isCustom            = (myGeometricMesh->currentIndex() != DefaultGeom);
-  bool isPhysicalLocalSize = (myPhysicalMesh->currentIndex() == PhysicalLocalSize);
-  bool isQuadAllowed       = (myAllowQuadrangles->isChecked() );
 
-  GeomParamsGroupBox->setEnabled(isCustom);
-  myGradation->setEnabled( !isQuadAllowed && ( isCustom || isPhysicalLocalSize ));
+  myAngleMesh->setEnabled( isCustom );
+  myChordalError->setEnabled( isCustom );
 
-  if ( ! isCustom ) {
-    //  hphy_flag = 0 and hgeo_flag = 0 is not allowed (spec)
-    if ( myPhysicalMesh->currentIndex() == DefaultSize ) {
-      myPhysicalMesh->setCurrentIndex( PhysicalGlobalSize );
-      onPhysicalMeshChanged();
-    }
-  }
 }
 
 void BLSURFPluginGUI_StdWidget::resizeWidgets() {

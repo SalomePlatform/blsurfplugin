@@ -28,6 +28,7 @@
 #include <SMESH_Gen.hxx>
 #include <SMESH_Gen_i.hxx>
 #include <SMESH_PythonDump.hxx>
+#include <SMESHGUI_Utils.h>
 
 #include <SALOMEDS_wrap.hxx>
 #include <Utils_CorbaException.hxx>
@@ -238,6 +239,35 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::IsMaxSizeRel() {
   return this->GetImpl()->IsMaxSizeRel();
 }
 
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::SetUseGradation
+ *
+ *  Set true or false
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetUseGradation(CORBA::Boolean theValue) {
+  MESSAGE("BLSURFPlugin_Hypothesis_i::SetUseGradation");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetUseGradation(theValue);
+  std::string theValueStr = theValue ? "True" : "False";
+  SMESH::TPythonDump() << _this() << ".SetUseGradation( " << theValueStr.c_str() << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetUseGradation
+ *
+ *  Get true or false
+ */
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetUseGradation() {
+  MESSAGE("BLSURFPlugin_Hypothesis_i::GetUseGradation");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetUseGradation();
+}
+
 //=============================================================================
 /*!
  *  BLSURFPlugin_Hypothesis_i::SetGradation
@@ -263,6 +293,61 @@ CORBA::Double BLSURFPlugin_Hypothesis_i::GetGradation() {
   // MESSAGE("BLSURFPlugin_Hypothesis_i::GetGradation");
   ASSERT(myBaseImpl);
   return this->GetImpl()->GetGradation();
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::SetUseVolumeGradation
+ *
+ *  Set true or false
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetUseVolumeGradation(CORBA::Boolean theValue) {
+  MESSAGE("BLSURFPlugin_Hypothesis_i::SetUseVolumeGradation");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetUseVolumeGradation(theValue);
+  std::string theValueStr = theValue ? "True" : "False";
+  SMESH::TPythonDump() << _this() << ".SetUseVolumeGradation( " << theValueStr.c_str() << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetUseVolumeGradation
+ *
+ *  Get true or false
+ */
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetUseVolumeGradation() {
+  MESSAGE("BLSURFPlugin_Hypothesis_i::GetUseVolumeGradation");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetUseVolumeGradation();
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::SetVolumeGradation
+ *
+ *  Set VolumeGradation
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetVolumeGradation(CORBA::Double theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetVolumeGradation");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetVolumeGradation(theValue);
+  SMESH::TPythonDump() << _this() << ".SetVolumeGradation( " << theValue << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetVolumeGradation
+ *
+ *  Get VolumeGradation
+ */
+//=============================================================================
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetVolumeGradation() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetVolumeGradation");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetVolumeGradation();
 }
 
 //=============================================================================
@@ -460,6 +545,116 @@ CORBA::Double BLSURFPlugin_Hypothesis_i::GetTinyEdgeLength() {
 
 //=============================================================================
 /*!
+ *  BLSURFPlugin_Hypothesis_i::SetOptimiseTinyEdges
+ *
+ *  Set true or false
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetOptimiseTinyEdges(CORBA::Boolean theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetOptimiseTinyEdges");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetOptimiseTinyEdges(theValue);
+  std::string theValueStr = theValue ? "True" : "False";
+  SMESH::TPythonDump() << _this() << ".SetOptimiseTinyEdges( " << theValueStr.c_str() << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetOptimiseTinyEdges
+ *
+ *  Get true or false
+ */
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetOptimiseTinyEdges() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetOptimiseTinyEdges");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetOptimiseTinyEdges();
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::SetTinyEdgeOptimisationLength
+ *
+ *  Set Tiny Edge OptimisationLength
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetTinyEdgeOptimisationLength(CORBA::Double theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetTinyEdgeOptimisationLength");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetTinyEdgeOptimisationLength(theValue);
+  SMESH::TPythonDump() << _this() << ".SetTinyEdgeOptimisationLength( " << theValue << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetTinyEdgeOptimisationLength
+ *
+ *  Get Tiny Edge OptimisationLength
+ */
+//=============================================================================
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetTinyEdgeOptimisationLength() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetTinyEdgeOptimisationLength");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetTinyEdgeOptimisationLength();
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::SetCorrectSurfaceIntersection
+ *
+ *  Set true or false
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetCorrectSurfaceIntersection(CORBA::Boolean theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetCorrectSurfaceIntersection");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetCorrectSurfaceIntersection(theValue);
+  std::string theValueStr = theValue ? "True" : "False";
+  SMESH::TPythonDump() << _this() << ".SetCorrectSurfaceIntersection( " << theValueStr.c_str() << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetCorrectSurfaceIntersection
+ *
+ *  Get true or false
+ */
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetCorrectSurfaceIntersection() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetCorrectSurfaceIntersection");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetCorrectSurfaceIntersection();
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::SetCorrectSurfaceIntersectionMaxCost
+ *
+ *  Set Tiny Edge OptimisationLength
+ */
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetCorrectSurfaceIntersectionMaxCost(CORBA::Double theValue) {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetCorrectSurfaceIntersectionMaxCost");
+  ASSERT(myBaseImpl);
+  this->GetImpl()->SetCorrectSurfaceIntersectionMaxCost(theValue);
+  SMESH::TPythonDump() << _this() << ".SetCorrectSurfaceIntersectionMaxCost( " << theValue << " )";
+}
+
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetCorrectSurfaceIntersectionMaxCost
+ *
+ *  Get Tiny Edge OptimisationLength
+ */
+//=============================================================================
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetCorrectSurfaceIntersectionMaxCost() {
+  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetCorrectSurfaceIntersectionMaxCost");
+  ASSERT(myBaseImpl);
+  return this->GetImpl()->GetCorrectSurfaceIntersectionMaxCost();
+}
+
+//=============================================================================
+/*!
  *  BLSURFPlugin_Hypothesis_i::SetBadElementRemoval
  *
  *  Set true or false
@@ -617,6 +812,240 @@ CORBA::Short BLSURFPlugin_Hypothesis_i::GetVerbosity() {
 }
 
 //=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetEnforceCadEdgesSize( CORBA::Boolean toEnforce )
+{
+  if ( GetEnforceCadEdgesSize() != toEnforce )
+  {
+    this->GetImpl()->SetEnforceCadEdgesSize(toEnforce);
+    SMESH::TPythonDump() << _this() << ".SetEnforceCadEdgesSize( " << toEnforce << " )";
+  }
+}
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetEnforceCadEdgesSize()
+{
+  return this->GetImpl()->GetEnforceCadEdgesSize();
+}
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::SetJacobianRectificationRespectGeometry( CORBA::Boolean allowRectification )
+{
+  if ( GetJacobianRectificationRespectGeometry() != allowRectification )
+  {
+    this->GetImpl()->SetJacobianRectificationRespectGeometry(allowRectification);
+    SMESH::TPythonDump() << _this() << ".SetJacobianRectificationRespectGeometry( " << allowRectification << " )";
+  }
+}
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetJacobianRectificationRespectGeometry()
+{
+  return this->GetImpl()->GetJacobianRectificationRespectGeometry();
+}
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::SetJacobianRectification( CORBA::Boolean allowRectification )
+{
+  if ( GetJacobianRectification() != allowRectification )
+  {
+    this->GetImpl()->SetJacobianRectification(allowRectification);
+    SMESH::TPythonDump() << _this() << ".SetJacobianRectification( " << allowRectification << " )";
+  }
+}
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetJacobianRectification()
+{
+  return this->GetImpl()->GetJacobianRectification();
+}
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::SetMaxNumberOfPointsPerPatch( CORBA::Long nb ) throw (SALOME::SALOME_Exception)
+{
+  if ( GetMaxNumberOfPointsPerPatch() != nb )
+  {
+    try {
+      this->GetImpl()->SetMaxNumberOfPointsPerPatch(nb);
+
+    } catch (const std::invalid_argument& ex) {
+      THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+    } catch (SALOME_Exception& ex) {
+      THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+    }
+    SMESH::TPythonDump() << _this() << ".SetMaxNumberOfPointsPerPatch( " << nb << " )";
+  }
+}
+//=============================================================================
+CORBA::Long BLSURFPlugin_Hypothesis_i::GetMaxNumberOfPointsPerPatch()
+{
+  return this->GetImpl()->GetMaxNumberOfPointsPerPatch();
+}
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::SetRespectGeometry( CORBA::Boolean toRespect )
+{
+  if ( GetRespectGeometry() != toRespect )
+  {
+    this->GetImpl()->SetRespectGeometry(toRespect);
+    SMESH::TPythonDump() << _this() << ".SetRespectGeometry( " << toRespect << " )";
+  }
+}
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetRespectGeometry()
+{
+  return this->GetImpl()->GetRespectGeometry();
+}
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::SetTinyEdgesAvoidSurfaceIntersections( CORBA::Boolean toAvoidIntersection )
+{
+  if ( GetTinyEdgesAvoidSurfaceIntersections() != toAvoidIntersection )
+  {
+    this->GetImpl()->SetTinyEdgesAvoidSurfaceIntersections(toAvoidIntersection);
+    SMESH::TPythonDump() << _this() << ".SetTinyEdgesAvoidSurfaceIntersections( " << toAvoidIntersection << " )";
+  }
+}
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetTinyEdgesAvoidSurfaceIntersections()
+{
+  return this->GetImpl()->GetTinyEdgesAvoidSurfaceIntersections();
+}
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::SetClosedGeometry( CORBA::Boolean isClosed )
+{
+  if ( GetClosedGeometry() != isClosed )
+  {
+    this->GetImpl()->SetClosedGeometry(isClosed);
+    SMESH::TPythonDump() << _this() << ".SetClosedGeometry( " << isClosed << " )";
+  }
+}
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetClosedGeometry()
+{
+  return this->GetImpl()->GetClosedGeometry();
+}
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::SetDebug( CORBA::Boolean isDebug )
+{
+  if ( GetDebug() != isDebug )
+  {
+    this->GetImpl()->SetDebug(isDebug);
+    SMESH::TPythonDump() << _this() << ".SetDebug( " << isDebug << " )";
+  }
+}
+//=============================================================================
+bool BLSURFPlugin_Hypothesis_i::GetDebug()
+{
+  return this->GetImpl()->GetDebug();
+}
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::SetPeriodicTolerance( CORBA::Double tol ) throw (SALOME::SALOME_Exception)
+{
+  if ( SMESH::toStdStr( GetPreCADOptionValue("periodic_tolerance")) != SMESH_Comment( tol ))
+  {
+    try
+    {
+      this->GetImpl()->SetPeriodicTolerance(tol);
+
+    } catch (const std::invalid_argument& ex) {
+      THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+    } catch (SALOME_Exception& ex) {
+      THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+    }
+    SMESH::TPythonDump() << _this() << ".SetPeriodicTolerance( " << tol << " )";
+  }
+}
+//=============================================================================
+double BLSURFPlugin_Hypothesis_i::GetPeriodicTolerance() throw (SALOME::SALOME_Exception)
+{
+  try{
+    return this->GetImpl()->GetPeriodicTolerance();
+
+  } catch (const std::invalid_argument& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  } catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+  return -1;
+}
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::SetRequiredEntities( const char* howToTreat ) throw (SALOME::SALOME_Exception)
+{
+  if ( GetImpl()->GetRequiredEntities() != howToTreat )
+  {
+    try {
+      this->GetImpl()->SetRequiredEntities(howToTreat);
+
+    } catch (const std::invalid_argument& ex) {
+      THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+    } catch (SALOME_Exception& ex) {
+      THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+    }
+    SMESH::TPythonDump() << _this() << ".SetRequiredEntities( '" << howToTreat << "' )";
+  }
+}
+//=============================================================================
+char* BLSURFPlugin_Hypothesis_i::GetRequiredEntities()
+{
+  return CORBA::string_dup( this->GetImpl()->GetRequiredEntities().c_str() );
+}
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::SetSewingTolerance( CORBA::Double tol ) throw (SALOME::SALOME_Exception)
+{
+  if ( SMESH::toStdStr( GetPreCADOptionValue("sewing_tolerance")) != SMESH_Comment( tol ))
+  {
+    try
+    {
+      this->GetImpl()->SetSewingTolerance(tol);
+      SMESH::TPythonDump() << _this() << ".SetSewingTolerance( " << tol << " )";
+
+    } catch (const std::invalid_argument& ex) {
+      THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+    } catch (SALOME_Exception& ex) {
+      THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+    }
+  }
+}
+//=============================================================================
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetSewingTolerance() throw (SALOME::SALOME_Exception)
+{
+  try
+  {
+    return this->GetImpl()->GetSewingTolerance();
+
+  } catch (const std::invalid_argument& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  } catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+  return -1;
+}
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::SetTags( const char* howToTreat ) throw (SALOME::SALOME_Exception)
+{
+  if ( GetImpl()->GetTags() != howToTreat )
+  {
+    try {
+      this->GetImpl()->SetTags(howToTreat);
+    }
+    catch (const std::invalid_argument& ex) {
+      THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+    } catch (SALOME_Exception& ex) {
+      THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+    }
+  }
+  SMESH::TPythonDump() << _this() << ".SetTags( '" << howToTreat << "' )";
+}
+//=============================================================================
+char* BLSURFPlugin_Hypothesis_i::GetTags()
+{
+  return CORBA::string_dup( this->GetImpl()->GetTags().c_str() );
+}
+
+//=============================================================================
 /*!
  *  BLSURFPlugin_Hypothesis_i::SetPreCADMergeEdges
  *
@@ -760,44 +1189,168 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADDiscardInput() {
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis_i::SetOptionValue(const char* optionName, const char* optionValue)
-    throw (SALOME::SALOME_Exception) {
+  throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
-  bool valueChanged = false;
   try {
-    valueChanged = (this->GetImpl()->GetOptionValue(optionName) != optionValue);
-    if (valueChanged)
-      this->GetImpl()->SetOptionValue(optionName, optionValue);
+    std::string name( optionName );
+    if ( !optionValue || !optionValue[0] )
+      UnsetOption( optionName );
+
+    // basic options (visible in Advanced table)
+
+    else if ( name == "enforce_cad_edge_sizes" )
+      SetEnforceCadEdgesSize( GetImpl()->ToBool( optionValue ));
+
+    else if ( name == "jacobian_rectification_respect_geometry" )
+      SetJacobianRectificationRespectGeometry( GetImpl()->ToBool( optionValue ));
+
+    else if ( name == "max_number_of_points_per_patch" )
+      SetMaxNumberOfPointsPerPatch( GetImpl()->ToInt( optionValue ));
+
+    else if ( name == "rectify_jacobian" )
+      SetJacobianRectification( GetImpl()->ToBool( optionValue ));
+
+    else if ( name == "respect_geometry" )
+      SetRespectGeometry( GetImpl()->ToBool( optionValue ));
+
+    else if ( name == "tiny_edge_avoid_surface_intersections" )
+      SetTinyEdgesAvoidSurfaceIntersections( GetImpl()->ToBool( optionValue ));
+
+    else if ( name == "closed_geometry" )
+      SetClosedGeometry( GetImpl()->ToBool( optionValue ));
+
+    else if ( name == "debug" )
+      SetDebug( GetImpl()->ToBool( optionValue ));
+
+    else if ( name == "discard_input_topology" )
+      SetPreCADDiscardInput( GetImpl()->ToBool( optionValue ));
+
+    else if ( name == "merge_edges" )
+      SetPreCADMergeEdges( GetImpl()->ToBool( optionValue ));
+
+    else if ( name == "periodic_tolerance" )
+      SetPeriodicTolerance( GetImpl()->ToDbl( optionValue ));
+
+    else if ( name == "remove_duplicate_cad_faces" )
+      SetPreCADRemoveDuplicateCADFaces( GetImpl()->ToBool( optionValue ));
+
+    else if ( name == "required_entities" )
+      SetRequiredEntities( optionValue );
+
+    else if ( name == "sewing_tolerance" )
+      SetSewingTolerance( GetImpl()->ToDbl( optionValue ));
+
+    else if ( name == "tags" )
+      SetTags( optionValue );
+
+    // other basic options with specific methods
+
+    else if ( name == "correct_surface_intersections" )
+      SetCorrectSurfaceIntersection( GetImpl()->ToBool( optionValue ));
+
+    else if ( name == "optimise_tiny_edges" )
+      SetOptimiseTinyEdges( GetImpl()->ToBool( optionValue ));
+
+    else if ( name == "surface_intersections_processing_max_cost" )
+      SetCorrectSurfaceIntersectionMaxCost( GetImpl()->ToDbl( optionValue ));
+
+    else if ( name == "volume_gradation" )
+      SetVolumeGradation( GetImpl()->ToDbl( optionValue ));
+
+    else if ( name == "tiny_edge_optimisation_length" )
+      SetTinyEdgeOptimisationLength( GetImpl()->ToDbl( optionValue ));
+
+    // advanced options (for backward compatibility)
+
+    else if ( name == "create_tag_on_collision" ||
+              name == "tiny_edge_respect_geometry" )
+      AddOption( optionName, optionValue );
+
+    else {
+      bool valueChanged;
+      valueChanged = ( this->GetImpl()->GetOptionValue( name ) != optionValue &&
+                       this->GetImpl()->GetOptionValue( name, &valueChanged ) != optionValue );
+      if ( valueChanged )
+      {
+        this->GetImpl()->SetOptionValue(optionName, optionValue);
+        SMESH::TPythonDump() << _this() << ".SetOptionValue( '" << optionName << "', '" << optionValue << "' )";
+      }
+    }
   } catch (const std::invalid_argument& ex) {
-    SALOME::ExceptionStruct ExDescription;
-    ExDescription.text = ex.what();
-    ExDescription.type = SALOME::BAD_PARAM;
-    ExDescription.sourceFile = "BLSURFPlugin_Hypothesis::SetOptionValue(name,value)";
-    ExDescription.lineNumber = 0;
-    throw SALOME::SALOME_Exception(ExDescription);
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
   } catch (SALOME_Exception& ex) {
     THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
   }
-  if (valueChanged)
-    SMESH::TPythonDump() << _this() << ".SetOptionValue( '" << optionName << "', '" << optionValue << "' )";
 }
 
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis_i::SetPreCADOptionValue(const char* optionName, const char* optionValue)
-    throw (SALOME::SALOME_Exception) {
+  throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
   bool valueChanged = false;
   try {
-    valueChanged = (this->GetImpl()->GetPreCADOptionValue(optionName) != optionValue);
-    if (valueChanged)
-      this->GetImpl()->SetPreCADOptionValue(optionName, optionValue);
+    std::string name( optionName );
+    if ( !optionValue || !optionValue[0] )
+      UnsetOption( optionName );
+
+    else if ( name == "closed_geometry" )
+      SetClosedGeometry( GetImpl()->ToBool( optionValue ));
+
+    else if ( name == "debug" )
+      SetDebug( GetImpl()->ToBool( optionValue ));
+
+    else if ( name == "discard_input_topology" )
+      SetPreCADDiscardInput( GetImpl()->ToBool( optionValue ));
+
+    else if ( name == "merge_edges" )
+      SetPreCADMergeEdges( GetImpl()->ToBool( optionValue ));
+
+    else if ( name == "periodic_tolerance" )
+      SetPeriodicTolerance( GetImpl()->ToDbl( optionValue ));
+
+    else if ( name == "remove_duplicate_cad_faces" )
+      SetPreCADRemoveDuplicateCADFaces( GetImpl()->ToBool( optionValue ));
+
+    else if ( name == "required_entities" )
+      SetRequiredEntities( optionValue );
+
+    else if ( name == "sewing_tolerance" )
+      SetSewingTolerance( GetImpl()->ToDbl( optionValue ));
+
+    else if ( name == "tags" )
+      SetTags( optionValue );
+
+    // other basic options with specific methods
+
+    else if ( name == "correct_surface_intersections" )
+      SetCorrectSurfaceIntersection( GetImpl()->ToBool( optionValue ));
+
+    else if ( name == "optimise_tiny_edges" )
+      SetOptimiseTinyEdges( GetImpl()->ToBool( optionValue ));
+
+    else if ( name == "surface_intersections_processing_max_cost" )
+      SetCorrectSurfaceIntersectionMaxCost( GetImpl()->ToDbl( optionValue ));
+
+    else if ( name == "volume_gradation" )
+      SetVolumeGradation( GetImpl()->ToDbl( optionValue ));
+
+    else if ( name == "tiny_edge_optimisation_length" )
+      SetTinyEdgeOptimisationLength( GetImpl()->ToDbl( optionValue ));
+
+    // advanced options (for backward compatibility)
+
+    else if ( name == "create_tag_on_collision" ||
+              name == "tiny_edge_respect_geometry" )
+      AddOption( optionName, optionValue );
+
+    else {
+      valueChanged = (this->GetImpl()->GetPreCADOptionValue(optionName) != optionValue);
+      if (valueChanged)
+        this->GetImpl()->SetPreCADOptionValue(optionName, optionValue);
+    }
   } catch (const std::invalid_argument& ex) {
-    SALOME::ExceptionStruct ExDescription;
-    ExDescription.text = ex.what();
-    ExDescription.type = SALOME::BAD_PARAM;
-    ExDescription.sourceFile = "BLSURFPlugin_Hypothesis::SetPreCADOptionValue(name,value)";
-    ExDescription.lineNumber = 0;
-    throw SALOME::SALOME_Exception(ExDescription);
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
   } catch (SALOME_Exception& ex) {
     THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
   }
@@ -810,14 +1363,10 @@ void BLSURFPlugin_Hypothesis_i::SetPreCADOptionValue(const char* optionName, con
 char* BLSURFPlugin_Hypothesis_i::GetOptionValue(const char* optionName) throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
   try {
-    return CORBA::string_dup(this->GetImpl()->GetOptionValue(optionName).c_str());
+    bool isDefault;
+    return CORBA::string_dup(this->GetImpl()->GetOptionValue(optionName,&isDefault).c_str());
   } catch (const std::invalid_argument& ex) {
-    SALOME::ExceptionStruct ExDescription;
-    ExDescription.text = ex.what();
-    ExDescription.type = SALOME::BAD_PARAM;
-    ExDescription.sourceFile = "BLSURFPlugin_Hypothesis::GetOptionValue(name)";
-    ExDescription.lineNumber = 0;
-    throw SALOME::SALOME_Exception(ExDescription);
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
   } catch (SALOME_Exception& ex) {
     THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
   }
@@ -829,14 +1378,10 @@ char* BLSURFPlugin_Hypothesis_i::GetOptionValue(const char* optionName) throw (S
 char* BLSURFPlugin_Hypothesis_i::GetPreCADOptionValue(const char* optionName) throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
   try {
-    return CORBA::string_dup(this->GetImpl()->GetPreCADOptionValue(optionName).c_str());
+    bool isDefault;
+    return CORBA::string_dup(this->GetImpl()->GetPreCADOptionValue(optionName,&isDefault).c_str());
   } catch (const std::invalid_argument& ex) {
-    SALOME::ExceptionStruct ExDescription;
-    ExDescription.text = ex.what();
-    ExDescription.type = SALOME::BAD_PARAM;
-    ExDescription.sourceFile = "BLSURFPlugin_Hypothesis::GetPreCADOptionValue(name)";
-    ExDescription.lineNumber = 0;
-    throw SALOME::SALOME_Exception(ExDescription);
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
   } catch (SALOME_Exception& ex) {
     THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
   }
@@ -847,16 +1392,22 @@ char* BLSURFPlugin_Hypothesis_i::GetPreCADOptionValue(const char* optionName) th
 
 void BLSURFPlugin_Hypothesis_i::UnsetOption(const char* optionName) {
   ASSERT(myBaseImpl);
-  this->GetImpl()->ClearOption(optionName);
-  SMESH::TPythonDump() << _this() << ".UnsetOption( '" << optionName << "' )";
+  if ( !GetImpl()->GetOptionValue( optionName ).empty() )
+  {
+    this->GetImpl()->ClearOption(optionName);
+    SMESH::TPythonDump() << _this() << ".UnsetOption( '" << optionName << "' )";
+  }
 }
 
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis_i::UnsetPreCADOption(const char* optionName) {
   ASSERT(myBaseImpl);
-  this->GetImpl()->ClearPreCADOption(optionName);
-  SMESH::TPythonDump() << _this() << ".UnsetPreCADOption( '" << optionName << "' )";
+  if ( !GetImpl()->GetPreCADOptionValue( optionName ).empty() )
+  {
+    this->GetImpl()->ClearPreCADOption(optionName);
+    SMESH::TPythonDump() << _this() << ".UnsetPreCADOption( '" << optionName << "' )";
+  }
 }
 
 //=============================================================================
@@ -866,31 +1417,21 @@ BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetOptionValues() {
   BLSURFPlugin::string_array_var result = new BLSURFPlugin::string_array();
 
   const ::BLSURFPlugin_Hypothesis::TOptionValues & opts = this->GetImpl()->GetOptionValues();
-  const ::BLSURFPlugin_Hypothesis::TOptionValues & custom_opts = this->GetImpl()->GetCustomOptionValues();
-  result->length(opts.size()+custom_opts.size());
+  result->length(opts.size());
   int i=0;
 
+  bool isDefault;
   ::BLSURFPlugin_Hypothesis::TOptionValues::const_iterator opIt = opts.begin();
   for (; opIt != opts.end(); ++opIt, ++i) {
     string name_value_type = opIt->first;
     if (!opIt->second.empty()) {
       name_value_type += ":";
-      name_value_type += opIt->second;
-      name_value_type += ":0";
+      name_value_type += GetImpl()->GetOptionValue( opIt->first, &isDefault );
+      name_value_type += isDefault ? ":0" : ":1";
     }
     result[i] = CORBA::string_dup(name_value_type.c_str());
   }
 
-  opIt = custom_opts.begin();
-  for (; opIt != custom_opts.end(); ++opIt,++i) {
-    string name_value_type = opIt->first;
-    if (!opIt->second.empty()) {
-      name_value_type += ":";
-      name_value_type += opIt->second;
-      name_value_type += ":1";
-    }
-    result[i] = CORBA::string_dup(name_value_type.c_str());
-  }
   return result._retn();
 }
 
@@ -901,28 +1442,40 @@ BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetPreCADOptionValues() {
   BLSURFPlugin::string_array_var result = new BLSURFPlugin::string_array();
 
   const ::BLSURFPlugin_Hypothesis::TOptionValues & opts = this->GetImpl()->GetPreCADOptionValues();
-  const ::BLSURFPlugin_Hypothesis::TOptionValues & custom_opts = this->GetImpl()->GetCustomPreCADOptionValues();
-  result->length(opts.size()+custom_opts.size());
+  result->length(opts.size());
   int i=0;
 
+  bool isDefault;
   ::BLSURFPlugin_Hypothesis::TOptionValues::const_iterator opIt = opts.begin();
   for (; opIt != opts.end(); ++opIt, ++i) {
     string name_value_type = opIt->first;
     if (!opIt->second.empty()) {
       name_value_type += ":";
-      name_value_type += opIt->second;
-      name_value_type += ":0";
+      name_value_type += GetImpl()->GetPreCADOptionValue( opIt->first, &isDefault );
+      name_value_type += isDefault ? ":0" : ":1";
     }
     result[i] = CORBA::string_dup(name_value_type.c_str());
   }
+  return result._retn();
+}
 
-  opIt = custom_opts.begin();
-  for (; opIt != custom_opts.end(); ++opIt,++i) {
+//=============================================================================
+
+BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetAdvancedOptionValues()
+{
+  BLSURFPlugin::string_array_var result = new BLSURFPlugin::string_array();
+
+  const ::BLSURFPlugin_Hypothesis::TOptionValues & custom_opts = this->GetImpl()->GetCustomOptionValues();
+  result->length(custom_opts.size());
+  int i=0;
+
+  ::BLSURFPlugin_Hypothesis::TOptionValues::const_iterator opIt = custom_opts.begin();
+  for (; opIt != custom_opts.end(); ++opIt, ++i) {
     string name_value_type = opIt->first;
     if (!opIt->second.empty()) {
       name_value_type += ":";
       name_value_type += opIt->second;
-      name_value_type += ":1";
+      name_value_type += ":1"; // user defined
     }
     result[i] = CORBA::string_dup(name_value_type.c_str());
   }
@@ -940,7 +1493,6 @@ void BLSURFPlugin_Hypothesis_i::SetOptionValues(const BLSURFPlugin::string_array
       continue;
     size_t colonPos = name_value_type.find(':');
     string name, value;
-    bool custom = false;
     if (colonPos == string::npos) // ':' not found
       name = name_value_type;
     else {
@@ -950,10 +1502,11 @@ void BLSURFPlugin_Hypothesis_i::SetOptionValues(const BLSURFPlugin::string_array
         colonPos = value_type.find(':');
         value = value_type.substr(0, colonPos);
         if (colonPos < value_type.size() - 1 && value_type[colonPos] != ' ')
-          custom = atoi((value_type.substr(colonPos + 1)).c_str());
+          if ( value_type.substr(colonPos + 1) == "0" ) // is default
+            value.clear();
       }
     }
-    custom ? AddOption(name.c_str(), value.c_str()) : SetOptionValue(name.c_str(), value.c_str());
+    SetOptionValue(name.c_str(), value.c_str());
   }
 }
 
@@ -968,7 +1521,6 @@ void BLSURFPlugin_Hypothesis_i::SetPreCADOptionValues(const BLSURFPlugin::string
       continue;
     size_t colonPos = name_value_type.find(':');
     string name, value;
-    bool custom = false;
     if (colonPos == string::npos) // ':' not found
       name = name_value_type;
     else {
@@ -978,11 +1530,72 @@ void BLSURFPlugin_Hypothesis_i::SetPreCADOptionValues(const BLSURFPlugin::string
         colonPos = value_type.find(':');
         value = value_type.substr(0, colonPos);
         if (colonPos < value_type.size() - 1 && value_type[colonPos] != ' ')
-          custom = atoi((value_type.substr(colonPos + 1)).c_str());
+          if ( value_type.substr(colonPos + 1) == "0" ) // is default
+            value.clear();
       }
     }
-    custom ? AddPreCADOption(name.c_str(), value.c_str()) : SetPreCADOptionValue(name.c_str(), value.c_str());
+    SetPreCADOptionValue(name.c_str(), value.c_str());
   }
+}
+
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::SetAdvancedOptionValues(const BLSURFPlugin::string_array& options)
+{
+  SMESH::TPythonDump dump;
+
+  string optionsAndValues;
+  for ( CORBA::ULong i = 0; i < options.length(); ++i) {
+    string name_value_type = options[i].in();
+    if(name_value_type.empty())
+      continue;
+    size_t colonPos = name_value_type.find(':');
+    string name, value;
+    if (colonPos == string::npos) // ':' not found
+      name = name_value_type;
+    else {
+      name = name_value_type.substr(0, colonPos);
+      if (colonPos < name_value_type.size() - 1 && name_value_type[colonPos] != ' ') {
+        string value_type = name_value_type.substr(colonPos + 1);
+        colonPos = value_type.find(':');
+        value = value_type.substr(0, colonPos);
+      }
+    }
+    AddOption(name.c_str(), value.c_str());
+
+    optionsAndValues += name + " " + value + " ";
+  }
+
+  if ( !optionsAndValues.empty() )
+    dump << _this() << ".SetAdvancedOptions( '" << optionsAndValues.c_str() << "' )";
+}
+
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis_i::SetAdvancedOption(const char* optionsAndValues)
+  throw (SALOME::SALOME_Exception)
+{
+  if ( !optionsAndValues ) return;
+
+  SMESH::TPythonDump dump;
+
+  std::istringstream strm( optionsAndValues );
+  std::istream_iterator<std::string> sIt( strm ), sEnd;
+  while ( sIt != sEnd )
+  {
+    std::string option = *sIt;
+    if ( ++sIt != sEnd )
+    {
+      std::string value = *sIt;
+      ++sIt;
+      AddOption( option.c_str(), value.c_str() );
+    }
+    else
+    {
+      THROW_SALOME_CORBA_EXCEPTION( "Uneven number of options and values" ,SALOME::BAD_PARAM );
+    }
+  }
+  dump << _this() << ".SetAdvancedOption( '" << optionsAndValues << "' )";
 }
 
 //=============================================================================

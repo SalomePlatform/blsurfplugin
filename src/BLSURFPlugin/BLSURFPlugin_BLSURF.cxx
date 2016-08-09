@@ -840,7 +840,10 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
   bool   _minSizeRel            = BLSURFPlugin_Hypothesis::GetDefaultMinSizeRel();
   double _maxSize               = BLSURFPlugin_Hypothesis::GetDefaultMaxSize(diagonal);
   bool   _maxSizeRel            = BLSURFPlugin_Hypothesis::GetDefaultMaxSizeRel();
+  double _use_gradation         = BLSURFPlugin_Hypothesis::GetDefaultUseGradation();
   double _gradation             = BLSURFPlugin_Hypothesis::GetDefaultGradation();
+  double _use_volume_gradation  = BLSURFPlugin_Hypothesis::GetDefaultUseVolumeGradation();
+  double _volume_gradation      = BLSURFPlugin_Hypothesis::GetDefaultVolumeGradation();
   bool   _quadAllowed           = BLSURFPlugin_Hypothesis::GetDefaultQuadAllowed();
   double _angleMesh             = BLSURFPlugin_Hypothesis::GetDefaultAngleMesh();
   double _chordalError          = BLSURFPlugin_Hypothesis::GetDefaultChordalError(diagonal);
@@ -848,19 +851,23 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
   double _anisotropicRatio      = BLSURFPlugin_Hypothesis::GetDefaultAnisotropicRatio();
   bool   _removeTinyEdges       = BLSURFPlugin_Hypothesis::GetDefaultRemoveTinyEdges();
   double _tinyEdgeLength        = BLSURFPlugin_Hypothesis::GetDefaultTinyEdgeLength(diagonal);
+  bool   _optimiseTinyEdges     = BLSURFPlugin_Hypothesis::GetDefaultOptimiseTinyEdges();
+  double _tinyEdgeOptimisLength = BLSURFPlugin_Hypothesis::GetDefaultTinyEdgeOptimisationLength(diagonal);
+  bool   _correctSurfaceIntersec= BLSURFPlugin_Hypothesis::GetDefaultCorrectSurfaceIntersection();
+  double _corrSurfaceIntersCost = BLSURFPlugin_Hypothesis::GetDefaultCorrectSurfaceIntersectionMaxCost();
   bool   _badElementRemoval     = BLSURFPlugin_Hypothesis::GetDefaultBadElementRemoval();
   double _badElementAspectRatio = BLSURFPlugin_Hypothesis::GetDefaultBadElementAspectRatio();
   bool   _optimizeMesh          = BLSURFPlugin_Hypothesis::GetDefaultOptimizeMesh();
   bool   _quadraticMesh         = BLSURFPlugin_Hypothesis::GetDefaultQuadraticMesh();
   int    _verb                  = BLSURFPlugin_Hypothesis::GetDefaultVerbosity();
-  int    _topology              = BLSURFPlugin_Hypothesis::GetDefaultTopology();
+  //int    _topology              = BLSURFPlugin_Hypothesis::GetDefaultTopology();
 
   // PreCAD
-  int _precadMergeEdges         = BLSURFPlugin_Hypothesis::GetDefaultPreCADMergeEdges();
+  //int _precadMergeEdges         = BLSURFPlugin_Hypothesis::GetDefaultPreCADMergeEdges();
   int _precadRemoveTinyUVEdges  = BLSURFPlugin_Hypothesis::GetDefaultPreCADRemoveTinyUVEdges();
-  int _precadRemoveDuplicateCADFaces = BLSURFPlugin_Hypothesis::GetDefaultPreCADRemoveDuplicateCADFaces();
+  //int _precadRemoveDuplicateCADFaces = BLSURFPlugin_Hypothesis::GetDefaultPreCADRemoveDuplicateCADFaces();
   int _precadProcess3DTopology  = BLSURFPlugin_Hypothesis::GetDefaultPreCADProcess3DTopology();
-  int _precadDiscardInput       = BLSURFPlugin_Hypothesis::GetDefaultPreCADDiscardInput();
+  //int _precadDiscardInput       = BLSURFPlugin_Hypothesis::GetDefaultPreCADDiscardInput();
 
 
   if (hyp) {
@@ -882,8 +889,12 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
       // if max size is not explicitly specified, "relative" flag is ignored
       _maxSizeRel    = hyp->IsMaxSizeRel();
     }
-    if (hyp->GetGradation() > 0)
+    _use_gradation = hyp->GetUseGradation();
+    if (hyp->GetGradation() > 0 && _use_gradation)
       _gradation     = hyp->GetGradation();
+    _use_volume_gradation    = hyp->GetUseVolumeGradation();
+    if (hyp->GetVolumeGradation() > 0 && _use_volume_gradation )
+      _volume_gradation      = hyp->GetVolumeGradation();
     _quadAllowed     = hyp->GetQuadAllowed();
     if (hyp->GetAngleMesh() > 0)
       _angleMesh     = hyp->GetAngleMesh();
@@ -895,19 +906,25 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
     _removeTinyEdges         = hyp->GetRemoveTinyEdges();
     if (hyp->GetTinyEdgeLength() > 0)
       _tinyEdgeLength        = hyp->GetTinyEdgeLength();
+    _optimiseTinyEdges       = hyp->GetOptimiseTinyEdges();
+    if (hyp->GetTinyEdgeOptimisationLength() > 0)
+      _tinyEdgeOptimisLength = hyp->GetTinyEdgeOptimisationLength();
+    _correctSurfaceIntersec  = hyp->GetCorrectSurfaceIntersection();
+    if (hyp->GetCorrectSurfaceIntersectionMaxCost() > 0)
+      _corrSurfaceIntersCost = hyp->GetCorrectSurfaceIntersectionMaxCost();
     _badElementRemoval       = hyp->GetBadElementRemoval();
     if (hyp->GetBadElementAspectRatio() >= 0)
       _badElementAspectRatio = hyp->GetBadElementAspectRatio();
     _optimizeMesh  = hyp->GetOptimizeMesh();
     _quadraticMesh = hyp->GetQuadraticMesh();
     _verb          = hyp->GetVerbosity();
-    _topology      = (int) hyp->GetTopology();
+    //_topology      = (int) hyp->GetTopology();
     // PreCAD
-    _precadMergeEdges        = hyp->GetPreCADMergeEdges();
+    //_precadMergeEdges        = hyp->GetPreCADMergeEdges();
     _precadRemoveTinyUVEdges = hyp->GetPreCADRemoveTinyUVEdges();
-    _precadRemoveDuplicateCADFaces = hyp->GetPreCADRemoveDuplicateCADFaces();
+    //_precadRemoveDuplicateCADFaces = hyp->GetPreCADRemoveDuplicateCADFaces();
     _precadProcess3DTopology = hyp->GetPreCADProcess3DTopology();
-    _precadDiscardInput      = hyp->GetPreCADDiscardInput();
+    //_precadDiscardInput      = hyp->GetPreCADDiscardInput();
 
     const BLSURFPlugin_Hypothesis::TOptionValues& opts = hyp->GetOptionValues();
     BLSURFPlugin_Hypothesis::TOptionValues::const_iterator opIt;
@@ -930,35 +947,15 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
         MESSAGE("cadsurf_set_param(): " << opIt->first << " = " << opIt->second);
         set_param(css, opIt->first.c_str(), opIt->second.c_str());
       }
-
-    const BLSURFPlugin_Hypothesis::TOptionValues& custom_preCADopts = hyp->GetCustomPreCADOptionValues();
-    for ( opIt = custom_preCADopts.begin(); opIt != custom_preCADopts.end(); ++opIt )
-      if ( !opIt->second.empty() ) {
-        MESSAGE("cadsurf_set_param(): " << opIt->first << " = " << opIt->second);
-        set_param(css, opIt->first.c_str(), opIt->second.c_str());
-      }
   }
-//   else {
-//     //0020968: EDF1545 SMESH: Problem in the creation of a mesh group on geometry
-//     // GetDefaultPhySize() sometimes leads to computation failure
-//     // GDD 26/07/2012 From Distene documentation, global physical size default value = diag/100
-//     _phySize = BLSURFPlugin_Hypothesis::GetDefaultPhySize(diagonal);
-//     _minSize = BLSURFPlugin_Hypothesis::GetDefaultMinSize(diagonal);
-//     _maxSize = BLSURFPlugin_Hypothesis::GetDefaultMaxSize(diagonal);
-//     _chordalError = BLSURFPlugin_Hypothesis::GetDefaultChordalError(diagonal);
-//     _tinyEdgeLength = BLSURFPlugin_Hypothesis::GetDefaultTinyEdgeLength(diagonal);
-//     MESSAGE("BLSURFPlugin_BLSURF::SetParameters using defaults");
-//   }
 
-  // PreProcessor (formerly PreCAD)
-  set_param(css, "merge_edges",            _precadMergeEdges ? "yes" : "no");
+  // PreProcessor (formerly PreCAD) -- commented params are preCADoptions (since 0023307)
+  //set_param(css, "merge_edges",            _precadMergeEdges ? "yes" : "no");
   set_param(css, "remove_tiny_uv_edges",   _precadRemoveTinyUVEdges ? "yes" : "no");
-  set_param(css, "remove_duplicate_cad_faces", _precadRemoveDuplicateCADFaces ? "yes" : "no");
+  //set_param(css, "remove_duplicate_cad_faces", _precadRemoveDuplicateCADFaces ? "yes" : "no");
   set_param(css, "process_3d_topology",    _precadProcess3DTopology ? "1" : "0");
-  set_param(css, "discard_input_topology", _precadDiscardInput ? "1" : "0");
-
-  // unlimit mesh size (issue 0022266)
-  set_param(css, "max_number_of_points_per_patch", "1000000");
+  //set_param(css, "discard_input_topology", _precadDiscardInput ? "1" : "0");
+  //set_param(css, "max_number_of_points_per_patch", "1000000");
   
    bool useGradation = false;
    switch (_physicalMesh)
@@ -1022,8 +1019,10 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
    // anisotropic and quadrangle mesh requires disabling gradation
    if ( _anisotropic && _quadAllowed )
      useGradation = false; // limitation of V1.3
-   if ( useGradation )
-     set_param(css, "gradation",                         val_to_string(_gradation).c_str());
+   if ( useGradation && _use_gradation )
+     set_param(css, "gradation",                       val_to_string(_gradation).c_str());
+   if ( useGradation && _use_volume_gradation )
+     set_param(css, "volume_gradation",                val_to_string(_volume_gradation).c_str());
    set_param(css, "element_generation",                _quadAllowed ? "quad_dominant" : "triangle");
 
 
@@ -1033,6 +1032,12 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
    set_param(css, "remove_tiny_edges",                 _removeTinyEdges ? "1" : "0");
    if ( _removeTinyEdges )
      set_param(css, "tiny_edge_length",                  val_to_string(_tinyEdgeLength).c_str());
+   set_param(css, "optimise_tiny_edges",               _optimiseTinyEdges ? "1" : "0");
+   if ( _optimiseTinyEdges )
+     set_param(css, "tiny_edge_optimisation_length",   val_to_string(_tinyEdgeOptimisLength).c_str());
+   set_param(css, "correct_surface_intersections",     _correctSurfaceIntersec ? "1" : "0");
+   if ( _correctSurfaceIntersec )
+     set_param(css, "surface_intersections_processing_max_cost", val_to_string(_corrSurfaceIntersCost ).c_str());
    set_param(css, "force_bad_surface_element_removal", _badElementRemoval ? "1" : "0");
    if ( _badElementRemoval )
      set_param(css, "bad_surface_element_aspect_ratio",  val_to_string(_badElementAspectRatio).c_str());
@@ -1849,9 +1854,6 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
    */
 
   // PreCAD
-  // If user requests it, send the CAD through Distene preprocessor : PreCAD
-  cad_t *cleanc = NULL; // preprocessed cad
-  dcad_t *cleandc = NULL; // preprocessed dcad
 
   cadsurf_session_t *css = cadsurf_session_new(ctx);
 
@@ -1859,7 +1861,6 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   BLSURF_Cleaner cleaner( ctx,css,c,dcad );
 
   MESSAGE("BEGIN SetParameters");
-  bool use_precad = false;
   SetParameters(_hypothesis, css, aShape);
   MESSAGE("END SetParameters");
 
@@ -2628,10 +2629,10 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     mesh_get_composite_tag_definition(msh, tag, &nb_tag, tags_buff);
     if(nb_tag > 1)  
       tag=tags_buff[nb_tag-1];
-    if ( tag > emap.Extent() )
+    if ( tag < 1 || tag > emap.Extent() )
     {
       std::cerr << "MG-CADSurf BUG:::: Edge tag " << tag
-                << " more than nb CAD egdes (" << emap.Extent() << ")" << std::endl;
+                << " does not point to a CAD edge (nb edges " << emap.Extent() << ")" << std::endl;
       continue;
     }
     if (tags[vtx[0]]) {

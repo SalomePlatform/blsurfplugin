@@ -39,6 +39,15 @@
 #include CORBA_CLIENT_HEADER(SALOMEDS)
 #include CORBA_CLIENT_HEADER(GEOM_Gen)
 
+namespace
+{
+  struct GET_DEFAULT // struct used to get default value from GetOptionValue()
+  {
+    bool isDefault;
+    operator bool* () { return &isDefault; }
+  };
+}
+
 //=============================================================================
 BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_Gen * gen) :
   SMESH_Hypothesis(hypId, studyId, gen), 
@@ -50,7 +59,10 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   _maxSize(GetDefaultMaxSize()),
   _minSizeRel(GetDefaultMinSizeRel()),
   _maxSizeRel(GetDefaultMaxSizeRel()),
+  _useGradation(GetDefaultUseGradation()),
   _gradation(GetDefaultGradation()),
+  _useVolumeGradation(GetDefaultUseVolumeGradation()),
+  _volumeGradation(GetDefaultVolumeGradation()),
   _quadAllowed(GetDefaultQuadAllowed()),
   _angleMesh(GetDefaultAngleMesh()),
   _chordalError(GetDefaultChordalError()), 
@@ -58,6 +70,10 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   _anisotropicRatio(GetDefaultAnisotropicRatio()),
   _removeTinyEdges(GetDefaultRemoveTinyEdges()),
   _tinyEdgeLength(GetDefaultTinyEdgeLength()),
+  _optimiseTinyEdges(GetDefaultOptimiseTinyEdges()),
+  _tinyEdgeOptimisationLength(GetDefaultTinyEdgeOptimisationLength()),
+  _correctSurfaceIntersec(GetDefaultCorrectSurfaceIntersection()),
+  _corrSurfaceIntersCost(GetDefaultCorrectSurfaceIntersectionMaxCost()),
   _badElementRemoval(GetDefaultBadElementRemoval()),
   _badElementAspectRatio(GetDefaultBadElementAspectRatio()),
   _optimizeMesh(GetDefaultOptimizeMesh()),
@@ -89,52 +105,51 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   
 //   _GMFFileMode = false; // GMF ascii mode
 
-  const char* boolOptionNames[] = {         "correct_surface_intersections",            // default = 1
-                                            "create_tag_on_collision",                  // default = 1
-                                            "debug",                                    // default = 0
-                                            "enforce_cad_edge_sizes",                   // default = 0
-                                            "frontal",                                  // ok default = 1
+  // Advanced options with their defaults according to MG User Manual
+
+  const char* boolOptionNames[] = {         "enforce_cad_edge_sizes",                   // default = 0
+                                            // "correct_surface_intersections",            // default = 1
+                                            // "create_tag_on_collision",                  // default = 1
                                             "jacobian_rectification_respect_geometry",  // default = 1
-                                            "proximity",                                // default = 0
                                             "rectify_jacobian",                         // default = 1
                                             "respect_geometry",                         // default = 1
-                                            "optimise_tiny_edges",                      // default = 0
+                                            // "optimise_tiny_edges",                      // default = 0
+                                            // "remove_duplicate_cad_faces",               // default = 1
                                             "tiny_edge_avoid_surface_intersections",    // default = 1
-                                            "tiny_edge_respect_geometry",               // default = 0
+                                            // "tiny_edge_respect_geometry",               // default = 0
                                             "" // mark of end
       };
 
-  const char* intOptionNames[] = {          "hinterpol_flag",                           // ok default = 0
-                                            "hmean_flag",                               // ok default = 0
-                                            "max_number_of_points_per_patch",           // default = 100000
-                                            "prox_nb_layer",                            // detects the volumic proximity of surfaces
+  const char* intOptionNames[] = {          "max_number_of_points_per_patch",           // default = 100000
                                             "" // mark of end
       };
-  const char* doubleOptionNames[] = {       "surface_intersections_processing_max_cost",// default = 15
-                                            "periodic_tolerance",                       // default = diag/100
-                                            "prox_ratio",
-                                            "volume_gradation",
-                                            "tiny_edge_optimisation_length",            // default = diag * 1e-6
+  const char* doubleOptionNames[] = {       // "surface_intersections_processing_max_cost",// default = 15
+                                            // "periodic_tolerance",                       // default = diag/100
+                                            // "volume_gradation",
+                                            // "tiny_edge_optimisation_length",            // default = diag * 1e-6
                                             "" // mark of end
       };
-  const char* charOptionNames[] = {         "required_entities",                        // default = "respect"
-                                            "tags",                                     // default = "respect"
+  const char* charOptionNames[] = {         // "required_entities",                        // default = "respect"
+                                            // "tags",                                     // default = "respect"
                                             "" // mark of end
       };
 
   // PreCAD advanced options
   const char* preCADboolOptionNames[] = {   "closed_geometry",                          // default = 0
-                                            "create_tag_on_collision",                  // default = 1
+                                            "discard_input_topology",                   // default = 0
+                                            "merge_edges",                              // default =  = 1
+                                            "remove_duplicate_cad_faces",               // default = 1
+                                            // "create_tag_on_collision",                  // default = 1
                                             "debug",                                    // default = 0 
-                                            "remove_tiny_edges",                        // default = 0
+                                            // "remove_tiny_edges",                        // default = 0
                                             "" // mark of end
       };
-  const char* preCADintOptionNames[] = {    "manifold_geometry",                        // default = 0
+  const char* preCADintOptionNames[] = {    // "manifold_geometry",                        // default = 0
                                             "" // mark of end
       };
   const char* preCADdoubleOptionNames[] = { "periodic_tolerance",                       // default = diag * 1e-5
                                             "sewing_tolerance",                         // default = diag * 5e-4
-                                            "tiny_edge_length",                         // default = diag * 1e-5
+                                            // "tiny_edge_length",                         // default = diag * 1e-5
                                             "" // mark of end
       };
   const char* preCADcharOptionNames[] = {   "required_entities",                        // default = "respect"
@@ -144,12 +159,16 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   
   int i = 0;
   while (boolOptionNames[i][0])
+  {
+    _boolOptions.insert( boolOptionNames[i] );
     _option2value[boolOptionNames[i++]].clear();
-  
+  }
   i = 0;
   while (preCADboolOptionNames[i][0])
+  {
+    _boolOptions.insert( preCADboolOptionNames[i] );
     _preCADoption2value[preCADboolOptionNames[i++]].clear();
-  
+  }
   i = 0;
   while (intOptionNames[i][0])
     _option2value[intOptionNames[i++]].clear();
@@ -178,8 +197,32 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
     _preCADcharOptions.insert(preCADcharOptionNames[i]);
     _preCADoption2value[preCADcharOptionNames[i++]].clear();
   }
-  
 
+  // default values to be used while MG meshing
+
+  _defaultOptionValues["enforce_cad_edge_sizes"                 ] = "no";
+  _defaultOptionValues["jacobian_rectification_respect_geometry"] = "yes";
+  _defaultOptionValues["max_number_of_points_per_patch"         ] = "0";
+  _defaultOptionValues["rectify_jacobian"                       ] = "yes";
+  _defaultOptionValues["respect_geometry"                       ] = "yes";
+  _defaultOptionValues["tiny_edge_avoid_surface_intersections"  ] = "yes";
+  _defaultOptionValues["closed_geometry"                        ] = "no";
+  _defaultOptionValues["debug"                                  ] = "no";
+  _defaultOptionValues["discard_input_topology"                 ] = "no";
+  _defaultOptionValues["merge_edges"                            ] = "no";
+  _defaultOptionValues["periodic_tolerance"                     ] = "1e-5*D";
+  _defaultOptionValues["remove_duplicate_cad_faces"             ] = "no";
+  _defaultOptionValues["required_entities"                      ] = "respect";
+  _defaultOptionValues["sewing_tolerance"                       ] = "5e-4*D";
+  _defaultOptionValues["tags"                                   ] = "respect";
+
+#ifdef _DEBUG_
+  // check validity of option names of _defaultOptionValues
+  TOptionValues::iterator n2v = _defaultOptionValues.begin();
+  for ( ; n2v != _defaultOptionValues.end(); ++n2v )
+    ASSERT( _option2value.count( n2v->first ) || _preCADoption2value.count( n2v->first ));
+  ASSERT( _option2value.size() + _preCADoption2value.size() == _defaultOptionValues.size() );
+#endif
       
   _sizeMap.clear();
   _attractors.clear();
@@ -272,9 +315,33 @@ void BLSURFPlugin_Hypothesis::SetMaxSize(double theMaxSize, bool isRelative) {
 }
 
 //=============================================================================
+void BLSURFPlugin_Hypothesis::SetUseGradation(bool theVal) {
+  if (theVal != _useGradation) {
+    _useGradation = theVal;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
 void BLSURFPlugin_Hypothesis::SetGradation(double theVal) {
   if (theVal != _gradation) {
     _gradation = theVal;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetUseVolumeGradation(bool theVal) {
+  if (theVal != _useVolumeGradation) {
+    _useVolumeGradation = theVal;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetVolumeGradation(double theVal) {
+  if (theVal != _volumeGradation) {
+    _volumeGradation = theVal;
     NotifySubMeshesHypothesisModification();
   }
 }
@@ -336,6 +403,38 @@ void BLSURFPlugin_Hypothesis::SetTinyEdgeLength(double theVal) {
 }
 
 //=============================================================================
+void BLSURFPlugin_Hypothesis::SetOptimiseTinyEdges(bool theVal) {
+  if (theVal != _optimiseTinyEdges) {
+    _optimiseTinyEdges = theVal;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetTinyEdgeOptimisationLength(double theVal) {
+  if (theVal != _tinyEdgeOptimisationLength) {
+    _tinyEdgeOptimisationLength = theVal;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetCorrectSurfaceIntersection(bool theVal) {
+  if (theVal != _correctSurfaceIntersec) {
+    _correctSurfaceIntersec = theVal;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetCorrectSurfaceIntersectionMaxCost(double theVal) {
+  if (theVal != _corrSurfaceIntersCost) {
+    _corrSurfaceIntersCost = theVal;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
 void BLSURFPlugin_Hypothesis::SetBadElementRemoval(bool theVal) {
   if (theVal != _badElementRemoval) {
     _badElementRemoval = theVal;
@@ -384,16 +483,218 @@ void BLSURFPlugin_Hypothesis::SetVerbosity(int theVal) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetPreCADMergeEdges(bool theVal) {
+void BLSURFPlugin_Hypothesis::SetEnforceCadEdgesSize( bool toEnforce )
+{
+  if ( GetEnforceCadEdgesSize() != toEnforce )
+  {
+    SetOptionValue( "enforce_cad_edge_sizes", toEnforce ? "yes" : "no" );
+    NotifySubMeshesHypothesisModification();
+  }
+}
+//=============================================================================
+bool BLSURFPlugin_Hypothesis::GetEnforceCadEdgesSize()
+{
+  return ToBool( GetOptionValue( "enforce_cad_edge_sizes" ), GET_DEFAULT() );
+}
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis::SetJacobianRectificationRespectGeometry( bool allowRectification )
+{
+  if ( GetJacobianRectificationRespectGeometry() != allowRectification )
+  {
+    SetOptionValue("jacobian_rectification_respect_geometry", allowRectification ? "yes" : "no" );
+    NotifySubMeshesHypothesisModification();
+  }
+}
+//=============================================================================
+bool BLSURFPlugin_Hypothesis::GetJacobianRectificationRespectGeometry()
+{
+  return ToBool( GetOptionValue("jacobian_rectification_respect_geometry", GET_DEFAULT()));
+}
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis::SetJacobianRectification( bool allowRectification )
+{
+  if ( GetJacobianRectification() != allowRectification )
+  {
+    SetOptionValue( "rectify_jacobian", allowRectification ? "yes" : "no" );
+    NotifySubMeshesHypothesisModification();
+  }
+}
+//=============================================================================
+bool BLSURFPlugin_Hypothesis::GetJacobianRectification()
+{
+  return ToBool( GetOptionValue("rectify_jacobian", GET_DEFAULT()));
+}
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis::SetMaxNumberOfPointsPerPatch( CORBA::Long nb )
+  throw (std::invalid_argument)
+{
+  if ( nb < 0 )
+    throw std::invalid_argument( SMESH_Comment("Invalid number of points: ") << nb );
+
+  if ( GetMaxNumberOfPointsPerPatch() != nb )
+  {
+    SetOptionValue("max_number_of_points_per_patch", SMESH_Comment( nb ));
+    NotifySubMeshesHypothesisModification();
+  }
+}
+//=============================================================================
+int BLSURFPlugin_Hypothesis::GetMaxNumberOfPointsPerPatch()
+{
+  return ToInt( GetOptionValue("max_number_of_points_per_patch", GET_DEFAULT()));
+}
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis::SetRespectGeometry( bool toRespect )
+{
+  if ( GetRespectGeometry() != toRespect )
+  {
+    SetOptionValue("respect_geometry", toRespect ? "yes" : "no" );
+    NotifySubMeshesHypothesisModification();
+  }
+}
+//=============================================================================
+bool BLSURFPlugin_Hypothesis::GetRespectGeometry()
+{
+  return ToBool( GetOptionValue( "respect_geometry", GET_DEFAULT()));
+}
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis::SetTinyEdgesAvoidSurfaceIntersections( bool toAvoidIntersection )
+{
+  if ( GetTinyEdgesAvoidSurfaceIntersections() != toAvoidIntersection )
+  {
+    SetOptionValue("tiny_edge_avoid_surface_intersections", toAvoidIntersection ? "yes" : "no" );
+    NotifySubMeshesHypothesisModification();
+  }
+}
+//=============================================================================
+bool BLSURFPlugin_Hypothesis::GetTinyEdgesAvoidSurfaceIntersections()
+{
+  return ToBool( GetOptionValue("tiny_edge_avoid_surface_intersections", GET_DEFAULT()));
+}
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis::SetClosedGeometry( bool isClosed )
+{
+  if ( GetClosedGeometry() != isClosed )
+  {
+    SetPreCADOptionValue("closed_geometry", isClosed ? "yes" : "no" );
+    NotifySubMeshesHypothesisModification();
+  }
+}
+//=============================================================================
+bool BLSURFPlugin_Hypothesis::GetClosedGeometry()
+{
+  return ToBool( GetPreCADOptionValue( "closed_geometry", GET_DEFAULT()));
+}
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis::SetDebug( bool isDebug )
+{
+  if ( GetDebug() != isDebug )
+  {
+    SetPreCADOptionValue("debug", isDebug ? "yes" : "no" );
+    NotifySubMeshesHypothesisModification();
+  }
+}
+//=============================================================================
+bool BLSURFPlugin_Hypothesis::GetDebug()
+{
+  return ToBool( GetPreCADOptionValue("debug", GET_DEFAULT()));
+}
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis::SetPeriodicTolerance( CORBA::Double tol )
+  throw (std::invalid_argument)
+{
+  if ( tol <= 0 )
+    throw std::invalid_argument( SMESH_Comment("Invalid tolerance: ") << tol );
+  if ( GetPeriodicTolerance() != tol )
+  {
+    SetPreCADOptionValue("periodic_tolerance", SMESH_Comment( tol ) );
+    NotifySubMeshesHypothesisModification();
+  }
+}
+//=============================================================================
+double BLSURFPlugin_Hypothesis::GetPeriodicTolerance()
+{
+  return ToDbl( GetPreCADOptionValue( "periodic_tolerance", GET_DEFAULT()));
+}
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis::SetRequiredEntities( const std::string& howToTreat )
+  throw (std::invalid_argument)
+{
+  if ( howToTreat != "respect" && howToTreat != "ignore" && howToTreat != "clear"  )
+    throw std::invalid_argument
+      ( SMESH_Comment("required_entities must be in ['respect','ignore','clear'] "));
+
+  if ( GetRequiredEntities() != howToTreat )
+  {
+    SetPreCADOptionValue("required_entities", howToTreat );
+    NotifySubMeshesHypothesisModification();
+  }
+}
+//=============================================================================
+std::string BLSURFPlugin_Hypothesis::GetRequiredEntities()
+{
+  return GetPreCADOptionValue("required_entities", GET_DEFAULT());
+}
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis::SetSewingTolerance( CORBA::Double tol )
+  throw (std::invalid_argument)
+{
+  if ( tol <= 0 )
+    throw std::invalid_argument( SMESH_Comment("Invalid tolerance: ") << tol );
+  if ( GetSewingTolerance() != tol )
+  {
+    SetPreCADOptionValue("sewing_tolerance", SMESH_Comment( tol ) );
+    NotifySubMeshesHypothesisModification();
+  }
+}
+//=============================================================================
+CORBA::Double BLSURFPlugin_Hypothesis::GetSewingTolerance()
+{
+  return ToDbl( GetPreCADOptionValue("sewing_tolerance", GET_DEFAULT()));
+}
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis::SetTags( const std::string& howToTreat )
+  throw (std::invalid_argument)
+{
+  if ( howToTreat != "respect" && howToTreat != "ignore" && howToTreat != "clear"  )
+    throw std::invalid_argument
+      ( SMESH_Comment("'tags' must be in ['respect','ignore','clear'] "));
+
+  if ( GetTags() != howToTreat )
+  {
+    SetPreCADOptionValue("tags", howToTreat );
+    NotifySubMeshesHypothesisModification();
+  }
+}
+//=============================================================================
+std::string BLSURFPlugin_Hypothesis::GetTags()
+{
+  return GetPreCADOptionValue("tags", GET_DEFAULT());
+}
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetPreCADMergeEdges(bool theVal)
+{
   if (theVal != _preCADMergeEdges) {
 //     SetTopology(PreCAD);
     _preCADMergeEdges = theVal;
+    SetPreCADOptionValue("merge_edges", theVal ? "yes" : "no" );
     NotifySubMeshesHypothesisModification();
   }
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetPreCADRemoveTinyUVEdges(bool theVal) {
+void BLSURFPlugin_Hypothesis::SetPreCADRemoveTinyUVEdges(bool theVal)
+{
   if (theVal != _preCADRemoveTinyUVEdges) {
 //     SetTopology(PreCAD);
     _preCADRemoveTinyUVEdges = theVal;
@@ -402,28 +703,33 @@ void BLSURFPlugin_Hypothesis::SetPreCADRemoveTinyUVEdges(bool theVal) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetPreCADRemoveDuplicateCADFaces(bool theVal) {
+void BLSURFPlugin_Hypothesis::SetPreCADRemoveDuplicateCADFaces(bool theVal)
+{
   if (theVal != _preCADRemoveDuplicateCADFaces) {
-//     SetTopology(PreCAD);
+    //     SetTopology(PreCAD);
     _preCADRemoveDuplicateCADFaces = theVal;
+    SetPreCADOptionValue("remove_duplicate_cad_faces", theVal ? "yes" : "no" );
     NotifySubMeshesHypothesisModification();
   }
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetPreCADProcess3DTopology(bool theVal) {
+void BLSURFPlugin_Hypothesis::SetPreCADProcess3DTopology(bool theVal)
+{
   if (theVal != _preCADProcess3DTopology) {
-//     SetTopology(PreCAD);
+    //     SetTopology(PreCAD);
     _preCADProcess3DTopology = theVal;
     NotifySubMeshesHypothesisModification();
   }
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetPreCADDiscardInput(bool theVal) {
+void BLSURFPlugin_Hypothesis::SetPreCADDiscardInput(bool theVal)
+{
   if (theVal != _preCADDiscardInput) {
-//     SetTopology(PreCAD);
+    //     SetTopology(PreCAD);
     _preCADDiscardInput = theVal;
+    SetPreCADOptionValue("discard_input_topology", theVal ? "yes" : "no" );
     NotifySubMeshesHypothesisModification();
   }
 }
@@ -433,19 +739,26 @@ void BLSURFPlugin_Hypothesis::SetPreCADDiscardInput(bool theVal) {
 void BLSURFPlugin_Hypothesis::SetGMFFile(const std::string& theFileName)
 {
   _GMFFileName = theFileName;
-//   _GMFFileMode = isBinary;
+  //   _GMFFileMode = isBinary;
   NotifySubMeshesHypothesisModification();
 }
 
 //=============================================================================
 void BLSURFPlugin_Hypothesis::SetOptionValue(const std::string& optionName, const std::string& optionValue)
-    throw (std::invalid_argument) {
+  throw (std::invalid_argument) {
+
   TOptionValues::iterator op_val = _option2value.find(optionName);
-  if (op_val == _option2value.end()) {
-    std::string msg = "Unknown MG-CADSurf option: '" + optionName + "'";
-    throw std::invalid_argument(msg);
+  if (op_val == _option2value.end())
+  {
+    op_val = _preCADoption2value.find(optionName);
+    if (op_val == _preCADoption2value.end())
+    {
+      std::string msg = "Unknown MG-CADSurf option: '" + optionName + "'. Try SetAdvancedOption()";
+      throw std::invalid_argument(msg);
+    }
   }
-  if (op_val->second != optionValue) {
+  if (op_val->second != optionValue)
+  {
     const char* ptr = optionValue.c_str();
     // strip white spaces
     while (ptr[0] == ' ')
@@ -458,39 +771,49 @@ void BLSURFPlugin_Hypothesis::SetOptionValue(const std::string& optionName, cons
     std::string typeName;
     if (i == 0) {
       // empty string
-    } else if (_charOptions.find(optionName) != _charOptions.end()) {
+    } else if (_charOptions.count(optionName)) {
       // do not check strings
-    } else if (_doubleOptions.find(optionName) != _doubleOptions.end()) {
+    } else if (_doubleOptions.count(optionName)) {
       // check if value is double
-      char * endPtr;
-      strtod(ptr, &endPtr);
-      typeOk = (ptr != endPtr);
+      ToDbl(ptr, &typeOk);
       typeName = "real";
+    } else if (_boolOptions.count(optionName)) {
+      // check if value is bool
+      ToBool(ptr, &typeOk);
+      typeName = "bool";
     } else {
       // check if value is int
-      char * endPtr;
-      strtol(ptr, &endPtr, 10);
-      typeOk = (ptr != endPtr);
+      ToInt(ptr, &typeOk);
       typeName = "integer";
     }
     if (!typeOk) {
       std::string msg = "Advanced option '" + optionName + "' = '" + optionValue + "' but must be " + typeName;
       throw std::invalid_argument(msg);
     }
-    op_val->second = optionValue;
+    std::string value( ptr, i );
+    if ( _defaultOptionValues[ optionName ] == value )
+      value.clear();
+
+    op_val->second = value;
+
     NotifySubMeshesHypothesisModification();
   }
 }
 
 //=============================================================================
 void BLSURFPlugin_Hypothesis::SetPreCADOptionValue(const std::string& optionName, const std::string& optionValue)
-    throw (std::invalid_argument) {
+  throw (std::invalid_argument) {
+
   TOptionValues::iterator op_val = _preCADoption2value.find(optionName);
   if (op_val == _preCADoption2value.end()) {
-    std::string msg = "Unknown MG-CADSurf option: '" + optionName + "'";
-    throw std::invalid_argument(msg);
+    op_val = _option2value.find(optionName);
+    if (op_val == _option2value.end()) {
+      std::string msg = "Unknown MG-PreCAD option: '" + optionName + "'. Try SetAdvancedOption()";
+      throw std::invalid_argument(msg);
+    }
   }
-  if (op_val->second != optionValue) {
+  if (op_val->second != optionValue)
+  {
     const char* ptr = optionValue.c_str();
     // strip white spaces
     while (ptr[0] == ' ')
@@ -511,6 +834,10 @@ void BLSURFPlugin_Hypothesis::SetPreCADOptionValue(const std::string& optionName
       strtod(ptr, &endPtr);
       typeOk = (ptr != endPtr);
       typeName = "real";
+    } else if (_boolOptions.count(optionName)) {
+      // check if value is bool
+      ToBool(ptr, &typeOk);
+      typeName = "bool";
     } else {
       // check if value is int
       char * endPtr;
@@ -522,35 +849,81 @@ void BLSURFPlugin_Hypothesis::SetPreCADOptionValue(const std::string& optionName
       std::string msg = "PreCAD advanced option '" + optionName + "' = '" + optionValue + "' but must be " + typeName;
       throw std::invalid_argument(msg);
     }
-    op_val->second = optionValue;
+    std::string value( ptr, i );
+    if ( _defaultOptionValues[ optionName ] == value )
+      value.clear();
+
+    op_val->second = value;
+
     NotifySubMeshesHypothesisModification();
   }
 }
 
 //=============================================================================
-std::string BLSURFPlugin_Hypothesis::GetOptionValue(const std::string& optionName) throw (std::invalid_argument) {
-  TOptionValues::iterator op_val = _option2value.find(optionName);
-  if (op_val == _option2value.end()) {
-    std::string msg = "Unknown MG-CADSurf option: <";
-    msg += optionName + ">";
-    throw std::invalid_argument(msg);
+std::string BLSURFPlugin_Hypothesis::GetOptionValue(const std::string& optionName,
+                                                    bool*              isDefault) const
+  throw (std::invalid_argument)
+{
+  TOptionValues::const_iterator op_val = _option2value.find(optionName);
+  if (op_val == _option2value.end())
+  {
+    op_val = _preCADoption2value.find(optionName);
+    if (op_val == _preCADoption2value.end())
+    {
+      op_val = _customOption2value.find(optionName);
+      if (op_val == _customOption2value.end())
+      {
+        std::string msg = "Unknown MG-CADSurf option: <" + optionName + ">";
+        throw std::invalid_argument(msg);
+      }
+    }
   }
-  return op_val->second;
+  std::string val = op_val->second;
+  if ( isDefault ) *isDefault = ( val.empty() );
+
+  if ( val.empty() && isDefault )
+  {
+    op_val = _defaultOptionValues.find( optionName );
+    if (op_val != _defaultOptionValues.end())
+      val = op_val->second;
+  }
+  return val;
 }
 
 //=============================================================================
-std::string BLSURFPlugin_Hypothesis::GetPreCADOptionValue(const std::string& optionName) throw (std::invalid_argument) {
-  TOptionValues::iterator op_val = _preCADoption2value.find(optionName);
-  if (op_val == _preCADoption2value.end()) {
-    std::string msg = "Unknown PRECAD option: <";
-    msg += optionName + ">";
-    throw std::invalid_argument(msg);
+std::string BLSURFPlugin_Hypothesis::GetPreCADOptionValue(const std::string& optionName,
+                                                          bool*              isDefault) const
+  throw (std::invalid_argument)
+{
+  TOptionValues::const_iterator op_val = _preCADoption2value.find(optionName);
+  if (op_val == _preCADoption2value.end())
+  {
+    op_val = _option2value.find(optionName);
+    if (op_val == _option2value.end())
+    {
+      op_val = _customOption2value.find(optionName);
+      if (op_val == _customOption2value.end())
+      {
+        std::string msg = "Unknown MG-CADSurf option: <" + optionName + ">";
+        throw std::invalid_argument(msg);
+      }
+    }
   }
-  return op_val->second;
+  std::string val = op_val->second;
+  if ( isDefault ) *isDefault = ( val.empty() );
+
+  if ( val.empty() && isDefault )
+  {
+    op_val = _defaultOptionValues.find( optionName );
+    if (op_val != _option2value.end())
+      val = op_val->second;
+  }
+  return val;
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::ClearOption(const std::string& optionName) {
+void BLSURFPlugin_Hypothesis::ClearOption(const std::string& optionName)
+{
   TOptionValues::iterator op_val = _customOption2value.find(optionName);
   if (op_val != _customOption2value.end())
    _customOption2value.erase(op_val);
@@ -558,55 +931,67 @@ void BLSURFPlugin_Hypothesis::ClearOption(const std::string& optionName) {
     op_val = _option2value.find(optionName);
     if (op_val != _option2value.end())
       op_val->second.clear();
+    else {
+      op_val = _preCADoption2value.find(optionName);
+      if (op_val != _preCADoption2value.end())
+        op_val->second.clear();
+    }
   }
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::ClearPreCADOption(const std::string& optionName) {
-  TOptionValues::iterator op_val = _customPreCADOption2value.find(optionName);
-  if (op_val != _customPreCADOption2value.end())
-    _customPreCADOption2value.erase(op_val);
-  else {
-    op_val = _preCADoption2value.find(optionName);
-    if (op_val != _preCADoption2value.end())
-      op_val->second.clear();
-  }
+void BLSURFPlugin_Hypothesis::ClearPreCADOption(const std::string& optionName)
+{
+  TOptionValues::iterator op_val = _preCADoption2value.find(optionName);
+  if (op_val != _preCADoption2value.end())
+    op_val->second.clear();
 }
 
 //=============================================================================
 void BLSURFPlugin_Hypothesis::AddOption(const std::string& optionName, const std::string& optionValue)
 {
+  bool modif = true;
   TOptionValues::iterator op_val = _option2value.find(optionName);
-  if (op_val != _option2value.end()) {
+  if (op_val != _option2value.end())
+  {
     if (op_val->second != optionValue)
       op_val->second = optionValue;
+    else
+      modif = false;
   }
-  else {
-    op_val = _customOption2value.find(optionName);
-    if (op_val == _customOption2value.end())
-      _customOption2value[optionName] = optionValue;
-    else if (op_val->second != optionValue)
-      op_val->second = optionValue;
+  else
+  {
+    op_val = _preCADoption2value.find(optionName);
+    if (op_val != _preCADoption2value.end())
+    {
+      if (op_val->second != optionValue)
+        op_val->second = optionValue;
+      else
+        modif = false;
+    }
+    else if ( optionValue.empty() )
+    {
+      _customOption2value.erase( optionName );
+    }
+    else
+    {
+      op_val = _customOption2value.find(optionName);
+      if (op_val == _customOption2value.end())
+        _customOption2value[optionName] = optionValue;
+      else if (op_val->second != optionValue)
+        op_val->second = optionValue;
+      else
+        modif = false;
+    }
   }
-  NotifySubMeshesHypothesisModification();
+  if ( modif )
+    NotifySubMeshesHypothesisModification();
 }
 
 //=============================================================================
 void BLSURFPlugin_Hypothesis::AddPreCADOption(const std::string& optionName, const std::string& optionValue)
 {
-  TOptionValues::iterator op_val = _preCADoption2value.find(optionName);
-  if (op_val != _preCADoption2value.end()) {
-    if (op_val->second != optionValue)
-      op_val->second = optionValue;
-  }
-  else {
-    op_val = _customPreCADOption2value.find(optionName);
-    if (op_val == _customPreCADOption2value.end())
-      _customPreCADOption2value[optionName] = optionValue;
-    else if (op_val->second != optionValue)
-      op_val->second = optionValue;
-  }
-  NotifySubMeshesHypothesisModification();
+  AddOption( optionName, optionValue );
 }
 
 //=============================================================================
@@ -622,11 +1007,33 @@ std::string BLSURFPlugin_Hypothesis::GetOption(const std::string& optionName)
 //=============================================================================
 std::string BLSURFPlugin_Hypothesis::GetPreCADOption(const std::string& optionName)
 {
-  TOptionValues::iterator op_val = _customPreCADOption2value.find(optionName);
-  if (op_val != _customPreCADOption2value.end())
+  TOptionValues::iterator op_val = _customOption2value.find(optionName);
+  if (op_val != _customOption2value.end())
     return op_val->second;
   else
     return "";
+}
+
+//=============================================================================
+BLSURFPlugin_Hypothesis::TOptionValues BLSURFPlugin_Hypothesis::GetOptionValues() const
+{
+  TOptionValues vals;
+  TOptionValues::const_iterator op_val = _option2value.begin();
+  for ( ; op_val != _option2value.end(); ++op_val )
+    vals.insert( make_pair( op_val->first, GetOptionValue( op_val->first, GET_DEFAULT() )));
+
+  return vals;
+}
+
+//=============================================================================
+BLSURFPlugin_Hypothesis::TOptionValues BLSURFPlugin_Hypothesis::GetPreCADOptionValues() const
+{
+  TOptionValues vals;
+  TOptionValues::const_iterator op_val = _preCADoption2value.begin();
+  for ( ; op_val != _preCADoption2value.end(); ++op_val )
+    vals.insert( make_pair( op_val->first, GetPreCADOptionValue( op_val->first, GET_DEFAULT() )));
+
+  return vals;
 }
 
 //=======================================================================
@@ -1417,6 +1824,9 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save) {
   save << " " << (int) _anisotropic << " " << _anisotropicRatio << " " << (int) _removeTinyEdges << " " << _tinyEdgeLength ;
   save << " " << (int) _badElementRemoval << " " << _badElementAspectRatio << " " << (int) _optimizeMesh << " " << (int) _quadraticMesh ;
   save << " " << (int) _preCADProcess3DTopology << " " << (int) _preCADRemoveDuplicateCADFaces << " " << (int) _preCADRemoveTinyUVEdges;
+  save << " " << (int)_optimiseTinyEdges << " " << _tinyEdgeOptimisationLength;
+  save << " " << (int)_correctSurfaceIntersec << " " << _corrSurfaceIntersCost;
+  save << " " << (int)_useGradation << " " << (int)_useVolumeGradation << " " << _volumeGradation;
 
   op_val = _option2value.begin();
   if (op_val != _option2value.end()) {
@@ -1446,16 +1856,6 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save) {
         save << " " << op_val->first << " " << op_val->second << "%#"; // "%#" is a mark of value end
     }
     save << " " << "__PRECAD_OPTIONS_END__";
-  }
-
-  op_val = _customPreCADOption2value.begin();
-  if (op_val != _customPreCADOption2value.end()) {
-    save << " " << "__CUSTOM_PRECAD_OPTIONS_BEGIN__";
-    for (; op_val != _customPreCADOption2value.end(); ++op_val) {
-      if (!op_val->second.empty())
-        save << " " << op_val->first << " " << op_val->second << "%#"; // "%#" is a mark of value end
-    }
-    save << " " << "__CUSTOM_PRECAD_OPTIONS_END__";
   }
 
   TSizeMap::iterator it_sm = _sizeMap.begin();
@@ -1836,7 +2236,6 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   bool hasOptions = false;
   bool hasCustomOptions = false;
   bool hasPreCADOptions = false;
-  bool hasCustomPreCADOptions = false;
   bool hasSizeMap = false;
   bool hasAttractor = false;
   bool hasNewAttractor = false;
@@ -1860,8 +2259,6 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
       hasCustomOptions = true;
     else if (option_or_sm == "__PRECAD_OPTIONS_BEGIN__")
       hasPreCADOptions = true;
-    else if (option_or_sm == "__CUSTOM_PRECAD_OPTIONS_BEGIN__")
-      hasCustomPreCADOptions = true;
     else if (option_or_sm == "__SIZEMAP_BEGIN__")
       hasSizeMap = true;
     else if (option_or_sm == "__ATTRACTORS_BEGIN__")
@@ -1954,20 +2351,64 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
     else
       load.clear(std::ios::badbit | load.rdstate());
 
-    isOK = static_cast<bool>(load >> i);
-    if (isOK)
-      _preCADRemoveDuplicateCADFaces = (bool) i;
-    else
-      load.clear(std::ios::badbit | load.rdstate());
+    if (( load >> std::ws).peek() != '_' )
+    {
+      isOK = static_cast<bool>(load >> i);
+      if (isOK)
+        _preCADRemoveDuplicateCADFaces = (bool) i;
+      else
+        load.clear(std::ios::badbit | load.rdstate());
 
-    isOK = static_cast<bool>(load >> i);
-    if (isOK)
-      _preCADRemoveTinyUVEdges = (bool) i;
-    else
-      load.clear(std::ios::badbit | load.rdstate());
+      isOK = static_cast<bool>(load >> i);
+      if (isOK)
+        _preCADRemoveTinyUVEdges = (bool) i;
+      else
+        load.clear(std::ios::badbit | load.rdstate());
 
+      isOK = static_cast<bool>(load >> i);
+      if (isOK)
+        _optimiseTinyEdges = (bool) i;
+      else
+        load.clear(std::ios::badbit | load.rdstate());
+
+      isOK = static_cast<bool>(load >> val);
+      if (isOK)
+        _tinyEdgeOptimisationLength = val;
+      else
+        load.clear(std::ios::badbit | load.rdstate());
+
+      isOK = static_cast<bool>(load >> i);
+      if (isOK)
+        _correctSurfaceIntersec = (bool) i;
+      else
+        load.clear(std::ios::badbit | load.rdstate());
+
+      isOK = static_cast<bool>(load >> val);
+      if (isOK)
+        _corrSurfaceIntersCost = val;
+      else
+        load.clear(std::ios::badbit | load.rdstate());
+
+      isOK = static_cast<bool>(load >> i);
+      if (isOK)
+        _useGradation = (bool) i;
+      else
+        load.clear(std::ios::badbit | load.rdstate());
+
+      isOK = static_cast<bool>(load >> i);
+      if (isOK)
+        _useVolumeGradation = (bool) i;
+      else
+        load.clear(std::ios::badbit | load.rdstate());
+
+      isOK = static_cast<bool>(load >> val);
+      if (isOK)
+        _volumeGradation = val;
+      else
+        load.clear(std::ios::badbit | load.rdstate());
+    }
   }
-  
+
 
   if (hasCADSurfOptions) {
     isOK = static_cast<bool>(load >> option_or_sm);
@@ -1978,8 +2419,6 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         hasCustomOptions = true;
       else if (option_or_sm == "__PRECAD_OPTIONS_BEGIN__")
         hasPreCADOptions = true;
-      else if (option_or_sm == "__CUSTOM_PRECAD_OPTIONS_BEGIN__")
-        hasCustomPreCADOptions = true;
       else if (option_or_sm == "__SIZEMAP_BEGIN__")
         hasSizeMap = true;
       else if (option_or_sm == "__ATTRACTORS_BEGIN__")
@@ -2024,7 +2463,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
           break;
         }
       }
-      value[len - 2] = '\0'; //cut off "%#"
+      value.resize(len - 2); //cut off "%#"
     }
   }
 
@@ -2035,8 +2474,6 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         hasCustomOptions = true;
       else if (option_or_sm == "__PRECAD_OPTIONS_BEGIN__")
         hasPreCADOptions = true;
-      else if (option_or_sm == "__CUSTOM_PRECAD_OPTIONS_BEGIN__")
-        hasCustomPreCADOptions = true;
       else if (option_or_sm == "__SIZEMAP_BEGIN__")
         hasSizeMap = true;
       else if (option_or_sm == "__ATTRACTORS_BEGIN__")
@@ -2079,8 +2516,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
           break;
         }
       }
-      _customOption2value[optName] = value.substr(0,len-2);
-      value[len - 2] = '\0'; //cut off "%#"
+      value.resize(len - 2); //cut off "%#"
+      _customOption2value[optName] = value;
     }
   }
 
@@ -2089,8 +2526,6 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
     if (isOK) {
       if (option_or_sm == "__PRECAD_OPTIONS_BEGIN__")
         hasPreCADOptions = true;
-      else if (option_or_sm == "__CUSTOM_PRECAD_OPTIONS_BEGIN__")
-        hasCustomPreCADOptions = true;
       else if (option_or_sm == "__SIZEMAP_BEGIN__")
         hasSizeMap = true;
       else if (option_or_sm == "__ATTRACTORS_BEGIN__")
@@ -2134,63 +2569,11 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
           break;
         }
       }
-      value[len - 2] = '\0'; //cut off "%#"
+      value.resize(len - 2); //cut off "%#"
     }
   }
 
   if (hasPreCADOptions) {
-    isOK = static_cast<bool>(load >> option_or_sm);
-    if (isOK) {
-      if (option_or_sm == "__CUSTOM_PRECAD_OPTIONS_BEGIN__")
-        hasCustomPreCADOptions = true;
-      else if (option_or_sm == "__SIZEMAP_BEGIN__")
-        hasSizeMap = true;
-      else if (option_or_sm == "__ATTRACTORS_BEGIN__")
-        hasAttractor = true;
-      else if (option_or_sm == "__NEW_ATTRACTORS_BEGIN__")
-        hasNewAttractor = true;
-      else if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
-        hasEnforcedVertex = true;
-      else if (option_or_sm == "__PRECAD_FACES_PERIODICITY_BEGIN__")
-        hasPreCADFacesPeriodicity = true;
-      else if (option_or_sm == "__PRECAD_EDGES_PERIODICITY_BEGIN__")
-        hasPreCADEdgesPeriodicity = true;
-      else if (option_or_sm == "__FACES_PERIODICITY_BEGIN__")
-        hasFacesPeriodicity = true;
-      else if (option_or_sm == "__EDGES_PERIODICITY_BEGIN__")
-        hasEdgesPeriodicity = true;
-      else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
-        hasVerticesPeriodicity = true;
-    }
-  }
-
-  while (isOK && hasCustomPreCADOptions) {
-    isOK = static_cast<bool>(load >> optName);
-    if (isOK) {
-      if (optName == "__CUSTOM_PRECAD_OPTIONS_END__")
-        break;
-      isOK = static_cast<bool>(load >> optValue);
-    }
-    if (isOK) {
-      std::string& value = optValue;
-      int len = value.size();
-      // continue reading until "%#" encountered
-      while (value[len - 1] != '#' || value[len - 2] != '%') {
-        isOK = static_cast<bool>(load >> optValue);
-        if (isOK) {
-          value += " ";
-          value += optValue;
-          len = value.size();
-        } else {
-          break;
-        }
-      }
-      _customPreCADOption2value[optName] = value.substr(0,len-2);
-      value[len - 2] = '\0'; //cut off "%#"
-    }
-  }
-
-  if (hasCustomPreCADOptions) {
     isOK = static_cast<bool>(load >> option_or_sm);
     if (isOK) {
       if (option_or_sm == "__SIZEMAP_BEGIN__")
@@ -2213,7 +2596,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         hasVerticesPeriodicity = true;
     }
   }
-  
+ 
   std::string smEntry, smValue;
   while (isOK && hasSizeMap) {
     isOK = static_cast<bool>(load >> smEntry);
@@ -2237,7 +2620,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
           break;
         }
       }
-      value2[len2 - 2] = '\0'; //cut off "%#"
+      value2.resize(len2 - 2); //cut off "%#"
     }
   }
 
@@ -2285,7 +2668,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
           break;
         }
       }
-      value3[len3 - 2] = '\0'; //cut off "%#"
+      value3.resize(len3 - 2); //cut off "%#"
     }
   }
 
@@ -2942,6 +3325,18 @@ double BLSURFPlugin_Hypothesis::GetDefaultTinyEdgeLength(double diagonal) {
   return undefinedDouble();
 }
 
+//================================================================================
+/*!
+ * \brief Returns default tiny edge optimisation length given a default value of element length ratio
+ */
+//================================================================================
+
+double BLSURFPlugin_Hypothesis::GetDefaultTinyEdgeOptimisationLength(double diagonal) {
+  if (diagonal != 0)
+    return diagonal * 1e-6 ;
+  return undefinedDouble();
+}
+
 //=============================================================================
 /*!
  * \brief Initialize my parameter values by default parameters.
@@ -2954,9 +3349,90 @@ bool BLSURFPlugin_Hypothesis::SetParametersByDefaults(const TDefaults& dflts, co
   _phySize = GetDefaultPhySize(diagonal, _gen->GetBoundaryBoxSegmentation());
   _minSize = GetDefaultMinSize(diagonal);
   _maxSize = GetDefaultMaxSize(diagonal);
-  _chordalError = GetDefaultChordalError(diagonal);
+  _chordalError = 0.5 * _phySize; //GetDefaultChordalError(diagonal); IMP 0023307
   _tinyEdgeLength = GetDefaultTinyEdgeLength(diagonal);
+  _tinyEdgeOptimisationLength = GetDefaultTinyEdgeOptimisationLength(diagonal);
 
   return true;
-//   return bool(_phySize = dflts._elemLength);
 }
+
+//================================================================================
+/*!
+ * \brief Converts a string to a bool
+ */
+//================================================================================
+
+bool BLSURFPlugin_Hypothesis::ToBool(const std::string& str, bool* isOk )
+  throw (std::invalid_argument)
+{
+  std::string s = str;
+  if ( isOk ) *isOk = true;
+
+  for ( size_t i = 0; i <= s.size(); ++i )
+    s[i] = tolower( s[i] );
+
+  if ( s == "1" || s == "true" || s == "active" || s == "yes" )
+    return true;
+
+  if ( s == "0" || s == "false" || s == "inactive" || s == "no" )
+    return false;
+
+  if ( isOk )
+    *isOk = false;
+  else {
+    std::string msg = "Not a Boolean value:'" + str + "'";
+    throw std::invalid_argument(msg);
+  }
+  return false;
+}
+
+//================================================================================
+/*!
+ * \brief Converts a string to a real value
+ */
+//================================================================================
+
+double BLSURFPlugin_Hypothesis::ToDbl(const std::string& str, bool* isOk )
+  throw (std::invalid_argument)
+{
+  if ( str.empty() ) throw std::invalid_argument("Empty value provided");
+
+  char * endPtr;
+  double val = strtod(&str[0], &endPtr);
+  bool ok = (&str[0] != endPtr);
+
+  if ( isOk ) *isOk = ok;
+
+  if ( !ok )
+  {
+    std::string msg = "Not a real value:'" + str + "'";
+    throw std::invalid_argument(msg);
+  }
+  return val;
+}
+
+//================================================================================
+/*!
+ * \brief Converts a string to a integer value
+ */
+//================================================================================
+
+int BLSURFPlugin_Hypothesis::ToInt(const std::string& str, bool* isOk )
+  throw (std::invalid_argument)
+{
+  if ( str.empty() ) throw std::invalid_argument("Empty value provided");
+
+  char * endPtr;
+  int val = (int)strtol( &str[0], &endPtr, 10);
+  bool ok = (&str[0] != endPtr);
+
+  if ( isOk ) *isOk = ok;
+
+  if ( !ok )
+  {
+    std::string msg = "Not an integer value:'" + str + "'";
+    throw std::invalid_argument(msg);
+  }
+  return val;
+}
+

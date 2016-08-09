@@ -13,7 +13,11 @@
     </message>
     <message>
         <source>BLSURF_PHY_MESH</source>
-        <translation>Maillage physique</translation>
+        <translation>Type</translation>
+    </message>
+    <message>
+        <source>BLSURF_PHYSICAL_SIZE</source>
+        <translation>Taille physique</translation>
     </message>
     <message>
         <source>BLSURF_PHY_MESH_TOOLTIP</source>
@@ -24,7 +28,7 @@
     </message>
     <message>
         <source>BLSURF_GEOM_MESH</source>
-        <translation>Maillage gÃ©omÃ©trique</translation>
+        <translation>Type</translation>
     </message>
     <message>
         <source>BLSURF_GEOM_MESH_TOOLTIP</source>
@@ -92,12 +96,24 @@ La valeur par dÃ©faut est calculÃ©e par &lt;em&gt;diag&lt;/em&gt;/5.</translatio
         <translation>Ratio maximum entre les longueurs de deux segments adjacents.</translation>
     </message>
     <message>
+        <source>BLSURF_VOLUME_GRADATION</source>
+        <translation>Taux d&apos;accroissement 3D</translation>
+    </message>
+    <message>
+        <source>BLSURF_VOLUME_GRADATION_TOOLTIP</source>
+        <translation type="unfinished">Ratio maximum entre les longueurs de deux segments adjacents.</translation>
+    </message>
+    <message>
         <source>BLSURF_ALLOW_QUADRANGLES</source>
         <translation>Autoriser les quadrangles</translation>
     </message>
     <message>
-        <source>BLSURF_GEOMETRICAL_PARAMETERS</source>
-        <translation>ParamÃ¨tres gÃ©ometriques</translation>
+        <source>BLSURF_ALLOW_QUADRANGLES_TOOLTIP</source>
+        <translation type="unfinished">To generate quadrangle dominant mesh</translation>
+    </message>
+    <message>
+        <source>BLSURF_GEOMETRICAL_SIZE</source>
+        <translation> Taille géométrique </translation>
     </message>
     <message>
         <source>BLSURF_ANGLE_MESH</source>
@@ -139,6 +155,22 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
         <translation>Si activÃ©, ce paramÃ¨tre dÃ©fini la longueur minimale sous laquelle une arÃªte est considÃ©rÃ©e comme toute petite.</translation>
     </message>
     <message>
+        <source>BLSURF_OPTIMISE_TINY_EDGES</source>
+        <translation type="unfinished">Optimize tiny edges</translation>
+    </message>
+    <message>
+        <source>BLSURF_OPTIMIZE_TINY_EDGES_TOOLTIP</source>
+        <translation type="unfinished">If checked, this parameter defines the minimal length under which an edge is considered to be a tiny one.</translation>
+    </message>
+    <message>
+        <source>BLSURF_SURFACE_INTERSECTIONS</source>
+        <translation type="unfinished">Correct surface intersections</translation>
+    </message>
+    <message>
+        <source>BLSURF_SURFACE_INTERSECTIONS_TOOLTIP</source>
+        <translation type="unfinished">If checked, this parameter defines the time that will be spent in the intersection prevention process.</translation>
+    </message>
+    <message>
         <source>BLSURF_REMOVE_SLIVERS</source>
         <translation>Enlever les mauvais Ã©lÃ©ments</translation>
     </message>
@@ -157,6 +189,10 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
     <message>
         <source>BLSURF_ELEMENT_ORDER</source>
         <translation>Maillage quadratique</translation>
+    </message>
+    <message>
+        <source>BLSURF_ELEMENT_ORDER_TOOLTIP</source>
+        <translation type="unfinished">To generate quadratic mesh</translation>
     </message>
     <message>
         <source>BLSURF_HYPOTHESIS</source>
@@ -211,11 +247,11 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
         <translation>Valeur</translation>
     </message>
     <message>
-        <source>OPTION_MENU_BLSURF</source>
-        <translation>MG-CADSurf</translation>
+        <source>BLSURF_MESHING_OPTIONS</source>
+        <translation>Meshing</translation>
     </message>
     <message>
-        <source>OPTION_MENU_PRECAD</source>
+        <source>BLSURF_PRECAD_OPTIONS</source>
         <translation>PreCAD</translation>
     </message>
     <message>
@@ -227,7 +263,7 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
         <translation>Effacer l&apos;option</translation>
     </message>
     <message>
-        <source>BLSURF_OTHER_OPTION</source>
+        <source>BLSURF_CUSTOM_OPTIONS</source>
         <translation>L&apos;autre option</translation>
     </message>
     <message>
@@ -557,6 +593,77 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
     <message>
         <source>BLSURF_PERIODICITY_SELECT_EDGE</source>
         <translation>ArÃªte</translation>
+    </message>
+</context>
+<context>
+    <name>BLSURFPluginGUI_AdvWidget</name>
+    <message>
+        <source>enforce_cad_edge_sizes</source>
+        <translation>enforce_cad_edge_sizes</translation>
+    </message>
+    <message>
+        <source>jacobian_rectification_respect_geometry</source>
+        <translation> Priorité de la géométrie sur le Jacobien</translation>
+    </message>
+    <message>
+        <source>max_number_of_points_per_patch</source>
+        <translation>Nombre de points maximal par patch</translation>
+    </message>
+    <message>
+        <source>rectify_jacobian</source>
+        <translation>Ajustement du Jacobien</translation>
+    </message>
+    <message>
+        <source>respect_geometry</source>
+        <translation>Respect de la géométrie</translation>
+    </message>
+    <message>
+        <source>tiny_edge_avoid_surface_intersections</source>
+        <translation>Priorité de l?intersection des surfaces sur le retrait des petites arêtes</translation>
+    </message>
+    <message>
+        <source>closed_geometry</source>
+        <translation>Géométrie fermée</translation>
+    </message>
+    <message>
+        <source>debug</source>
+        <translation>Deboggage</translation>
+    </message>
+    <message>
+        <source>discard_input_topology</source>
+        <translation>discard_input_topology</translation>
+    </message>
+    <message>
+        <source>merge_edges</source>
+        <translation>Fusion des arêtes</translation>
+    </message>
+    <message>
+        <source>periodic_tolerance</source>
+        <translation>Tolérance de périodicité</translation>
+    </message>
+    <message>
+        <source>remove_duplicate_cad_faces</source>
+        <translation>Suppression des faces doubles</translation>
+    </message>
+    <message>
+        <source>required_entities</source>
+        <translation>Entités requises</translation>
+    </message>
+    <message>
+        <source>sewing_tolerance</source>
+        <translation>Tolérance de fusion</translation>
+    </message>
+    <message>
+        <source>tags</source>
+        <translation>Etiquettes</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation>Actif</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation>Inactif</translation>
     </message>
 </context>
 </TS>

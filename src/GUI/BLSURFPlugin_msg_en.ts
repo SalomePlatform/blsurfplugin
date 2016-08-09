@@ -9,7 +9,11 @@
     </message>
     <message>
         <source>BLSURF_PHY_MESH</source>
-        <translation>Physical Mesh</translation>
+        <translation>Type</translation>
+    </message>
+    <message>
+        <source>BLSURF_PHYSICAL_SIZE</source>
+        <translation>Physical Size</translation>
     </message>
     <message>
         <source>BLSURF_PHY_MESH_TOOLTIP</source>
@@ -20,7 +24,7 @@
     </message>
     <message>
         <source>BLSURF_GEOM_MESH</source>
-        <translation>Geometrical Mesh</translation>
+        <translation>Type</translation>
     </message>
     <message>
         <source>BLSURF_GEOM_MESH_TOOLTIP</source>
@@ -88,12 +92,24 @@ The default computed value is &lt;em&gt;diag&lt;/em&gt;/5.</translation>
         <translation>Maximum ratio between the lengths of two adjacent edges.</translation>
     </message>
     <message>
+        <source>BLSURF_VOLUME_GRADATION</source>
+        <translation>Volume Gradation</translation>
+    </message>
+    <message>
+        <source>BLSURF_VOLUME_GRADATION_TOOLTIP</source>
+        <translation>Maximum ratio between the lengths of two adjacent edges in 3D mesh.</translation>
+    </message>
+    <message>
         <source>BLSURF_ALLOW_QUADRANGLES</source>
         <translation>Allow Quadrangles</translation>
     </message>
     <message>
-        <source>BLSURF_GEOMETRICAL_PARAMETERS</source>
-        <translation>Geometrical parameters</translation>
+        <source>BLSURF_ALLOW_QUADRANGLES_TOOLTIP</source>
+        <translation>To generate quadrangle dominant mesh</translation>
+    </message>
+    <message>
+        <source>BLSURF_GEOMETRICAL_SIZE</source>
+        <translation>Geometrical size</translation>
     </message>
     <message>
         <source>BLSURF_ANGLE_MESH</source>
@@ -135,6 +151,22 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
         <translation>If checked, this parameter defines the minimal length under which an edge is considered to be a tiny one.</translation>
     </message>
     <message>
+        <source>BLSURF_OPTIMISE_TINY_EDGES</source>
+        <translation>Optimize tiny edges</translation>
+    </message>
+    <message>
+        <source>BLSURF_OPTIMIZE_TINY_EDGES_TOOLTIP</source>
+        <translation>If checked, this parameter defines the minimal length under which an edge is considered to be a tiny one.</translation>
+    </message>
+    <message>
+        <source>BLSURF_SURFACE_INTERSECTIONS</source>
+        <translation>Correct surface intersections</translation>
+    </message>
+    <message>
+        <source>BLSURF_SURFACE_INTERSECTIONS_TOOLTIP</source>
+        <translation>If checked, this parameter defines the time that will be spent in the intersection prevention process.</translation>
+    </message>
+    <message>
         <source>BLSURF_REMOVE_SLIVERS</source>
         <translation>Remove bad elements</translation>
     </message>
@@ -153,6 +185,10 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
     <message>
         <source>BLSURF_ELEMENT_ORDER</source>
         <translation>Quadratic mesh</translation>
+    </message>
+    <message>
+        <source>BLSURF_ELEMENT_ORDER_TOOLTIP</source>
+        <translation type="unfinished">To generate quadratic mesh</translation>
     </message>
     <message>
         <source>BLSURF_HYPOTHESIS</source>
@@ -207,12 +243,12 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
         <translation>Value</translation>
     </message>
     <message>
-        <source>OPTION_MENU_BLSURF</source>
-        <translation>MG-CADSurf</translation>
+        <source>BLSURF_MESHING_OPTIONS</source>
+        <translation>Meshing</translation>
     </message>
     <message>
-        <source>OPTION_MENU_PRECAD</source>
-        <translation>PreCAD</translation>
+        <source>BLSURF_PRECAD_OPTIONS</source>
+        <translation>CAD preprocessor</translation>
     </message>
     <message>
         <source>BLSURF_ADD_OPTION</source>
@@ -223,8 +259,8 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
         <translation>Clear option</translation>
     </message>
     <message>
-        <source>BLSURF_OTHER_OPTION</source>
-        <translation>Other option</translation>
+        <source>BLSURF_CUSTOM_OPTIONS</source>
+        <translation>Other options</translation>
     </message>
     <message>
         <source>BLSURF_GMF_FILE</source>
@@ -559,4 +595,71 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
         <translation>Edge</translation>
     </message>
 </context>
+<context>
+    <name>BLSURFPluginGUI_AdvWidget</name>
+    <message>
+        <source>enforce_cad_edge_sizes</source>
+        <translation>Enforce CAD edge sizes</translation>
+    </message>
+    <message>
+        <source>jacobian_rectification_respect_geometry</source>
+        <translation>Priority of geometry over Jacobian</translation>
+    </message>
+    <message>
+        <source>max_number_of_points_per_patch</source>
+        <translation>Maximal number of points per patch</translation>
+    </message>
+    <message>
+        <source>rectify_jacobian</source>
+        <translation>Rectify Jacobian</translation>
+    </message>
+    <message>
+        <source>respect_geometry</source>
+        <translation>Respect geometry</translation>
+    </message>
+    <message>
+        <source>tiny_edge_avoid_surface_intersections</source>
+        <translation>Tiny edges avoid surface intersections</translation>
+    </message>
+    <message>
+        <source>closed_geometry</source>
+        <translation>Closed geometry</translation>
+    </message>
+    <message>
+        <source>debug</source>
+        <translation>Debug</translation>
+    </message>
+    <message>
+        <source>discard_input_topology</source>
+        <translation>Discard input topology</translation>
+    </message>
+    <message>
+        <source>merge_edges</source>
+        <translation>Merge edges</translation>
+    </message>
+    <message>
+        <source>periodic_tolerance</source>
+        <translation>Periodic tolerance</translation>
+    </message>
+    <message>
+        <source>remove_duplicate_cad_faces</source>
+        <translation>Remove duplicate CAD faces</translation>
+    </message>
+    <message>
+        <source>required_entities</source>
+        <translation>Required entities</translation>
+    </message>
+    <message>
+        <source>sewing_tolerance</source>
+        <translation>Sewing tolerance</translation>
+    </message>
+    <message>
+        <source>tags</source>
+        <translation>Tags</translation>
+    </message>
+    <message>
+        <source></source>
+        <translation></translation>
+    </message>
+</context> 
 </TS>

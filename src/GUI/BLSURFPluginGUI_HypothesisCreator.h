@@ -163,13 +163,13 @@ typedef struct
   int     myPhysicalMesh, myGeometricMesh;
   double  myPhySize, myMinSize, myMaxSize;
   bool    myPhySizeRel, myMinSizeRel, myMaxSizeRel;
-  bool    myUseMinSize, myUseMaxSize;
-  double  myGradation, myAngleMesh, myChordalError;
-  bool    myAnisotropic, myRemoveTinyEdges, myForceBadElementRemoval;
-  double  myAnisotropicRatio, myTinyEdgeLength, myBadElementAspectRatio;
+  bool    myUseMinSize, myUseMaxSize, myUseGradation, myUseVolumeGradation;
+  double  myGradation, myVolumeGradation, myAngleMesh, myChordalError;
+  bool    myAnisotropic, myOptimiseTinyEdges, myRemoveTinyEdges, myForceBadElementRemoval, myCorrectSurfaceIntersection;
+  double  myAnisotropicRatio, myTinyEdgeLength, myTinyEdgeOptimisLength, myBadElementAspectRatio, myCorrectSurfaceIntersectionMaxCost;
   bool    myOptimizeMesh, myQuadraticMesh;
   bool    myAllowQuadrangles, mySmpsurface,mySmpedge,mySmppoint,myEnforcedVertex,myInternalEnforcedVerticesAllFaces;
-  bool    myPreCADMergeEdges, myPreCADRemoveTinyUVEdges, myPreCADRemoveDuplicateCADFaces, myPreCADProcess3DTopology, myPreCADDiscardInput;
+  bool    myPreCADMergeEdges, myPreCADProcess3DTopology, myPreCADDiscardInput;
 //   bool    myGMFFileMode;
   std::string myGMFFileName, myInternalEnforcedVerticesAllFacesGroup;
   TEnfVertexList enfVertexList;
@@ -376,7 +376,7 @@ private:
   QPushButton* myPeriodicityRemoveButton;
   QSpacerItem* myPeriodicityVerticalSpacer;
 
-  BLSURFPlugin::string_array_var myOptions, myPreCADOptions;
+  BLSURFPlugin::string_array_var myOptions, myPreCADOptions, myCustomOptions;
 
   PyObject *          main_mod;
   PyObject *          main_dict;

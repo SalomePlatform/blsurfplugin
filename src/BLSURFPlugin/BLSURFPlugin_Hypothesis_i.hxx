@@ -66,39 +66,58 @@ public:
   CORBA::Double GetMaxSize();
   CORBA::Boolean IsMaxSizeRel();
 
+  void SetUseGradation(CORBA::Boolean theValue);
+  CORBA::Boolean GetUseGradation();
   void SetGradation(CORBA::Double theValue);
   CORBA::Double GetGradation();
+
+  void SetUseVolumeGradation(CORBA::Boolean theValue);
+  CORBA::Boolean GetUseVolumeGradation();
+  void SetVolumeGradation(CORBA::Double theValue);
+  CORBA::Double GetVolumeGradation();
 
   void SetQuadAllowed(CORBA::Boolean theValue);
   CORBA::Boolean GetQuadAllowed();
 
   void SetAngleMesh(CORBA::Double theValue);
   CORBA::Double GetAngleMesh();
-  
+
   void SetChordalError(CORBA::Double distance);
   CORBA::Double GetChordalError();
-  
+
   void SetAnisotropic(CORBA::Boolean anisotropic);
   CORBA::Boolean GetAnisotropic();
-  
+
   void SetAnisotropicRatio(CORBA::Double ratio);
   CORBA::Double GetAnisotropicRatio();
-  
+
   void SetRemoveTinyEdges(CORBA::Boolean remove);
   CORBA::Boolean GetRemoveTinyEdges();
-  
+
   void SetTinyEdgeLength(CORBA::Double length);
   CORBA::Double GetTinyEdgeLength();
-  
+
+  void SetOptimiseTinyEdges(CORBA::Boolean toOptimise);
+  CORBA::Boolean GetOptimiseTinyEdges();
+
+  void SetTinyEdgeOptimisationLength(CORBA::Double length);
+  CORBA::Double GetTinyEdgeOptimisationLength();
+
+  void SetCorrectSurfaceIntersection(CORBA::Boolean toOptimise);
+  CORBA::Boolean GetCorrectSurfaceIntersection();
+
+  void SetCorrectSurfaceIntersectionMaxCost(CORBA::Double maxCost);
+  CORBA::Double GetCorrectSurfaceIntersectionMaxCost();
+
   void SetBadElementRemoval(CORBA::Boolean remove);
   CORBA::Boolean GetBadElementRemoval();
-  
+
   void SetBadElementAspectRatio(CORBA::Double ratio);
   CORBA::Double GetBadElementAspectRatio();
-  
+
   void SetOptimizeMesh(CORBA::Boolean optimize);
   CORBA::Boolean GetOptimizeMesh();
-  
+
   void SetQuadraticMesh(CORBA::Boolean quadratic);
   CORBA::Boolean GetQuadraticMesh();
 
@@ -107,6 +126,42 @@ public:
 
   void SetVerbosity(CORBA::Short theVal) throw (SALOME::SALOME_Exception);
   CORBA::Short GetVerbosity();
+
+  void SetEnforceCadEdgesSize( CORBA::Boolean toEnforce );
+  CORBA::Boolean GetEnforceCadEdgesSize();
+
+  void SetJacobianRectificationRespectGeometry( CORBA::Boolean allowRectification );
+  CORBA::Boolean GetJacobianRectificationRespectGeometry();
+
+  void SetJacobianRectification( CORBA::Boolean allowRectification );
+  CORBA::Boolean GetJacobianRectification();
+
+  void SetMaxNumberOfPointsPerPatch( CORBA::Long nb ) throw (SALOME::SALOME_Exception);
+  CORBA::Long GetMaxNumberOfPointsPerPatch();
+
+  void SetRespectGeometry( CORBA::Boolean toRespect );
+  CORBA::Boolean GetRespectGeometry();
+
+  void SetTinyEdgesAvoidSurfaceIntersections( CORBA::Boolean toAvoidIntersection );
+  CORBA::Boolean GetTinyEdgesAvoidSurfaceIntersections();
+
+  void SetClosedGeometry( CORBA::Boolean isClosed );
+  CORBA::Boolean GetClosedGeometry();
+
+  void SetDebug( CORBA::Boolean isDebug );
+  bool GetDebug();
+
+  void SetPeriodicTolerance( CORBA::Double tol ) throw (SALOME::SALOME_Exception);
+  double GetPeriodicTolerance() throw (SALOME::SALOME_Exception);
+
+  void SetRequiredEntities( const char* howToTreat ) throw (SALOME::SALOME_Exception);
+  char* GetRequiredEntities();
+
+  void SetSewingTolerance( CORBA::Double tol ) throw (SALOME::SALOME_Exception);
+  CORBA::Double GetSewingTolerance() throw (SALOME::SALOME_Exception);
+
+  void SetTags( const char* howToTreat ) throw (SALOME::SALOME_Exception);
+  char* GetTags();
 
   void SetPreCADMergeEdges(CORBA::Boolean theValue);
   CORBA::Boolean GetPreCADMergeEdges();
@@ -133,9 +188,12 @@ public:
 
   BLSURFPlugin::string_array* GetOptionValues();
   BLSURFPlugin::string_array* GetPreCADOptionValues();
+  BLSURFPlugin::string_array* GetAdvancedOptionValues();
 
   void SetOptionValues(const BLSURFPlugin::string_array& options) throw (SALOME::SALOME_Exception);
   void SetPreCADOptionValues(const BLSURFPlugin::string_array& options) throw (SALOME::SALOME_Exception);
+  void SetAdvancedOptionValues(const BLSURFPlugin::string_array& options);
+  void SetAdvancedOption(const char* optionsAndValues) throw (SALOME::SALOME_Exception);
 
   void AddOption(const char* optionName, const char* optionValue);
   void AddPreCADOption(const char* optionName, const char* optionValue);

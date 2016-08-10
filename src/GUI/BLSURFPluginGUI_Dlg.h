@@ -90,8 +90,14 @@ public:
   BLSURFPluginGUI_AdvWidget( QWidget* = 0, Qt::WindowFlags = 0 );
   ~BLSURFPluginGUI_AdvWidget();
 
+  void AddOption( int iTable, const char* name_value_type );
+  void GetOptionAndValue( QTreeWidgetItem * tblRow, QString& option, QString& value, bool& dflt );
+
 public slots:
+
   void onChooseGMFFile();
+  void itemChanged(QTreeWidgetItem * tblRow, int column);
+
 };
 
 #endif

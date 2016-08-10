@@ -86,8 +86,15 @@ public:
   double GetMaxSize() const { return _maxSize; }
   bool IsMaxSizeRel() const { return _maxSizeRel; }
 
+  void SetUseGradation(bool toUse);
+  bool GetUseGradation() const { return _useGradation; }
   void SetGradation(double theGradation);
   double GetGradation() const { return _gradation; }
+
+  void SetUseVolumeGradation(bool toUse);
+  bool GetUseVolumeGradation() const { return _useVolumeGradation; }
+  void SetVolumeGradation(double theGradation);
+  double GetVolumeGradation() const { return _volumeGradation; }
 
   void SetQuadAllowed(bool theVal);
   bool GetQuadAllowed() const { return _quadAllowed; }
@@ -110,6 +117,18 @@ public:
   void SetTinyEdgeLength(double theVal);
   double GetTinyEdgeLength() const { return _tinyEdgeLength; }
 
+  void SetOptimiseTinyEdges(bool theVal);
+  bool GetOptimiseTinyEdges() const { return _optimiseTinyEdges; }
+
+  void SetTinyEdgeOptimisationLength(double theVal);
+  double GetTinyEdgeOptimisationLength() const { return _tinyEdgeOptimisationLength; }
+
+  void SetCorrectSurfaceIntersection(bool theVal);
+  bool GetCorrectSurfaceIntersection() const { return _correctSurfaceIntersec; }
+
+  void SetCorrectSurfaceIntersectionMaxCost(double theVal);
+  double GetCorrectSurfaceIntersectionMaxCost() const { return _corrSurfaceIntersCost; }
+
   void SetBadElementRemoval(bool theVal);
   bool GetBadElementRemoval() const { return _badElementRemoval; }
 
@@ -131,8 +150,50 @@ public:
   void ClearEntry(const std::string& entry, const char * attEntry = 0);
   void ClearSizeMaps();
 
+  void SetEnforceCadEdgesSize( bool toEnforce );
+  bool GetEnforceCadEdgesSize();
+
+  void SetJacobianRectificationRespectGeometry( bool allowRectification );
+  bool GetJacobianRectificationRespectGeometry();
+    
+  void SetJacobianRectification( bool allowRectification );
+  bool GetJacobianRectification();
+
+  void SetMaxNumberOfPointsPerPatch( int nb ) throw (std::invalid_argument);
+  int  GetMaxNumberOfPointsPerPatch();
+
+  void SetRespectGeometry( bool toRespect );
+  bool GetRespectGeometry();
+
+  void SetTinyEdgesAvoidSurfaceIntersections( bool toAvoidIntersection );
+  bool GetTinyEdgesAvoidSurfaceIntersections();
+
+  void SetClosedGeometry( bool isClosed );
+  bool GetClosedGeometry();
+
+  void SetDebug( bool isDebug );
+  bool GetDebug();
+
+  void SetPeriodicTolerance( double tol ) throw (std::invalid_argument);
+  double GetPeriodicTolerance();
+
+  void SetRequiredEntities( const std::string& howToTreat ) throw (std::invalid_argument);
+  std::string GetRequiredEntities();
+
+  void SetSewingTolerance( double tol ) throw (std::invalid_argument);
+  double GetSewingTolerance();
+
+  void SetTags( const std::string& howToTreat ) throw (std::invalid_argument);
+  std::string GetTags();
+
   void SetPreCADMergeEdges(bool theVal);
   bool GetPreCADMergeEdges() const { return _preCADMergeEdges; }
+
+  void SetPreCADRemoveTinyUVEdges(bool theVal);
+  bool GetPreCADRemoveTinyUVEdges() const { return _preCADRemoveTinyUVEdges; }
+
+  void SetPreCADRemoveDuplicateCADFaces(bool theVal);
+  bool GetPreCADRemoveDuplicateCADFaces() const { return _preCADRemoveDuplicateCADFaces; }
 
   void SetPreCADProcess3DTopology(bool theVal);
   bool GetPreCADProcess3DTopology() const { return _preCADProcess3DTopology; }
@@ -336,7 +397,7 @@ public:
 //  bool GetInternalEnforcedVertex(const TEntry& theFaceEntry);
 
   static PhysicalMesh    GetDefaultPhysicalMesh() { return PhysicalGlobalSize; }
-  static GeometricMesh   GetDefaultGeometricMesh() { return DefaultGeom; }
+  static GeometricMesh   GetDefaultGeometricMesh() { return GeometricalGlobalSize; }
   static double          GetDefaultPhySize(double diagonal, double bbSegmentation);
   static double          GetDefaultPhySize() { return undefinedDouble(); }
   static bool            GetDefaultPhySizeRel() { return false; }
@@ -346,9 +407,12 @@ public:
   static double          GetDefaultMaxSize(double diagonal);
   static double          GetDefaultMaxSize() { return undefinedDouble(); }
   static bool            GetDefaultMaxSizeRel() { return false; }
+  static bool            GetDefaultUseGradation() { return false; }
   static double          GetDefaultGradation() { return 1.3; }
+  static bool            GetDefaultUseVolumeGradation() { return false; }
+  static double          GetDefaultVolumeGradation() { return 2; }
   static bool            GetDefaultQuadAllowed() { return false; }
-  static double          GetDefaultAngleMesh() { return 22.0; }
+  static double          GetDefaultAngleMesh() { return 8.0; }
   
   static double          GetDefaultChordalError(double diagonal);
   static double          GetDefaultChordalError() { return undefinedDouble(); }
@@ -357,6 +421,11 @@ public:
   static bool            GetDefaultRemoveTinyEdges() { return false; }
   static double          GetDefaultTinyEdgeLength(double diagonal);
   static double          GetDefaultTinyEdgeLength() { return undefinedDouble(); }
+  static bool            GetDefaultOptimiseTinyEdges() { return false; }
+  static double          GetDefaultTinyEdgeOptimisationLength(double diagonal);
+  static double          GetDefaultTinyEdgeOptimisationLength() { return undefinedDouble(); }
+  static bool            GetDefaultCorrectSurfaceIntersection() { return true; }
+  static double          GetDefaultCorrectSurfaceIntersectionMaxCost() { return 15.; }
   static bool            GetDefaultBadElementRemoval() { return false; }
   static double          GetDefaultBadElementAspectRatio() {return 1000.0; } 
   static bool            GetDefaultOptimizeMesh() { return true; }
@@ -365,8 +434,10 @@ public:
   static int             GetDefaultVerbosity() { return 3; }
   static Topology        GetDefaultTopology() { return FromCAD; }
   // PreCAD
-  static bool            GetDefaultPreCADMergeEdges() { return true; }
-  static bool            GetDefaultPreCADProcess3DTopology() { return true; }
+  static bool            GetDefaultPreCADMergeEdges() { return false; }
+  static bool            GetDefaultPreCADRemoveTinyUVEdges() { return false; }
+  static bool            GetDefaultPreCADRemoveDuplicateCADFaces() { return false; }
+  static bool            GetDefaultPreCADProcess3DTopology() { return false; }
   static bool            GetDefaultPreCADDiscardInput() { return false; }
   
   static TSizeMap        GetDefaultSizeMap() { return TSizeMap();}
@@ -416,10 +487,6 @@ public:
   void AddPreCadEdgesPeriodicity(TEntry theEdge1Entry, TEntry theEdge2Entry,
       std::vector<std::string> &theSourceVerticesEntries, std::vector<std::string> &theTargetVerticesEntries);
 
-  void AddFacePeriodicity(TEntry theFace1Entry, TEntry theFace2Entry);
-  void AddEdgePeriodicity(TEntry theFace1Entry, TEntry theEdge1Entry, TEntry theFace2Entry, TEntry theEdge2Entry, int edge_orientation = 0);
-  void AddVertexPeriodicity(TEntry theEdge1Entry, TEntry theVertex1Entry, TEntry theEdge2Entry, TEntry theVertex2Entry);
-
   static double undefinedDouble() { return -1.0; }
 
   typedef std::map< std::string, std::string > TOptionValues;
@@ -429,19 +496,22 @@ public:
                       const std::string& optionValue) throw (std::invalid_argument);
   void SetPreCADOptionValue(const std::string& optionName,
                             const std::string& optionValue) throw (std::invalid_argument);
-  std::string GetOptionValue(const std::string& optionName) throw (std::invalid_argument);
-  std::string GetPreCADOptionValue(const std::string& optionName) throw (std::invalid_argument);
+  std::string GetOptionValue(const std::string& optionName, bool* isDefault=0) const throw (std::invalid_argument);
+  std::string GetPreCADOptionValue(const std::string& optionName, bool* isDefault=0) const throw (std::invalid_argument);
   void ClearOption(const std::string& optionName);
   void ClearPreCADOption(const std::string& optionName);
-  const TOptionValues& GetOptionValues() const { return _option2value; }
-  const TOptionValues& GetPreCADOptionValues() const { return _preCADoption2value; }
+  TOptionValues        GetOptionValues()       const;
+  TOptionValues        GetPreCADOptionValues() const;
   const TOptionValues& GetCustomOptionValues() const { return _customOption2value; }
-  const TOptionValues& GetCustomPreCADOptionValues() const { return _customPreCADOption2value; }
 
   void AddOption(const std::string& optionName, const std::string& optionValue);
   void AddPreCADOption(const std::string& optionName, const std::string& optionValue);
   std::string GetOption(const std::string& optionName);
   std::string GetPreCADOption(const std::string& optionName);
+
+  static bool  ToBool(const std::string& str, bool* isOk=0) throw (std::invalid_argument);
+  static double ToDbl(const std::string& str, bool* isOk=0) throw (std::invalid_argument);
+  static int    ToInt(const std::string& str, bool* isOk=0) throw (std::invalid_argument);
 
   /*!
     * Sets the file for export resulting mesh in GMF format
@@ -480,7 +550,10 @@ private:
   bool            _phySizeRel;
   double          _minSize, _maxSize;
   bool            _minSizeRel, _maxSizeRel;
+  bool            _useGradation;
   double          _gradation;
+  bool            _useVolumeGradation;
+  double          _volumeGradation;
   bool            _quadAllowed;
   double          _angleMesh;
   double          _chordalError;
@@ -488,6 +561,10 @@ private:
   double          _anisotropicRatio;
   bool            _removeTinyEdges;
   double          _tinyEdgeLength;
+  bool            _optimiseTinyEdges;
+  double          _tinyEdgeOptimisationLength;
+  bool            _correctSurfaceIntersec;
+  double          _corrSurfaceIntersCost;
   bool            _badElementRemoval;
   double          _badElementAspectRatio;
   bool            _optimizeMesh;
@@ -496,25 +573,28 @@ private:
   Topology        _topology;
   
   bool            _preCADMergeEdges;
+  bool            _preCADRemoveTinyUVEdges;
+  bool            _preCADRemoveDuplicateCADFaces;
   bool            _preCADProcess3DTopology;
   bool            _preCADDiscardInput;
   double          _preCADEpsNano;
   
-  TOptionValues   _option2value, _preCADoption2value;
-  TOptionValues   _customOption2value, _customPreCADOption2value;
-  TOptionNames    _doubleOptions, _charOptions;
+  TOptionValues   _option2value, _preCADoption2value, _customOption2value; // user defined values
+  TOptionValues   _defaultOptionValues;               // default values
+  TOptionNames    _doubleOptions, _charOptions, _boolOptions; // to find a type of option
   TOptionNames    _preCADdoubleOptions, _preCADcharOptions;
+
   TSizeMap        _sizeMap;
   TSizeMap        _attractors;
   TAttractorMap   _classAttractors;
   TSizeMap        _attEntry;
   TParamsMap      _attParams;
 
-  TFaceEntryEnfVertexListMap  _faceEntryEnfVertexListMap;
-  TEnfVertexList              _enfVertexList;
+  TFaceEntryEnfVertexListMap      _faceEntryEnfVertexListMap;
+  TEnfVertexList                  _enfVertexList;
   // maps to get "manual" enf vertex (through their coordinates)
-  TFaceEntryCoordsListMap     _faceEntryCoordsListMap;
-  TCoordsEnfVertexMap         _coordsEnfVertexMap;
+  TFaceEntryCoordsListMap         _faceEntryCoordsListMap;
+  TCoordsEnfVertexMap             _coordsEnfVertexMap;
   // maps to get "geom" enf vertex (through their geom entries)
   TFaceEntryEnfVertexEntryListMap _faceEntryEnfVertexEntryListMap;
   TEnfVertexEntryEnfVertexMap     _enfVertexEntryEnfVertexMap;

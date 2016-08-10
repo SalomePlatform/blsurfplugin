@@ -58,7 +58,7 @@ SET(_link_LIBRARIES
   ${GEOM_GEOM}
   ${SMESH_SMESH}
   ${SMESH_SMESHEngine}
-  ${SMESH_GeomSelectionTools}
+  ${SMESH_PluginUtils}
   ${SMESH_StdMeshersGUI}
   ${SMESH_SMESHFiltersSelection}
   ${CAS_KERNEL}

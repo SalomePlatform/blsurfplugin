@@ -13,7 +13,9 @@
 - <b>Name</b> - allows defining the name of the hypothesis (MG-CADSurf
 Parameters_n by default).
 
-- <b>Physical Mesh</b> - can be set to <em>None</em>, <em>Global size</em>
+- <b>Physical Size</b> group defines a \a physical sizemap.
+
+- \b Type of the physical sizemap can be set to <em>None</em>, <em>Global size</em>
   or <em>Local size</em>
 
   - if set to <em>Global size</em>, only the <b>User size</b>,
@@ -23,7 +25,9 @@ Parameters_n by default).
   account the "Gradation" parameter and the custom elements sizes given in the
   "Local size" tab.
 
-- <b>Geometrical mesh</b> - can be set to <em>None</em>, <em>Global size</em>
+- <b>Geometrical Size</b> group defines a \a geometrical sizemap.
+
+- \b Type of the geometrical sizemap can be set to <em>None</em>, <em>Global size</em>
 
   - if set to <em>Global size</em>, allows user input in <b>Mesh angle</b>,
   <b>Mesh distance</b> and <b>Gradation</b> fields. These fields control
@@ -41,18 +45,25 @@ is checked, the value is relative to the diagonal of the shape.
 - <b>Min Size</b> - defines the lower limit of mesh element size. If "Relative value"
 is checked, the value is relative to the diagonal of the shape.
 
-- <b>Gradation</b> - maximum ratio between the lengths of two adjacent edges.
-
-- <b>Quadratic mesh</b> - if checked, quadratic elements will be generated.
-
 - <b>Mesh angle</b> - Limiting angle (in degree) between the plane of a triangle of the mesh and each of the tangent planes at the three vertices.
 The smaller this angle is, the closer the mesh is to the exact surface, and the denser the resulting mesh is.
 
 - <b>Mesh distance</b> - Maximum desired distance between a triangle and its supporting CAD surface.
 The smaller this distance is, the closer the mesh is to the exact surface (only available in isotropic meshing).
 
+- <b>Quadratic mesh</b> - if checked, quadratic elements will be generated.
+
+- <b>Gradation</b> - maximum ratio between the lengths of two adjacent edges.
+
+- <b>Mesh optimisation</b> - if checked, the mesh will be optimized in order to get better shaped elements.
+
+- <b>Allow Quadrangles</b> - if checked, allows the creation of quadrilateral elements.
+
 - <b>Anisotropic</b> - if checked, this parameter defines the maximum anisotropic ratio of the metric governing the anisotropic meshing process.
 The default value (0) means that the metric (and thus the generated elements) can be arbitrarily stretched.
+
+- <b>Optimize tiny edges</b> - if checked, the tiny (nano) edges are removed from the generated mesh during local mesh optimization.
+The tiny edge value defines the minimal length under which an edge is considered to be a tiny one.
 
 - <b>Remove tiny edges</b> - if checked, the tiny (nano) edges are removed from the generated mesh.
 The tiny edge value defines the minimal length under which an edge is considered to be a tiny one.
@@ -60,9 +71,13 @@ The tiny edge value defines the minimal length under which an edge is considered
 - <b>Remove bad elements</b> - if checked, the bad elements (slivers) are removed from the generated mesh.
 The bad element value defines the aspect ratio triggering the "bad element” classification.
 
-- <b>Mesh optimisation</b> - if checked, the mesh will be optimized in order to get better shaped elements.
+- <b>Correct surface intersections</b> - if checked, the mesher will try to prevent all surface intersections, which is useful for future volume mesh generation. The value defines the time that will be spent in the intersection prevention process. For example, the value 3 means that the time of the intersection removal process won't be more than 3 times the time required to mesh without processing the intersections.
 
-- <b>Allow Quadrangles</b> - if checked, allows the creation of quadrilateral elements.
+- <b>Volume Gradation</b> - maximum ratio between the lengths of two adjacent edges affecting quality of a future volume mesh, specially in thin volume areas. The volume gradation parameter must be greater than 1, and should be greater or equal to the value of the classic
+surface gradation (at the risk of increasing the time of convergence of the gradation process).
+The closer it is to 1, the smoother the final volume mesh you will build should be.
+
+
 
 \ref blsurf_top "Back to top"
 
@@ -72,204 +87,100 @@ The notion of <i>diag</i> used in the descriptions means the diagonal of the bou
 
 \image html blsurf_parameters_advanced.png
 
-- <b>PreCAD options</b> -if checked, the PreCAD module will be used. This module has
-two main goals:
+\b Advanced page tab expose mostly useful advanced options. Initially, default values of the options are displayed and they are not modifiable. If an option is activated using a check-box, its value becomes modifiable.
+
+- \b Meshing options
+
+  - <b>Enforce CAD edge sizes</b> - Relaxes the given sizemap constraint around CAD edges to allow a better
+element quality and a better geometric approximation. It is only useful in combination with the
+gradation option.
+
+  - <b>Priority of geometry over Jacobian</b> - This parameter determines whether or not the geometry accuracy
+is more important than the negative Jacobian correction. When this parameter is set to 0,
+MeshGems-CADSurf is allowed to lose the CAD-mesh associativity in order to correct the last negative Jacobians.
+
+  - <b>Maximal number of points per patch</b> - This parameter controls the maximum amount of points MeshGems-CADSurf
+is allowed to generate on a single CAD patch. For an automatic gestion of the memory, you can set this parameter to ”0”.
+
+  - <b>Rectify Jacobian</b> - The quadratic elements generation is a processing of the MeshGems-CADSurf
+meshing process which inserts the extra nodes on the CAD. This parameter determines whether
+MeshGems-CADSurf will try to correct or not all the elements of the surface mesh with negative
+Jacobians by moving the internal nodes of the mesh.
+
+  - <b>Respect geometry</b> - This patch independent option can be deactivated to allow MeshGems-CADSurf
+to lower the geometry accuracy in its patch independent process.
+
+  - <b>Tiny edges avoid surface intersections</b> - This option defines the priority between the tiny feature
+suppression and the surface intersection prevention. By default, MeshGems-CADSurf gives the priority
+to the surface intersection prevention rather than to tiny edge or bad surface element removal. These
+mesh features are then removed only if it does not lead to surface intersections. This behaviour can be
+deactivated by setting this parameter to 0, giving priority to the tiny edge or bad surface element
+removal.
+
+
+- <b>CAD preprocessor</b> options. The CAD preprocessor (formerly known as PreCAD) has two main goals:
 
   - Complete missing or inadequate CAD descriptions.
 
   - Perform topology reconstruction and specific geometry
   enhancement for mesh generation.
 
-  \n This module requires a specific licence. The following PreCAD
-  options are the most significant and important ones:
+  \n All options are unchecked by default. No cleanup is made by default so that the mesh matches the shape. If the user has a bad shape (e.g. imported shape), he can activate some options to improve the mesh.
 
-    - <b>Merge Edges</b> - allows PreCAD to optimize the geometry by merging some
-    edges. This option is checked by default.
+  - <b>Closed geometry</b> - describes whether the working geometry should be closed or not. 
+  When activated, this option helps PreCAD to process the dirtiest geometries.
 
-    - <b>Process 3D topology</b> - allows PreCAD to perform the cleanup processing.
-    This option is checked by default.
+  - \b Debug - If debug = yes PreCAD will be very verbose and will output some intermediate files in the working directory.
 
-    - <b>Discard input topology</b> - computes the CAD topology from scratch, 
-    without considering the topological information contained in the original CAD
-    (useful for iges files). This option is unchecked by default.
+  - <b>Discard input topology</b> - compute the CAD topology from scratch,
+  without considering the topological information contained in the original CAD
+  (useful for iges files). This option is unchecked by default.
 
-- <b>Verbosity level</b> - defines the percentage of "verbosity" of
-MeshGems-CADSurf and MeshGems-PreCAD [0-10].
+  - <b>Merge Edges</b> - optimize the geometry by merging some
+  edges.
 
-- <b>ExportGMF</b> - saves the computed mesh into a GMF file (.mesh or .meshb).
+  - <b>Periodic tolerance</b> - This parameter defines the maximum size difference between two periodic edges and also the maximum distance error between two periodic entities.
 
-- <b>Add option</b> - provides the choice of multiple PreCAD and MG-CADSurf 
-advanced options, which appear, if selected, in a table where it is 
-possible to input the value of the option and edit it later.
+  - <b>Remove duplicate CAD faces</b> - optimize the geometry by merging the
+  duplicate CAD faces. This option is unchecked by default.
 
-- <b>Clear option</b> - removes the option selected in the table.
-
-The following advanced MG-CADSurf options can be used:
-
-- \b volume_gradation (real) - Controls the mesh volume gradation, which can improve the shape quality of a
-volume mesh built afterward, specially in thin volume areas.
-The volume gradation parameter must be greater than 1, and should be greater or equal to the value of the classic
-surface gradation (at the risk of increasing the time of convergence of the gradation process).
-The closer it is to 1, the smoother the final volume mesh you will build should be.
-
-- \b correct_surface_intersections (bool) - If this option is deactivated, MeshGems-CADSurf will not correct
-surface intersections. This particularly useful if you don't want volume filling in a later stage, or if you want to fix the
-intersections in an other way (using MeshGems Cleaner for instance).
-By default this option is 1.
-
-- \b surface_intersections_processing_max_cost (real) - If correct_surface_intersections = 1, this
-parameter gives the time the user is ready to spend in the intersection prevention process. For example,
-if set to 3, MeshGems-CADSurf will not spend more time in the intersection removal process than
-3 times the time required to mesh without processing the intersections.
-
-- \b create_tag_on_collision (bool) - If this option is activated, MeshGems-CADSurf will create new tags to
-describe tag collisions (when it locally changes the topology, depending on the patch independent
-options). When this option is not activated, only one tag is preserved while the other one is dropped.
-By default this option is 1.
-
-- \b debug (bool) - If debug = 1, MeshGems-CADSurf will be very verbose and will output some intermediate files
-in the working directory. This option is meant to communicate with Distene support mainly.
-By default this option is 0.
-
-- \b enforce_cad_edge_sizes (bool) - Relaxes the given sizemap constraint around CAD edges to allow a better
-element quality and a better geometric approximation. It is only useful in combination with the gradation option.
-By default this option is 0.
-
-- \b rectify_jacobian (bool) - The quadratic elements generation is a processing of the MeshGems-CADSurf
-meshing process which inserts the extra nodes on the CAD. This parameter determines whether
-MeshGems-CADSurf will try to correct or not all the elements of the surface mesh with negative
-Jacobians by moving the internal nodes of the mesh.
-By default this option is 1.
-
-- \b jacobian_rectification_respect_geometry (bool) - This parameter determines whether or not the geometry accuracy
-is more important than the negative Jacobian correction. When this parameter is set to 0,
-MeshGems-CADSurf is allowed to lose the CAD-mesh associativity in order to correct the last negative Jacobians.
-By default this option is 1.
-
-- \b respect_geometry (bool) - This patch independent option can be deactivated to allow MeshGems-CADSurf
-to lower the geometry accuracy in its patch independent process.
-By default this option is 1.
-
-- \b optimise_tiny_edges (bool) - This patch-independent correction option can be activated to remove the tiny
-edges (defined by the option tiny edge optimisation length) from the generated mesh when it improves
-the local mesh quality, without taking into account the tags (attributes) specifications.
-By default this option is 0.
-
-- \b remove_duplicate_cad_faces (bool) - Defines the behavior of MeshGems-PreCAD regarding the duplicate
-CAD faces. By default, MG-PreCAD merges the duplicate CAD faces. This behavior can be deactivated by using this option.
-By default this option is 1.
-
-- \b tiny_edge_avoid_surface_intersections (bool) - This option defines the priority between the tiny feature
-suppression and the surface intersection prevention. By default, MeshGems-CADSurf gives the priority
-to the surface intersection prevention rather than to tiny edge or bad surface element removal. These
-mesh features are then removed only if it does not lead to surface intersections. This behaviour can be
-deactivated by setting this parameter to 0, giving priority to the tiny edge or bad surface element
-removal.
-By default this option is 1.
-
-- \b tiny_edge_optimisation_length (double) - This parameter defines the minimal length under which an edge is
-considered to be a tiny one to be optimised out by the optimise tiny edges option.
-By default this option is \f$\mathrm{diag} \times 10^{-6}\f$.
-
-- \b tiny_edge_respect_geometry (bool) - This option defines the behaviour of the tiny edge removal algorithm
-regarding volume collapse. By default, all tiny edges will be removed, regardless of any potential
-volume collapse. When this option is activated, it will prevent volume from being collapsed during the
-tiny edge removal process.
-By default this option is 0.
-
-- \b max_number_of_points_per_patch (int) - This parameter controls the maximum amount of points MeshGems-CADSurf
-is allowed to generate on a single CAD patch. For an automatic gestion of the memory, one can set this parameter to ”0”.
-By default this option is 100000.
-
-- \b periodic_tolerance (double) - This parameter defines the maximum size difference between two periodic edges
-and also the maximum distance error between two periodic entities.
-By default this option is diag/100.
-
-- \b required_entities (char) - The required entities control the correction operations. Accepted values for this parameter are:
-
+  - <b>Required entities</b> - The required entities control the correction operations. Accepted values for this parameter are:
     - respect : MeshGems-CADSurf is not allowed to alter any required entity, even for correction purposes,
     - ignore : MeshGems-CADSurf will ignore the required entities in its processing,
     - clear : MeshGems-CADSurf will clear any required status for the entities. There will not be any entity marked as required in the generated mesh.
 
-    \n By default this option is "respect".
+  - <b>Sewing tolerance</b> - tolerance of the assembly. It rarely requires to be tuned.
 
-- \b tags (char) - The tag (attribute) system controls the optimisation process. Accepted values for this parameter are:
-
-    - respect : the CAD tags will be preserved and unaltered by the optimisation operations,
-    - ignore : the CAD tags will be ignored by the optimisation operations but they will still be present inthe output mesh,
-    - clear : MeshGems-CADSurf will clear any tag on any entity and optimise accordingly. There will not be any tag in the generated mesh.
-
-    \n By default this option is "respect".
-
-    
-\b Remark: To set boolean options, you have to type 0 or 1.
+  - \b Tags - controls the optimisation process. Possible values are:
+    - "respect" - PreCAD is not allowed to cross the CAD attributes boundaries for optimisation purpose.
+    - "ignore" - PreCAD is allowed to cross the CAD attributes boundaries for optimisation.
+    - "clear" - PreCAD will erase each tgas of each entities, and will thus be allowed to cross the CAD attributes boundaries in its optimisation purpose.
 
 
+- <b>Add option</b> - adds a new line in <b>Other options</b> section where you can type an option name and value. The following advanced MG-CADSurf options can be used:
 
-The following MG-CADSurf options are deprecated (since MeshGems 1.3) and will be removed in the next version of Salome:
+  - \b create_tag_on_collision (bool) - If this option is activated, MeshGems-CADSurf will create new tags to
+  describe tag collisions (when it locally changes the topology, depending on the patch independent
+  options). When this option is not activated, only one tag is preserved while the other one is dropped.
+  By default this option is 1.
 
-- frontal
-- hinterpol_flag
-- hmean_flag
-- prox_nb_layer
-- prox_ratio
-- proximity.
+  - \b tiny_edge_respect_geometry (bool) - This option defines the behaviour of the tiny edge removal algorithm
+  regarding volume collapse. By default, all tiny edges will be removed, regardless of any potential
+  volume collapse. When this option is activated, it will prevent volume from being collapsed during the tiny edge removal process.
+  By default this option is 0.
+
+  - \b manifold_geometry (int) - describes whether the working geometry should be manifold or not.
+  When activated, this option helps PreCAD to process the dirtiest
+  geometries. By default this option is 0.
 
 
-The following PreCAD options are commonly usable. 
 
-- \b closed_geometry (boolean) - describes whether the working geometry
-should be closed or not. When activated, this option helps PreCAD to process 
-the dirtiest geometries. By default this option is 0.
+- <b>Verbosity level</b> - defines the percentage of "verbosity" of
+MeshGems-CADSurf [0-10].
 
-- \b create_tag_collision (boolean) - creates new tags from original ones in case
-of collision (entity merge or association for example). By default
-this option is 1.
+- <b>ExportGMF</b> - saves the computed mesh into a GMF file (.mesh or .meshb).
 
-- \b debug (bool) - If debug = 1 PreCAD will be very verbose and will output
-some intermediate files in the working directory. By default this
-option is 0.
 
-- \b manifold_geometry (int) - describes whether the working geometry should be manifold or not.
-When activated, this option helps PreCAD to process the dirtiest
-geometries. By default this option is 0.
-
-- \b periodic_tolerance (real) - defines the maximum distance error accepted between
-two sets of periodic entities. By default this option is \f$\mathrm{diag} \times 10^{-5}\f$.
-
-- \b remove_tiny_edges (boolean) -optimize the geometry by removing the nano edges whenever possible.
-By default this option is 0.
-
-- \b required_entities (char) -controls the correction operations. Possible values are:
-
-  - "respect" - PreCAD is not allowed to correct or optimize a required edge.
-
-  - "ignore" - PreCAD is allowed to correct a required edge.
-
-  - "clear" - PreCAD will erase "required" status of each required entities, and will thus
-  be allowed to correct a required edge.
-
-  \n By default this option is "respect".
-
-- \b sewing_tolerance (real) - tolerance of the assembly. It rarely requires to be tuned.
-By default this option is \f$\mathrm{diag} \times 5 \cdot 10^{-4}\f$.
-
-- \b tags (char) -controls the optimisation process. Possible values are:
-
-  - "respect" - PreCAD is not allowed to cross the CAD attributes boundaries for optimisation purpose.
-
-  - "ignore" - PreCAD is allowed to cross the CAD attributes boundaries for optimisation.
-
-  - "clear" - PreCAD will erase each tgas of each entities, and will thus
-  be allowed to cross the CAD attributes boundaries in its optimisation purpose.
-
-  \n By default this option is "respect".
-
-- \b tiny_edge_length (real) -  the length below which en edge is considered as nano for the topology processing.
-By default this option is \f$10^{-5}\f$.
-
-\note Moreover, user can choose "<Other option>" item in these two pop-up menus 
-(MG-CADSurf and PreCAD) to be able to specify both the option name and the option value. 
 
 \ref blsurf_top "Back to top"
 
@@ -444,9 +355,7 @@ A group can optionnaly be defined on those enforced vertices.
 Periodicity is used to have the same discretization on two faces (in 3D) or two edges (in 2D).
 This is useful for instance for a Representative Volume Element so that the translated meshes share the same nodes on the common faces.
 
-In GUI, periodicity association uses PreCAD (optional MG-CADSurf add-on). You must have a PreCAD license to be able to use it.
-
-In TUI, advanced users can use CADSurf periodicity via \ref periodicity_tui_basic_api_usage "the basic API" or \ref periodicity_tui_advanced_api_usage "the advanced API". It requires to disable PreCAD. We strongly advise to use PreCAD periodicity instead.
+Periodicity association uses PreCAD (MG-CADSurf preprocessor). You don't need an extra PreCAD license. It is included in MG-CADSurf since MeshGems V2.2.
 
 \image html blsurf_periodicity_translation.png "Two periodic faces (translation)"
 
@@ -472,35 +381,12 @@ Otherwise, for instance a rotation, the user has to define 3 non-colinear vertic
 The two methods to define periodicity with PreCAD are
 (the former name of <em>MG-CADSurf</em> is \a BLSURF and names
 of the corresponding classes and modules still include \a "BLSURF"):
-- BLSURFPluginBuilder.BLSURF_Algorithm.AddPreCadFacesPeriodicity 
+- BLSURFPluginBuilder.BLSURF_Algorithm.AddPreCadFacesPeriodicity
 - BLSURFPluginBuilder.BLSURF_Algorithm.AddPreCadEdgesPeriodicity
 
 List of source and target vertices to define a transformation are optional.
 
 \sa Sample TUI Script of the definition of MG-CADSurf periodicity \ref tui_blsurf_periodicity_preCAD "using preCAD".
-
-\subsection periodicity_tui_basic_api_usage TUI Basic API usage
-
-In the CADSurf basic API, only available in TUI, the periodicity must be defined face by face, edge by edge and vertex by vertex.
-
-You must disable PreCAD to use it. Hence, shapes with seam edges will not be meshed correctly.
-
-The methods are:
-- BLSURFPluginBuilder.BLSURF_Algorithm.AddFacePeriodicity
-- BLSURFPluginBuilder.BLSURF_Algorithm.AddEdgePeriodicity
-- BLSURFPluginBuilder.BLSURF_Algorithm.AddEdgePeriodicityWithoutFaces
-- BLSURFPluginBuilder.BLSURF_Algorithm.AddVertexPeriodicity
-
-Sample TUI Script of the definition of MG-CADSurf periodicity \ref tui_blsurf_periodicity_basic "using basic API (without preCAD)".
-
-\subsection periodicity_tui_advanced_api_usage TUI Advanced API usage
-
-To ease the periodicity description, the basic API methods can be called through two advanced methods, given two geom groups and a python geom transformation:
-
-- BLSURFPluginBuilder.BLSURF_Algorithm.AddAdvancedFacesPeriodicity (in 3D)
-- BLSURFPluginBuilder.BLSURF_Algorithm.AddAdvancedEdgesPeriodicity (in 2D)
-
-Sample TUI Script of the definition of MG-CADSurf periodicity \ref tui_blsurf_periodicity_advanced "using advanced API (without preCAD)".
 
 \ref blsurf_top "Back to top"
 

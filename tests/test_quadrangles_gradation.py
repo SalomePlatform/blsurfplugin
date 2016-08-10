@@ -8,15 +8,12 @@ geompy = geomBuilder.New(salome.myStudy)
 
 import math
 
-area_tolerance = 1e-3
-nb_faces_tolerance = 10
+area_tolerance = 1e-2
+nb_faces_tolerance = 20
 
 ## Return the min and max areas of a mesh
 def getMinMaxArea(mesh):
-  faces = mesh.GetElementsByType(SMESH.FACE)
-  areas = [mesh.GetArea(face) for face in faces]
-  mini = min(areas)
-  maxi = max(areas)
+  mini, maxi = mesh.GetMinMax(SMESH.FT_Area)
   return mini, maxi
 
 O = geompy.MakeVertex(0, 0, 0)
@@ -105,14 +102,14 @@ maxi_1_ref = 0.530
 if abs(mini_1-mini_1_ref) > area_tolerance:
   raise Exception("Min area of Mesh_1 incorrect")
 
-if abs(maxi_1-maxi_1_ref) > area_tolerance:
+if maxi_1 > maxi_1_ref:
   raise Exception("Max area of Mesh_1 incorrect")
 
 # Check the number of faces of Mesh_1
 nb_faces_1 = Mesh_1.NbFaces()
 nb_faces_1_ref = 1208
 
-if abs(nb_faces_1-nb_faces_1_ref) > nb_faces_tolerance:
+if nb_faces_1 < nb_faces_1_ref:
   raise Exception("Number of faces of Mesh_1 incorrect")
 
 

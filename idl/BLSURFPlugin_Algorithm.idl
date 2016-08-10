@@ -178,8 +178,18 @@ module BLSURFPlugin
     /*!
      * Sets maximal allowed ratio between the lengths of two adjacent edges
      */
+    void SetUseGradation(in boolean toUse);
+    boolean GetUseGradation();
     void SetGradation(in double ratio);
     double GetGradation();
+
+    /*!
+     * Sets maximal allowed ratio between the lengths of two adjacent edges in 3D mesh
+     */
+    void SetUseVolumeGradation(in boolean toUse);
+    boolean GetUseVolumeGradation();
+    void SetVolumeGradation(in double ratio);
+    double GetVolumeGradation();
 
     /*!
      * Sets to create quadrilateral elements or not
@@ -228,6 +238,37 @@ module BLSURFPlugin
     double GetTinyEdgeLength();
 
     /*!
+     *  This patch-independent correction option can be activated to remove the tiny
+     * edges (defined by the option tiny edge optimisation length) from the generated
+     * mesh when it improves the local mesh quality, without taking into account the
+     * tags (attributes) specifications.
+     */
+    void SetOptimiseTinyEdges(in boolean toOptimise);
+    boolean GetOptimiseTinyEdges();
+
+    /*!
+     * Defines the minimal length under which an edge is considered to be a tiny one
+     * to be optimised out by the optimise tiny edges option
+     */
+    void SetTinyEdgeOptimisationLength(in double length);
+    double GetTinyEdgeOptimisationLength();
+
+    /*!
+     * Activate correction of all surface intersections
+     */
+    void SetCorrectSurfaceIntersection(in boolean toCorrect);
+    boolean GetCorrectSurfaceIntersection();
+
+    /*!
+     * Defines the time the user is ready to spend in the intersection prevention process.
+     * For example, maxCost = 3 means that MeshGems-CADSurf will not spend more time
+     * in the intersection removal process than 3 times the time required to mesh
+     * without processing the intersections.
+     */
+    void SetCorrectSurfaceIntersectionMaxCost(in double maxCost);
+    double GetCorrectSurfaceIntersectionMaxCost();
+
+    /*!
      * This patch independent correction option can be activated to remove the bad 
      * elements (often called slivers) from the generated mesh, without taking into account
      * the tags (attributes) specification.
@@ -272,10 +313,140 @@ module BLSURFPlugin
     short GetVerbosity();
 
     /*!
+     * Set enforce_cad_edge_sizes parameter
+     *
+     * Relaxes the given sizemap constraint around CAD edges to allow a better
+     * element quality and a better geometric approximation. It is only useful in 
+     * combination with the gradation option.
+     */
+    void SetEnforceCadEdgesSize( in boolean toEnforce );
+    boolean GetEnforceCadEdgesSize();
+
+    /*!
+     * Set jacobian_rectification_respect_geometry parameter
+     *
+     * While making the mesh quadratic, allows to lose the CAD-mesh associativity in order
+     * to correct elements with nagative Jacobian
+     */
+    void SetJacobianRectificationRespectGeometry( in boolean allowRectification );
+    boolean GetJacobianRectificationRespectGeometry();
+    
+    /*!
+     * Set rectify_jacobian parameter
+     *
+     * While making the mesh quadratic, allow to fix nagative Jacobian surface elements
+     */
+    void SetJacobianRectification( in boolean allowRectification );
+    boolean GetJacobianRectification();
+
+    /*!
+     * Set max_number_of_points_per_patch parameter
+     * 
+     * This parameter controls the maximum amount of points MeshGems-CADSurf is allowed
+     * to generate on a single CAD patch. For an automatic gestion of the memory, one
+     * can set this parameter to 0
+     */
+    void SetMaxNumberOfPointsPerPatch( in long nb ) raises (SALOME::SALOME_Exception);
+    long GetMaxNumberOfPointsPerPatch();
+
+    /*!
+     * Set respect_geometry parameter
+     *
+     *  This patch independent option can be deactivated to allow MeshGems-CADSurf
+     * to lower the geometry accuracy in its patch independent process.
+     */
+    void SetRespectGeometry( in boolean toRespect );
+    boolean GetRespectGeometry();
+
+    /*!
+     * Set tiny_edges_avoid_surface_intersections parameter
+     *
+     * This option defines the priority between the tiny feature
+     * suppression and the surface intersection prevention. 
+     */
+    void SetTinyEdgesAvoidSurfaceIntersections( in boolean toAvoidIntersection );
+    boolean GetTinyEdgesAvoidSurfaceIntersections();
+
+    /*!
+     * Set closed_geometry parameter parameter
+     *
+     *  Describes whether the geometry is expected to be closed or not. 
+     * When activated, this option helps MeshGems-PreCAD to treat the dirtiest geometries.
+     */
+    void SetClosedGeometry( in boolean isClosed );
+    boolean GetClosedGeometry();
+
+    /*!
+     * Set debug parameter
+     *
+     * Make MeshGems-CADSurf will be very verbose and will output some intermediate
+     * files in the working directory. This option is mainly meant for Distene support issues.
+     */
+    void SetDebug( in boolean isDebug );
+    boolean GetDebug();
+
+    /*!
+     * Set periodic_tolerance parameter
+     * 
+     *  This parameter defines the maximum size difference between two periodic edges
+     * and also the maximum distance error between two periodic entities.
+     */
+    void SetPeriodicTolerance( in double tol ) raises (SALOME::SALOME_Exception);
+    double GetPeriodicTolerance() raises (SALOME::SALOME_Exception);
+
+    /*!
+     * Set required_entities parameter
+     *
+     * The required entities control the correction operations. 
+     * Accepted values for this parameter are :
+     * - "respect" : MeshGems-CADSurf is not allowed to alter any required entity, 
+     *             even for correction purposes,
+     * - "ignore" : MeshGems-CADSurf will ignore the required entities in its processing,
+     * - "clear" : MeshGems-CADSurf will clear any required status for the entities. 
+     *           There will not be any entity marked as required in the generated mesh.
+     */
+    void SetRequiredEntities( in string howToTreat ) raises (SALOME::SALOME_Exception);
+    string GetRequiredEntities();
+
+    /*!
+     * Set sewing_tolerance parameter
+     *
+     * This parameter is the tolerance of the assembly.
+     */
+    void SetSewingTolerance( in double tol ) raises (SALOME::SALOME_Exception);
+    double GetSewingTolerance() raises (SALOME::SALOME_Exception);
+
+    /*!
+     * Set tags parameter
+     *
+     *  The tag (attribute) system controls the optimisation process. 
+     *  Accepted values for this parameter are :
+     * - "respect"  : the CAD tags will be preserved and unaltered by the optimisation operations,
+     * - "ignore" : the CAD tags will be ignored by the optimisation operations 
+     *              but they will still be present in the output mesh,
+     * - "clear" : MeshGems-CADSurf will clear any tag on any entity and optimise accordingly. 
+     *             There will not be any tag in the generated mesh.
+     */
+    void SetTags( in string howToTreat ) raises (SALOME::SALOME_Exception);
+    string GetTags();
+
+    /*!
      * To merges edges.
      */
     void SetPreCADMergeEdges(in boolean toMergeEdges);
     boolean GetPreCADMergeEdges();
+
+    /*!
+     * To remove tiny UV edges edges.
+     */
+    void SetPreCADRemoveTinyUVEdges(in boolean toRemoveTinyUVEdges);
+    boolean GetPreCADRemoveTinyUVEdges();
+
+    /*!
+     * To remove duplicate CAD faces.
+     */
+    void SetPreCADRemoveDuplicateCADFaces(in boolean toRemoveDuplicateCADFaces);
+    boolean GetPreCADRemoveDuplicateCADFaces();
 
     /*!
      * To process 3D topology.
@@ -308,6 +479,8 @@ module BLSURFPlugin
     /*!
      * Adds custom advanced option and its value
      */
+    void SetAdvancedOption(in string optionsAndValues) // in a form "option_1 v1 option_2 v2'"
+      raises (SALOME::SALOME_Exception);
     void AddOption(in string optionName, in string optionValue);
     void AddPreCADOption(in string optionName, in string optionValue);
     string GetOption(in string optionName);
@@ -317,10 +490,12 @@ module BLSURFPlugin
      * Return array of strings each of which is option name concatenated
      * with option value devided by semicolon - "option_name:option_value:option_type".
      * Option value is empty if an option is not set.
+     * option_type: 1 if user-define, 0 if default
      * Note: the method is mostly for interaction with GUI.
      */
     string_array GetOptionValues();
     string_array GetPreCADOptionValues();
+    string_array GetAdvancedOptionValues();
 
     /*!
      * Set option values each in the form "option_name[:option_value][:option_type]".
@@ -328,6 +503,7 @@ module BLSURFPlugin
      */
     void SetOptionValues(in string_array options) raises (SALOME::SALOME_Exception);
     void SetPreCADOptionValues(in string_array options) raises (SALOME::SALOME_Exception);
+    void SetAdvancedOptionValues(in string_array options);
 
     /*!
      * SizeMap
@@ -457,10 +633,6 @@ module BLSURFPlugin
     void AddPreCadEdgesPeriodicity(in GEOM::GEOM_Object theEdge1, in GEOM::GEOM_Object theEdge2) raises (SALOME::SALOME_Exception);
     void AddPreCadEdgesPeriodicityWithVertices(in GEOM::GEOM_Object theEdge1, in GEOM::GEOM_Object theEdge2, in GEOM::ListOfGO theSourceVertices, in GEOM::ListOfGO theTargetVertices) raises (SALOME::SALOME_Exception);
     void AddPreCadEdgesPeriodicityEntry(in TEntry theEdge1, in TEntry theEdge2, in TEntryList theSourceVertices, in TEntryList theTargetVertices)  raises (SALOME::SALOME_Exception);
-    void AddFacePeriodicity(in GEOM::GEOM_Object theFace1, in GEOM::GEOM_Object theFace2) raises (SALOME::SALOME_Exception);
-    void AddEdgePeriodicity(in GEOM::GEOM_Object theFace1, in GEOM::GEOM_Object theEdge1, in GEOM::GEOM_Object theFace2, in GEOM::GEOM_Object theEdge2, in long edge_orientation) raises (SALOME::SALOME_Exception);
-    void AddEdgePeriodicityWithoutFaces(in GEOM::GEOM_Object theEdge1, in GEOM::GEOM_Object theEdge2, in long edge_orientation) raises (SALOME::SALOME_Exception);
-    void AddVertexPeriodicity(in GEOM::GEOM_Object theEdge1, in GEOM::GEOM_Object theVertex1, in GEOM::GEOM_Object theEdge2, in GEOM::GEOM_Object theVertex2) raises (SALOME::SALOME_Exception);
     TPeriodicityList GetPreCadFacesPeriodicityVector();
     TPeriodicityList GetPreCadEdgesPeriodicityVector();
     ///////////////////////

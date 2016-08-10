@@ -51,15 +51,18 @@ BLSURF_Parameters.SetPhySize( 5 )
 Mesh_1.Compute()
 
 # Check that vertices are not merged by preCAD preprocessing
+# when no preprocessing option has been explicitely called
 nodes = []
 for p in vertices:
     x, y, z = geompy.PointCoordinates(p)
     id_node = Mesh_1.FindNodeClosestTo(x, y, z)
     nodes.append(id_node)
 
-nodes = set(nodes)
+nodes = list(set(nodes))
 
-assert(len(nodes) == 2)
+Mesh_1.MakeGroupByIds("nodes", SMESH.NODE, nodes)
+
+assert len(nodes) == 3, "We should have 3 nodes. We got %i. => The preprocessing has done something, but we did not ask him to."%len(nodes)
 
 if salome.sg.hasDesktop():
   salome.sg.updateObjBrowser(1)

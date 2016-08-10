@@ -74,6 +74,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   _bad_surface_element_aspect_ratio = 1000
   _geometric_approximation = 22
   _gradation  = 1.3
+  _volume_gradation  = 2
   _metric = "isotropic"
   _remove_tiny_edges = 0
 
@@ -159,9 +160,20 @@ class BLSURF_Algorithm(Mesh_Algorithm):
 
   ## Sets maximal allowed ratio between the lengths of two adjacent edges.
   #  @param theVal value of maximal length ratio
-  def SetGradation(self, theVal=_gradation):
+  def SetGradation(self, toUseGradation=True, theVal=_gradation):
+    if isinstance( toUseGradation, float ): ## backward compatibility
+      toUseGradation, theVal = True, toUseGradation
     if self.Parameters().GetGeometricMesh() == 0: theVal = self._gradation
+    self.Parameters().SetUseGradation(toUseGradation)
     self.Parameters().SetGradation(theVal)
+    pass
+
+  ## Sets maximal allowed ratio between the lengths of two adjacent edges in 3D mesh.
+  #  @param theVal value of maximal length ratio
+  def SetVolumeGradation(self, toUseGradation=True, theVal=_gradation):
+    if self.Parameters().GetGeometricMesh() == 0: theVal = self._volume_gradation
+    self.Parameters().SetUseVolumeGradation(toUseGradation)
+    self.Parameters().SetVolumeGradation(theVal)
     pass
 
   ## Sets topology usage way.
@@ -191,19 +203,162 @@ class BLSURF_Algorithm(Mesh_Algorithm):
     self.Parameters().SetVerbosity(level)
     pass
 
+  ## Set enforce_cad_edge_sizes parameter
+  #  
+  #  Relaxes the given sizemap constraint around CAD edges to allow a better
+  #  element quality and a better geometric approximation. It is only useful in 
+  #  combination with the gradation option.
+  #  
+  def SetEnforceCadEdgesSize( self, toEnforce ):
+    self.Parameters().SetEnforceCadEdgesSize( toEnforce )
+
+  ## Set jacobian_rectification_respect_geometry parameter
+  #  
+  #  While making the mesh quadratic, allows to lose the CAD-mesh associativity in order
+  #  to correct elements with nagative Jacobian
+  #  
+  def SetJacobianRectificationRespectGeometry( self, allowRectification ):
+    self.Parameters().SetJacobianRectificationRespectGeometry( allowRectification )
+    
+  ## Set rectify_jacobian parameter
+  #  
+  #  While making the mesh quadratic, allow to fix nagative Jacobian surface elements
+  #  
+  def SetJacobianRectification( self, allowRectification ):
+    self.Parameters().SetJacobianRectification( allowRectification )
+
+  ## Set respect_geometry parameter
+  #  
+  #  This patch independent option can be deactivated to allow MeshGems-CADSurf
+  #  to lower the geometry accuracy in its patch independent process.
+  #  
+  def SetRespectGeometry( self, toRespect ):
+    self.Parameters().SetRespectGeometry( toRespect )
+
+  ## Set max_number_of_points_per_patch parameter
+  #  
+  #  This parameter controls the maximum amount of points MeshGems-CADSurf is allowed
+  #  to generate on a single CAD patch. For an automatic gestion of the memory, one
+  #  can set this parameter to 0
+  #  
+  def SetMaxNumberOfPointsPerPatch( self, nb ):
+    self.Parameters().SetMaxNumberOfPointsPerPatch( nb )
+
+  ## Set respect_geometry parameter
+  #  
+  #  This patch independent option can be deactivated to allow MeshGems-CADSurf
+  #  to lower the geometry accuracy in its patch independent process.
+  #  
+  def SetRespectGeometry( self, toRespect ):
+    self.Parameters().SetRespectGeometry( toRespect )
+
+  ## Set tiny_edges_avoid_surface_intersections parameter
+  #  
+  #  This option defines the priority between the tiny feature
+  #  suppression and the surface intersection prevention. 
+  #  
+  def SetTinyEdgesAvoidSurfaceIntersections( self, toAvoidIntersection ):
+    self.Parameters().SetTinyEdgesAvoidSurfaceIntersections( toAvoidIntersection )
+
+  ## Set closed_geometry parameter parameter
+  #  
+  #  Describes whether the geometry is expected to be closed or not. 
+  #  When activated, this option helps MeshGems-PreCAD to treat the dirtiest geometries.
+  #  
+  def SetClosedGeometry( self, isClosed ):
+    self.Parameters().SetClosedGeometry( isClosed )
+
+  ## Set debug parameter
+  #  
+  #  Make MeshGems-CADSurf will be very verbose and will output some intermediate
+  #  files in the working directory. This option is mainly meant for Distene support issues.
+  #  
+  def SetDebug( self, isDebug ):
+    self.Parameters().SetDebug( isDebug )
+
+  ## Set periodic_tolerance parameter
+  #  
+  #  This parameter defines the maximum size difference between two periodic edges
+  #  and also the maximum distance error between two periodic entities.
+  #  
+  def SetPeriodicTolerance( self, tol ):
+    self.Parameters().SetPeriodicTolerance( tol )
+
+  ## Set required_entities parameter
+  #  
+  #  The required entities control the correction operations. 
+  #  Accepted values for this parameter are :
+  #  - "respect" : MeshGems-CADSurf is not allowed to alter any required entity, 
+  #                even for correction purposes,
+  #  - "ignore" : MeshGems-CADSurf will ignore the required entities in its processing,
+  #  - "clear" : MeshGems-CADSurf will clear any required status for the entities. 
+  #              There will not be any entity marked as required in the generated mesh.
+  #  
+  def SetRequiredEntities( self, howToTreat ):
+    self.Parameters().SetRequiredEntities( howToTreat )
+
+  ## Set sewing_tolerance parameter
+  #  
+  #  This parameter is the tolerance of the assembly.
+  #  
+  def SetSewingTolerance( self, tol ):
+    self.Parameters().SetSewingTolerance( tol )
+
+  ## Set tags parameter
+  #  
+  #  The tag (attribute) system controls the optimisation process. 
+  #  Accepted values for this parameter are :
+  #  - "respect"  : the CAD tags will be preserved and unaltered by the optimisation operations,
+  #  - "ignore" : the CAD tags will be ignored by the optimisation operations 
+  #               but they will still be present in the output mesh,
+  #  - "clear" : MeshGems-CADSurf will clear any tag on any entity and optimise accordingly. 
+  #              There will not be any tag in the generated mesh.
+  #  
+  def SetTags( self, howToTreat ):
+    self.Parameters().SetTags( howToTreat )
+
+  ## Activate removal of the tiny edges from the generated
+  # mesh when it improves the local mesh quality, without taking into account the
+  # tags (attributes) specifications.
+  #  @param toOptimise "to optimize" flag value
+  #  @param length minimal length under which an edge is considered to be a tiny
+  def SetOptimiseTinyEdges(self, toOptimise, length=-1):
+    self.Parameters().SetOptimiseTinyEdges( toOptimise )
+    if toOptimise:
+      self.Parameters().SetTinyEdgeOptimisationLength( length )
+
+  ## Activate correction of all surface intersections
+  #  @param toCorrect "to correct" flag value
+  #  @param maxCost  the time the user is ready to spend in the intersection prevention process
+  #         For example, maxCost = 3 means that MeshGems-CADSurf will not spend more time
+  #         in the intersection removal process than 3 times the time required to mesh
+  #         without processing the intersections.
+  def SetCorrectSurfaceIntersection(self, toCorrect, maxCost ):
+    self.Parameters().SetCorrectSurfaceIntersection( toCorrect )
+    if toCorrect:
+      self.Parameters().SetCorrectSurfaceIntersectionMaxCost( maxCost )
+
   ## To optimize merges edges.
   #  @param toMergeEdges "merge edges" flag value
   def SetPreCADMergeEdges(self, toMergeEdges=False):
-    if self.Parameters().GetTopology() != PreCAD:
-      self.SetTopology(PreCAD)
     self.Parameters().SetPreCADMergeEdges(toMergeEdges)
+    pass
+
+  ## To remove tiny UV edges.
+  #  @param toRemoveTinyUVEdges "remove_tiny_uv_edges" flag value
+  def SetPreCADRemoveTinyUVEdges(self, toRemoveTinyUVEdges=False):
+    self.Parameters().SetPreCADRemoveTinyUVEdges(toRemoveTinyUVEdges)
+    pass
+
+  ## To remove duplicate CAD Faces
+  #  @param toRemoveDuplicateCADFaces "remove_duplicate_cad_faces" flag value
+  def SetPreCADRemoveDuplicateCADFaces(self, toRemoveDuplicateCADFaces=False):
+    self.Parameters().SetPreCADRemoveDuplicateCADFaces(toRemoveDuplicateCADFaces)
     pass
 
   ## To process 3D topology.
   #  @param toProcess "PreCAD process 3D" flag value
   def SetPreCADProcess3DTopology(self, toProcess=False):
-    if self.Parameters().GetTopology() != PreCAD:
-      self.SetTopology(PreCAD)
     self.Parameters().SetPreCADProcess3DTopology(toProcess)
     pass
 
@@ -219,8 +374,6 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   ## To compute topology from scratch
   #  @param toDiscardInput "discard input" flag value
   def SetPreCADDiscardInput(self, toDiscardInput=False):
-    if self.Parameters().GetTopology() != PreCAD:
-      self.SetTopology(PreCAD)
     self.Parameters().SetPreCADDiscardInput(toDiscardInput)
     pass
 
@@ -242,11 +395,15 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   #  @param optionName name of the option
   #  @param optionValue value of the option
   def SetPreCADOptionValue(self, optionName, optionValue):
-    if self.Parameters().GetTopology() != PreCAD:
-      self.SetTopology(PreCAD)
     self.Parameters().SetPreCADOptionValue(optionName,optionValue)
     pass
   
+  ## Adds custom advanced option values
+  #  @param optionsAndValues options and values in a form "option_1 v1 option_2 v2'"
+  def SetAdvancedOption(self, optionsAndValues):
+    self.Parameters().SetAdvancedOption(optionsAndValues)
+    pass
+
   ## Adds custom advanced option value.
   #  @param optionName custom advanced option name
   #  @param level custom advanced option value
@@ -258,8 +415,6 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   #  @param optionName custom name of the option
   #  @param optionValue value of the option
   def AddPreCADOption(self, optionName, optionValue):
-    if self.Parameters().GetTopology() != PreCAD:
-      self.SetTopology(PreCAD)
     self.Parameters().AddPreCADOption(optionName,optionValue)
     pass
 
@@ -500,123 +655,6 @@ class BLSURF_Algorithm(Mesh_Algorithm):
         self.Parameters().AddPreCadEdgesPeriodicityWithVertices(theEdge1, theEdge2, theSourceVertices, theTargetVertices)
     else:
         self.Parameters().AddPreCadEdgesPeriodicity(theEdge1, theEdge2)
-    pass
-
-
-  #-----------------------------------------
-  # Periodicity (BLSURF without PreCAD)
-  #-----------------------------------------
-
-
-  ## Defines periodicity between two faces, without using PreCAD.
-  #  User has to call AddEdgePeriodicity with the edges of the face,
-  #  and AddVertexPeriodicity with the vertices of each edge.
-  #  @param theFace1 : GEOM face to associate with theFace2
-  #  @param theFace2 : GEOM face associated with theFace1
-  def AddFacePeriodicity(self, theFace1, theFace2):
-    self.Parameters().AddFacePeriodicity(theFace1, theFace2)
-    pass
-      
-  ## Defines periodicity between two edges belonging to two periodic faces, without using PreCAD.
-  #  To be used with AddFacePeriodicity.
-  #  User has to call AddVertexPeriodicity with the vertices of each edge
-  #  @param theFace1 : GEOM face to associate with theFace2
-  #  @param theEdge1 : GEOM edge to associate with theEdge2
-  #  @param theFace2 : GEOM face associated with theFace1
-  #  @param theEdge2 : GEOM edge associated with theEdge1
-  #  @param theEdgeOrientation : -1 (reversed), 0 (unknown) or 1 (forward)
-  def AddEdgePeriodicity(self, theFace1, theEdge1, theFace2, theEdge2, theEdgeOrientation=0):
-    self.Parameters().AddEdgePeriodicity(theFace1, theEdge1, theFace2, theEdge2, theEdgeOrientation)
-    pass
-
-  ## Defines periodicity between two edges without face periodicity, without using PreCAD.
-  #  User has to call AddVertexPeriodicity with the vertices of each edge.
-  #  @param theEdge1 : GEOM edge to associate with theEdge2
-  #  @param theEdge2 : GEOM edge associated with theEdge1
-  #  @param theEdgeOrientation : -1 (reversed), 0 (unknown) or 1 (forward)
-  def AddEdgePeriodicityWithoutFaces(self, theEdge1, theEdge2, theEdgeOrientation=0):
-    self.Parameters().AddEdgePeriodicityWithoutFaces(theEdge1, theEdge2, theEdgeOrientation)
-    pass
-      
-  ## Defines periodicity between two vertices.
-  #  To be used with AddFacePeriodicity and AddEdgePeriodicity.
-  #  @param theEdge1 : GEOM edge to associate with theEdge2
-  #  @param theVertex1 : GEOM face to associate with theVertex2
-  #  @param theEdge2 : GEOM edge associated with theEdge1
-  #  @param theVertex2 : GEOM face associated with theVertex1
-  def AddVertexPeriodicity(self, theEdge1, theVertex1, theEdge2, theVertex2):
-    self.Parameters().AddVertexPeriodicity(theEdge1, theVertex1, theEdge2, theVertex2)
-    pass
-
-  ## Define periodicity between two groups of faces, given a transformation function.
-  #  This uses the basic BLSURF API for each face, each edge, and each vertex.
-  #  @param theFace1 : GEOM face (or group, compound) to associate with theFace2
-  #  @param theFace2 : GEOM face (or group, compound) associated with theFace1
-  #  @param f_transf : python function defining the transformation between an object of theFace1
-  # into an object of theFace2
-  def AddAdvancedFacesPeriodicity(self, theFace1, theFace2, f_transf):
-    source_faces = self.geompyD.SubShapeAll(theFace1, self.geompyD.ShapeType["FACE"])
-    i = 0
-    j = 0
-    k = 0
-    for source_face in source_faces:
-      self.geompyD.addToStudyInFather(theFace1, source_face, "source_face_%i"%i)
-      p_source = self.geompyD.MakeVertexInsideFace(source_face)
-      p_target = f_transf(p_source)
-      target_face = self.geompyD.GetFaceNearPoint(theFace2, p_target)
-      self.geompyD.addToStudyInFather(theFace2, target_face, "target_face_%i"%i)
-      self.AddFacePeriodicity(source_face, target_face)
-      i += 1
-      
-      source_edges = self.geompyD.SubShapeAll(source_face, self.geompyD.ShapeType["EDGE"])
-      for source_edge in source_edges:
-        self.geompyD.addToStudyInFather(theFace1, source_edge, "source_edge_%i"%(j))
-        p_source = self.geompyD.MakeVertexOnCurve(source_edge, 0.5)
-        p_target = f_transf(p_source)
-        target_edge = self.geompyD.GetEdgeNearPoint(theFace2, p_target)
-        self.geompyD.addToStudyInFather(theFace2, target_edge, "target_edge_%i"%(j))
-        self.AddEdgePeriodicity(source_face, source_edge, target_face, target_edge, 1)
-        j += 1
-        
-        source_vertices = self.geompyD.SubShapeAll(source_edge, self.geompyD.ShapeType["VERTEX"])
-        for source_vertex in source_vertices:
-          self.geompyD.addToStudyInFather(theFace1, source_vertex, "source_vertex_%i"%(k))
-          target_vertex_tmp = f_transf(source_vertex)
-          target_vertex = self.geompyD.GetSame(theFace2, target_vertex_tmp)
-          self.geompyD.addToStudyInFather(theFace2, target_vertex, "target_vertex_%i"%(k))
-          self.AddVertexPeriodicity(source_edge, source_vertex, target_edge, target_vertex)
-          k += 1
-      pass
-
-  ## Define periodicity between two groups of edges, without faces, given a transformation function.
-  #  This uses the basic BLSURF API for each edge and each vertex.
-  #  @param theEdge1 : GEOM edge (or group, compound) to associate with theEdge2
-  #  @param theEdge2 : GEOM edge (or group, compound) associated with theEdge1
-  #  @param f_transf : python function defining the transformation between an object of theEdge1
-  # into an object of theFace2
-  def AddAdvancedEdgesPeriodicity(self, theEdge1, theEdge2, f_transf):
-    source_edges = self.geompyD.SubShapeAll(theEdge1, self.geompyD.ShapeType["EDGE"])
-    j = 0
-    k = 0
-    for source_edge in source_edges:
-      self.geompyD.addToStudyInFather(theEdge1, source_edge, "source_edge_%i"%j)
-      p_source = self.geompyD.MakeVertexOnCurve(source_edge, 0.5)
-      p_target = f_transf(p_source)
-      target_edge = self.geompyD.GetEdgeNearPoint(theEdge2, p_target)
-      self.geompyD.addToStudyInFather(theEdge2, target_edge, "target_edge_%i"%j)
-      self.AddEdgePeriodicityWithoutFaces(source_edge, target_edge)
-      
-      j += 1
-      
-      source_vertices = self.geompyD.SubShapeAll(source_edge, self.geompyD.ShapeType["VERTEX"])
-      for source_vertex in source_vertices:
-        self.geompyD.addToStudyInFather(theEdge1, source_vertex, "source_vertex_%i"%k)
-        target_vertex_tmp = f_transf(source_vertex)
-        target_vertex = self.geompyD.GetSame(theEdge2, target_vertex_tmp)
-        self.geompyD.addToStudyInFather(theEdge2, target_vertex, "target_vertex_%i"%k)
-        self.AddVertexPeriodicity(source_edge, source_vertex, target_edge, target_vertex)
-        
-        k += 1
     pass
 
   #=====================

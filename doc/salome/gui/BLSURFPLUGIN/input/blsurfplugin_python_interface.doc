@@ -22,19 +22,11 @@ Below you can see examples of usage of this class for 2D mesh generation.
 \anchor tui_blsurf
 
 \anchor example_BLSURFPlugin
-<h2>Example of mesh generation with MG-CADSurf algorithm:</h2>
+<h2>Example of mesh generation with MG-CADSurf algorithm</h2>
 \tui_script{blsurfdemo.py}
 
 \anchor tui_blsurf_periodicity_preCAD
 <h2>Example of periodicity definition with preCAD</h2>
 \tui_script{test_periodicity_precad.py}
-
-\anchor tui_blsurf_periodicity_basic
-<h2>Example of basic periodicity definition (without preCAD)</h2>
-\tui_script{test_periodicity.py}
-
-\anchor tui_blsurf_periodicity_advanced
-<h2>Example of advanced periodicity definition (without preCAD)</h2>
-\tui_script{test_periodicity_reflexion_advanced.py}
 
 */

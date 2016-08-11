@@ -209,10 +209,10 @@ protected slots:
   void                onStateChange();
   // Advanced tab
   void                onAddOption();
-  void                onDeleteOption();
-  void                onEditOption( int, int );
+//  void                onDeleteOption();
+//  void                onEditOption( int, int );
   void                onChangeOptionName( int, int );
-  void                onOptionChosenInPopup( QAction* );
+//  void                onOptionChosenInPopup( QAction* );
   // Sizemap tab
   void                onMapGeomContentModified();
   void                onSmpItemClicked( QTreeWidgetItem *, int );

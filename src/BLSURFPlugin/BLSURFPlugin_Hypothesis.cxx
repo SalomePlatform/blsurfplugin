@@ -528,7 +528,7 @@ bool BLSURFPlugin_Hypothesis::GetJacobianRectification()
 }
 //=============================================================================
 
-void BLSURFPlugin_Hypothesis::SetMaxNumberOfPointsPerPatch( CORBA::Long nb )
+void BLSURFPlugin_Hypothesis::SetMaxNumberOfPointsPerPatch( int nb )
   throw (std::invalid_argument)
 {
   if ( nb < 0 )

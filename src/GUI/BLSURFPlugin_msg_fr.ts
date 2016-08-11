@@ -113,7 +113,7 @@ La valeur par dÃ©faut est calculÃ©e par &lt;em&gt;diag&lt;/em&gt;/5.</translatio
     </message>
     <message>
         <source>BLSURF_GEOMETRICAL_SIZE</source>
-        <translation> Taille géométrique </translation>
+        <translation> Taille gÃ©omÃ©trique </translation>
     </message>
     <message>
         <source>BLSURF_ANGLE_MESH</source>
@@ -603,7 +603,7 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
     </message>
     <message>
         <source>jacobian_rectification_respect_geometry</source>
-        <translation> Priorité de la géométrie sur le Jacobien</translation>
+        <translation> PrioritÃ© de la gÃ©omÃ©trie sur le Jacobien</translation>
     </message>
     <message>
         <source>max_number_of_points_per_patch</source>
@@ -615,15 +615,15 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
     </message>
     <message>
         <source>respect_geometry</source>
-        <translation>Respect de la géométrie</translation>
+        <translation>Respect de la gÃ©omÃ©trie</translation>
     </message>
     <message>
         <source>tiny_edge_avoid_surface_intersections</source>
-        <translation>Priorité de l?intersection des surfaces sur le retrait des petites arêtes</translation>
+        <translation>PrioritÃ© de l'intersection des surfaces sur le retrait des petites arÃªtes</translation>
     </message>
     <message>
         <source>closed_geometry</source>
-        <translation>Géométrie fermée</translation>
+        <translation>GÃ©omÃ©trie fermÃ©e</translation>
     </message>
     <message>
         <source>debug</source>
@@ -635,11 +635,11 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
     </message>
     <message>
         <source>merge_edges</source>
-        <translation>Fusion des arêtes</translation>
+        <translation>Fusion des arÃªtes</translation>
     </message>
     <message>
         <source>periodic_tolerance</source>
-        <translation>Tolérance de périodicité</translation>
+        <translation>TolÃ©rance de pÃ©riodicitÃ©</translation>
     </message>
     <message>
         <source>remove_duplicate_cad_faces</source>
@@ -647,11 +647,11 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
     </message>
     <message>
         <source>required_entities</source>
-        <translation>Entités requises</translation>
+        <translation>EntitÃ©s requises</translation>
     </message>
     <message>
         <source>sewing_tolerance</source>
-        <translation>Tolérance de fusion</translation>
+        <translation>TolÃ©rance de fusion</translation>
     </message>
     <message>
         <source>tags</source>

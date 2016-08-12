@@ -28,7 +28,6 @@
 #include <SMESH_Gen.hxx>
 #include <SMESH_Gen_i.hxx>
 #include <SMESH_PythonDump.hxx>
-#include <SMESHGUI_Utils.h>
 
 #include <SALOMEDS_wrap.hxx>
 #include <Utils_CorbaException.hxx>
@@ -941,7 +940,8 @@ bool BLSURFPlugin_Hypothesis_i::GetDebug()
 
 void BLSURFPlugin_Hypothesis_i::SetPeriodicTolerance( CORBA::Double tol ) throw (SALOME::SALOME_Exception)
 {
-  if ( SMESH::toStdStr( GetPreCADOptionValue("periodic_tolerance")) != SMESH_Comment( tol ))
+  bool isDefault;
+  if ( GetImpl()->GetPreCADOptionValue("periodic_tolerance",&isDefault) != SMESH_Comment( tol ))
   {
     try
     {
@@ -994,7 +994,8 @@ char* BLSURFPlugin_Hypothesis_i::GetRequiredEntities()
 
 void BLSURFPlugin_Hypothesis_i::SetSewingTolerance( CORBA::Double tol ) throw (SALOME::SALOME_Exception)
 {
-  if ( SMESH::toStdStr( GetPreCADOptionValue("sewing_tolerance")) != SMESH_Comment( tol ))
+  bool isDefault;
+  if ( GetImpl()->GetPreCADOptionValue("sewing_tolerance",&isDefault) != SMESH_Comment( tol ))
   {
     try
     {

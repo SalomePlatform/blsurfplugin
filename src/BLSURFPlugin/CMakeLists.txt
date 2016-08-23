@@ -53,7 +53,7 @@ SET(_link_LIBRARIES
   ${CAS_TKG2d}
   ${CAS_TKG3d}
   ${CAS_TKShHealing}
-  ${MESHGEMS_LIBRARIES}
+  ${MESHGEMS_CADSURF_LIBRARY}
   ${SMESH_SMESHimpl}
   ${SMESH_SMESHEngine}
   ${SMESH_StdMeshers}

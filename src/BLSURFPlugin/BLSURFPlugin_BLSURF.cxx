@@ -2800,6 +2800,12 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     }
   }
 
+  // Remove free nodes that can appear e.g. if "remove tiny edges"(IPAL53235)
+  for(int iv=1;iv<=nv;iv++)
+    if ( tags[iv] && nodes[iv] && nodes[iv]->NbInverseElements() == 0 )
+      meshDS->RemoveFreeNode( nodes[iv], 0, /*fromGroups=*/false );
+
+
   // SetIsAlwaysComputed( true ) to sub-meshes of EDGEs w/o mesh
   for (int i = 1; i <= emap.Extent(); i++)
     if ( SMESH_subMesh* sm = aMesh.GetSubMeshContaining( emap( i )))

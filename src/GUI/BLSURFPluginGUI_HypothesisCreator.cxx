@@ -2525,10 +2525,10 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
   h_data.myMinSizeRel            = myStdWidget->myMinSizeRel->isChecked();
   h_data.myMaxSize               = myStdWidget->myMaxSize->text().isEmpty() ? -1.0 : myStdWidget->myMaxSize->GetValue();
   h_data.myMaxSizeRel            = myStdWidget->myMaxSizeRel->isChecked();
-  h_data.myUseGradation          = myStdWidget->myUseGradation->isChecked();
-  h_data.myGradation             = myStdWidget->myGradation->text().isEmpty() ? -1.0 : myStdWidget->myGradation->GetValue();
-  h_data.myUseVolumeGradation    = myStdWidget->myUseVolumeGradation->isChecked();
-  h_data.myVolumeGradation       = myStdWidget->myVolumeGradation->text().isEmpty() ? -1.0 : myStdWidget->myVolumeGradation->GetValue();
+  h_data.myUseGradation          = myStdWidget->myUseGradation->isChecked() && !myStdWidget->myGradation->text().isEmpty();
+  h_data.myGradation             = h_data.myUseGradation ? myStdWidget->myGradation->GetValue() : -1.0;
+  h_data.myUseVolumeGradation    = myStdWidget->myUseVolumeGradation->isChecked() && !myStdWidget->myVolumeGradation->text().isEmpty();
+  h_data.myVolumeGradation       = h_data.myUseVolumeGradation ? myStdWidget->myVolumeGradation->GetValue() : -1. ;
   h_data.myAllowQuadrangles      = myStdWidget->myAllowQuadrangles->isChecked();
   h_data.myAngleMesh             = myStdWidget->myAngleMesh->text().isEmpty() ? -1.0 : myStdWidget->myAngleMesh->GetValue();
   h_data.myChordalError          = myStdWidget->myChordalError->text().isEmpty() ? -1.0 : myStdWidget->myChordalError->GetValue();

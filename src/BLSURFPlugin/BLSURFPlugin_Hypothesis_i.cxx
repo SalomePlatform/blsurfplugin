@@ -249,9 +249,12 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::IsMaxSizeRel() {
 void BLSURFPlugin_Hypothesis_i::SetUseGradation(CORBA::Boolean theValue) {
   MESSAGE("BLSURFPlugin_Hypothesis_i::SetUseGradation");
   ASSERT(myBaseImpl);
-  this->GetImpl()->SetUseGradation(theValue);
-  std::string theValueStr = theValue ? "True" : "False";
-  SMESH::TPythonDump() << _this() << ".SetUseGradation( " << theValueStr.c_str() << " )";
+  if ( GetImpl()->GetUseGradation() != bool( theValue ))
+  {
+    this->GetImpl()->SetUseGradation(theValue);
+    std::string theValueStr = theValue ? "True" : "False";
+    SMESH::TPythonDump() << _this() << ".SetUseGradation( " << theValueStr.c_str() << " )";
+  }
 }
 
 //=============================================================================
@@ -278,7 +281,11 @@ void BLSURFPlugin_Hypothesis_i::SetGradation(CORBA::Double theValue) {
   // MESSAGE("BLSURFPlugin_Hypothesis_i::SetGradation");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetGradation(theValue);
-  SMESH::TPythonDump() << _this() << ".SetGradation( " << theValue << " )";
+
+  if ( theValue < 0 )
+    SetUseGradation( false );
+  else
+    SMESH::TPythonDump() << _this() << ".SetGradation( " << theValue << " )";
 }
 
 //=============================================================================
@@ -304,9 +311,12 @@ CORBA::Double BLSURFPlugin_Hypothesis_i::GetGradation() {
 void BLSURFPlugin_Hypothesis_i::SetUseVolumeGradation(CORBA::Boolean theValue) {
   MESSAGE("BLSURFPlugin_Hypothesis_i::SetUseVolumeGradation");
   ASSERT(myBaseImpl);
-  this->GetImpl()->SetUseVolumeGradation(theValue);
-  std::string theValueStr = theValue ? "True" : "False";
-  SMESH::TPythonDump() << _this() << ".SetUseVolumeGradation( " << theValueStr.c_str() << " )";
+  if ( GetImpl()->GetUseVolumeGradation() != bool( theValue ))
+  {
+    this->GetImpl()->SetUseVolumeGradation(theValue);
+    std::string theValueStr = theValue ? "True" : "False";
+    SMESH::TPythonDump() << _this() << ".SetUseVolumeGradation( " << theValueStr.c_str() << " )";
+  }
 }
 
 //=============================================================================
@@ -333,7 +343,10 @@ void BLSURFPlugin_Hypothesis_i::SetVolumeGradation(CORBA::Double theValue) {
   // MESSAGE("BLSURFPlugin_Hypothesis_i::SetVolumeGradation");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetVolumeGradation(theValue);
-  SMESH::TPythonDump() << _this() << ".SetVolumeGradation( " << theValue << " )";
+  if ( theValue < 0 )
+    SetUseVolumeGradation( false );
+  else
+    SMESH::TPythonDump() << _this() << ".SetVolumeGradation( " << theValue << " )";
 }
 
 //=============================================================================
@@ -1339,11 +1352,19 @@ void BLSURFPlugin_Hypothesis_i::SetPreCADOptionValue(const char* optionName, con
     else if ( name == "tiny_edge_optimisation_length" )
       SetTinyEdgeOptimisationLength( GetImpl()->ToDbl( optionValue ));
 
+    else if ( name == "remove_tiny_uv_edges" )
+      SetPreCADRemoveTinyUVEdges( GetImpl()->ToBool( optionValue ));
+
+    else if ( name == "process_3d_topology" )
+      SetPreCADProcess3DTopology( GetImpl()->ToBool( optionValue ));
+
     // advanced options (for backward compatibility)
 
     else if ( name == "create_tag_on_collision" ||
-              name == "tiny_edge_respect_geometry" )
-      AddOption( optionName, optionValue );
+              name == "tiny_edge_respect_geometry" ||
+              name == "remove_tiny_edges" ||
+              name == "tiny_edge_length")
+      AddPreCADOption( optionName, optionValue );
 
     else {
       valueChanged = (this->GetImpl()->GetPreCADOptionValue(optionName) != optionValue);
@@ -3872,10 +3893,10 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetDecimesh() {
 }
 void BLSURFPlugin_Hypothesis_i::SetPreCADRemoveNanoEdges(CORBA::Boolean theValue) {
   std::string theValueStr = theValue ? "1" : "0";
-  this->SetPreCADOptionValue("remove_tiny_edges",theValueStr.c_str());
+  this->AddPreCADOption("remove_tiny_edges",theValueStr.c_str());
 }
 CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADRemoveNanoEdges() {
-  std::string theValueStr = this->GetPreCADOptionValue("remove_tiny_edges");
+  std::string theValueStr = this->GetPreCADOption("remove_tiny_edges");
   if (theValueStr == "1")
       return true;
   return false;
@@ -3883,10 +3904,10 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADRemoveNanoEdges() {
 void BLSURFPlugin_Hypothesis_i::SetPreCADEpsNano(CORBA::Double theValue) {
   std::ostringstream theValueStr;
   theValueStr << theValue;
-  this->SetPreCADOptionValue("tiny_edge_length",theValueStr.str().c_str());
+  this->AddPreCADOption("tiny_edge_length",theValueStr.str().c_str());
 }
 CORBA::Double BLSURFPlugin_Hypothesis_i::GetPreCADEpsNano() {
-  std::istringstream theValueStr(this->GetPreCADOptionValue("tiny_edge_length"));
+  std::istringstream theValueStr(this->GetPreCADOption("tiny_edge_length"));
   double result;
   theValueStr >> result;
   return result;

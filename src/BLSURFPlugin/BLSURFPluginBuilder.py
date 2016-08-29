@@ -159,6 +159,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
     pass
 
   ## Sets maximal allowed ratio between the lengths of two adjacent edges.
+  #  @param toUseGradation to use gradation
   #  @param theVal value of maximal length ratio
   def SetGradation(self, toUseGradation=True, theVal=_gradation):
     if isinstance( toUseGradation, float ): ## backward compatibility
@@ -169,6 +170,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
     pass
 
   ## Sets maximal allowed ratio between the lengths of two adjacent edges in 3D mesh.
+  #  @param toUseGradation to use gradation
   #  @param theVal value of maximal length ratio
   def SetVolumeGradation(self, toUseGradation=True, theVal=_gradation):
     if self.Parameters().GetGeometricMesh() == 0: theVal = self._volume_gradation

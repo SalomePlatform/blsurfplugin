@@ -1949,7 +1949,7 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
     for ( ; evsIt != evs.end() ; ++evsIt) {
       enfVertex = (*evsIt);
       MESSAGE("Name: " << enfVertex->name);
-      double x, y, z = 0;
+      double x = 0, y = 0, z = 0;
       if (enfVertex->coords.size()) {
         x = enfVertex->coords[0];
         y = enfVertex->coords[1];
@@ -2057,9 +2057,9 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   h_data.myQuadraticMesh          = h->GetQuadraticMesh();
   h_data.myVerbosity              = h->GetVerbosity();
   //h_data.myTopology               = (int) h->GetTopology();
-  h_data.myPreCADMergeEdges       = h->GetPreCADMergeEdges();
-  h_data.myPreCADProcess3DTopology  = h->GetPreCADProcess3DTopology();
-  h_data.myPreCADDiscardInput     = h->GetPreCADDiscardInput();
+  //h_data.myPreCADMergeEdges       = h->GetPreCADMergeEdges();
+  // h_data.myPreCADProcess3DTopology  = h->GetPreCADProcess3DTopology();
+  // h_data.myPreCADDiscardInput     = h->GetPreCADDiscardInput();
 
 
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
@@ -2340,12 +2340,12 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
       h->SetVerbosity( h_data.myVerbosity );
     // if ( h->GetTopology() != h_data.myTopology )
     //   h->SetTopology( (int) h_data.myTopology );
-    if ( h->GetPreCADMergeEdges() != h_data.myPreCADMergeEdges )
-      h->SetPreCADMergeEdges( h_data.myPreCADMergeEdges );
-    if ( h->GetPreCADProcess3DTopology() != h_data.myPreCADProcess3DTopology )
-      h->SetPreCADProcess3DTopology( h_data.myPreCADProcess3DTopology );
-    if ( h->GetPreCADDiscardInput() != h_data.myPreCADDiscardInput )
-      h->SetPreCADDiscardInput( h_data.myPreCADDiscardInput );
+    // if ( h->GetPreCADMergeEdges() != h_data.myPreCADMergeEdges )
+    //   h->SetPreCADMergeEdges( h_data.myPreCADMergeEdges );
+    // if ( h->GetPreCADProcess3DTopology() != h_data.myPreCADProcess3DTopology )
+    //   h->SetPreCADProcess3DTopology( h_data.myPreCADProcess3DTopology );
+    // if ( h->GetPreCADDiscardInput() != h_data.myPreCADDiscardInput )
+    //   h->SetPreCADDiscardInput( h_data.myPreCADDiscardInput );
 
     // options are set in checkParams()
     //h->SetOptionValues( myOptions ); // is set in readParamsFromWidgets()
@@ -2575,10 +2575,10 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
   guiHyp += tr("BLSURF_ELEMENT_ORDER") + " = " + QString(h_data.myQuadraticMesh ? "yes" : "no") + "; ";
   
   
-  guiHyp += tr("BLSURF_TOPOLOGY") + " = " + QString::number( h_data.myTopology ) + "; ";
-  guiHyp += tr("BLSURF_PRECAD_MERGE_EDGES") + " = " + QString(h_data.myPreCADMergeEdges ? "yes" : "no") + "; ";
-  guiHyp += tr("BLSURF_PRECAD_REMOVE_NANO_EDGES") + " = " + QString(h_data.myPreCADProcess3DTopology ? "yes" : "no") + "; ";
-  guiHyp += tr("BLSURF_PRECAD_DISCARD_INPUT") + " = " + QString(h_data.myPreCADDiscardInput ? "yes" : "no") + "; ";
+  // guiHyp += tr("BLSURF_TOPOLOGY") + " = " + QString::number( h_data.myTopology ) + "; ";
+  // guiHyp += tr("BLSURF_PRECAD_MERGE_EDGES") + " = " + QString(h_data.myPreCADMergeEdges ? "yes" : "no") + "; ";
+  // guiHyp += tr("BLSURF_PRECAD_REMOVE_NANO_EDGES") + " = " + QString(h_data.myPreCADProcess3DTopology ? "yes" : "no") + "; ";
+  // guiHyp += tr("BLSURF_PRECAD_DISCARD_INPUT") + " = " + QString(h_data.myPreCADDiscardInput ? "yes" : "no") + "; ";
  
   h_data.myGMFFileName = myAdvWidget->myGMFFileName->text().toStdString();
 //   h_data.myGMFFileMode = myGMFFileMode->isChecked();
@@ -3159,7 +3159,7 @@ bool BLSURFPluginGUI_HypothesisCreator::insertAttractor(GEOM::GEOM_Object_var aF
   QString constDistString = QString::fromStdString(oss3.str());
   
   QTreeWidgetItem* item; 
-  QTreeWidgetItem* child;
+  QTreeWidgetItem* child = 0;
   TAttractor attParams( attEntry.c_str(), phySize, infDist, constDist );
   if (modify) {
     int rowToChange = findRowFromEntry(shapeEntry);

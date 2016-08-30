@@ -324,8 +324,8 @@ void BLSURFPlugin_Hypothesis::SetUseGradation(bool theVal) {
 
 //=============================================================================
 void BLSURFPlugin_Hypothesis::SetGradation(double theVal) {
+  _useGradation = ( theVal > 0 );
   if (theVal != _gradation) {
-    _useGradation = ( theVal > 0 );
     _gradation = theVal;
     NotifySubMeshesHypothesisModification();
   }
@@ -341,8 +341,8 @@ void BLSURFPlugin_Hypothesis::SetUseVolumeGradation(bool theVal) {
 
 //=============================================================================
 void BLSURFPlugin_Hypothesis::SetVolumeGradation(double theVal) {
+  _useVolumeGradation = ( theVal > 0 );
   if (theVal != _volumeGradation) {
-    _useVolumeGradation = ( theVal > 0 );
     _volumeGradation = theVal;
     NotifySubMeshesHypothesisModification();
   }

@@ -1373,7 +1373,7 @@ void BLSURFPlugin_BLSURF::set_param(cadsurf_session_t *css,
         ( "No valid license available" );
     else
       throw SALOME_Exception
-        ( SMESH_Comment("Unacceptable value of CADSURF parameter '")
+        ( SMESH_Comment("Either wrong name or unacceptable value of CADSURF parameter '")
           << option_name << "': " << option_value);
   }
 }

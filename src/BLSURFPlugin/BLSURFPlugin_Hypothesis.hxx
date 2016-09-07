@@ -407,9 +407,9 @@ public:
   static double          GetDefaultMaxSize(double diagonal);
   static double          GetDefaultMaxSize() { return undefinedDouble(); }
   static bool            GetDefaultMaxSizeRel() { return false; }
-  static bool            GetDefaultUseGradation() { return false; }
+  static bool            GetDefaultUseGradation() { return true; }
   static double          GetDefaultGradation() { return 1.3; }
-  static bool            GetDefaultUseVolumeGradation() { return false; }
+  static bool            GetDefaultUseVolumeGradation() { return true; }
   static double          GetDefaultVolumeGradation() { return 2; }
   static bool            GetDefaultQuadAllowed() { return false; }
   static double          GetDefaultAngleMesh() { return 8.0; }

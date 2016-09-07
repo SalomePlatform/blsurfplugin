@@ -721,6 +721,7 @@ void BLSURFPlugin_Hypothesis::SetPreCADProcess3DTopology(bool theVal)
   if (theVal != _preCADProcess3DTopology) {
     //     SetTopology(PreCAD);
     _preCADProcess3DTopology = theVal;
+    AddPreCADOption("process_3d_topology", theVal ? "yes" : "no" );
     NotifySubMeshesHypothesisModification();
   }
 }
@@ -734,6 +735,25 @@ void BLSURFPlugin_Hypothesis::SetPreCADDiscardInput(bool theVal)
     SetPreCADOptionValue("discard_input_topology", theVal ? "yes" : "no" );
     NotifySubMeshesHypothesisModification();
   }
+}
+
+//=============================================================================
+// Return true if any PreCAD option is activated
+bool BLSURFPlugin_Hypothesis::HasPreCADOptions(const BLSURFPlugin_Hypothesis* hyp)
+{
+  if ( !hyp )
+  {
+    return false;
+  }
+  bool orDefault, isOk;
+  return ( ToBool( hyp->GetPreCADOptionValue("closed_geometry"           , &orDefault )) ||
+           ToBool( hyp->GetPreCADOptionValue("discard_input_topology"    , &orDefault )) ||
+           ToBool( hyp->GetPreCADOptionValue("merge_edges"               , &orDefault )) ||
+           ToBool( hyp->GetPreCADOptionValue("remove_duplicate_cad_faces", &orDefault )) ||
+           ToBool( hyp->GetPreCADOption     ("process_3d_topology")      , &isOk       ) ||
+           ToBool( hyp->GetPreCADOption     ("manifold_geometry")        , &isOk       ) ||
+           hyp->GetPreCADOptionValue("sewing_tolerance") != "5e-4*D"                     ||
+           hyp->GetPreCADProcess3DTopology() );
 }
 
 //=============================================================================
@@ -997,9 +1017,9 @@ void BLSURFPlugin_Hypothesis::AddPreCADOption(const std::string& optionName, con
 }
 
 //=============================================================================
-std::string BLSURFPlugin_Hypothesis::GetOption(const std::string& optionName)
+std::string BLSURFPlugin_Hypothesis::GetOption(const std::string& optionName) const
 {
-  TOptionValues::iterator op_val = _customOption2value.find(optionName);
+  TOptionValues::const_iterator op_val = _customOption2value.find(optionName);
   if (op_val != _customOption2value.end())
     return op_val->second;
   else
@@ -1007,9 +1027,9 @@ std::string BLSURFPlugin_Hypothesis::GetOption(const std::string& optionName)
 }
 
 //=============================================================================
-std::string BLSURFPlugin_Hypothesis::GetPreCADOption(const std::string& optionName)
+std::string BLSURFPlugin_Hypothesis::GetPreCADOption(const std::string& optionName) const
 {
-  TOptionValues::iterator op_val = _customOption2value.find(optionName);
+  TOptionValues::const_iterator op_val = _customOption2value.find(optionName);
   if (op_val != _customOption2value.end())
     return op_val->second;
   else

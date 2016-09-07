@@ -200,6 +200,8 @@ public:
 
   void SetPreCADDiscardInput(bool theVal);
   bool GetPreCADDiscardInput() const { return _preCADDiscardInput; }
+
+  static bool HasPreCADOptions(const BLSURFPlugin_Hypothesis* hyp);
     
   typedef std::map<std::string,std::string> TSizeMap;
 
@@ -506,8 +508,8 @@ public:
 
   void AddOption(const std::string& optionName, const std::string& optionValue);
   void AddPreCADOption(const std::string& optionName, const std::string& optionValue);
-  std::string GetOption(const std::string& optionName);
-  std::string GetPreCADOption(const std::string& optionName);
+  std::string GetOption(const std::string& optionName) const;
+  std::string GetPreCADOption(const std::string& optionName) const;
 
   static bool  ToBool(const std::string& str, bool* isOk=0) throw (std::invalid_argument);
   static double ToDbl(const std::string& str, bool* isOk=0) throw (std::invalid_argument);

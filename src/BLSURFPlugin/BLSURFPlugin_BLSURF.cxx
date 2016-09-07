@@ -866,7 +866,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
   //int _precadMergeEdges         = BLSURFPlugin_Hypothesis::GetDefaultPreCADMergeEdges();
   int _precadRemoveTinyUVEdges  = BLSURFPlugin_Hypothesis::GetDefaultPreCADRemoveTinyUVEdges();
   //int _precadRemoveDuplicateCADFaces = BLSURFPlugin_Hypothesis::GetDefaultPreCADRemoveDuplicateCADFaces();
-  int _precadProcess3DTopology  = BLSURFPlugin_Hypothesis::GetDefaultPreCADProcess3DTopology();
+  //int _precadProcess3DTopology  = BLSURFPlugin_Hypothesis::GetDefaultPreCADProcess3DTopology();
   //int _precadDiscardInput       = BLSURFPlugin_Hypothesis::GetDefaultPreCADDiscardInput();
 
 
@@ -923,7 +923,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
     //_precadMergeEdges        = hyp->GetPreCADMergeEdges();
     _precadRemoveTinyUVEdges = hyp->GetPreCADRemoveTinyUVEdges();
     //_precadRemoveDuplicateCADFaces = hyp->GetPreCADRemoveDuplicateCADFaces();
-    _precadProcess3DTopology = hyp->GetPreCADProcess3DTopology();
+    //_precadProcess3DTopology = hyp->GetPreCADProcess3DTopology();
     //_precadDiscardInput      = hyp->GetPreCADDiscardInput();
 
     const BLSURFPlugin_Hypothesis::TOptionValues& opts = hyp->GetOptionValues();
@@ -949,11 +949,15 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
       }
   }
 
+  if ( BLSURFPlugin_Hypothesis::HasPreCADOptions( hyp ))
+  {
+    cadsurf_set_param(css, "use_precad", "yes" ); // for young versions
+  }
   // PreProcessor (formerly PreCAD) -- commented params are preCADoptions (since 0023307)
   //set_param(css, "merge_edges",            _precadMergeEdges ? "yes" : "no");
   set_param(css, "remove_tiny_uv_edges",   _precadRemoveTinyUVEdges ? "yes" : "no");
   //set_param(css, "remove_duplicate_cad_faces", _precadRemoveDuplicateCADFaces ? "yes" : "no");
-  set_param(css, "process_3d_topology",    _precadProcess3DTopology ? "1" : "0");
+  //set_param(css, "process_3d_topology",    _precadProcess3DTopology ? "1" : "0");
   //set_param(css, "discard_input_topology", _precadDiscardInput ? "1" : "0");
   //set_param(css, "max_number_of_points_per_patch", "1000000");
   
@@ -1362,6 +1366,10 @@ void BLSURFPlugin_BLSURF::set_param(cadsurf_session_t *css,
                                     const char *       option_value)
 {
   status_t status = cadsurf_set_param(css, option_name, option_value );
+
+  if ( _hypothesis && _hypothesis->GetVerbosity() > _hypothesis->GetDefaultVerbosity() )
+    cout << option_name << " = " << option_value << endl;
+
   if ( status != MESHGEMS_STATUS_OK )
   {
     if ( status == MESHGEMS_STATUS_UNKNOWN_PARAMETER ) {
@@ -2802,7 +2810,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
 
   // Remove free nodes that can appear e.g. if "remove tiny edges"(IPAL53235)
   for(int iv=1;iv<=nv;iv++)
-    if ( tags[iv] && nodes[iv] && nodes[iv]->NbInverseElements() == 0 )
+    if ( nodes[iv] && nodes[iv]->NbInverseElements() == 0 )
       meshDS->RemoveFreeNode( nodes[iv], 0, /*fromGroups=*/false );
 
 

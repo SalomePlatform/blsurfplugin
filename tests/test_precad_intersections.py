@@ -61,9 +61,9 @@ for p in vertices:
 
 nodes = list(set(nodes))
 
-Mesh_1.MakeGroupByIds("nodes", SMESH.NODE, nodes)
+nodesGroup = Mesh_1.MakeGroupByIds("nodes", SMESH.NODE, nodes)
 
-assert(len(nodes) == 1)
+assert nodesGroup.Size() == 1, nodesGroup.GetIDs()
 
 if salome.sg.hasDesktop():
   salome.sg.updateObjBrowser(1)

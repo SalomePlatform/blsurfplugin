@@ -141,6 +141,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
                                             "remove_duplicate_cad_faces",               // default = 1
                                             // "create_tag_on_collision",                  // default = 1
                                             "debug",                                    // default = 0 
+                                            "process_3d_topology",                      // default = 1
                                             // "remove_tiny_edges",                        // default = 0
                                             "" // mark of end
       };
@@ -206,6 +207,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   _defaultOptionValues["rectify_jacobian"                       ] = "yes";
   _defaultOptionValues["respect_geometry"                       ] = "yes";
   _defaultOptionValues["tiny_edge_avoid_surface_intersections"  ] = "yes";
+  _defaultOptionValues["process_3d_topology"                    ] = "no";
   _defaultOptionValues["closed_geometry"                        ] = "no";
   _defaultOptionValues["debug"                                  ] = "no";
   _defaultOptionValues["discard_input_topology"                 ] = "no";
@@ -686,8 +688,7 @@ std::string BLSURFPlugin_Hypothesis::GetTags()
 //=============================================================================
 void BLSURFPlugin_Hypothesis::SetPreCADMergeEdges(bool theVal)
 {
-  if (theVal != _preCADMergeEdges) {
-//     SetTopology(PreCAD);
+  if (theVal != ToBool( GetPreCADOptionValue("merge_edges", GET_DEFAULT()))) {
     _preCADMergeEdges = theVal;
     SetPreCADOptionValue("merge_edges", theVal ? "yes" : "no" );
     NotifySubMeshesHypothesisModification();
@@ -698,7 +699,6 @@ void BLSURFPlugin_Hypothesis::SetPreCADMergeEdges(bool theVal)
 void BLSURFPlugin_Hypothesis::SetPreCADRemoveTinyUVEdges(bool theVal)
 {
   if (theVal != _preCADRemoveTinyUVEdges) {
-//     SetTopology(PreCAD);
     _preCADRemoveTinyUVEdges = theVal;
     NotifySubMeshesHypothesisModification();
   }
@@ -707,8 +707,7 @@ void BLSURFPlugin_Hypothesis::SetPreCADRemoveTinyUVEdges(bool theVal)
 //=============================================================================
 void BLSURFPlugin_Hypothesis::SetPreCADRemoveDuplicateCADFaces(bool theVal)
 {
-  if (theVal != _preCADRemoveDuplicateCADFaces) {
-    //     SetTopology(PreCAD);
+  if (theVal != ToBool( GetPreCADOptionValue("remove_duplicate_cad_faces", GET_DEFAULT()))) {
     _preCADRemoveDuplicateCADFaces = theVal;
     SetPreCADOptionValue("remove_duplicate_cad_faces", theVal ? "yes" : "no" );
     NotifySubMeshesHypothesisModification();
@@ -718,10 +717,9 @@ void BLSURFPlugin_Hypothesis::SetPreCADRemoveDuplicateCADFaces(bool theVal)
 //=============================================================================
 void BLSURFPlugin_Hypothesis::SetPreCADProcess3DTopology(bool theVal)
 {
-  if (theVal != _preCADProcess3DTopology) {
-    //     SetTopology(PreCAD);
+  if (theVal != ToBool( GetPreCADOptionValue("process_3d_topology", GET_DEFAULT()))) {
     _preCADProcess3DTopology = theVal;
-    AddPreCADOption("process_3d_topology", theVal ? "yes" : "no" );
+    SetPreCADOptionValue("process_3d_topology", theVal ? "yes" : "no" );
     NotifySubMeshesHypothesisModification();
   }
 }
@@ -729,8 +727,7 @@ void BLSURFPlugin_Hypothesis::SetPreCADProcess3DTopology(bool theVal)
 //=============================================================================
 void BLSURFPlugin_Hypothesis::SetPreCADDiscardInput(bool theVal)
 {
-  if (theVal != _preCADDiscardInput) {
-    //     SetTopology(PreCAD);
+  if (theVal != ToBool( GetPreCADOptionValue("discard_input_topology", GET_DEFAULT()))) {
     _preCADDiscardInput = theVal;
     SetPreCADOptionValue("discard_input_topology", theVal ? "yes" : "no" );
     NotifySubMeshesHypothesisModification();
@@ -750,10 +747,9 @@ bool BLSURFPlugin_Hypothesis::HasPreCADOptions(const BLSURFPlugin_Hypothesis* hy
            ToBool( hyp->GetPreCADOptionValue("discard_input_topology"    , &orDefault )) ||
            ToBool( hyp->GetPreCADOptionValue("merge_edges"               , &orDefault )) ||
            ToBool( hyp->GetPreCADOptionValue("remove_duplicate_cad_faces", &orDefault )) ||
-           ToBool( hyp->GetPreCADOption     ("process_3d_topology")      , &isOk       ) ||
+           ToBool( hyp->GetPreCADOptionValue("process_3d_topology"       , &orDefault )) ||
            ToBool( hyp->GetPreCADOption     ("manifold_geometry")        , &isOk       ) ||
-           hyp->GetPreCADOptionValue("sewing_tolerance") != "5e-4*D"                     ||
-           hyp->GetPreCADProcess3DTopology() );
+           hyp->GetPreCADOptionValue("sewing_tolerance") != "5e-4*D" );
 }
 
 //=============================================================================
@@ -2485,7 +2481,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
           break;
         }
       }
-      value.resize(len - 2); //cut off "%#"
+      if ( value[ len - 1] == '#' )
+        value.resize(len - 2); //cut off "%#"
     }
   }
 
@@ -2538,7 +2535,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
           break;
         }
       }
-      value.resize(len - 2); //cut off "%#"
+      if ( value[ len - 1] == '#' )
+        value.resize(len - 2); //cut off "%#"
       _customOption2value[optName] = value;
     }
   }
@@ -2591,7 +2589,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
           break;
         }
       }
-      value.resize(len - 2); //cut off "%#"
+      if ( value[ len - 1] == '#' )
+        value.resize(len - 2); //cut off "%#"
     }
   }
 

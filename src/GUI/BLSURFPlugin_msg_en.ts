@@ -638,6 +638,10 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
         <translation>Merge edges</translation>
     </message>
     <message>
+        <source>process_3d_topology</source>
+        <translation>Process 3D topology</translation>
+    </message>
+    <message>
         <source>periodic_tolerance</source>
         <translation>Periodic tolerance</translation>
     </message>

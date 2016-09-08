@@ -634,6 +634,10 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
         <translation>discard_input_topology</translation>
     </message>
     <message>
+        <source>process_3d_topology</source>
+        <translation>Nettoyer la CAO</translation>
+    </message>
+    <message>
         <source>merge_edges</source>
         <translation>Fusion des arêtes</translation>
     </message>

@@ -411,7 +411,7 @@ public:
   static bool            GetDefaultMaxSizeRel() { return false; }
   static bool            GetDefaultUseGradation() { return true; }
   static double          GetDefaultGradation() { return 1.3; }
-  static bool            GetDefaultUseVolumeGradation() { return true; }
+  static bool            GetDefaultUseVolumeGradation() { return false; }
   static double          GetDefaultVolumeGradation() { return 2; }
   static bool            GetDefaultQuadAllowed() { return false; }
   static double          GetDefaultAngleMesh() { return 8.0; }

@@ -62,11 +62,16 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
 - <b>Anisotropic</b> - if checked, this parameter defines the maximum anisotropic ratio of the metric governing the anisotropic meshing process.
 The default value (0) means that the metric (and thus the generated elements) can be arbitrarily stretched.
 
-- <b>Optimize tiny edges</b> - if checked, the tiny (nano) edges are removed from the generated mesh during local mesh optimization.
-The tiny edge value defines the minimal length under which an edge is considered to be a tiny one.
+- <b>Optimize tiny edges</b> - if checked, the tiny (nano) edges are
+  removed from the generated mesh during local mesh optimization. The
+  tiny edge will be removed only if the local quality is improved by
+  the deletion. The tiny edge value defines the minimal length under
+  which an edge is considered to be a tiny one.
 
-- <b>Remove tiny edges</b> - if checked, the tiny (nano) edges are removed from the generated mesh.
-The tiny edge value defines the minimal length under which an edge is considered to be a tiny one.
+- <b>Remove tiny edges</b> - if checked, the tiny (nano) edges are
+  removed from the generated mesh \a without taking into account the
+  local quality around the edge. The tiny edge value defines the
+  minimal length under which an edge is considered to be a tiny one.
 
 - <b>Remove bad elements</b> - if checked, the bad elements (slivers) are removed from the generated mesh.
 The bad element value defines the aspect ratio triggering the "bad element” classification.

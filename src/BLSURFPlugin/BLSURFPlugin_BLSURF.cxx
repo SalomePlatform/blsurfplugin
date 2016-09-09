@@ -2764,6 +2764,13 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   /* release the mesh object, the rest is released by cleaner */
   cadsurf_regain_mesh(css, msh);
 
+
+  // Remove free nodes that can appear e.g. if "remove tiny edges"(IPAL53235)
+  for(int iv=1;iv<=nv;iv++)
+    if ( nodes[iv] && nodes[iv]->NbInverseElements() == 0 )
+      meshDS->RemoveFreeNode( nodes[iv], 0, /*fromGroups=*/false );
+
+
   if ( needMerge ) // sew mesh computed by MG-CADSurf with pre-existing mesh
   {
     SMESH_MeshEditor editor( &aMesh );
@@ -2807,11 +2814,6 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
       }
     }
   }
-
-  // Remove free nodes that can appear e.g. if "remove tiny edges"(IPAL53235)
-  for(int iv=1;iv<=nv;iv++)
-    if ( nodes[iv] && nodes[iv]->NbInverseElements() == 0 )
-      meshDS->RemoveFreeNode( nodes[iv], 0, /*fromGroups=*/false );
 
 
   // SetIsAlwaysComputed( true ) to sub-meshes of EDGEs w/o mesh

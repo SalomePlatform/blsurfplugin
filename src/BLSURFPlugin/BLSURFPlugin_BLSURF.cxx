@@ -951,7 +951,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
 
   if ( BLSURFPlugin_Hypothesis::HasPreCADOptions( hyp ))
   {
-    cadsurf_set_param(css, "use_precad", "yes" ); // for young versions
+    cadsurf_set_param(css, "use_precad", "yes" ); // for old versions
   }
   // PreProcessor (formerly PreCAD) -- commented params are preCADoptions (since 0023307)
   //set_param(css, "merge_edges",            _precadMergeEdges ? "yes" : "no");

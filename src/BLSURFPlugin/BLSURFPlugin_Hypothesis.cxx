@@ -749,7 +749,13 @@ bool BLSURFPlugin_Hypothesis::HasPreCADOptions(const BLSURFPlugin_Hypothesis* hy
            ToBool( hyp->GetPreCADOptionValue("remove_duplicate_cad_faces", &orDefault )) ||
            ToBool( hyp->GetPreCADOptionValue("process_3d_topology"       , &orDefault )) ||
            ToBool( hyp->GetPreCADOption     ("manifold_geometry")        , &isOk       ) ||
-           hyp->GetPreCADOptionValue("sewing_tolerance", &orDefault ) != "5e-4*D" );
+           hyp->GetPreCADOptionValue("sewing_tolerance", &orDefault ) != "5e-4*D"        ||
+           !hyp->_preCadFacesPeriodicityVector.empty()                                   ||
+           !hyp->_preCadEdgesPeriodicityVector.empty()                                   ||
+           !hyp->_facesPeriodicityVector.empty()                                         ||
+           !hyp->_edgesPeriodicityVector.empty()                                         ||
+           !hyp->_verticesPeriodicityVector.empty()                                      ||
+           hyp->GetTopology() != FromCAD );
 }
 
 //=============================================================================

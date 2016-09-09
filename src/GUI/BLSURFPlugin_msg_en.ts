@@ -148,7 +148,7 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
     </message>
     <message>
         <source>BLSURF_REMOVE_TINY_EDGES_TOOLTIP</source>
-        <translation>If checked, this parameter defines the minimal length under which an edge is considered to be a tiny one.</translation>
+        <translation>If checked, this parameter defines the minimal length under which an edge is considered to be a tiny one. The tiny edge will be removed without taking into account the local quality around the edge.</translation>
     </message>
     <message>
         <source>BLSURF_OPTIMISE_TINY_EDGES</source>
@@ -156,7 +156,7 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
     </message>
     <message>
         <source>BLSURF_OPTIMIZE_TINY_EDGES_TOOLTIP</source>
-        <translation>If checked, this parameter defines the minimal length under which an edge is considered to be a tiny one.</translation>
+        <translation>If checked, this parameter defines the minimal length under which an edge is considered to be a tiny one. The tiny edge will be removed only if the local quality is improved by the deletion.</translation>
     </message>
     <message>
         <source>BLSURF_SURFACE_INTERSECTIONS</source>

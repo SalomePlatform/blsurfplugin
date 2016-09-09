@@ -152,7 +152,7 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
     </message>
     <message>
         <source>BLSURF_REMOVE_TINY_EDGES_TOOLTIP</source>
-        <translation>Si activé, ce paramètre défini la longueur minimale sous laquelle une arête est considérée comme toute petite.</translation>
+        <translation type="unfinished">Si activé, ce paramètre défini la longueur minimale sous laquelle une arête est considérée comme toute petite. The tiny edge will be removed without taking into account the local quality around the edge.</translation>
     </message>
     <message>
         <source>BLSURF_OPTIMISE_TINY_EDGES</source>
@@ -160,7 +160,7 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
     </message>
     <message>
         <source>BLSURF_OPTIMIZE_TINY_EDGES_TOOLTIP</source>
-        <translation type="unfinished">If checked, this parameter defines the minimal length under which an edge is considered to be a tiny one.</translation>
+        <translation type="unfinished">If checked, this parameter defines the minimal length under which an edge is considered to be a tiny one. The tiny edge will be removed only if the local quality is improved by the deletion.</translation>
     </message>
     <message>
         <source>BLSURF_SURFACE_INTERSECTIONS</source>

@@ -101,7 +101,7 @@ La valeur par défaut est calculée par &lt;em&gt;diag&lt;/em&gt;/5.</translatio
     </message>
     <message>
         <source>BLSURF_VOLUME_GRADATION_TOOLTIP</source>
-        <translation type="unfinished">Ratio maximum entre les longueurs de deux segments adjacents.</translation>
+        <translation>Ratio maximum entre les longueurs de deux segments adjacents.</translation>
     </message>
     <message>
         <source>BLSURF_ALLOW_QUADRANGLES</source>
@@ -109,7 +109,7 @@ La valeur par défaut est calculée par &lt;em&gt;diag&lt;/em&gt;/5.</translatio
     </message>
     <message>
         <source>BLSURF_ALLOW_QUADRANGLES_TOOLTIP</source>
-        <translation type="unfinished">To generate quadrangle dominant mesh</translation>
+        <translation>Générer un maillage à majorité de quadrangles</translation>
     </message>
     <message>
         <source>BLSURF_GEOMETRICAL_SIZE</source>
@@ -152,23 +152,23 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
     </message>
     <message>
         <source>BLSURF_REMOVE_TINY_EDGES_TOOLTIP</source>
-        <translation type="unfinished">Si activé, ce paramètre défini la longueur minimale sous laquelle une arête est considérée comme toute petite. The tiny edge will be removed without taking into account the local quality around the edge.</translation>
+        <translation>Si activé, ce paramètre défini la longueur minimale sous laquelle une arête est considérée comme toute petite. La petite arête sera supprimée sans prendre en compte l'amélioration de la qualité locale autour de l'arête.</translation>
     </message>
     <message>
         <source>BLSURF_OPTIMISE_TINY_EDGES</source>
-        <translation type="unfinished">Optimize tiny edges</translation>
+        <translation>Optimiser les petites arêtes</translation>
     </message>
     <message>
         <source>BLSURF_OPTIMIZE_TINY_EDGES_TOOLTIP</source>
-        <translation type="unfinished">If checked, this parameter defines the minimal length under which an edge is considered to be a tiny one. The tiny edge will be removed only if the local quality is improved by the deletion.</translation>
+        <translation>Si activé, ce paramètre défini la longueur minimale sous laquelle une arête est considérée comme toute petite. La petite arête ne sera supprimée que si la qualité locale est améliorée par la suppression.</translation>
     </message>
     <message>
         <source>BLSURF_SURFACE_INTERSECTIONS</source>
-        <translation type="unfinished">Correct surface intersections</translation>
+        <translation>Corrige les intersections entre faces</translation>
     </message>
     <message>
         <source>BLSURF_SURFACE_INTERSECTIONS_TOOLTIP</source>
-        <translation type="unfinished">If checked, this parameter defines the time that will be spent in the intersection prevention process.</translation>
+        <translation>Si activé, ce paramètre défini le temps passé dans le processus de prévention des intersections.</translation>
     </message>
     <message>
         <source>BLSURF_REMOVE_SLIVERS</source>
@@ -192,7 +192,7 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
     </message>
     <message>
         <source>BLSURF_ELEMENT_ORDER_TOOLTIP</source>
-        <translation type="unfinished">To generate quadratic mesh</translation>
+        <translation>Générer un maillage quadratique</translation>
     </message>
     <message>
         <source>BLSURF_HYPOTHESIS</source>

@@ -12,6 +12,10 @@
       <translation>物理的なメッシュ</translation>
     </message>
     <message>
+      <source>BLSURF_PHYSICAL_SIZE</source>
+      <translation>物理サイズ</translation>
+    </message>
+    <message>
       <source>BLSURF_PHY_MESH_TOOLTIP</source>
       <translation>&lt;b&gt;&lt;u&gt;物理サイズ モード&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;br&gt;-「全体的なサイズ」: 物理的なサイズはグローバルで、メッシャーは、提供されている全体的な物理的なサイズが使用されます。&lt;br&gt;-'ローカル サイズ': サイズ マップ関数を使用してサイズのカーブおよびサーフェス上にローカルに計算できます。&lt;br&gt;-「非アクティブ」: 物理的なサイズが計算されなくなります。</translation>
     </message>
@@ -80,12 +84,24 @@
       <translation>最大 2 つの隣接するセグメントの長さの比率。</translation>
     </message>
     <message>
+      <source>BLSURF_VOLUME_GRADATION</source>
+      <translation>ボリューム勾配</translation>
+    </message>
+    <message>
+      <source>BLSURF_VOLUME_GRADATION_TOOLTIP</source>
+      <translation>3D要素内の２本の隣接エッジ長間の最大比</translation>
+    </message>
+    <message>
       <source>BLSURF_ALLOW_QUADRANGLES</source>
       <translation>四角形を許可</translation>
     </message>
     <message>
-      <source>BLSURF_GEOMETRICAL_PARAMETERS</source>
-      <translation>幾何学的パラメーター</translation>
+      <source>BLSURF_ALLOW_QUADRANGLES_TOOLTIP</source>
+      <translation>ドミナント四角形要素の生成</translation>
+    </message>
+    <message>
+      <source>BLSURF_GEOMETRICAL_SIZE</source>
+      <translation>幾何サイズ</translation>
     </message>
     <message>
       <source>BLSURF_ANGLE_MESH</source>
@@ -124,6 +140,22 @@
       <translation>、この設定は、エッジが非常に小さいと見なされます最小の長さが有効な場合。</translation>
     </message>
     <message>
+      <source>BLSURF_OPTIMISE_TINY_EDGES</source>
+      <translation>微小エッジの最適化</translation>
+    </message>
+    <message>
+      <source>BLSURF_OPTIMIZE_TINY_EDGES_TOOLTIP</source>
+      <translation>チェックした場合、このパラメータは、エッジが小さな一つであると考え最小長さを定義します。ローカル品質が削除によって改善される場合は、微小エッジだけが削除されるでしょう。</translation>
+    </message>
+    <message>
+      <source>BLSURF_SURFACE_INTERSECTIONS</source>
+      <translation>面交差の修正</translation>
+    </message>
+    <message>
+      <source>BLSURF_SURFACE_INTERSECTIONS_TOOLTIP</source>
+      <translation>チェックした場合、このパラメータは、交差防止処理に費やされる時間を定義します。</translation>
+    </message>
+    <message>
       <source>BLSURF_REMOVE_SLIVERS</source>
       <translation>悪い部分を削除します。</translation>
     </message>
@@ -142,6 +174,10 @@
     <message>
       <source>BLSURF_ELEMENT_ORDER</source>
       <translation>正方形のメッシュ</translation>
+    </message>
+    <message>
+      <source>BLSURF_ELEMENT_ORDER_TOOLTIP</source>
+      <translation>四角形要素の生成</translation>
     </message>
     <message>
       <source>BLSURF_HYPOTHESIS</source>
@@ -196,12 +232,12 @@
       <translation>値</translation>
     </message>
     <message>
-      <source>OPTION_MENU_BLSURF</source>
-      <translation>MG-CADSurf</translation>
+      <source>BLSURF_MESHING_OPTIONS</source>
+      <translation>メッシング</translation>
     </message>
     <message>
-      <source>OPTION_MENU_PRECAD</source>
-      <translation>PreCAD</translation>
+      <source>BLSURF_PRECAD_OPTIONS</source>
+      <translation>CAD プリプロセッサ</translation>
     </message>
     <message>
       <source>BLSURF_ADD_OPTION</source>
@@ -212,8 +248,8 @@
       <translation>オプションを削除します。</translation>
     </message>
     <message>
-      <source>BLSURF_OTHER_OPTION</source>
-      <translation>その他のオプション</translation>
+      <source>BLSURF_CUSTOM_OPTIONS</source>
+      <translation>他のオプション</translation>
     </message>
     <message>
       <source>BLSURF_GMF_FILE</source>
@@ -238,6 +274,14 @@
     <message>
       <source>BLSURF_PRECAD_MERGE_EDGES</source>
       <translation>エッジをマージします。</translation>
+    </message>
+    <message>
+      <source>BLSURF_PRECAD_REMOVE_TINY_UV_EDGES</source>
+      <translation>微小UVエッジの削除</translation>
+    </message>
+    <message>
+      <source>BLSURF_PRECAD_REMOVE_DUPLICATE_CAD_FACES</source>
+      <translation>重複CAD面の削除</translation>
     </message>
     <message>
       <source>BLSURF_PRECAD_PROCESS_3D_TOPOLOGY</source>
@@ -538,6 +582,77 @@
     <message>
       <source>BLSURF_PERIODICITY_SELECT_EDGE</source>
       <translation>Edge</translation>
+    </message>
+  </context>
+  <context>
+    <name>BLSURFPluginGUI_AdvWidget</name>
+    <message>
+      <source>enforce_cad_edge_sizes</source>
+      <translation>CADエッジサイズの強制</translation>
+    </message>
+    <message>
+      <source>jacobian_rectification_respect_geometry</source>
+      <translation>ヤコビアン上のジオメトリの優先順位</translation>
+    </message>
+    <message>
+      <source>max_number_of_points_per_patch</source>
+      <translation>1パッチの最大点数</translation>
+    </message>
+    <message>
+      <source>rectify_jacobian</source>
+      <translation>ヤコビアンの修正</translation>
+    </message>
+    <message>
+      <source>respect_geometry</source>
+      <translation>ジオメトリの尊重</translation>
+    </message>
+    <message>
+      <source>tiny_edge_avoid_surface_intersections</source>
+      <translation>交差面を避けた微小エッジ</translation>
+    </message>
+    <message>
+      <source>closed_geometry</source>
+      <translation>閉じたジオメトリ</translation>
+    </message>
+    <message>
+      <source>debug</source>
+      <translation>デバッグ</translation>
+    </message>
+    <message>
+      <source>discard_input_topology</source>
+      <translation>入力トポロジーの廃棄</translation>
+    </message>
+    <message>
+      <source>merge_edges</source>
+      <translation>エッジのマージ</translation>
+    </message>
+    <message>
+      <source>process_3d_topology</source>
+      <translation>3Dトポロジーの処理</translation>
+    </message>
+    <message>
+      <source>periodic_tolerance</source>
+      <translation>周期的なトレランス</translation>
+    </message>
+    <message>
+      <source>remove_duplicate_cad_faces</source>
+      <translation>重複CAD面の削除</translation>
+    </message>
+    <message>
+      <source>required_entities</source>
+      <translation>要求されたエンティティ</translation>
+    </message>
+    <message>
+      <source>sewing_tolerance</source>
+      <translation>繕いのトレランス</translation>
+    </message>
+    <message>
+      <source>tags</source>
+      <translation>タグ</translation>
+    </message>
+    <message>
+      <source/>
+      <translation type="unfinished"/>
     </message>
   </context>
 </TS>

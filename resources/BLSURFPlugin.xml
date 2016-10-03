@@ -70,6 +70,8 @@
     <algorithm type="MG-CADSurf"
                label-id="MG-CADSurf"
                icon-id="mesh_algo_BLSURF.png"
+               group-id ="1"
+               priority ="30"
                opt-hypos="MG-CADSurf Parameters,ViscousLayers2D"
                output="TRIA,QUAD"
                dim="2"

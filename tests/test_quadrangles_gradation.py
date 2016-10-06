@@ -150,6 +150,6 @@ if abs(nb_faces_2-nb_faces_2_ref) > nb_faces_tolerance:
   raise Exception("Number of faces of Mesh_2 incorrect")
 
 if salome.sg.hasDesktop():
-  salome.sg.updateObjBrowser(1)
+  salome.sg.updateObjBrowser(True)
 
 

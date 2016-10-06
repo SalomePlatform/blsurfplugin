@@ -118,5 +118,5 @@ def checkProjection(gr, mesh_translated, tol=1e-7):
         
 checkProjection(gr_front, left_rotated)
 
-salome.sg.updateObjBrowser(0)
+salome.sg.updateObjBrowser(True)
 

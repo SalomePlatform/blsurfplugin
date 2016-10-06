@@ -50,4 +50,4 @@ if not ok:
     raise Exception("Error when computing volume mesh")
 
 if salome.sg.hasDesktop():
-  salome.sg.updateObjBrowser(1)
+  salome.sg.updateObjBrowser(True)

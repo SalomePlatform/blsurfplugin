@@ -66,4 +66,4 @@ nodesGroup = Mesh_1.MakeGroupByIds("nodes", SMESH.NODE, nodes)
 assert nodesGroup.Size() == 1, nodesGroup.GetIDs()
 
 if salome.sg.hasDesktop():
-  salome.sg.updateObjBrowser(1)
+  salome.sg.updateObjBrowser(True)

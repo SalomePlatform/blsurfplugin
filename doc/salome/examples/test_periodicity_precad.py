@@ -136,5 +136,5 @@ checkProjection(gr_right, left_translated)
 checkProjection(gr_back, front_translated)
 checkProjection(gr_top, bottom_translated)
 
-salome.sg.updateObjBrowser(0)
+salome.sg.updateObjBrowser(True)
 

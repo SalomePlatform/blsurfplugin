@@ -86,4 +86,4 @@ if min_area > 1.5:
     raise Exception("Wrong minimal area on box. Proximity has not worked.")
 
 if salome.sg.hasDesktop():
-  salome.sg.updateObjBrowser(1)
+  salome.sg.updateObjBrowser(True)

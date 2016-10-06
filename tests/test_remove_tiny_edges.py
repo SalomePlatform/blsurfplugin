@@ -107,4 +107,4 @@ if min_length<tiny_edge_length:
     raise Exception("Small edge has not been removed")
 
 if salome.sg.hasDesktop():
-  salome.sg.updateObjBrowser(1)
+  salome.sg.updateObjBrowser(True)

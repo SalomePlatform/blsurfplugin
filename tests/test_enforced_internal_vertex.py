@@ -50,5 +50,5 @@ x, y, z = Mesh.GetNodeXYZ(id_node)
 
 assert("%.2f, %.2f, %.2f"%(x, y, z) == "%.2f, %.2f, %.2f"%(dist_coin, 0, dist_coin))
 
-salome.sg.updateObjBrowser(0)
+salome.sg.updateObjBrowser(True)
 

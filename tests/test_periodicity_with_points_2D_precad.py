@@ -120,6 +120,6 @@ def checkProjection(gr, mesh_translated, tol=1e-7):
 checkProjection(gr_top, bottom_translated)
 
 if salome.sg.hasDesktop():
-  salome.sg.updateObjBrowser(1)
+  salome.sg.updateObjBrowser(True)
   
 

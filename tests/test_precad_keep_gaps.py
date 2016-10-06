@@ -65,4 +65,4 @@ Mesh_1.MakeGroupByIds("nodes", SMESH.NODE, nodes)
 assert len(nodes) == 3, "We should have 3 nodes. We got %i. => The preprocessing has done something, but we did not ask him to."%len(nodes)
 
 if salome.sg.hasDesktop():
-  salome.sg.updateObjBrowser(1)
+  salome.sg.updateObjBrowser(True)

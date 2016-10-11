@@ -238,7 +238,7 @@ double BLSURFPlugin_Attractor::GetSize(double u, double v)
       }
       break;
     case TYPE_LIN:
-        return _startSize + ( 0.5 * (attrDist - _constantRadius + abs(attrDist - _constantRadius)) ) ;
+        return _startSize + ( 0.5 * (attrDist - _constantRadius + fabs(attrDist - _constantRadius)) ) ;
       break;
   }
   return -1;

@@ -238,9 +238,8 @@ bool HasSizeMapOnVertex=false;
  */
 //=============================================================================
 
-BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF(int hypId, int studyId,
-                                               SMESH_Gen* gen)
-  : SMESH_2D_Algo(hypId, studyId, gen)
+BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF(int hypId, SMESH_Gen* gen)
+  : SMESH_2D_Algo(hypId, gen)
 {
   MESSAGE("BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF");
 
@@ -254,15 +253,10 @@ BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF(int hypId, int studyId,
   _supportSubmeshes = true;
 
   smeshGen_i = SMESH_Gen_i::GetSMESHGen();
-  CORBA::Object_var anObject = smeshGen_i->GetNS()->Resolve("/myStudyManager");
-  SALOMEDS::StudyManager_var aStudyMgr = SALOMEDS::StudyManager::_narrow(anObject);
-
-  MESSAGE("studyid = " << _studyId);
-
-  myStudy = NULL;
-  myStudy = aStudyMgr->GetStudyByID(_studyId);
+  CORBA::Object_var anObject = smeshGen_i->GetNS()->Resolve("/Study");
+  myStudy = SALOMEDS::Study::_narrow(anObject);
   if ( !myStudy->_is_nil() )
-    MESSAGE("myStudy->StudyId() = " << myStudy->StudyId());
+    MESSAGE("myStudy not empty");
 
   /* Initialize the Python interpreter */
   assert(Py_IsInitialized());

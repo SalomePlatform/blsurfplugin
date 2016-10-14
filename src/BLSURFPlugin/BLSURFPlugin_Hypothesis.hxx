@@ -43,7 +43,7 @@
 class BLSURFPlugin_Hypothesis: public SMESH_Hypothesis
 {
 public:
-  BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_Gen * gen);
+  BLSURFPlugin_Hypothesis(int hypId, SMESH_Gen * gen);
 
   enum Topology {
     FromCAD,

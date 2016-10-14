@@ -49,8 +49,8 @@ namespace
 }
 
 //=============================================================================
-BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_Gen * gen) :
-  SMESH_Hypothesis(hypId, studyId, gen), 
+BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, SMESH_Gen * gen) :
+  SMESH_Hypothesis(hypId, gen),
   _physicalMesh(GetDefaultPhysicalMesh()),
   _geometricMesh(GetDefaultGeometricMesh()),
   _phySize(GetDefaultPhySize()),
@@ -247,7 +247,7 @@ TopoDS_Shape BLSURFPlugin_Hypothesis::entryToShape(std::string entry)
   MESSAGE("BLSURFPlugin_Hypothesis::entryToShape "<<entry );
   GEOM::GEOM_Object_var aGeomObj;
   SMESH_Gen_i* smeshGen_i = SMESH_Gen_i::GetSMESHGen();
-  SALOMEDS::Study_ptr myStudy = smeshGen_i->GetCurrentStudy();
+  SALOMEDS::Study_ptr myStudy = smeshGen_i->GetStudy();
   
   TopoDS_Shape S = TopoDS_Shape();
   SALOMEDS::SObject_var aSObj = myStudy->FindObjectID( entry.c_str() );

@@ -41,7 +41,6 @@ class BLSURFPlugin_BLSURF_i:
 public:
   // Constructor
   BLSURFPlugin_BLSURF_i( PortableServer::POA_ptr thePOA,
-                         int                     theStudyId,
                          ::SMESH_Gen*            theGenImpl );
   // Destructor
   virtual ~BLSURFPlugin_BLSURF_i();

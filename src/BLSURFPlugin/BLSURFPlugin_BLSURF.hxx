@@ -75,7 +75,7 @@ class TopoDS_Shape;
 
 class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
   public:
-    BLSURFPlugin_BLSURF(int hypId, int studyId, SMESH_Gen* gen);
+    BLSURFPlugin_BLSURF(int hypId, SMESH_Gen* gen);
 
     virtual ~BLSURFPlugin_BLSURF();
 

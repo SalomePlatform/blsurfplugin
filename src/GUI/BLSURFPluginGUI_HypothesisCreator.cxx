@@ -1283,7 +1283,7 @@ void BLSURFPluginGUI_HypothesisCreator::onSelectEnforcedVertex() {
     myEnfVertex = myEnfVertexWdg->GetObject< GEOM::GEOM_Object >(nbSelEnfVertex-1);
     if (myEnfVertex->GetShapeType() == GEOM::VERTEX) {
       BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
-      GEOM::GEOM_IMeasureOperations_var measureOp = getGeomEngine()->GetIMeasureOperations( that->getGeomSelectionTool()->getMyStudy()->StudyId() );
+      GEOM::GEOM_IMeasureOperations_var measureOp = getGeomEngine()->GetIMeasureOperations();
       if (CORBA::is_nil(measureOp))
         return;
       
@@ -1506,7 +1506,7 @@ void BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices() {
       if ( CORBA::is_nil(getGeomEngine()))
         return;
 
-      GEOM::GEOM_IMeasureOperations_var measureOp = getGeomEngine()->GetIMeasureOperations( that->getGeomSelectionTool()->getMyStudy()->StudyId() );
+      GEOM::GEOM_IMeasureOperations_var measureOp = getGeomEngine()->GetIMeasureOperations();
       if (CORBA::is_nil(measureOp))
         return;
 
@@ -3385,7 +3385,7 @@ LightApp_SelectionMgr* BLSURFPluginGUI_HypothesisCreator::selectionMgr()
 CORBA::Object_var BLSURFPluginGUI_HypothesisCreator::entryToObject(QString entry)
 {
   SMESH_Gen_i* smeshGen_i = SMESH_Gen_i::GetSMESHGen();
-  SALOMEDS::Study_var myStudy = smeshGen_i->GetCurrentStudy();
+  SALOMEDS::Study_var myStudy = smeshGen_i->GetStudy();
   CORBA::Object_var obj;
   SALOMEDS::SObject_var aSObj = myStudy->FindObjectID( entry.toStdString().c_str() );
   if (!aSObj->_is_nil()) {

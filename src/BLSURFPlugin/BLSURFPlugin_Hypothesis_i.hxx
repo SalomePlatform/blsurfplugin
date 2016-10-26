@@ -276,6 +276,7 @@ public:
   /*!
    * Set/get/unset an enforced vertex on geom object
    */
+  // OBSOLETE
   bool SetEnforcedVertex(GEOM::GEOM_Object_ptr theFace, CORBA::Double x, CORBA::Double y, CORBA::Double z)
       throw (SALOME::SALOME_Exception);
   bool SetEnforcedVertexNamed(GEOM::GEOM_Object_ptr theFace, CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* theVertexName)
@@ -296,6 +297,26 @@ public:
   bool UnsetEnforcedVertexGeom(GEOM::GEOM_Object_ptr theFace, GEOM::GEOM_Object_ptr theVertex)
       throw (SALOME::SALOME_Exception);
   bool UnsetEnforcedVertices(GEOM::GEOM_Object_ptr theFace) throw (SALOME::SALOME_Exception);
+
+  // NEW - no face
+  bool AddEnforcedVertex(CORBA::Double x, CORBA::Double y, CORBA::Double z)
+      throw (SALOME::SALOME_Exception);
+  bool AddEnforcedVertexNamed(CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* theVertexName)
+      throw (SALOME::SALOME_Exception);
+  bool AddEnforcedVertexGeom(GEOM::GEOM_Object_ptr theVertex)
+      throw (SALOME::SALOME_Exception);
+  bool AddEnforcedVertexWithGroup(CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* theGroupName)
+      throw (SALOME::SALOME_Exception);
+  bool AddEnforcedVertexNamedWithGroup(CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* theVertexName, const char* theGroupName)
+      throw (SALOME::SALOME_Exception);
+  bool AddEnforcedVertexGeomWithGroup(GEOM::GEOM_Object_ptr theVertex, const char* theGroupName)
+      throw (SALOME::SALOME_Exception);
+
+  bool RemoveEnforcedVertex(CORBA::Double x, CORBA::Double y, CORBA::Double z)
+      throw (SALOME::SALOME_Exception);
+  bool RemoveEnforcedVertexGeom(GEOM::GEOM_Object_ptr theVertex)
+      throw (SALOME::SALOME_Exception);
+  bool RemoveEnforcedVertices() throw (SALOME::SALOME_Exception);
 
   /*!
    * Set/get/unset an enforced vertex on geom object given by entry

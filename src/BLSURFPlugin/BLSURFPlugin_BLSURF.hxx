@@ -148,6 +148,7 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
     TopoDS_Shape entryToShape(std::string entry);
     void addCoordsFromVertices(const std::vector<std::string> &theVerticesEntries, std::vector<double> &theVerticesCoords);
     void addCoordsFromVertex(BLSURFPlugin_Hypothesis::TEntry theVertexEntry, std::vector<double> &theVerticesCoords);
+    TopoDS_Shape findFaces( const BLSURFPlugin_Hypothesis::TEnfVertexList& enfVertexList );
     void createEnforcedVertexOnFace(TopoDS_Shape FaceShape, BLSURFPlugin_Hypothesis::TEnfVertexList enfVertexList);
     void createPreCadFacesPeriodicity(TopoDS_Shape theGeomShape, const BLSURFPlugin_Hypothesis::TPreCadPeriodicity &preCadPeriodicity);
     void createPreCadEdgesPeriodicity(TopoDS_Shape theGeomShape, const BLSURFPlugin_Hypothesis::TPreCadPeriodicity &preCadPeriodicity);
@@ -157,7 +158,7 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
   private:
       PyObject *          main_mod;
       PyObject *          main_dict;
-      SMESH_Mesh*         myMesh;
+      SMESH_MesherHelper* myHelper;
       SALOMEDS::Study_var myStudy;
       SMESH_Gen_i*        smeshGen_i;
 

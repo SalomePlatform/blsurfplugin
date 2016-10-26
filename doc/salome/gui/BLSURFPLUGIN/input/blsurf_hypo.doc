@@ -330,22 +330,22 @@ shape. The distance is the geodesic distance (i.e. calculated by following the s
 \image html blsurf_parameters_enforced_vertices.png
 
 It is possible to define some enforced vertices to MG-CADSurf algorithm.
-An enforced vertex is defined on a Face or a Compound by
+An enforced vertex is defined by
 
 - selecting an existing Vertex or Compound,
 
-- or creating a new vertex given its coordinates.
+- or by its coordinates.
 
 The enforced vertex is the projection of a point defined by its
-(x,y,z) coordinates on the selected face.
+(x,y,z) coordinates on the closest face found by the application.
 
-- It is possible to define several enforced vertices on a face or a group of faces.
+- It is possible to define several enforced vertices.
 
 - If the projected point is on the boundary or outside of the face, it will be ignored.
 
-- If a group name is specified : If the group exists, the enforced nodes will be added in the existing group, if the group does not exist it will be created.
+- If a group name is specified : if the group exists, the enforced nodes will be added in the existing group, if the group does not exist it will be created.
 
-All the internal vertices of the faces can be considered as enforced vertices if the corresponding checkbox is checked.
+All the internal vertices of faces can be considered as enforced vertices if the corresponding checkbox is checked.
 A group can optionnaly be defined on those enforced vertices.
 
 \sa Sample TUI Script of the \ref tui_blsurf "creation of a MG-CADSurf hypothesis", including enforced vertices.

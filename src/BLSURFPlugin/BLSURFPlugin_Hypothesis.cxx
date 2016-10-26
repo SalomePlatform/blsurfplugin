@@ -244,7 +244,6 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
 
 TopoDS_Shape BLSURFPlugin_Hypothesis::entryToShape(std::string entry)
 {
-  MESSAGE("BLSURFPlugin_Hypothesis::entryToShape "<<entry );
   GEOM::GEOM_Object_var aGeomObj;
   SMESH_Gen_i* smeshGen_i = SMESH_Gen_i::GetSMESHGen();
   SALOMEDS::Study_ptr myStudy = smeshGen_i->GetCurrentStudy();
@@ -290,7 +289,6 @@ void BLSURFPlugin_Hypothesis::SetPhySize(double theVal, bool isRelative) {
     _phySizeRel = isRelative;
     if (theVal == 0) {
       _phySize = GetMaxSize();
-      MESSAGE("Warning: nul physical size is not allowed");
     }
     else
       _phySize = theVal;
@@ -1228,7 +1226,6 @@ void BLSURFPlugin_Hypothesis::ClearEntry(const std::string& entry,
            ++it_clAt;
        }
        while ( it_clAt != _classAttractors.end() );
-       MESSAGE("_classAttractors.size() = "<<_classAttractors.size())
        NotifySubMeshesHypothesisModification();
      }
      else
@@ -1255,7 +1252,6 @@ void BLSURFPlugin_Hypothesis::ClearSizeMaps() {
 //                                                        bool toEnforceInternalVertices,
 //                                                        TEnfGroupName theGroupName) {
 
-//  MESSAGE("BLSURFPlugin_Hypothesis::SetInternalEnforcedVertex("<< theFaceEntry << ", "
 //      << toEnforceInternalVertices << ", " << theGroupName << ")");
   
 //  TFaceEntryInternalVerticesList::iterator it = _faceEntryInternalVerticesList.find(theFaceEntry);
@@ -1278,15 +1274,14 @@ void BLSURFPlugin_Hypothesis::ClearSizeMaps() {
 //=======================================================================
 //function : SetEnforcedVertex
 //=======================================================================
-bool BLSURFPlugin_Hypothesis::SetEnforcedVertex(TEntry theFaceEntry, TEnfName theVertexName, TEntry theVertexEntry,
-                                                TEnfGroupName theGroupName, double x, double y, double z) {
-
-  MESSAGE("BLSURFPlugin_Hypothesis::SetEnforcedVertex("<< theFaceEntry << ", "
-      << x << ", " << y << ", " << z << ", " << theVertexName << ", " << theVertexEntry << ", " << theGroupName << ")");
-
+bool BLSURFPlugin_Hypothesis::SetEnforcedVertex(TEntry        theFaceEntry,
+                                                TEnfName      theVertexName,
+                                                TEntry        theVertexEntry,
+                                                TEnfGroupName theGroupName,
+                                                double x, double y, double z)
+{
   SetPhysicalMesh(PhysicalLocalSize);
 
-  //  TEnfVertexList::iterator it;
   bool toNotify = false;
   bool toCreate = true;
 
@@ -1303,27 +1298,23 @@ bool BLSURFPlugin_Hypothesis::SetEnforcedVertex(TEntry theFaceEntry, TEnfName th
   newEnfVertex->grpName = theGroupName;
   newEnfVertex->faceEntries.clear();
   newEnfVertex->faceEntries.insert(theFaceEntry);
-  
-  
+
+
   // update _enfVertexList
   TEnfVertexList::iterator it = _enfVertexList.find(newEnfVertex);
   if (it != _enfVertexList.end()) {
     toCreate = false;
     oldEnVertex = (*it);
-    MESSAGE("Enforced Vertex was found => Update");
     if (oldEnVertex->name != theVertexName) {
-      MESSAGE("Update name from \"" << oldEnVertex->name << "\" to \"" << theVertexName << "\"");
       oldEnVertex->name = theVertexName;
       toNotify = true;
     }
     if (oldEnVertex->grpName != theGroupName) {
-      MESSAGE("Update group name from \"" << oldEnVertex->grpName << "\" to \"" << theGroupName << "\"");
       oldEnVertex->grpName = theGroupName;
       toNotify = true;
     }
     TEntryList::iterator it_faceEntries = oldEnVertex->faceEntries.find(theFaceEntry);
     if (it_faceEntries == oldEnVertex->faceEntries.end()) {
-      MESSAGE("Update face list by adding \"" << theFaceEntry << "\"");
       oldEnVertex->faceEntries.insert(theFaceEntry);
       _faceEntryEnfVertexListMap[theFaceEntry].insert(oldEnVertex);
       toNotify = true;
@@ -1346,7 +1337,6 @@ bool BLSURFPlugin_Hypothesis::SetEnforcedVertex(TEntry theFaceEntry, TEnfName th
 //   //////// CREATE ////////////
   if (toCreate) {
     toNotify = true;
-    MESSAGE("Creating new enforced vertex");
     _faceEntryEnfVertexListMap[theFaceEntry].insert(newEnfVertex);
     _enfVertexList.insert(newEnfVertex);
     if (theVertexEntry == "") {
@@ -1362,7 +1352,6 @@ bool BLSURFPlugin_Hypothesis::SetEnforcedVertex(TEntry theFaceEntry, TEnfName th
   if (toNotify)
     NotifySubMeshesHypothesisModification();
 
-  MESSAGE("BLSURFPlugin_Hypothesis::SetEnforcedVertex END");
   return toNotify;
 }
 
@@ -1476,7 +1465,6 @@ bool BLSURFPlugin_Hypothesis::ClearEnforcedVertex(const TEntry& theFaceEntry, do
   TEnfVertexEntryEnfVertexMap::iterator it_enfVertexEntry = _enfVertexEntryEnfVertexMap.find(theVertexEntry);
   if (it_enfVertexEntry != _enfVertexEntryEnfVertexMap.end()) {
     // Success
-    MESSAGE("Found enforced vertex with geom entry " << theVertexEntry);
     oldEnfVertex = it_enfVertexEntry->second;
 
     _enfVertexEntryEnfVertexMap.erase(it_enfVertexEntry);
@@ -1498,7 +1486,6 @@ bool BLSURFPlugin_Hypothesis::ClearEnforcedVertex(const TEntry& theFaceEntry, do
     TCoordsEnfVertexMap::iterator it_coords_enf = _coordsEnfVertexMap.find(coords);
     if (it_coords_enf != _coordsEnfVertexMap.end()) {
       // Success
-      MESSAGE("Found enforced vertex with coords " << x << ", " << y << ", " << z);
       oldEnfVertex = it_coords_enf->second;
 
       _coordsEnfVertexMap.erase(it_coords_enf);
@@ -1521,8 +1508,6 @@ bool BLSURFPlugin_Hypothesis::ClearEnforcedVertex(const TEntry& theFaceEntry, do
     }
   }
 
-  MESSAGE("Remove enf vertex from _enfVertexList");
-
   // update _enfVertexList
   TEnfVertexList::iterator it = _enfVertexList.find(oldEnfVertex);
   if (it != _enfVertexList.end()) {
@@ -1531,7 +1516,6 @@ bool BLSURFPlugin_Hypothesis::ClearEnforcedVertex(const TEntry& theFaceEntry, do
       _enfVertexList.erase(it);
       toNotify = true;
     }
-    MESSAGE("Done");
   }
 
   // update _faceEntryEnfVertexListMap
@@ -1539,9 +1523,7 @@ bool BLSURFPlugin_Hypothesis::ClearEnforcedVertex(const TEntry& theFaceEntry, do
   currentEnfVertexList.erase(oldEnfVertex);
 
   if (currentEnfVertexList.size() == 0) {
-    MESSAGE("Remove _faceEntryEnfVertexListMap[" << theFaceEntry <<"]");
     _faceEntryEnfVertexListMap.erase(theFaceEntry);
-    MESSAGE("Done");
   }
 
   if (toNotify)
@@ -1576,7 +1558,6 @@ bool BLSURFPlugin_Hypothesis::ClearEnforcedVertices(const TEntry& theFaceEntry) 
           _enfVertexList.erase(it);
           toNotify = true;
         }
-        MESSAGE("Done");
       }
     }
     _faceEntryCoordsListMap.erase(it_entry_coords);
@@ -1600,7 +1581,6 @@ bool BLSURFPlugin_Hypothesis::ClearEnforcedVertices(const TEntry& theFaceEntry) 
           _enfVertexList.erase(it);
           toNotify = true;
         }
-        MESSAGE("Done");
       }
     }
     _faceEntryEnfVertexEntryListMap.erase(it_entry_entry);
@@ -1920,7 +1900,6 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save) {
     }
     save << " " << "__NEW_ATTRACTORS_END__";
     test << " " << "__NEW_ATTRACTORS_END__";
-    MESSAGE(" Attractor hypothesis saved as "<<test.str())
   }
 
   TEnfVertexList::const_iterator it_enf = _enfVertexList.begin();
@@ -1957,7 +1936,10 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save) {
         save << " " << "__BEGIN_FACELIST__";
       }
       for (; faceEntriesIt != enfVertex->faceEntries.end(); ++faceEntriesIt)
-        save << " " << (*faceEntriesIt);
+        if ( faceEntriesIt->empty() )
+          save << " _no_face_";
+        else
+          save << " " << (*faceEntriesIt);
       if (hasFaces)
         save << " " << "__END_FACELIST__";
       save << " " << "__END_VERTEX__";
@@ -1981,7 +1963,6 @@ void BLSURFPlugin_Hypothesis::SaveFacesPeriodicity(std::ostream & save){
 
   TFacesPeriodicityVector::const_iterator it_faces_periodicity = _facesPeriodicityVector.begin();
   if (it_faces_periodicity != _facesPeriodicityVector.end()) {
-    MESSAGE("__FACES_PERIODICITY_BEGIN__");
     save << " " << "__FACES_PERIODICITY_BEGIN__";
     for (; it_faces_periodicity != _facesPeriodicityVector.end(); ++it_faces_periodicity) {
       TFacesPeriodicity periodicity_i = (*it_faces_periodicity);
@@ -1995,7 +1976,6 @@ void BLSURFPlugin_Hypothesis::SaveFacesPeriodicity(std::ostream & save){
       save << " " << "__END_PERIODICITY_DESCRIPTION__";
     }
     save << " " << "__FACES_PERIODICITY_END__";
-    MESSAGE("__FACES_PERIODICITY_END__");
   }
 }
 
@@ -2004,7 +1984,6 @@ void BLSURFPlugin_Hypothesis::SaveEdgesPeriodicity(std::ostream & save){
   TEdgesPeriodicityVector::const_iterator it_edges_periodicity = _edgesPeriodicityVector.begin();
   if (it_edges_periodicity != _edgesPeriodicityVector.end()) {
     save << " " << "__EDGES_PERIODICITY_BEGIN__";
-    MESSAGE("__EDGES_PERIODICITY_BEGIN__");
     for (; it_edges_periodicity != _edgesPeriodicityVector.end(); ++it_edges_periodicity) {
       TEdgePeriodicity periodicity_i = (*it_edges_periodicity);
       save << " " << "__BEGIN_PERIODICITY_DESCRIPTION__";
@@ -2030,7 +2009,6 @@ void BLSURFPlugin_Hypothesis::SaveEdgesPeriodicity(std::ostream & save){
       save << " " << "__END_PERIODICITY_DESCRIPTION__";
     }
     save << " " << "__EDGES_PERIODICITY_END__";
-    MESSAGE("__EDGES_PERIODICITY_END__");
   }
 }
 
@@ -2038,7 +2016,6 @@ void BLSURFPlugin_Hypothesis::SaveVerticesPeriodicity(std::ostream & save){
 
   TVerticesPeriodicityVector::const_iterator it_vertices_periodicity = _verticesPeriodicityVector.begin();
   if (it_vertices_periodicity != _verticesPeriodicityVector.end()) {
-    MESSAGE("__VERTICES_PERIODICITY_BEGIN__");
     save << " " << "__VERTICES_PERIODICITY_BEGIN__";
     for (; it_vertices_periodicity != _verticesPeriodicityVector.end(); ++it_vertices_periodicity) {
       TVertexPeriodicity periodicity_i = (*it_vertices_periodicity);
@@ -2058,7 +2035,6 @@ void BLSURFPlugin_Hypothesis::SaveVerticesPeriodicity(std::ostream & save){
       save << " " << "__END_PERIODICITY_DESCRIPTION__";
     }
     save << " " << "__VERTICES_PERIODICITY_END__";
-    MESSAGE("__VERTICES_PERIODICITY_END__");
   }
 }
 
@@ -2735,7 +2711,6 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
       isOK = static_cast<bool>(load >> attParams[0]>>attParams[1]>>attParams[2]>>attParams[3]); //>>step);
     }
     if (isOK) {
-      MESSAGE(" LOADING ATTRACTOR HYPOTHESIS ")
       const TopoDS_Shape attractorShape = BLSURFPlugin_Hypothesis::entryToShape(newAtShapeEntry);
       const TopoDS_Face faceShape = TopoDS::Face(BLSURFPlugin_Hypothesis::entryToShape(newAtFaceEntry));
       BLSURFPlugin_Attractor* attractor = new BLSURFPlugin_Attractor(faceShape, attractorShape, newAtShapeEntry);//, step);
@@ -2801,7 +2776,6 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   while (isOK && hasEnforcedVertex) {
     isOK = static_cast<bool>(load >> enfSeparator); // __BEGIN_VERTEX__
     TEnfVertex *enfVertex = new TEnfVertex();
-//     MESSAGE("enfSeparator: " <<enfSeparator);
     if (enfSeparator == "__ENFORCED_VERTICES_END__")
       break; // __ENFORCED_VERTICES_END__
     if (enfSeparator != "__BEGIN_VERTEX__")
@@ -2809,7 +2783,6 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
     
     while (isOK) {
       isOK = static_cast<bool>(load >> enfSeparator);
-      MESSAGE("enfSeparator: " <<enfSeparator);
       if (enfSeparator == "__END_VERTEX__") {
         
         enfVertex->name = enfName;
@@ -2854,7 +2827,6 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
             enfName += enfSeparator;
           }
         }
-        MESSAGE("enfName: " <<enfName);
       }
         
       if (enfSeparator == "__BEGIN_ENTRY__") {  // __BEGIN_ENTRY__
@@ -2862,7 +2834,6 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         isOK = static_cast<bool>(load >> enfSeparator); // __END_ENTRY__
         if (enfSeparator != "__END_ENTRY__")
           throw std::exception();
-        MESSAGE("enfGeomEntry: " <<enfGeomEntry);
       }
         
       if (enfSeparator == "__BEGIN_GROUP__") {  // __BEGIN_GROUP__
@@ -2874,7 +2845,6 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
             enfGroup += enfSeparator;
           }
         }
-        MESSAGE("enfGroup: " <<enfGroup);
       }
         
       if (enfSeparator == "__BEGIN_COORDS__") {  // __BEGIN_COORDS__
@@ -2883,7 +2853,6 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         isOK = static_cast<bool>(load >> enfSeparator); // __END_COORDS__
         if (enfSeparator != "__END_COORDS__")
           throw std::exception();
-        MESSAGE("enfCoords: " << enfCoords[0] <<","<< enfCoords[1] <<","<< enfCoords[2]);
       } 
         
       if (enfSeparator == "__BEGIN_FACELIST__") {  // __BEGIN_FACELIST__
@@ -2891,7 +2860,6 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
           isOK = static_cast<bool>(load >> enfSeparator);
           if (enfSeparator != "__END_FACELIST__") {
             enfFaceEntryList.insert(enfSeparator);
-            MESSAGE(enfSeparator << " was inserted into enfFaceEntryList");
           }
         }
       } 
@@ -2969,18 +2937,15 @@ void BLSURFPlugin_Hypothesis::LoadFacesPeriodicity(std::istream & load){
 
   while (isOK) {
     isOK = static_cast<bool>(load >> periodicitySeparator); // __BEGIN_PERIODICITY_DESCRIPTION__
-    MESSAGE("periodicitySeparator 1: " <<periodicitySeparator);
     TFacesPeriodicity *periodicity_i = new TFacesPeriodicity();
     if (periodicitySeparator == "__FACES_PERIODICITY_END__")
       break; // __FACES_PERIODICITY_END__
     if (periodicitySeparator != "__BEGIN_PERIODICITY_DESCRIPTION__"){
-      MESSAGE("//" << periodicitySeparator << "//");
       throw std::exception();
     }
 
     while (isOK) {
       isOK = static_cast<bool>(load >> periodicitySeparator);
-      MESSAGE("periodicitySeparator 2: " <<periodicitySeparator);
       if (periodicitySeparator == "__END_PERIODICITY_DESCRIPTION__") {
 
         periodicity_i->first = shape1Entry;
@@ -2996,7 +2961,6 @@ void BLSURFPlugin_Hypothesis::LoadFacesPeriodicity(std::istream & load){
         isOK = static_cast<bool>(load >> periodicitySeparator); // __END_ENTRY1__
         if (periodicitySeparator != "__END_ENTRY1__")
           throw std::exception();
-        MESSAGE("shape1Entry: " <<shape1Entry);
       }
 
       if (periodicitySeparator == "__BEGIN_ENTRY2__") {  // __BEGIN_ENTRY2__
@@ -3004,7 +2968,6 @@ void BLSURFPlugin_Hypothesis::LoadFacesPeriodicity(std::istream & load){
         isOK = static_cast<bool>(load >> periodicitySeparator); // __END_ENTRY2__
         if (periodicitySeparator != "__END_ENTRY2__")
           throw std::exception();
-        MESSAGE("shape2Entry: " <<shape2Entry);
       }
     }
   }
@@ -3026,18 +2989,15 @@ void BLSURFPlugin_Hypothesis::LoadEdgesPeriodicity(std::istream & load){
 
   while (isOK) {
     isOK = static_cast<bool>(load >> periodicitySeparator); // __BEGIN_PERIODICITY_DESCRIPTION__
-    MESSAGE("periodicitySeparator 1: " <<periodicitySeparator);
     TEdgePeriodicity *periodicity_i = new TEdgePeriodicity();
     if (periodicitySeparator == "__EDGES_PERIODICITY_END__")
       break; // __EDGES_PERIODICITY_END__
     if (periodicitySeparator != "__BEGIN_PERIODICITY_DESCRIPTION__"){
-      MESSAGE("//" << periodicitySeparator << "//");
       throw std::exception();
     }
 
     while (isOK) {
       isOK = static_cast<bool>(load >> periodicitySeparator);
-      MESSAGE("periodicitySeparator 2: " <<periodicitySeparator);
       if (periodicitySeparator == "__END_PERIODICITY_DESCRIPTION__") {
 
         periodicity_i->theFace1Entry = theFace1Entry;
@@ -3053,13 +3013,10 @@ void BLSURFPlugin_Hypothesis::LoadEdgesPeriodicity(std::istream & load){
 
       if (periodicitySeparator == "__BEGIN_FACE1__") {  // __BEGIN_FACE1__
         isOK = static_cast<bool>(load >> theFace1Entry);
-        MESSAGE("//" << theFace1Entry << "//");
         isOK = static_cast<bool>(load >> periodicitySeparator); // __END_FACE1__
         if (periodicitySeparator != "__END_FACE1__"){
-          MESSAGE("//" << periodicitySeparator << "//");
           throw std::exception();
         }
-        MESSAGE("theFace1Entry: " <<theFace1Entry);
       }
 
       if (periodicitySeparator == "__BEGIN_EDGE1__") {  // __BEGIN_EDGE1__
@@ -3067,7 +3024,6 @@ void BLSURFPlugin_Hypothesis::LoadEdgesPeriodicity(std::istream & load){
         isOK = static_cast<bool>(load >> periodicitySeparator); // __END_EDGE1__
         if (periodicitySeparator != "__END_EDGE1__")
           throw std::exception();
-        MESSAGE("theEdge1Entry: " <<theEdge1Entry);
       }
 
       if (periodicitySeparator == "__BEGIN_FACE2__") {  // __BEGIN_FACE2__
@@ -3075,7 +3031,6 @@ void BLSURFPlugin_Hypothesis::LoadEdgesPeriodicity(std::istream & load){
         isOK = static_cast<bool>(load >> periodicitySeparator); // __END_FACE2__
         if (periodicitySeparator != "__END_FACE2__")
           throw std::exception();
-        MESSAGE("theFace2Entry: " <<theFace2Entry);
       }
 
       if (periodicitySeparator == "__BEGIN_EDGE2__") {  // __BEGIN_EDGE2__
@@ -3083,7 +3038,6 @@ void BLSURFPlugin_Hypothesis::LoadEdgesPeriodicity(std::istream & load){
         isOK = static_cast<bool>(load >> periodicitySeparator); // __END_EDGE2__
         if (periodicitySeparator != "__END_EDGE2__")
           throw std::exception();
-        MESSAGE("theEdge2Entry: " <<theEdge2Entry);
       }
 
       if (periodicitySeparator == "__BEGIN_EDGE_ORIENTATION__") {  // __BEGIN_EDGE_ORIENTATION__
@@ -3091,7 +3045,6 @@ void BLSURFPlugin_Hypothesis::LoadEdgesPeriodicity(std::istream & load){
         isOK = static_cast<bool>(load >> periodicitySeparator); // __END_EDGE_ORIENTATION__
         if (periodicitySeparator != "__END_EDGE_ORIENTATION__")
           throw std::exception();
-        MESSAGE("edge_orientation: " <<edge_orientation);
       }
     }
   }
@@ -3111,18 +3064,15 @@ void BLSURFPlugin_Hypothesis::LoadVerticesPeriodicity(std::istream & load){
 
   while (isOK) {
     isOK = static_cast<bool>(load >> periodicitySeparator); // __BEGIN_PERIODICITY_DESCRIPTION__
-    MESSAGE("periodicitySeparator 1: " <<periodicitySeparator);
     TVertexPeriodicity *periodicity_i = new TVertexPeriodicity();
     if (periodicitySeparator == "__VERTICES_PERIODICITY_END__")
       break; // __VERTICES_PERIODICITY_END__
     if (periodicitySeparator != "__BEGIN_PERIODICITY_DESCRIPTION__"){
-      MESSAGE("//" << periodicitySeparator << "//");
       throw std::exception();
     }
 
     while (isOK) {
       isOK = static_cast<bool>(load >> periodicitySeparator);
-      MESSAGE("periodicitySeparator 2: " <<periodicitySeparator);
       if (periodicitySeparator == "__END_PERIODICITY_DESCRIPTION__") {
 
         periodicity_i->theEdge1Entry = theEdge1Entry;
@@ -3140,7 +3090,6 @@ void BLSURFPlugin_Hypothesis::LoadVerticesPeriodicity(std::istream & load){
         isOK = static_cast<bool>(load >> periodicitySeparator); // __END_EDGE1__
         if (periodicitySeparator != "__END_EDGE1__")
           throw std::exception();
-        MESSAGE("theEdge1Entry: " <<theEdge1Entry);
       }
 
       if (periodicitySeparator == "__BEGIN_VERTEX1__") {  // __BEGIN_VERTEX1__
@@ -3148,7 +3097,6 @@ void BLSURFPlugin_Hypothesis::LoadVerticesPeriodicity(std::istream & load){
         isOK = static_cast<bool>(load >> periodicitySeparator); // __END_VERTEX1__
         if (periodicitySeparator != "__END_VERTEX1__")
           throw std::exception();
-        MESSAGE("theVertex1Entry: " <<theVertex1Entry);
       }
 
       if (periodicitySeparator == "__BEGIN_EDGE2__") {  // __BEGIN_EDGE2__
@@ -3156,7 +3104,6 @@ void BLSURFPlugin_Hypothesis::LoadVerticesPeriodicity(std::istream & load){
         isOK = static_cast<bool>(load >> periodicitySeparator); // __END_EDGE2__
         if (periodicitySeparator != "__END_EDGE2__")
           throw std::exception();
-        MESSAGE("theEdge2Entry: " <<theEdge2Entry);
       }
 
       if (periodicitySeparator == "__BEGIN_VERTEX2__") {  // __BEGIN_VERTEX2__
@@ -3164,7 +3111,6 @@ void BLSURFPlugin_Hypothesis::LoadVerticesPeriodicity(std::istream & load){
         isOK = static_cast<bool>(load >> periodicitySeparator); // __END_VERTEX2__
         if (periodicitySeparator != "__END_VERTEX2__")
           throw std::exception();
-        MESSAGE("theVertex2Entry: " <<theVertex2Entry);
       }
     }
   }
@@ -3191,28 +3137,20 @@ void BLSURFPlugin_Hypothesis::LoadPreCADPeriodicity(std::istream & load, const c
 
   while (isOK) {
     isOK = static_cast<bool>(load >> periodicitySeparator); // __BEGIN_PERIODICITY_DESCRIPTION__
-    MESSAGE("periodicitySeparator 1: " <<periodicitySeparator);
     TPreCadPeriodicity *periodicity_i = new TPreCadPeriodicity();
-//     MESSAGE("periodicitySeparator: " <<periodicitySeparator);
     std::string endSeparator = "__PRECAD_" + std::string(shapeType) + "_PERIODICITY_END__";
     if (periodicitySeparator == endSeparator)
       break; // __PRECAD_FACES_PERIODICITY_END__
     if (periodicitySeparator != "__BEGIN_PERIODICITY_DESCRIPTION__"){
-      MESSAGE("//" << endSeparator << "//");
-      MESSAGE("//" << periodicitySeparator << "//");
       throw std::exception();
     }
 
     while (isOK) {
       isOK = static_cast<bool>(load >> periodicitySeparator);
-      MESSAGE("periodicitySeparator 2: " <<periodicitySeparator);
       if (periodicitySeparator == "__END_PERIODICITY_DESCRIPTION__") {
 
         periodicity_i->shape1Entry = shape1Entry;
         periodicity_i->shape2Entry = shape2Entry;
-
-        MESSAGE("theSourceVerticesEntries.size(): " << theSourceVerticesEntries.size());
-        MESSAGE("theTargetVerticesEntries.size(): " << theTargetVerticesEntries.size());
 
         if (hasSourceVertices)
           periodicity_i->theSourceVerticesEntries = theSourceVerticesEntries;
@@ -3236,7 +3174,6 @@ void BLSURFPlugin_Hypothesis::LoadPreCADPeriodicity(std::istream & load, const c
         isOK = static_cast<bool>(load >> periodicitySeparator); // __END_ENTRY1__
         if (periodicitySeparator != "__END_ENTRY1__")
           throw std::exception();
-        MESSAGE("shape1Entry: " <<shape1Entry);
       }
 
       if (periodicitySeparator == "__BEGIN_ENTRY2__") {  // __BEGIN_ENTRY2__
@@ -3244,7 +3181,6 @@ void BLSURFPlugin_Hypothesis::LoadPreCADPeriodicity(std::istream & load, const c
         isOK = static_cast<bool>(load >> periodicitySeparator); // __END_ENTRY2__
         if (periodicitySeparator != "__END_ENTRY2__")
           throw std::exception();
-        MESSAGE("shape2Entry: " <<shape2Entry);
       }
 
       if (periodicitySeparator == "__BEGIN_SOURCE_VERTICES_LIST__") {  // __BEGIN_SOURCE_VERTICES_LIST__
@@ -3253,7 +3189,6 @@ void BLSURFPlugin_Hypothesis::LoadPreCADPeriodicity(std::istream & load, const c
           isOK = static_cast<bool>(load >> periodicitySeparator);
           if (periodicitySeparator != "__END_SOURCE_VERTICES_LIST__") {
             theSourceVerticesEntries.push_back(periodicitySeparator);
-            MESSAGE("theSourceVerticesEntries: " <<periodicitySeparator);
           }
         }
       }
@@ -3264,7 +3199,6 @@ void BLSURFPlugin_Hypothesis::LoadPreCADPeriodicity(std::istream & load, const c
           isOK = static_cast<bool>(load >> periodicitySeparator);
           if (periodicitySeparator != "__END_TARGET_VERTICES_LIST__") {
             theTargetVerticesEntries.push_back(periodicitySeparator);
-            MESSAGE("theTargetVerticesEntries: " <<periodicitySeparator);
           }
         }
       }

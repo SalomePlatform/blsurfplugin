@@ -495,6 +495,42 @@ class BLSURF_Algorithm(Mesh_Algorithm):
       return self.Parameters().SetEnforcedVertexGeomWithGroup(theFace, theVertex,groupName)
     pass
 
+  ## Set an enforced vertex on a face given the coordinates of a point.
+  #  The face if found by the application.
+  #  @param x            : x coordinate
+  #  @param y            : y coordinate
+  #  @param z            : z coordinate
+  #  @param vertexName   : name of the enforced vertex
+  #  @param groupName    : name of the group
+  def AddEnforcedVertex(self, x, y, z, vertexName = "", groupName = ""):
+    from salome.smesh.smeshBuilder import AssureGeomPublished
+    if vertexName == "":
+      if groupName == "":
+        return self.Parameters().AddEnforcedVertex(x, y, z)
+      else:
+        return self.Parameters().AddEnforcedVertexWithGroup(x, y, z, groupName)
+      pass
+    else:
+      if groupName == "":
+        return self.Parameters().AddEnforcedVertexNamed(x, y, z, vertexName)
+      else:
+        return self.Parameters().AddEnforcedVertexNamedWithGroup( x, y, z, vertexName, groupName)
+      pass
+    pass
+
+  ## To set an enforced vertex on a face given a GEOM vertex, group or compound.
+  #  The face if found by the application.
+  #  @param theVertex    : GEOM vertex (or group, compound).
+  #  @param groupName    : name of the group
+  def AddEnforcedVertexGeom(self, theVertex, groupName = ""):
+    from salome.smesh.smeshBuilder import AssureGeomPublished
+    AssureGeomPublished( self.mesh, theVertex )
+    if groupName == "":
+      return self.Parameters().AddEnforcedVertexGeom(theVertex)
+    else:
+      return self.Parameters().AddEnforcedVertexGeomWithGroup(theVertex,groupName)
+    pass
+
   ## To remove an enforced vertex on a given GEOM face (or group, compound) given the coordinates.
   #  @param theFace      : GEOM face (or group, compound) on which to remove the enforced vertex
   #  @param x            : x coordinate

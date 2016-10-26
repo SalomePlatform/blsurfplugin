@@ -59,6 +59,15 @@
           UnsetEnforcedVertex,
           UnsetEnforcedVertexGeom,
           UnsetEnforcedVertices,
+          AddEnforcedVertex,
+          AddEnforcedVertexNamed,
+          AddEnforcedVertexGeom,
+          AddEnforcedVertexWithGroup,
+          AddEnforcedVertexNamedWithGroup,
+          AddEnforcedVertexGeomWithGroup,
+          RemoveEnforcedVertex,
+          RemoveEnforcedVertexGeom,
+          RemoveEnforcedVertices,
           AddPreCadFacesPeriodicity
         </accumulative-methods>
       </python-wrap>

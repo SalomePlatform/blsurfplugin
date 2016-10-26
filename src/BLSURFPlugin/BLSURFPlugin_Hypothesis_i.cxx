@@ -2479,7 +2479,7 @@ void BLSURFPlugin_Hypothesis_i::ClearAllEnforcedVertices() {
 }
 
 /*!
- * Set/get/unset an enforced vertex on face
+ * Set/get/unset an enforced vertex on face - OBSOLETE
  */
 bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertex(GEOM::GEOM_Object_ptr theFace, CORBA::Double x, CORBA::Double y,
     CORBA::Double z) throw (SALOME::SALOME_Exception) {
@@ -2982,13 +2982,200 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertices(GEOM::GEOM_Object_ptr theF
 }
 
 /*!
+ * Set/get/unset an enforced vertex on face - NEW (no face)
+ */
+bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertex(CORBA::Double x, CORBA::Double y, CORBA::Double z) throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+
+  try {
+    return SetEnforcedVertexEntry("", x, y, z);
+  } catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+}
+
+/*!
+ * Set/get/unset an enforced vertex with name on face
+ */
+bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexNamed(CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* theVertexName) throw (SALOME::SALOME_Exception)
+{
+  try {
+    return SetEnforcedVertexEntry("", x, y, z, theVertexName);
+  } catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+}
+
+/*!
+ * Set/get/unset an enforced vertex with geom object on face
+ */
+bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexGeom(GEOM::GEOM_Object_ptr theVertex)
+    throw (SALOME::SALOME_Exception)
+{
+  if ((theVertex->GetShapeType() != GEOM::VERTEX) && (theVertex->GetShapeType() != GEOM::COMPOUND)) {
+    MESSAGE("theVertex shape type is not VERTEX or COMPOUND");
+    THROW_SALOME_CORBA_EXCEPTION("theVertex shape type is not VERTEX or COMPOUND", SALOME::BAD_PARAM);
+  }
+  string theVertexEntry = theVertex->GetStudyEntry();
+  
+  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+  SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
+  string aName;
+  
+  if (theVertexEntry.empty()) {
+    if (theVertex->GetShapeType() == GEOM::VERTEX)
+      aName = "Vertex_";
+    if (theVertex->GetShapeType() == GEOM::COMPOUND)
+      aName = "Compound_";
+    aName += theVertex->GetEntry();
+    SALOMEDS::SObject_wrap theSVertex = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theVertex, aName.c_str());
+    if (!theSVertex->_is_nil())
+      theVertexEntry = theSVertex->GetID();
+  }
+  if (theVertexEntry.empty())
+    THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
+
+  string theVertexName = theVertex->GetName();
+  try {
+    return SetEnforcedVertexEntry("", 0, 0, 0, theVertexName.c_str(), theVertexEntry.c_str());
+  } catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+}
+
+/*!
+ * Set an enforced vertex with group name on face
+ */
+bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexWithGroup(CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* theGroupName)
+ throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+
+  try {
+    return SetEnforcedVertexEntry("", x, y, z, "", "", theGroupName);
+  } catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+}
+
+/*!
+ * Set an enforced vertex with name and group name on face
+ */
+bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexNamedWithGroup(CORBA::Double x, CORBA::Double y, CORBA::Double z, 
+                                                                const char* theVertexName, const char* theGroupName)
+ throw (SALOME::SALOME_Exception)
+{
+  ASSERT(myBaseImpl);
+
+  try {
+    return SetEnforcedVertexEntry("", x, y, z, theVertexName, "", theGroupName);
+  } catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+}
+
+/*!
+ * Set an enforced vertex with geom entry and group name on face
+ */
+bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexGeomWithGroup(GEOM::GEOM_Object_ptr theVertex, const char* theGroupName)
+ throw (SALOME::SALOME_Exception)
+{
+  if ((theVertex->GetShapeType() != GEOM::VERTEX) && (theVertex->GetShapeType() != GEOM::COMPOUND)) {
+    MESSAGE("theVertex shape type is not VERTEX or COMPOUND");
+    THROW_SALOME_CORBA_EXCEPTION("theVertex shape type is not VERTEX or COMPOUND", SALOME::BAD_PARAM);
+  }
+
+  string theVertexEntry = theVertex->GetStudyEntry();
+  
+  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+  SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
+  string aName;
+  
+  if (theVertexEntry.empty()) {
+    if (theVertex->GetShapeType() == GEOM::VERTEX)
+      aName = "Vertex_";
+    if (theVertex->GetShapeType() == GEOM::COMPOUND)
+      aName = "Compound_";
+    aName += theVertex->GetEntry();
+    SALOMEDS::SObject_wrap theSVertex = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theVertex, aName.c_str());
+    if (!theSVertex->_is_nil())
+      theVertexEntry = theSVertex->GetID();
+  }
+  if (theVertexEntry.empty())
+    THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
+
+  string theVertexName = theVertex->GetName();
+  try {
+    return SetEnforcedVertexEntry("", 0, 0, 0, theVertexName.c_str(), theVertexEntry.c_str(), theGroupName);
+  } catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+}
+
+bool BLSURFPlugin_Hypothesis_i::RemoveEnforcedVertex(CORBA::Double x, CORBA::Double y, CORBA::Double z) throw (SALOME::SALOME_Exception)
+{
+  try {
+    return UnsetEnforcedVertexEntry("", x, y, z);
+  } catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+}
+
+bool BLSURFPlugin_Hypothesis_i::RemoveEnforcedVertexGeom(GEOM::GEOM_Object_ptr theVertex)
+    throw (SALOME::SALOME_Exception)
+{
+  if ((theVertex->GetShapeType() != GEOM::VERTEX) && (theVertex->GetShapeType() != GEOM::COMPOUND)) {
+    MESSAGE("theVertex shape type is not VERTEX or COMPOUND");
+    THROW_SALOME_CORBA_EXCEPTION("theVertex shape type is not VERTEX or COMPOUND", SALOME::BAD_PARAM);
+  }
+  std::string theVertexEntry = theVertex->GetStudyEntry();
+  
+  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+  SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
+  string aName;
+  
+  if (theVertexEntry.empty()) {
+    if (theVertex->GetShapeType() == GEOM::VERTEX)
+      aName = "Vertex_";
+    if (theVertex->GetShapeType() == GEOM::COMPOUND)
+      aName = "Compound_";
+    aName += theVertex->GetEntry();
+    SALOMEDS::SObject_wrap theSVertex = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theVertex, aName.c_str());
+    if (!theSVertex->_is_nil())
+      theVertexEntry = theSVertex->GetID();
+  }
+  if (theVertexEntry.empty())
+    THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
+  
+  try {
+    return UnsetEnforcedVertexEntry("", 0, 0, 0, theVertexEntry.c_str());
+  } catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+}
+
+bool BLSURFPlugin_Hypothesis_i::RemoveEnforcedVertices() throw (SALOME::SALOME_Exception)
+{
+  try {
+    return UnsetEnforcedVerticesEntry("");
+  } catch (SALOME_Exception& ex) {
+    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+  }
+}
+
+/*!
  * Set/get/unset an enforced vertex on geom object given by entry
  */
-bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexEntry(const char* theFaceEntry, CORBA::Double x, CORBA::Double y,
-    CORBA::Double z, const char* theVertexName, const char* theVertexEntry, const char* theGroupName)
-    throw (SALOME::SALOME_Exception) {
-  ASSERT(myBaseImpl);
-  MESSAGE("IDL : SetEnforcedVertexEntry(" << theFaceEntry << ", " << x << ", " << y << ", " << z << ", \"" << theVertexName << "\", \"" << theVertexEntry << "\", \"" << theGroupName << "\")");
+bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexEntry(const char* theFaceEntry,
+                                                       CORBA::Double x,
+                                                       CORBA::Double y,
+                                                       CORBA::Double z,
+                                                       const char* theVertexName,
+                                                       const char* theVertexEntry,
+                                                       const char* theGroupName)
+  throw (SALOME::SALOME_Exception)
+{
   bool newValue = false;
   if (string(theVertexEntry).empty()) {
     try {
@@ -2999,37 +3186,29 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexEntry(const char* theFaceEntry,
       coords.push_back(y);
       coords.push_back(z);
       if (coordsList.find(coords) == coordsList.end()) {
-        MESSAGE("Coords not found: add it in coordsList");
         newValue = true;
       } else {
-        MESSAGE("Coords already found, compare names");
         ::BLSURFPlugin_Hypothesis::TEnfVertex *enfVertex = this->GetImpl()->GetEnfVertex(coords);
         if ((enfVertex->name != theVertexName) || (enfVertex->grpName != theGroupName)) {
-          MESSAGE("The names are different: update");
-          //          this->GetImpl()->ClearEnforcedVertex(theFaceEntry, x, y, z);
           newValue = true;
-        }
-        else {
-          MESSAGE("The names are identical");
         }
       }
     } catch (const std::invalid_argument& ex) {
       // no enforced vertex for entry
-      MESSAGE("Face entry not found : add it to the list");
       newValue = true;
     }
     if (newValue) {
       if (string(theVertexName).empty()) {
         if (string(theGroupName).empty())
-          SMESH::TPythonDump() << _this() << ".SetEnforcedVertex(" << theFaceEntry << ", " << x << ", " << y << ", " << z << ")";
+          SMESH::TPythonDump() << _this() << ".AddEnforcedVertex(" << x << ", " << y << ", " << z << ")";
         else
-          SMESH::TPythonDump() << _this() << ".SetEnforcedVertexWithGroup(" << theFaceEntry << ", " << x << ", " << y << ", " << z << ", \"" << theGroupName << "\")";
+          SMESH::TPythonDump() << _this() << ".AddEnforcedVertexWithGroup(" << theFaceEntry << ", " << x << ", " << y << ", " << z << ", \"" << theGroupName << "\")";
       }
       else {
         if (string(theGroupName).empty())
-          SMESH::TPythonDump() << _this() << ".SetEnforcedVertexNamed(" << theFaceEntry << ", " << x << ", " << y << ", " << z << ", \"" << theVertexName << "\")";
+          SMESH::TPythonDump() << _this() << ".AddEnforcedVertexNamed(" << x << ", " << y << ", " << z << ", \"" << theVertexName << "\")";
         else
-          SMESH::TPythonDump() << _this() << ".SetEnforcedVertexNamedWithGroup(" << theFaceEntry << ", " << x << ", " << y << ", " << z << ", \""
+          SMESH::TPythonDump() << _this() << ".AddEnforcedVertexNamedWithGroup(" << x << ", " << y << ", " << z << ", \""
                                << theVertexName << "\", \"" << theGroupName << "\")";
       }
     }
@@ -3038,58 +3217,35 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexEntry(const char* theFaceEntry,
       ::BLSURFPlugin_Hypothesis::TEntryList enfVertexEntryList = this->GetImpl()->GetEnfVertexEntryList(theFaceEntry);
       ::BLSURFPlugin_Hypothesis::TEntryList::const_iterator it = enfVertexEntryList.find(theVertexEntry);
       if ( it == enfVertexEntryList.end()) {
-        MESSAGE("Geom entry not found: add it in enfVertexEntryList");
         newValue = true;
       }
       else {
-        MESSAGE("Geom entry already found, compare names");
         ::BLSURFPlugin_Hypothesis::TEnfVertex *enfVertex = this->GetImpl()->GetEnfVertex((*it));
         if ((enfVertex->name != theVertexName) || (enfVertex->grpName != theGroupName)) {
-          MESSAGE("The names are different: update");
-//          this->GetImpl()->ClearEnforcedVertex(theFaceEntry, x, y, z);
           newValue = true;
-        }
-        else {
-          MESSAGE("The names are identical");
         }
       }
     } catch (const std::invalid_argument& ex) {
       // no enforced vertex for entry
-      MESSAGE("Face entry not found : add it to the list");
       newValue = true;
     }
     if (newValue) {
       if (string(theGroupName).empty())
-        SMESH::TPythonDump() << _this() << ".SetEnforcedVertexGeom(" << theFaceEntry << ", " << theVertexEntry << ")";
+        SMESH::TPythonDump() << _this() << ".AddEnforcedVertexGeom(" << theVertexEntry << ")";
       else
-        SMESH::TPythonDump() << _this() << ".SetEnforcedVertexGeomWithGroup(" << theFaceEntry << ", " << theVertexEntry << ", \"" << theGroupName << "\")";
+        SMESH::TPythonDump() << _this() << ".AddEnforcedVertexGeomWithGroup(" << theVertexEntry << ", \"" << theGroupName << "\")";
     }
   }
 
   if (newValue)
     this->GetImpl()->SetEnforcedVertex(theFaceEntry, theVertexName, theVertexEntry, theGroupName, x, y, z);
 
-  MESSAGE("IDL : SetEnforcedVertexEntry END");
   return newValue;
 }
 
-//Enable internal enforced vertices on specific face if requested by user
-//CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertexEntry(const char* theFaceEntry)
-//    throw (SALOME::SALOME_Exception) {
-//  ASSERT(myBaseImpl);
-//  try {
-//    return this->GetImpl()->GetInternalEnforcedVertex(theFaceEntry);
-//  } catch (const std::exception& ex) {
-//    std::cout << "Exception: " << ex.what() << std::endl;
-//    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
-//  }
-//}
-  
 BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVerticesEntry(const char* entry)
-    throw (SALOME::SALOME_Exception) {
-  ASSERT(myBaseImpl);
-  MESSAGE("ENGINE : GetEnforcedVerticesEntry START ENTRY : " << entry);
-
+    throw (SALOME::SALOME_Exception)
+{
   try {
     BLSURFPlugin::TEnfVertexList_var vertexList = new BLSURFPlugin::TEnfVertexList();
     ::BLSURFPlugin_Hypothesis::TEnfVertexList _vList = this->GetImpl()->GetEnfVertexList(entry);
@@ -3138,20 +3294,19 @@ BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVerticesEntr
   }
 }
 
-bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexEntry(const char* theFaceEntry, CORBA::Double x, CORBA::Double y,
-    CORBA::Double z, const char* theVertexEntry) throw (SALOME::SALOME_Exception) {
+bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexEntry(const char* theFaceEntry, CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* theVertexEntry) throw (SALOME::SALOME_Exception)
+{
   ASSERT(myBaseImpl);
-  MESSAGE("IDL : UnsetEnforcedVertexEntry(" << theFaceEntry << "," << x << "," << y << "," << z << ", " << theVertexEntry << ")");
 
   bool res = false;
   try {
     res = this->GetImpl()->ClearEnforcedVertex(theFaceEntry, x, y, z, theVertexEntry);
 
     if (string(theVertexEntry).empty())
-      SMESH::TPythonDump() << "isDone = " << _this() << ".UnsetEnforcedVertex(" << theFaceEntry << ", " << x << ", " << y << ", " << z
+      SMESH::TPythonDump() << "isDone = " << _this() << ".RemoveEnforcedVertex(" << x << ", " << y << ", " << z
           << ")";
     else
-      SMESH::TPythonDump() << "isDone = " << _this() << ".UnsetEnforcedVertexGeom(" << theFaceEntry << ", " << theVertexEntry << ")";
+      SMESH::TPythonDump() << "isDone = " << _this() << ".RemoveEnforcedVertexGeom(" << theVertexEntry << ")";
 
   } catch (const std::invalid_argument& ex) {
     return false;
@@ -3163,41 +3318,19 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexEntry(const char* theFaceEntr
   MESSAGE("ENGINE : UnsetEnforcedVertexEntry END ENTRY : " << theFaceEntry);
   return res;
 }
-
-//bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexEntryWithPoint(const char* theFaceEntry, const char* theVertexEntry,
-//    CORBA::Double x, CORBA::Double y, CORBA::Double z) throw (SALOME::SALOME_Exception) {
-//  MESSAGE("IDL : UnsetEnforcedVertexEntryWithPoint START theFaceEntry=" << theFaceEntry << ", theVertexEntry=" << theVertexEntry);
-//
-//  bool ret = false;
-//
-//  try {
-//    ret = _unsetEnfVertex(theFaceEntry, x, y, z);
-//  } catch (SALOME_Exception& ex) {
-//    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
-//  }
-//
-//  if (ret)
-//    SMESH::TPythonDump() << _this() << ".UnsetEnforcedVertexWithPoint(" << theFaceEntry << ", " << theVertexEntry
-//        << ")";
-//
-//  MESSAGE("IDL : UnsetEnforcedVertexEntryWithPoint END ENTRY : " << theFaceEntry);
-//  return ret;
-//}
-
-bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVerticesEntry(const char* theFaceEntry) throw (SALOME::SALOME_Exception) {
+bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVerticesEntry(const char* theFaceEntry) throw (SALOME::SALOME_Exception)
+{
   ASSERT(myBaseImpl);
-  MESSAGE("IDL : UnsetEnforcedVerticesEntry(" << theFaceEntry << ")");
 
   try {
     this->GetImpl()->ClearEnforcedVertices(theFaceEntry);
-    SMESH::TPythonDump() << _this() << ".UnsetEnforcedVertices(" << theFaceEntry << ")";
+    SMESH::TPythonDump() << _this() << ".RemoveEnforcedVertices()";
   } catch (const std::invalid_argument& ex) {
     return false;
   } catch (const std::exception& ex) {
     THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
   }
 
-  MESSAGE("IDL : UnsetEnforcedVerticesEntry END ENTRY : " << theFaceEntry);
   return true;
 }
 
@@ -3208,8 +3341,8 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVerticesEntry(const char* theFaceEn
  *  Set true or false
  */
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexAllFaces(CORBA::Boolean theValue) {
-  MESSAGE("BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexAllFaces");
+void BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexAllFaces(CORBA::Boolean theValue)
+{
   ASSERT(myBaseImpl);
   this->GetImpl()->SetInternalEnforcedVertexAllFaces(theValue);
   std::string theValueStr = theValue ? "True" : "False";
@@ -3223,8 +3356,8 @@ void BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexAllFaces(CORBA::Boolean
  *  Get true or false
  */
 //=============================================================================
-CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertexAllFaces() {
-  MESSAGE("BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertexAllFaces");
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertexAllFaces()
+{
   ASSERT(myBaseImpl);
   return this->GetImpl()->_GetInternalEnforcedVertexAllFaces();
 }
@@ -3236,8 +3369,8 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertexAllFaces() {
  *  Set group name
  */
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexAllFacesGroup(const char*  groupName) {
-  MESSAGE("BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexAllFacesGroup");
+void BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexAllFacesGroup(const char*  groupName)
+{
   ASSERT(myBaseImpl);
   this->GetImpl()->SetInternalEnforcedVertexAllFacesGroup(groupName);
   SMESH::TPythonDump() << _this() << ".SetInternalEnforcedVertexAllFacesGroup( \"" << groupName << "\" )";
@@ -3250,8 +3383,8 @@ void BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexAllFacesGroup(const cha
  *  Get group name
  */
 //=============================================================================
-char* BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertexAllFacesGroup() {
-  MESSAGE("BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertexAllFacesGroup");
+char* BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertexAllFacesGroup()
+{
   ASSERT(myBaseImpl);
   return CORBA::string_dup(this->GetImpl()->_GetInternalEnforcedVertexAllFacesGroup().c_str());
 }

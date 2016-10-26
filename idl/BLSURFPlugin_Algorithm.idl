@@ -579,6 +579,7 @@ module BLSURFPlugin
    /*!
     * Set/get/unset an enforced vertex on geom face
     */
+    // OBSOLETE
     boolean SetEnforcedVertex(in GEOM::GEOM_Object theFace, in double x, in double y, in double z) raises (SALOME::SALOME_Exception);
     boolean SetEnforcedVertexNamed(in GEOM::GEOM_Object theFace, in double x, in double y, in double z, in TEnfName theVertexName) raises (SALOME::SALOME_Exception);
     boolean SetEnforcedVertexGeom(in GEOM::GEOM_Object theFace, in GEOM::GEOM_Object theVertex) raises (SALOME::SALOME_Exception);
@@ -586,17 +587,27 @@ module BLSURFPlugin
     boolean SetEnforcedVertexNamedWithGroup(in GEOM::GEOM_Object theFace, in double x, in double y, in double z, in TEnfName theVertexName, in TEnfGroupName groupName) raises (SALOME::SALOME_Exception);
     boolean SetEnforcedVertexGeomWithGroup(in GEOM::GEOM_Object theFace, in GEOM::GEOM_Object theVertex, in TEnfGroupName groupName) raises (SALOME::SALOME_Exception);
 
-    
     TEnfVertexList GetEnforcedVertices(in GEOM::GEOM_Object theFace) raises (SALOME::SALOME_Exception);
-    
     boolean UnsetEnforcedVertex(in GEOM::GEOM_Object theFace, in double x, in double y, in double z) raises (SALOME::SALOME_Exception);
     boolean UnsetEnforcedVertexGeom(in GEOM::GEOM_Object theFace, in GEOM::GEOM_Object theVertex) raises (SALOME::SALOME_Exception);
     boolean UnsetEnforcedVertices(in GEOM::GEOM_Object theFace) raises (SALOME::SALOME_Exception);
     
-   /*!
-    * Set/get/unset an enforced vertex on geom face given by entry
-    */
-    boolean SetEnforcedVertexEntry(in TEntry theFaceEntry, in double x, in double y, in double z, 
+    // NEW - no face
+    boolean AddEnforcedVertex(in double x, in double y, in double z) raises (SALOME::SALOME_Exception);
+    boolean AddEnforcedVertexNamed(in double x, in double y, in double z, in TEnfName theVertexName) raises (SALOME::SALOME_Exception);
+    boolean AddEnforcedVertexGeom(in GEOM::GEOM_Object theVertex) raises (SALOME::SALOME_Exception);
+    boolean AddEnforcedVertexWithGroup(in double x, in double y, in double z, in TEnfGroupName groupName) raises (SALOME::SALOME_Exception);
+    boolean AddEnforcedVertexNamedWithGroup(in double x, in double y, in double z, in TEnfName theVertexName, in TEnfGroupName groupName) raises (SALOME::SALOME_Exception);
+    boolean AddEnforcedVertexGeomWithGroup(in GEOM::GEOM_Object theVertex, in TEnfGroupName groupName) raises (SALOME::SALOME_Exception);
+
+    boolean RemoveEnforcedVertex(in double x, in double y, in double z) raises (SALOME::SALOME_Exception);
+    boolean RemoveEnforcedVertexGeom(in GEOM::GEOM_Object theVertex) raises (SALOME::SALOME_Exception);
+    boolean RemoveEnforcedVertices() raises (SALOME::SALOME_Exception);
+
+    /*!
+     * Set/get/unset an enforced vertex on geom face given by entry
+     */
+    boolean SetEnforcedVertexEntry(in TEntry theFaceEntry, in double x, in double y, in double z,
                                    in TEnfName theVertexName, in TEntry theVertexEntry, in TEnfGroupName groupName) raises (SALOME::SALOME_Exception);
 
     TEnfVertexList GetEnforcedVerticesEntry(in TEntry theFaceEntry) raises (SALOME::SALOME_Exception);

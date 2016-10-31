@@ -163,6 +163,9 @@ public:
   void SetTags( const char* howToTreat ) throw (SALOME::SALOME_Exception);
   char* GetTags();
 
+  void SetHyperPatches(const BLSURFPlugin::THyperPatchList& hpl);
+  BLSURFPlugin::THyperPatchList* GetHyperPatches();
+
   void SetPreCADMergeEdges(CORBA::Boolean theValue);
   CORBA::Boolean GetPreCADMergeEdges();
 

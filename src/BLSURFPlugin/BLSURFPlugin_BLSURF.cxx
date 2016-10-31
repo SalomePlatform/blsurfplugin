@@ -1940,10 +1940,6 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
       f.Orientation(TopAbs_FORWARD);
 
     iface = fmap.Add(f);
-//    std::string aFileName = "fmap_face_";
-//    aFileName.append(val_to_string(iface));
-//    aFileName.append(".brep");
-//    BRepTools::Write(f,aFileName.c_str());
 
     surfaces.push_back(BRep_Tool::Surface(f));
 
@@ -1961,7 +1957,8 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
 
     /* by default a face has no tag (color).
        The following call sets it to the same value as the Geom module ID : */
-    const int faceTag = meshDS->ShapeToIndex(f);
+    int faceTag = meshDS->ShapeToIndex(f);
+    faceTag = BLSURFPlugin_Hypothesis::GetHyperPatchTag( faceTag, _hypothesis );
     cad_face_set_tag(fce, faceTag);
 
     /* Set face orientation (optional if you want a well oriented output mesh)*/
@@ -2127,11 +2124,6 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
       if (ic <= 0)
         ic = emap.Add(e);
 
-//      std::string aFileName = "fmap_edge_";
-//      aFileName.append(val_to_string(ic));
-//      aFileName.append(".brep");
-//      BRepTools::Write(e,aFileName.c_str());
-
       double tmin,tmax;
       curves.push_back(BRep_Tool::CurveOnSurface(e, f, tmin, tmax));
 
@@ -2198,7 +2190,25 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
 
       /* by default an edge has no tag (color).
          The following call sets it to the same value as the edge_id : */
-      cad_edge_set_tag(edg, ic);
+      // IMP23368. Do not set tag to an EDGE shared by FACEs of a hyper-patch
+      bool isInHyperPatch = false;
+      {
+        std::set< int > faceTags;
+        PShapeIteratorPtr faceIf = helper.GetAncestors( e, aMesh, TopAbs_FACE );
+        while ( const TopoDS_Shape* face = faceIf->next() )
+          if ( helper.IsSubShape( *face, aShape ))
+          {
+            int faceTag = meshDS->ShapeToIndex( *face );
+            int hpTag   = BLSURFPlugin_Hypothesis::GetHyperPatchTag( faceTag, _hypothesis );
+            if ( !faceTags.insert( hpTag ).second )
+            {
+              isInHyperPatch = true;
+              break;
+            }
+          }
+      }
+      if ( !isInHyperPatch )
+        cad_edge_set_tag(edg, ic);
 
       /* by default, an edge does not necessalry appear in the resulting mesh,
          unless the following property is set :
@@ -2800,8 +2810,17 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     SMESH_subMesh* sm = aMesh.GetSubMesh( f );
     if ( !sm->GetSubMeshDS() || sm->GetSubMeshDS()->NbElements() == 0 )
     {
-      sm->GetComputeError().reset( new SMESH_ComputeError( err, _comment, this ));
-      badFaceFound = true;
+      int faceTag = sm->GetId();
+      if ( faceTag != BLSURFPlugin_Hypothesis::GetHyperPatchTag( faceTag, _hypothesis ))
+      {
+        // triangles are assigned to the first face of hyper-patch
+        sm->SetIsAlwaysComputed( true );
+      }
+      else
+      {
+        sm->GetComputeError().reset( new SMESH_ComputeError( err, _comment, this ));
+        badFaceFound = true;
+      }
     }
   }
   if ( err == COMPERR_WARNING )

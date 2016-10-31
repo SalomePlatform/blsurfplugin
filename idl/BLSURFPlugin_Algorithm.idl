@@ -119,6 +119,10 @@ module BLSURFPlugin
   };
   
   typedef sequence<TPreCadPeriodicity> TPeriodicityList;
+
+  // Hyper-patches
+  typedef sequence<long> THyperPatch;
+  typedef sequence<THyperPatch> THyperPatchList;
   
   /*!
    * BLSURFPlugin_BLSURF: interface of BLSURF algorithm
@@ -429,6 +433,12 @@ module BLSURFPlugin
      */
     void SetTags( in string howToTreat ) raises (SALOME::SALOME_Exception);
     string GetTags();
+
+    /*!
+     * Set hyper-patches
+     */
+    void SetHyperPatches(in THyperPatchList hpl);
+    THyperPatchList GetHyperPatches();
 
     /*!
      * To merges edges.

@@ -1060,6 +1060,51 @@ char* BLSURFPlugin_Hypothesis_i::GetTags()
 }
 
 //=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetHyperPatches(const BLSURFPlugin::THyperPatchList& hpl)
+{
+  ::BLSURFPlugin_Hypothesis::THyperPatchList patchList( hpl.length() );
+  SMESH_Comment hplDump;
+  hplDump << "[";
+  for ( size_t i = 0; i < patchList.size(); ++i )
+  {
+    hplDump << "[ ";
+    BLSURFPlugin::THyperPatch tags = hpl[ i ];
+    for ( CORBA::ULong j = 0; j < tags.length(); ++j )
+    {
+      patchList[ i ].insert( tags[ j ]);
+      hplDump << tags[ j ] << ( j+1 < tags.length() ? ", " : " ]" );
+    }
+    hplDump << ( i+1 < patchList.size() ? "," : "]");
+  }
+  if ( GetImpl()->GetHyperPatches() != patchList )
+  {
+    GetImpl()->SetHyperPatches( patchList );
+    SMESH::TPythonDump() << _this() << ".SetHyperPatches( " << hplDump << " )";
+  }
+}
+
+//=============================================================================
+BLSURFPlugin::THyperPatchList* BLSURFPlugin_Hypothesis_i::GetHyperPatches()
+{
+  const ::BLSURFPlugin_Hypothesis::THyperPatchList& hpl = GetImpl()->GetHyperPatches();
+  BLSURFPlugin::THyperPatchList* resHpl = new BLSURFPlugin::THyperPatchList();
+  resHpl->length( hpl.size() );
+
+  ::BLSURFPlugin_Hypothesis::THyperPatchList::const_iterator hpIt = hpl.begin();
+  for ( int i = 0; hpIt != hpl.end(); ++hpIt, ++i )
+  {
+    const ::BLSURFPlugin_Hypothesis::THyperPatchTags& hp = *hpIt;
+    BLSURFPlugin::THyperPatch& resHp = (*resHpl)[ i ];
+    resHp.length( hp.size() );
+
+    ::BLSURFPlugin_Hypothesis::THyperPatchTags::const_iterator tag = hp.begin();
+    for ( int j = 0; tag != hp.end(); ++tag, ++j )
+      resHp[ j ] = *tag;
+  }
+  return resHpl;
+}
+
+//=============================================================================
 /*!
  *  BLSURFPlugin_Hypothesis_i::SetPreCADMergeEdges
  *

@@ -27,58 +27,54 @@
 #include "BLSURFPluginGUI_HypothesisCreator.h"
 #include "BLSURFPluginGUI_Dlg.h"
 
-#include "GeometryGUI.h"
+#include <GeometryGUI.h>
 
-#include <SMESHGUI_Utils.h>
-#include <SMESHGUI_HypothesesUtils.h>
 #include <SMESHGUI_Dialog.h>
-#include "SMESHGUI_SpinBox.h"
-#include "SMESH_NumberFilter.hxx"
+#include <SMESHGUI_HypothesesUtils.h>
+#include <SMESHGUI_IdValidator.h>
+#include <SMESHGUI_SpinBox.h>
+#include <SMESHGUI_Utils.h>
+#include <SMESH_Gen_i.hxx>
+#include <SMESH_NumberFilter.hxx>
+#include <StdMeshersGUI_SubShapeSelectorWdg.h>
 
-#include <SUIT_Session.h>
+#include <LightApp_SelectionMgr.h>
+#include <SALOME_ListIO.hxx>
 #include <SUIT_MessageBox.h>
 #include <SUIT_ResourceMgr.h>
+#include <SUIT_Session.h>
+#include <SalomeApp_Application.h>
 #include <SalomeApp_Tools.h>
 
 #include <QApplication>
 #include <QCheckBox>
 #include <QComboBox>
 #include <QFrame>
-#include <QHBoxLayout>
-#include <QHeaderView>
 #include <QGridLayout>
 #include <QGroupBox>
+#include <QHBoxLayout>
+#include <QHeaderView>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMenu>
+#include <QModelIndexList>
 #include <QObject>
 #include <QPushButton>
 #include <QRadioButton>
 #include <QSpinBox>
-#include <QTableWidget>
-#include <QTabWidget>
-#include <QVBoxLayout>
 #include <QSplitter>
-
-#include <QStandardItemModel>
 #include <QStandardItem>
+#include <QStandardItemModel>
+#include <QTabWidget>
+#include <QTableWidget>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
-#include <QModelIndexList>
-
-#include <LightApp_SelectionMgr.h>
-#include <SalomeApp_Application.h>
-#include <SALOME_ListIO.hxx>
-#include "SALOME_LifeCycleCORBA.hxx"
+#include <QVBoxLayout>
 
 #include <TopoDS_Shape.hxx>
 #include <TopoDS_Iterator.hxx>
-#include <SMESH_Gen_i.hxx>
-#include <boost/shared_ptr.hpp>
-#include <boost/algorithm/string.hpp>
-#include <structmember.h>
-#include <stdexcept>
-#include <algorithm>
+
+#include <structmember.h> // Python
 
 using namespace std;
 
@@ -88,6 +84,7 @@ enum {
   SMP_TAB,
   ENF_TAB,
   PERIODICITY_TAB,
+  HYPERPATCH_TAB,
   SMP_NAME_COLUMN =0,
   SMP_SIZEMAP_COLUMN,
   SMP_ENTRY_COLUMN,
@@ -650,9 +647,7 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams(QString& msg) const
 QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 {
   QFrame* fr = new QFrame( 0 );
- // fr-> setMinimumSize(600,400);
   QVBoxLayout* lay = new QVBoxLayout( fr );
- // lay->setSizeConstraint(QLayout::SetDefaultConstraint);
   lay->setMargin( 5 );
   lay->setSpacing( 0 );
 
@@ -681,14 +676,11 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   }
   aStdLayout->addWidget( myStdWidget,                                   row++, 0, 1, 4 );
   
-  //int maxrow = row;
   row = 0;
   if( isCreation() )
     row = 1;
-//   row = max(row,maxrow)+1;
   aStdLayout->setRowStretch(row,1);
   aStdLayout->setColumnStretch(1,1);
-  //maxrow = row;
 
   
   // advanced parameters
@@ -697,14 +689,12 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   anAdvLayout->setSpacing( 6 );
   anAdvLayout->setMargin( 11 );  
   myAdvWidget = new BLSURFPluginGUI_AdvWidget(myAdvGroup);
-  //myAdvWidget->addBtn->setMenu( new QMenu() );
   anAdvLayout->addWidget( myAdvWidget );
 
 
   // Size Maps parameters
 
   mySmpGroup = new QWidget();
-//   mySmpGroup->setMinimumWidth(500);
 
   //Layout
   QGridLayout* anSmpLayout = new QGridLayout(mySmpGroup);
@@ -837,10 +827,6 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   // Enforced vertices parameters
   myEnfGroup = new QWidget();
   QGridLayout* anEnfLayout = new QGridLayout(myEnfGroup);
-//
-//   myEnforcedVertexWidget = new DlgBlSurfHyp_Enforced(myEnfGroup);
-//   anEnfLayout->addWidget(myEnforcedVertexWidget);
-//   myEnforcedVertexWidget = new DlgBlSurfHyp_Enforced();
 
   myEnforcedTreeWidget = new QTreeWidget(myEnfGroup);
   myEnforcedTreeWidget->setColumnCount( ENF_VER_NB_COLUMNS );
@@ -869,7 +855,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   myEnforcedTreeWidget->hideColumn(ENF_VER_ENTRY_COLUMN);
   myEnforcedTreeWidget->setItemDelegate(new EnforcedTreeWidgetDelegate());
   
-// FACE AND VERTEX SELECTION
+  // FACE AND VERTEX SELECTION
   TColStd_MapOfInteger shapeTypes1, shapeTypes2;
   shapeTypes1.Add( TopAbs_FACE );
   shapeTypes1.Add( TopAbs_COMPOUND );
@@ -909,9 +895,6 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   QLabel* myInternalEnforcedVerticesAllFacesGroupLabel = new QLabel( tr( "BLSURF_ENF_VER_GROUP_LABEL" ), myEnfGroup );
   myInternalEnforcedVerticesAllFacesGroup = new QLineEdit(myEnfGroup);
 
-//   myGlobalGroupName = new QCheckBox(tr("BLSURF_ENF_VER_GROUPS"), myEnfGroup);
-//   myGlobalGroupName->setChecked(false);
-
   anEnfLayout->addWidget(myEnforcedTreeWidget,     0, 0, ENF_VER_NB_LINES, 1);
   QGridLayout* anEnfLayout2 = new QGridLayout(myEnfGroup);
 //  FACE AND VERTEX SELECTION
@@ -925,17 +908,13 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   anEnfLayout2->addWidget(myZCoord,                 ENF_VER_Z_COORD, 1, 1, 1);
   anEnfLayout2->addWidget(myGroupNameLabel,         ENF_VER_GROUP, 0, 1, 1);
   anEnfLayout2->addWidget(myGroupName,              ENF_VER_GROUP, 1, 1, 1);
-//   anEnfLayout2->addWidget(myGlobalGroupName,        ENF_VER_GROUP_CHECK, 0, 1, 2);
-//   anEnfLayout2->setRowStretch(                      ENF_VER_SPACE, 1);
   anEnfLayout2->addWidget(addVertexButton,          ENF_VER_BTN, 0, 1, 1);
   anEnfLayout2->addWidget(removeVertexButton,       ENF_VER_BTN, 1, 1, 1);
   anEnfLayout2->addWidget(myInternalEnforcedVerticesAllFaces, ENF_VER_INTERNAL_ALL_FACES, 0, 1, 2);
   anEnfLayout2->addWidget(myInternalEnforcedVerticesAllFacesGroupLabel, ENF_VER_INTERNAL_ALL_FACES_GROUP, 0, 1, 1);
   anEnfLayout2->addWidget(myInternalEnforcedVerticesAllFacesGroup, ENF_VER_INTERNAL_ALL_FACES_GROUP, 1, 1, 1);
   anEnfLayout2->setRowStretch(ENF_VER_NB_LINES+1, 1);
-//   anEnfLayout2->addWidget(makeGroupsCheck,          ENF_VER_GROUP_CHECK, 0, 1, 2);
   anEnfLayout->addLayout(anEnfLayout2, 0,1,ENF_VER_NB_LINES+1,2);
-//   anEnfLayout->setRowStretch(1, 1);
 
   // ---
   // Periodicity parameters
@@ -1128,12 +1107,49 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   myPeriodicitySelectionWidgets.append(myPeriodicityP3TargetWdg);
   avoidSimultaneousSelection(myPeriodicitySelectionWidgets);
 
+  // HyperPatch parameters
+
+  QWidget*      hpGroup = new QWidget();
+  QGridLayout* hpLayout = new QGridLayout(hpGroup);
+
+  myHyPatchTable = new QTableWidget( hpGroup );
+  myHyPatchTable->setColumnCount(1);
+  myHyPatchTable->setHorizontalHeaderLabels( QStringList() << tr("BLSURF_HYPATCH_TBL_HEADER") );
+  myHyPatchTable->setAlternatingRowColors(true);
+  myHyPatchTable->horizontalHeader()->setSectionResizeMode( 0, QHeaderView::Stretch );
+
+
+  QPixmap iconSelect (SUIT_Session::session()->resourceMgr()->loadPixmap("SMESH", tr("ICON_SELECT")));
+  myHyPatchFaceSelBtn  = new QPushButton( iconSelect, tr("BLSURF_HYPATCH_SEL_FACE"), hpGroup );
+  myHyPatchGroupSelBtn = new QPushButton( iconSelect, tr("BLSURF_HYPATCH_SEL_GROUP"), hpGroup );
+  myHyPatchFaceSelBtn->setCheckable( true );
+  myHyPatchGroupSelBtn->setCheckable( true );
+
+  myHyPatchFaceSelector = new StdMeshersGUI_SubShapeSelectorWdg( hpGroup, TopAbs_FACE, /*toShowList=*/false );
+
+  QLabel* hpTagsLbl = new QLabel( tr("BLSURF_TAGS"), hpGroup );
+  myHyPatchTagsLE   = new QLineEdit( hpGroup );
+  myHyPatchTagsLE->setValidator( new SMESHGUI_IdValidator( hpGroup ));
+
+  QPushButton* hpAddBtn = new QPushButton( tr("BLSURF_SM_ADD"), hpGroup );
+  QPushButton* hpRemBtn = new QPushButton( tr("BLSURF_SM_REMOVE"), hpGroup );
+
+  hpLayout->addWidget( myHyPatchTable,        0, 0, 5, 1 );
+  hpLayout->addWidget( myHyPatchFaceSelBtn,   0, 1, 1, 2 );
+  hpLayout->addWidget( myHyPatchGroupSelBtn,  0, 3, 1, 2 );
+  hpLayout->addWidget( hpTagsLbl,             1, 1, 1, 1 );
+  hpLayout->addWidget( myHyPatchTagsLE,       1, 2, 1, 3 );
+  hpLayout->addWidget( hpAddBtn,              2, 1, 1, 2 );
+  hpLayout->addWidget( hpRemBtn,              2, 3, 1, 2 );
+  hpLayout->addWidget( myHyPatchFaceSelector, 3, 1, 1, 4 );
+
   // ---
   myTabWidget->insertTab( STD_TAB, myStdGroup, tr( "SMESH_ARGUMENTS" ) );
   myTabWidget->insertTab( ADV_TAB, myAdvGroup, tr( "BLSURF_ADV_ARGS" ) );
   myTabWidget->insertTab( SMP_TAB, mySmpGroup, tr( "LOCAL_SIZE" ) );
   myTabWidget->insertTab( ENF_TAB, myEnfGroup, tr( "BLSURF_ENF_VER" ) );
   myTabWidget->insertTab( PERIODICITY_TAB, myPeriodicityGroup, tr( "BLSURF_PERIODICITY" ) );
+  myTabWidget->insertTab( HYPERPATCH_TAB, hpGroup, tr( "BLSURF_HYPERPATCH_TAB" ));
 
   myTabWidget->setCurrentIndex( STD_TAB );
 
@@ -1144,12 +1160,10 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   connect( addMapButton,        SIGNAL( clicked()),                    this,         SLOT( onAddMap() ) );
   connect( removeMapButton,     SIGNAL( clicked()),                    this,         SLOT( onRemoveMap() ) );
   connect( modifyMapButton,     SIGNAL( clicked()),                    this,         SLOT( onModifyMap() ) );
-//   connect( mySizeMapTable,      SIGNAL( cellChanged ( int, int  )),    this,         SLOT( onSetSizeMap(int,int ) ) );
   connect( mySizeMapTable,      SIGNAL( itemClicked (QTreeWidgetItem *, int)),this,  SLOT( onSmpItemClicked(QTreeWidgetItem *, int) ) );
   connect( myGeomSelWdg2,       SIGNAL( contentModified() ),           this,         SLOT( onMapGeomContentModified() ) );
   connect( myGeomSelWdg1,       SIGNAL( contentModified() ),           this,         SLOT( onMapGeomContentModified() ) );
   connect( myAttSelWdg,         SIGNAL( contentModified() ),           this,         SLOT( onMapGeomContentModified() ) );
-//   connect( myAttractorGroup,    SIGNAL( clicked(bool) ),               this,         SLOT( onAttractorGroupClicked(bool) ) );
   connect( mySizeMapTable,      SIGNAL( itemChanged (QTreeWidgetItem *, int)),this,  SLOT( onSetSizeMap(QTreeWidgetItem *, int) ) );
   connect( myAttractorCheck,    SIGNAL( stateChanged ( int )),         this,         SLOT( onAttractorClicked( int ) ) );
   connect( myConstSizeCheck,    SIGNAL( stateChanged ( int )),         this,         SLOT( onConstSizeClicked( int ) ) );
@@ -1159,14 +1173,11 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   // Enforced vertices
   connect( myEnforcedTreeWidget,SIGNAL( itemClicked(QTreeWidgetItem *, int)), this,  SLOT( synchronizeCoords() ) );
   connect( myEnforcedTreeWidget,SIGNAL( itemChanged(QTreeWidgetItem *, int)), this,  SLOT( updateEnforcedVertexValues(QTreeWidgetItem *, int) ) );
-//   connect( myEnforcedTreeWidget,SIGNAL( itemChanged(QTreeWidgetItem *, int)), this,  SLOT( update(QTreeWidgetItem *, int) ) );
   connect( myEnforcedTreeWidget,SIGNAL( itemSelectionChanged() ),      this,         SLOT( synchronizeCoords() ) );
   connect( addVertexButton,     SIGNAL( clicked()),                    this,         SLOT( onAddEnforcedVertices() ) );
   connect( removeVertexButton,  SIGNAL( clicked()),                    this,         SLOT( onRemoveEnforcedVertex() ) );
   connect( myEnfVertexWdg,      SIGNAL( contentModified()),            this,         SLOT( onSelectEnforcedVertex() ) );
   connect( myInternalEnforcedVerticesAllFaces, SIGNAL( stateChanged ( int )), this,  SLOT( onInternalVerticesClicked( int ) ) );
-//   connect( myEnfVertexWdg,     SIGNAL( selectionActivated()),         this,         SLOT( onVertexSelectionActivated() ) );
-//   connect( myEnfFaceWdg,       SIGNAL( selectionActivated()),         this,         SLOT( onFaceSelectionActivated() ) );
 
   // Periodicity
   connect( myPeriodicityAddButton,     SIGNAL( clicked()),                    this,   SLOT( onAddPeriodicity() ) );
@@ -1176,17 +1187,24 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 
   ListOfWidgets::const_iterator anIt = myPeriodicitySelectionWidgets.begin();
   for (; anIt != myPeriodicitySelectionWidgets.end(); anIt++)
-    {
-      StdMeshersGUI_ObjectReferenceParamWdg * w1 = ( StdMeshersGUI_ObjectReferenceParamWdg* ) ( *anIt );
-      connect( w1,     SIGNAL(contentModified ()),                 this,   SLOT(onPeriodicityContentModified()));
+  {
+    StdMeshersGUI_ObjectReferenceParamWdg * w1 = ( StdMeshersGUI_ObjectReferenceParamWdg* ) ( *anIt );
+    connect( w1,     SIGNAL(contentModified ()),                 this,   SLOT(onPeriodicityContentModified()));
 
-    }
-//  connect( myPeriodicitySourceFaceWdg,     SIGNAL(contentModified()),    this,   SLOT(onPeriodicityContentModified()));
+  }
+
+  // HyperPatch
+  connect( myHyPatchFaceSelBtn,   SIGNAL( toggled(bool) ),   SLOT( onHyPatchFaceSelection(bool) ));
+  connect( myHyPatchGroupSelBtn,  SIGNAL( toggled(bool) ),   SLOT( onHyPatchGroupSelection(bool) ));
+  connect( myHyPatchFaceSelector, SIGNAL( shapeSelected() ), SLOT( onHyPatchSelectionChanged()));
+  connect( hpAddBtn,              SIGNAL( clicked() ),       SLOT( onHyPatchAdd()));
+  connect( hpRemBtn,              SIGNAL( clicked() ),       SLOT( onHyPatchRemove()));
+
   return fr;
 }
 
 /** BLSURFPluginGUI_HypothesisCreator::deactivateSelection(QWidget*, QWidget*)
-This method stop the selection of the widgets StdMeshersGUI_ObjectReferenceParamWdg
+    This method stop the selection of the widgets StdMeshersGUI_ObjectReferenceParamWdg
 */
 // void BLSURFPluginGUI_HypothesisCreator::deactivateSelection(QWidget* old, QWidget* now)
 // {
@@ -1215,12 +1233,12 @@ void BLSURFPluginGUI_HypothesisCreator::clearEnforcedVertexWidgets()
   myXCoord->setText("");
   myYCoord->setText("");
   myZCoord->setText("");
-//   myGroupName->setText("");
+  //   myGroupName->setText("");
 }
 
 /** BLSURFPluginGUI_HypothesisCreator::updateEnforcedVertexValues(item, column)
-This method updates the tooltip of a modified item. The QLineEdit widgets content
-is synchronized with the coordinates of the enforced vertex clicked in the tree widget.
+    This method updates the tooltip of a modified item. The QLineEdit widgets content
+    is synchronized with the coordinates of the enforced vertex clicked in the tree widget.
 */
 void BLSURFPluginGUI_HypothesisCreator::updateEnforcedVertexValues(QTreeWidgetItem* item, int column) {
   QVariant vertexName = item->data(ENF_VER_NAME_COLUMN, Qt::EditRole);
@@ -1418,42 +1436,26 @@ void BLSURFPluginGUI_HypothesisCreator::addEnforcedVertex(double x, double y, do
 /** BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices()
 This method is called when a item is added into the enforced vertices tree widget
 */
-void BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices() {
-
+void BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices()
+{
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
 
   getGeomSelectionTool()->selectionMgr()->clearFilters();
-  //myEnfFaceWdg->deactivateSelection();
   myEnfVertexWdg->deactivateSelection();
 
   for (int column = 0; column < myEnforcedTreeWidget->columnCount(); ++column)
     myEnforcedTreeWidget->resizeColumnToContents(column);
 
   // Vertex selection
-  //int selEnfFace   = myEnfFaceWdg->NbObjects();
   int selEnfVertex = myEnfVertexWdg->NbObjects();
   bool coordsEmpty = (myXCoord->text().isEmpty()) || (myYCoord->text().isEmpty()) || (myZCoord->text().isEmpty());
-
-  // if (selEnfFace == 0)
-  //   return;
 
   if ((selEnfVertex == 0) && coordsEmpty)
     return;
 
   string entry, shapeName;
-
-  //for (int i = 0 ; i < selEnfVertex + !coordsEmpty; i++)
   {
-    //myEnfFace = myEnfFaceWdg->GetObject< GEOM::GEOM_Object >(i);
-    //entry = myEnfFace->GetStudyEntry();
-    //shapeName = myEnfFace->GetName();
-    
-    //QTreeWidgetItem * faceItem = addEnforcedFace(entry, shapeName);
-    
-    std::string groupName = myGroupName->text().toStdString();
-
-    if (boost::trim_copy(groupName).empty())
-      groupName = "";
+    std::string groupName = myGroupName->text().simplified().toStdString();
 
     if (selEnfVertex <= 1)
     {
@@ -1493,7 +1495,6 @@ void BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices() {
     }
   }
 
-  //myEnfFaceWdg->SetObject(GEOM::GEOM_Object::_nil());
   myEnfVertexWdg->SetObject(GEOM::GEOM_Object::_nil());
   
   for (int column = 0; column < myEnforcedTreeWidget->columnCount(); ++column)
@@ -1882,7 +1883,7 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
     else
     {
       item->setData(SMP_SIZEMAP_COLUMN, Qt::EditRole, QVariant( sizeMap ) );
-    } 
+    }
   }
   mySizeMapTable->resizeColumnToContents( SMP_ENTRY_COLUMN );
   mySizeMapTable->resizeColumnToContents( SMP_NAME_COLUMN );
@@ -1894,7 +1895,7 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
   for ( ; evmIt != data.faceEntryEnfVertexListMap.end() ; ++evmIt) {
     TEntry entry = (*evmIt).first;
     std::string shapeName = myGeomToolSelected->getNameFromEntry(entry);
-    
+
     //QTreeWidgetItem* faceItem = that->addEnforcedFace(entry, shapeName);
 
     TEnfVertexList evs = (*evmIt).second;
@@ -1912,7 +1913,7 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
       that->addEnforcedVertex(x, y, z, enfVertex->name, enfVertex->geomEntry, enfVertex->grpName);
     }
   }
-  
+
   for (int column = 0; column < myEnforcedTreeWidget->columnCount(); ++column)
     myEnforcedTreeWidget->resizeColumnToContents(column);
 
@@ -1922,22 +1923,25 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
 
   // Periodicity
 
-
   // Add an item in the tree widget for each association
   for (size_t i=0 ; i<data.preCadPeriodicityVector.size() ; i++)
+  {
+    QTreeWidgetItem* item = new QTreeWidgetItem();
+    myPeriodicityTreeWidget->addTopLevelItem(item);
+    item->setFlags( Qt::ItemIsSelectable   |Qt::ItemIsEnabled );
+    TPreCadPeriodicity periodicity_i = data.preCadPeriodicityVector[i];
+    for (size_t k=0; k<periodicity_i.size(); k++)
     {
-      QTreeWidgetItem* item = new QTreeWidgetItem();
-      myPeriodicityTreeWidget->addTopLevelItem(item);
-      item->setFlags( Qt::ItemIsSelectable   |Qt::ItemIsEnabled );
-      TPreCadPeriodicity periodicity_i = data.preCadPeriodicityVector[i];
-      for (size_t k=0; k<periodicity_i.size(); k++)
-        {
-          string shapeEntry = periodicity_i[k];
-          string shapeName = myGeomToolSelected->getNameFromEntry(shapeEntry);
-          item->setData(k, Qt::EditRole, shapeName.c_str() );
-          item->setData(k, Qt::UserRole, shapeEntry.c_str() );
-        }
+      string shapeEntry = periodicity_i[k];
+      string shapeName = myGeomToolSelected->getNameFromEntry(shapeEntry);
+      item->setData(k, Qt::EditRole, shapeName.c_str() );
+      item->setData(k, Qt::UserRole, shapeEntry.c_str() );
     }
+  }
+
+  // Hyper patches
+  for ( int i = 0; i < data.hyperpatches.size(); ++i )
+    that->addHyPatchToTable( data.hyperpatches[i] );
 
   // update widgets
   that->myStdWidget->onPhysicalMeshChanged();
@@ -2138,6 +2142,21 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
 
   BLSURFPlugin::TPeriodicityList_var preCadEdgePeriodicityVector = h->GetPreCadEdgesPeriodicityVector();
   AddPreCadSequenceToVector(h_data, preCadEdgePeriodicityVector, false);
+
+  // Hyper Patches
+
+  h_data.hyperpatches.clear();
+  BLSURFPlugin::THyperPatchList_var patchList = h->GetHyperPatches();
+  for ( CORBA::ULong i = 0; i < patchList->length(); ++i )
+  {
+    QString tags;
+    BLSURFPlugin::THyperPatch& patch = patchList[i];
+    for ( CORBA::ULong j = 0; j < patch.length(); ++j )
+      tags += QString::number( patch[j] ) + " ";
+    if ( !tags.isEmpty() )
+      h_data.hyperpatches.append( tags );
+  }
+
   return true;
 }
 
@@ -2266,7 +2285,7 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
       h->SetOptimizeMesh( h_data.myOptimizeMesh );    
     
     if ( h->GetQuadraticMesh() != h_data.myQuadraticMesh )
-      h->SetQuadraticMesh( h_data.myQuadraticMesh );    
+      h->SetQuadraticMesh( h_data.myQuadraticMesh );
 
     if ( h->GetVerbosity() != h_data.myVerbosity )
       h->SetVerbosity( h_data.myVerbosity );
@@ -2282,10 +2301,10 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
     // options are set in checkParams()
     //h->SetOptionValues( myOptions ); // is set in readParamsFromWidgets()
     //h->SetPreCADOptionValues( myPreCADOptions ); // is set in readParamsFromWidgets()
-    
+
     if ( h->GetGMFFile() != h_data.myGMFFileName )
-//       || ( h->GetGMFFileMode() != h_data.myGMFFileMode ) )
-//       h->SetGMFFile( h_data.myGMFFileName.c_str(), h_data.myGMFFileMode );
+      //       || ( h->GetGMFFileMode() != h_data.myGMFFileMode ) )
+      //       h->SetGMFFile( h_data.myGMFFileName.c_str(), h_data.myGMFFileMode );
       h->SetGMFFile( h_data.myGMFFileName.c_str());
 
     BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
@@ -2302,7 +2321,7 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
         h->SetAttractorEntry( entry.toLatin1().constData(), sizeMap.toLatin1().constData());
       }
       else if (sizeMap.startsWith("def")) {
-//        h->SetCustomSizeMapEntry( entry.toLatin1().constData(), sizeMap.toLatin1().constData() );
+        //        h->SetCustomSizeMapEntry( entry.toLatin1().constData(), sizeMap.toLatin1().constData() );
       }
       else {
         if (!myATTMap[entry].empty()){
@@ -2340,13 +2359,13 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
     double x, y, z = 0;
     std::string enfName;
     /* TODO GROUPS
-    std::string groupName = "";
+       std::string groupName = "";
     */
 
     TFaceEntryEnfVertexListMap::const_iterator evmIt = h_data.faceEntryEnfVertexListMap.begin();
     // 1. Clear all enforced vertices in hypothesis
     // 2. Add new enforced vertex according to h_data
-    
+
     if ( h->GetAllEnforcedVertices()->length() > 0 )
       h->ClearAllEnforcedVertices();
     TEnfName faceEntry;
@@ -2377,65 +2396,73 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
 
     // Periodicity
     if ( h->GetPreCadFacesPeriodicityVector()->length() > 0 || h->GetPreCadEdgesPeriodicityVector()->length() > 0 )
-          h->ClearPreCadPeriodicityVectors();
+      h->ClearPreCadPeriodicityVectors();
 
     TPreCadPeriodicityVector::const_iterator pIt = h_data.preCadPeriodicityVector.begin();
     for ( ; pIt != h_data.preCadPeriodicityVector.end() ; ++pIt)
+    {
+      TPreCadPeriodicity periodicity_i = *pIt;
+      TEntry source = periodicity_i[PERIODICITY_OBJ_SOURCE_COLUMN];
+      TEntry target = periodicity_i[PERIODICITY_OBJ_TARGET_COLUMN];
+      TEntry p1Source = periodicity_i[PERIODICITY_P1_SOURCE_COLUMN];
+      TEntry p2Source = periodicity_i[PERIODICITY_P2_SOURCE_COLUMN];
+      TEntry p3Source = periodicity_i[PERIODICITY_P3_SOURCE_COLUMN];
+      TEntry p1Target = periodicity_i[PERIODICITY_P1_TARGET_COLUMN];
+      TEntry p2Target = periodicity_i[PERIODICITY_P2_TARGET_COLUMN];
+      TEntry p3Target = periodicity_i[PERIODICITY_P3_TARGET_COLUMN];
+      bool onFace = (periodicity_i[PERIODICITY_SHAPE_TYPE]=="1") ? true : false;
+
+      BLSURFPlugin::TEntryList_var sourceVertices = new BLSURFPlugin::TEntryList();
+      if (! p1Source.empty())
       {
-        TPreCadPeriodicity periodicity_i = *pIt;
-        TEntry source = periodicity_i[PERIODICITY_OBJ_SOURCE_COLUMN];
-        TEntry target = periodicity_i[PERIODICITY_OBJ_TARGET_COLUMN];
-        TEntry p1Source = periodicity_i[PERIODICITY_P1_SOURCE_COLUMN];
-        TEntry p2Source = periodicity_i[PERIODICITY_P2_SOURCE_COLUMN];
-        TEntry p3Source = periodicity_i[PERIODICITY_P3_SOURCE_COLUMN];
-        TEntry p1Target = periodicity_i[PERIODICITY_P1_TARGET_COLUMN];
-        TEntry p2Target = periodicity_i[PERIODICITY_P2_TARGET_COLUMN];
-        TEntry p3Target = periodicity_i[PERIODICITY_P3_TARGET_COLUMN];
-        bool onFace = (periodicity_i[PERIODICITY_SHAPE_TYPE]=="1") ? true : false;
-
-        BLSURFPlugin::TEntryList_var sourceVertices = new BLSURFPlugin::TEntryList();
-        if (! p1Source.empty())
-          {
-            sourceVertices->length(3);
-            sourceVertices[0]=CORBA::string_dup(p1Source.c_str());
-            sourceVertices[1]=CORBA::string_dup(p2Source.c_str());
-            sourceVertices[2]=CORBA::string_dup(p3Source.c_str());
-          }
-
-
-        BLSURFPlugin::TEntryList_var targetVertices = new BLSURFPlugin::TEntryList();
-        if (! p1Target.empty())
-          {
-            targetVertices->length(3);
-            targetVertices[0]=CORBA::string_dup(p1Target.c_str());
-            targetVertices[1]=CORBA::string_dup(p2Target.c_str());
-            targetVertices[2]=CORBA::string_dup(p3Target.c_str());
-          }
-
-        if (onFace)
-          h->AddPreCadFacesPeriodicityEntry(source.c_str(), target.c_str(), sourceVertices, targetVertices);
-        else
-          h->AddPreCadEdgesPeriodicityEntry(source.c_str(), target.c_str(), sourceVertices, targetVertices);
+        sourceVertices->length(3);
+        sourceVertices[0]=CORBA::string_dup(p1Source.c_str());
+        sourceVertices[1]=CORBA::string_dup(p2Source.c_str());
+        sourceVertices[2]=CORBA::string_dup(p3Source.c_str());
       }
 
 
+      BLSURFPlugin::TEntryList_var targetVertices = new BLSURFPlugin::TEntryList();
+      if (! p1Target.empty())
+      {
+        targetVertices->length(3);
+        targetVertices[0]=CORBA::string_dup(p1Target.c_str());
+        targetVertices[1]=CORBA::string_dup(p2Target.c_str());
+        targetVertices[2]=CORBA::string_dup(p3Target.c_str());
+      }
+
+      if (onFace)
+        h->AddPreCadFacesPeriodicityEntry(source.c_str(), target.c_str(), sourceVertices, targetVertices);
+      else
+        h->AddPreCadEdgesPeriodicityEntry(source.c_str(), target.c_str(), sourceVertices, targetVertices);
+    }
+
+    // Hyper-patches
+    BLSURFPlugin::THyperPatchList_var hpl = new BLSURFPlugin::THyperPatchList();
+    hpl->length( h_data.hyperpatches.size() );
+
+    for ( int i = 0; i < h_data.hyperpatches.size(); ++i )
+    {
+      QStringList tags = h_data.hyperpatches[i].split(" ",  QString::SkipEmptyParts);
+      BLSURFPlugin::THyperPatch& patch = hpl[ i ];
+      patch.length( tags.size() );
+
+      for ( int j = 0; j < tags.size(); ++j )
+        patch[ j ] = tags[ j ].toDouble();
+    }
+    h->SetHyperPatches( hpl );
+
 
   } // try
-  catch(const std::exception& ex) {
-    std::cout << "Exception: " << ex.what() << std::endl;
-    throw ex;
+  catch(...) {
+    ok = false;
   }
-//   catch(const SALOME::SALOME_Exception& ex)
-//   {
-//     throw ex;
-// //     SalomeApp_Tools::QtCatchCorbaException(ex);
-// //     ok = false;
-//   }
+
   return ok;
 }
 
 /** BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets(h_data)
-Stores the widgets content to the hypothesis data.
+    Stores the widgets content to the hypothesis data.
 */
 QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothesisData& h_data ) const
 {
@@ -2580,6 +2607,11 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
     guiHyp += "PERIODICITY = yes; ";
   }
 
+  // Hyper-patches
+  h_data.hyperpatches.clear();
+  for ( int row = 0; row < myHyPatchTable->rowCount(); ++row )
+    h_data.hyperpatches.append( myHyPatchTable->item( row, 0 )->text() );
+
   return guiHyp;
 }
 
@@ -2707,7 +2739,6 @@ void BLSURFPluginGUI_HypothesisCreator::onTabChanged(int tab)
     myGeomSelWdg1             ->deactivateSelection();
     myGeomSelWdg2             ->deactivateSelection();
     myAttSelWdg               ->deactivateSelection();
-    //myEnfFaceWdg              ->deactivateSelection();
     myEnfVertexWdg            ->deactivateSelection();
     myPeriodicitySourceFaceWdg->deactivateSelection();
     myPeriodicityTargetFaceWdg->deactivateSelection();
@@ -2717,6 +2748,10 @@ void BLSURFPluginGUI_HypothesisCreator::onTabChanged(int tab)
     myPeriodicityP1TargetWdg  ->deactivateSelection();
     myPeriodicityP2TargetWdg  ->deactivateSelection();
     myPeriodicityP3TargetWdg  ->deactivateSelection();
+    if ( myHyPatchFaceSelBtn->isChecked() )
+      myHyPatchFaceSelBtn->toggle();
+    if ( myHyPatchGroupSelBtn->isChecked() )
+      myHyPatchGroupSelBtn->toggle();
     return;
   }
   else if ( sender() == smpTab )
@@ -3235,6 +3270,121 @@ bool BLSURFPluginGUI_HypothesisCreator::sizeMapValidationFromEntry(QString myEnt
 
 
   return true;
+}
+
+//================================================================================
+/*!
+ * \brief SLOT: Activate selection of faces in the Viewer
+ */
+//================================================================================
+
+void BLSURFPluginGUI_HypothesisCreator::onHyPatchFaceSelection(bool on)
+{
+  if ( on && myHyPatchFaceSelector->GetMainShape().IsNull() )
+  {
+    QString aMainEntry = SMESHGUI_GenericHypothesisCreator::getMainShapeEntry();
+    QString aSubEntry  = SMESHGUI_GenericHypothesisCreator::getShapeEntry();
+    myHyPatchFaceSelector->SetGeomShapeEntry( aSubEntry, aMainEntry );
+  }
+  myHyPatchFaceSelector->setVisible( on );  // show its buttons
+  myHyPatchFaceSelector->ShowPreview( on ); // show faces in the Viewer
+  // treat selection or not
+  myHyPatchFaceSelector->ActivateSelection( on || myHyPatchGroupSelBtn->isChecked() );
+
+  if ( on )
+    myHyPatchGroupSelBtn->setChecked( false );
+}
+
+//================================================================================
+/*!
+ * \brief SLOT: Deactivate selection of faces in the Viewer
+ */
+//================================================================================
+
+void BLSURFPluginGUI_HypothesisCreator::onHyPatchGroupSelection(bool on)
+{
+  if ( on && myHyPatchFaceSelector->GetMainShape().IsNull() )
+  {
+    QString aMainEntry = SMESHGUI_GenericHypothesisCreator::getMainShapeEntry();
+    QString aSubEntry  = SMESHGUI_GenericHypothesisCreator::getShapeEntry();
+    myHyPatchFaceSelector->SetGeomShapeEntry( aSubEntry, aMainEntry );
+  }
+  if ( !myHyPatchFaceSelBtn->isChecked() )
+  {
+    myHyPatchFaceSelector->setVisible( false ); // show its buttons
+    myHyPatchFaceSelector->ShowPreview( false ); // show faces in the Viewer
+  }
+  // treat selection or not
+  myHyPatchFaceSelector->ActivateSelection( on || myHyPatchFaceSelBtn->isChecked() );
+
+  if ( on )
+    myHyPatchFaceSelBtn->setChecked( false );
+}
+
+//================================================================================
+/*!
+ * \brief SLOT: show IDs of selected faces in Tags LineEdit
+ */
+//================================================================================
+
+void BLSURFPluginGUI_HypothesisCreator::onHyPatchSelectionChanged()
+{
+  QString tagString;
+  const QList<int>& tags = myHyPatchFaceSelector->GetSelectedIDs();
+  for ( int i = 0; i < tags.size(); ++i )
+    tagString += QString::number( tags[i] ) + " ";
+
+  myHyPatchTagsLE->setText( tagString );
+}
+
+//================================================================================
+/*!
+ * \brief SLOT: Add the Tags to the HyperPatch table
+ */
+//================================================================================
+
+void BLSURFPluginGUI_HypothesisCreator::onHyPatchAdd()
+{
+  QStringList tagList = myHyPatchTagsLE->text().split(" ",  QString::SkipEmptyParts);
+  if ( tagList.size() > 1 )
+  {
+    addHyPatchToTable( myHyPatchTagsLE->text() );
+    myHyPatchTagsLE->setText("");
+  }
+}
+
+//================================================================================
+/*!
+ * \brief Add a row to myHyPatchTable
+ */
+//================================================================================
+
+void BLSURFPluginGUI_HypothesisCreator::addHyPatchToTable(const QString& tags)
+{
+  if ( tags.isEmpty() ) return;
+
+  QTableWidgetItem* cell = new QTableWidgetItem( tags );
+  cell->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled );
+
+  int row = myHyPatchTable->rowCount();
+  myHyPatchTable->insertRow( row );
+  myHyPatchTable->setItem( row, 0, cell );
+}
+
+//================================================================================
+/*!
+ * \brief SLOT: remove selected rows from the HyperPatch table
+ */
+//================================================================================
+
+void BLSURFPluginGUI_HypothesisCreator::onHyPatchRemove()
+{
+  QList<QTableWidgetItem *> items = myHyPatchTable->selectedItems();
+  while ( !items.isEmpty() )
+  {
+    myHyPatchTable->removeRow( items[0]->row() );
+    items = myHyPatchTable->selectedItems();
+  }
 }
 
 QString BLSURFPluginGUI_HypothesisCreator::caption() const

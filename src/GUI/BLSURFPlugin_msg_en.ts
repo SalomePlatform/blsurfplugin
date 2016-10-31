@@ -594,6 +594,26 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
         <source>BLSURF_PERIODICITY_SELECT_EDGE</source>
         <translation>Edge</translation>
     </message>
+    <message>
+        <source>BLSURF_HYPATCH_TBL_HEADER</source>
+        <translation>Hyper-patch IDs</translation>
+    </message>
+    <message>
+        <source>BLSURF_HYPATCH_SEL_FACE</source>
+        <translation>Face selection</translation>
+    </message>
+    <message>
+        <source>BLSURF_HYPATCH_SEL_GROUP</source>
+        <translation>Group selection</translation>
+    </message>
+    <message>
+        <source>BLSURF_TAGS</source>
+        <translation>IDs</translation>
+    </message>
+    <message>
+        <source>BLSURF_HYPERPATCH_TAB</source>
+        <translation>Hyper-patch</translation>
+    </message>
 </context>
 <context>
     <name>BLSURFPluginGUI_AdvWidget</name>
@@ -660,10 +680,6 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
     <message>
         <source>tags</source>
         <translation>Tags</translation>
-    </message>
-    <message>
-        <source></source>
-        <translation></translation>
     </message>
 </context> 
 </TS>

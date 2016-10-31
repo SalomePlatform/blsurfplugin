@@ -22,6 +22,7 @@
 # Python API for the MG-CADSurf meshing plug-in module.
 
 from salome.smesh.smesh_algorithm import Mesh_Algorithm
+import GEOM
 
 LIBRARY = "libBLSURFEngine.so"
 
@@ -694,6 +695,37 @@ class BLSURF_Algorithm(Mesh_Algorithm):
     else:
         self.Parameters().AddPreCadEdgesPeriodicity(theEdge1, theEdge2)
     pass
+
+  #-----------------------------------------
+  # Hyper-Patches
+  #-----------------------------------------
+  
+  ## Defines hyper-patches. A hyper-patch is a set of adjacent faces meshed as a whole,
+  #  ignoring edges between them
+  #  @param hyperPatchList : list of hyper-patches. A hyper-patch is defined as a list of
+  #         faces or groups of faces. A face can be identified either as a GEOM object or
+  #         a face ID (returned e.g. by geompy.GetSubShapeID( mainShape, subShape )).
+  #         
+  #  Example: cadsurf.SetHyperPatches([[ Face_1, Group_2 ],[ 13, 23 ]])
+  def SetHyperPatches(self, hyperPatchList):
+    hpl = []
+    for patch in hyperPatchList:
+      ids = []
+      for face in patch:
+        if isinstance( face, int ):
+          ids.append( face )
+        elif isinstance( face, GEOM._objref_GEOM_Object):
+          faces = self.mesh.geompyD.SubShapeAll( face, self.mesh.geompyD.ShapeType["FACE"] )
+          for f in faces:
+            ids.append( self.mesh.geompyD.GetSubShapeID( self.mesh.geom, f ))
+        else:
+          raise TypeError, \
+            "Face of hyper-patch should be either ID or GEOM_Object, not %s" % type(face)
+        pass
+      hpl.append( ids )
+      pass
+    self.Parameters().SetHyperPatches( hpl )
+    return
 
   #=====================
   # Obsolete methods

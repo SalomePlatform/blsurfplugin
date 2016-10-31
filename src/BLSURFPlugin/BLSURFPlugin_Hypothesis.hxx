@@ -186,6 +186,14 @@ public:
   void SetTags( const std::string& howToTreat ) throw (std::invalid_argument);
   std::string GetTags();
 
+  // Hyper-patches
+  typedef std::set< int > THyperPatchTags;
+  typedef std::vector< THyperPatchTags > THyperPatchList;
+
+  void SetHyperPatches(const THyperPatchList& hpl);
+  const THyperPatchList& GetHyperPatches() const { return _hyperPatchList; }
+  static int GetHyperPatchTag( int faceTag, const BLSURFPlugin_Hypothesis* hyp, int* iPatch=0 );
+
   void SetPreCADMergeEdges(bool theVal);
   bool GetPreCADMergeEdges() const { return _preCADMergeEdges; }
 
@@ -613,6 +621,8 @@ private:
   TFacesPeriodicityVector _facesPeriodicityVector;
   TEdgesPeriodicityVector _edgesPeriodicityVector;
   TVerticesPeriodicityVector _verticesPeriodicityVector;
+
+  THyperPatchList _hyperPatchList;
 
   // Called by SaveTo to store content of _preCadFacesPeriodicityVector and _preCadEdgesPeriodicityVector
   void SavePreCADPeriodicity(std::ostream & save, const char* shapeType);

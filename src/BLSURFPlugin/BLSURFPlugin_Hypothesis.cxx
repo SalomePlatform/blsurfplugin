@@ -684,6 +684,78 @@ std::string BLSURFPlugin_Hypothesis::GetTags()
   return GetPreCADOptionValue("tags", GET_DEFAULT());
 }
 //=============================================================================
+void BLSURFPlugin_Hypothesis::SetHyperPatches(const THyperPatchList& hpl)
+{
+  if ( hpl != _hyperPatchList )
+  {
+    // join patches sharing tags
+    _hyperPatchList.clear();
+    for ( size_t i = 0; i < hpl.size(); ++i )
+    {
+      const THyperPatchTags& tags = hpl[i];
+      if ( tags.size() < 2 ) continue;
+
+      std::set<int> iPatches;
+      if ( !_hyperPatchList.empty() )
+      {
+        THyperPatchTags::iterator t = tags.begin();
+        for ( ; t != tags.end(); ++t )
+        {
+          int iPatch = -1;
+          GetHyperPatchTag( *t, this, &iPatch );
+          if ( iPatch >= 0 )
+            iPatches.insert( iPatch );
+        }
+      }
+
+      if ( iPatches.empty() )
+      {
+        _hyperPatchList.push_back( tags );
+      }
+      else
+      {
+        std::set<int>::iterator iPatch = iPatches.begin();
+        THyperPatchTags&     mainPatch = _hyperPatchList[ *iPatch ];
+        mainPatch.insert( tags.begin(), tags.end() );
+
+        for ( ++iPatch; iPatch != iPatches.end(); ++iPatch )
+        {
+          mainPatch.insert( _hyperPatchList[ *iPatch ].begin(), _hyperPatchList[ *iPatch ].end() );
+          _hyperPatchList[ *iPatch ].clear();
+        }
+        if ( iPatches.size() > 1 )
+          for ( int j = _hyperPatchList.size()-1; j > 0; --j )
+            if ( _hyperPatchList[j].empty() )
+              _hyperPatchList.erase( _hyperPatchList.begin() + j );
+      }
+    }
+    NotifySubMeshesHypothesisModification();
+  }
+}
+//=============================================================================
+/*!
+ * \brief Return a tag of a face taking into account the hyper-patches. Optionally
+ *        return an index of a patch including the face
+ */
+//================================================================================
+
+int BLSURFPlugin_Hypothesis::GetHyperPatchTag( const int                      faceTag,
+                                               const BLSURFPlugin_Hypothesis* hyp,
+                                               int*                           iPatch)
+{
+  if ( hyp )
+  {
+    const THyperPatchList& hpl = hyp->_hyperPatchList;
+    for ( size_t i = 0; i < hpl.size(); ++i )
+      if ( hpl[i].count( faceTag ))
+      {
+        if ( iPatch ) *iPatch = i;
+        return *( hpl[i].begin() );
+      }
+  }
+  return faceTag;
+}
+//=============================================================================
 void BLSURFPlugin_Hypothesis::SetPreCADMergeEdges(bool theVal)
 {
   if (theVal != ToBool( GetPreCADOptionValue("merge_edges", GET_DEFAULT()))) {
@@ -753,6 +825,7 @@ bool BLSURFPlugin_Hypothesis::HasPreCADOptions(const BLSURFPlugin_Hypothesis* hy
            !hyp->_facesPeriodicityVector.empty()                                         ||
            !hyp->_edgesPeriodicityVector.empty()                                         ||
            !hyp->_verticesPeriodicityVector.empty()                                      ||
+           !hyp->GetHyperPatches().empty()                                               ||
            hyp->GetTopology() != FromCAD );
 }
 
@@ -1759,7 +1832,7 @@ void BLSURFPlugin_Hypothesis::ClearPreCadPeriodicityVectors() {
 //function : AddPreCadFacesPeriodicity
 //=======================================================================
 void BLSURFPlugin_Hypothesis::AddPreCadFacesPeriodicity(TEntry theFace1Entry, TEntry theFace2Entry,
-    std::vector<std::string> &theSourceVerticesEntries, std::vector<std::string> &theTargetVerticesEntries) {
+                                                        std::vector<std::string> &theSourceVerticesEntries, std::vector<std::string> &theTargetVerticesEntries) {
 
   TPreCadPeriodicity preCadFacesPeriodicity;
   preCadFacesPeriodicity.shape1Entry = theFace1Entry;
@@ -1790,37 +1863,38 @@ void BLSURFPlugin_Hypothesis::AddPreCadEdgesPeriodicity(TEntry theEdge1Entry, TE
 }
 
 //=============================================================================
-std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save) {
-   // We must keep at least the same number of arguments when increasing the SALOME version
-   // When MG-CADSurf becomes CADMESH, some parameters were fused into a single one. Thus the same
-   // parameter can be written several times to keep the old global number of parameters.
+std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save)
+{
+  // We must keep at least the same number of arguments when increasing the SALOME version
+  // When MG-CADSurf becomes CADMESH, some parameters were fused into a single one. Thus the same
+  // parameter can be written several times to keep the old global number of parameters.
 
-   // Treat old options which are now in the advanced options
-   TOptionValues::iterator op_val;
-   int _decimesh = -1;
-   int _preCADRemoveNanoEdges = -1;
-   double _preCADEpsNano = -1.0;
-   op_val = _option2value.find("respect_geometry");
-   if (op_val != _option2value.end()) {
-     std::string value = op_val->second;
-     if (!value.empty())
-       _decimesh = value.compare("1") == 0 ? 1 : 0;
-   }
-   op_val = _preCADoption2value.find("remove_tiny_edges");
-   if (op_val != _preCADoption2value.end()) {
-     std::string value = op_val->second;
-     if (!value.empty())
-       _preCADRemoveNanoEdges = value.compare("1") == 0 ? 1 : 0;
-   }
-   op_val = _preCADoption2value.find("tiny_edge_length");
-   if (op_val != _preCADoption2value.end()) {
-     std::string value = op_val->second;
-     if (!value.empty())
-       _preCADEpsNano = strtod(value.c_str(), NULL);
-   }
-   
+  // Treat old options which are now in the advanced options
+  TOptionValues::iterator op_val;
+  int _decimesh = -1;
+  int _preCADRemoveNanoEdges = -1;
+  double _preCADEpsNano = -1.0;
+  op_val = _option2value.find("respect_geometry");
+  if (op_val != _option2value.end()) {
+    std::string value = op_val->second;
+    if (!value.empty())
+      _decimesh = value.compare("1") == 0 ? 1 : 0;
+  }
+  op_val = _preCADoption2value.find("remove_tiny_edges");
+  if (op_val != _preCADoption2value.end()) {
+    std::string value = op_val->second;
+    if (!value.empty())
+      _preCADRemoveNanoEdges = value.compare("1") == 0 ? 1 : 0;
+  }
+  op_val = _preCADoption2value.find("tiny_edge_length");
+  if (op_val != _preCADoption2value.end()) {
+    std::string value = op_val->second;
+    if (!value.empty())
+      _preCADEpsNano = strtod(value.c_str(), NULL);
+  }
+
   save << " " << (int) _topology << " " << (int) _physicalMesh << " " << (int) _geometricMesh << " " << _phySize << " "
-      << _angleMesh << " " << _gradation << " " << (int) _quadAllowed << " " << _decimesh;
+       << _angleMesh << " " << _gradation << " " << (int) _quadAllowed << " " << _decimesh;
   save << " " << _minSize << " " << _maxSize << " " << _angleMesh << " " << _minSize << " " << _maxSize << " " << _verb;
   save << " " << (int) _preCADMergeEdges << " " << _preCADRemoveNanoEdges << " " << (int) _preCADDiscardInput << " " << _preCADEpsNano ;
   save << " " << (int) _enforcedInternalVerticesAllFaces;
@@ -1955,6 +2029,17 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save) {
   SaveFacesPeriodicity(save);
   SaveEdgesPeriodicity(save);
   SaveVerticesPeriodicity(save);
+
+  // HYPER-PATCHES
+  save << " " << _hyperPatchList.size() << " ";
+  for ( size_t i = 0; i < _hyperPatchList.size(); ++i )
+  {
+    THyperPatchTags& patch = _hyperPatchList[i];
+    save << patch.size() << " ";
+    THyperPatchTags::iterator tag = patch.begin();
+    for ( ; tag != patch.end(); ++tag )
+      save << *tag << " ";
+  }
 
   return save;
 }
@@ -2091,7 +2176,8 @@ void BLSURFPlugin_Hypothesis::SavePreCADPeriodicity(std::ostream & save, const c
 }
 
 //=============================================================================
-std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
+std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
+{
   bool isOK = true;
   int i;
   double val;
@@ -2745,17 +2831,17 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
 // __ENFORCED_VERTICES_BEGIN__ 
 // __BEGIN_VERTEX__  => no name, no entry
 // __BEGIN_GROUP__ mon groupe __END_GROUP__
-// __BEGIN_COORDS__ 10 10 10 __END_COORDS__ 
-// __BEGIN_FACELIST__ 0:1:1:1:1 __END_FACELIST__ 
-// __END_VERTEX__ 
+// __BEGIN_COORDS__ 10 10 10 __END_COORDS__
+// __BEGIN_FACELIST__ 0:1:1:1:1 __END_FACELIST__
+// __END_VERTEX__
 // __BEGIN_VERTEX__ => no coords
-// __BEGIN_NAME__ mes points __END_NAME__ 
+// __BEGIN_NAME__ mes points __END_NAME__
 // __BEGIN_ENTRY__ 0:1:1:4 __END_ENTRY__
 // __BEGIN_GROUP__ mon groupe __END_GROUP__
 // __BEGIN_FACELIST__ 0:1:1:1:3 __END_FACELIST__
-// __END_VERTEX__ 
+// __END_VERTEX__
 // __ENFORCED_VERTICES_END__
-// 
+//
 
   std::string enfSeparator;
   std::string enfName;
@@ -2764,27 +2850,28 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   TEntryList enfFaceEntryList;
   double enfCoords[3];
   bool hasCoords = false;
-  
+
   _faceEntryEnfVertexListMap.clear();
   _enfVertexList.clear();
   _faceEntryCoordsListMap.clear();
   _coordsEnfVertexMap.clear();
   _faceEntryEnfVertexEntryListMap.clear();
   _enfVertexEntryEnfVertexMap.clear();
-  
-  
-  while (isOK && hasEnforcedVertex) {
+
+
+  while (isOK && hasEnforcedVertex)
+  {
     isOK = static_cast<bool>(load >> enfSeparator); // __BEGIN_VERTEX__
     TEnfVertex *enfVertex = new TEnfVertex();
     if (enfSeparator == "__ENFORCED_VERTICES_END__")
       break; // __ENFORCED_VERTICES_END__
     if (enfSeparator != "__BEGIN_VERTEX__")
       throw std::exception();
-    
+
     while (isOK) {
       isOK = static_cast<bool>(load >> enfSeparator);
       if (enfSeparator == "__END_VERTEX__") {
-        
+
         enfVertex->name = enfName;
         enfVertex->geomEntry = enfGeomEntry;
         enfVertex->grpName = enfGroup;
@@ -2792,9 +2879,9 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         if (hasCoords)
           enfVertex->coords.assign(enfCoords,enfCoords+3);
         enfVertex->faceEntries = enfFaceEntryList;
-        
+
         _enfVertexList.insert(enfVertex);
-        
+
         if (enfVertex->coords.size()) {
           _coordsEnfVertexMap[enfVertex->coords] = enfVertex;
           for (TEntryList::const_iterator it = enfVertex->faceEntries.begin() ; it != enfVertex->faceEntries.end(); ++it) {
@@ -2809,7 +2896,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
             _faceEntryEnfVertexListMap[(*it)].insert(enfVertex);
           }
         }
-        
+
         enfName.clear();
         enfGeomEntry.clear();
         enfGroup.clear();
@@ -2817,7 +2904,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
         hasCoords = false;
         break; // __END_VERTEX__
       }
-        
+
       if (enfSeparator == "__BEGIN_NAME__") {  // __BEGIN_NAME__
         while (isOK && (enfSeparator != "__END_NAME__")) {
           isOK = static_cast<bool>(load >> enfSeparator);
@@ -2828,14 +2915,14 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
           }
         }
       }
-        
+
       if (enfSeparator == "__BEGIN_ENTRY__") {  // __BEGIN_ENTRY__
         isOK = static_cast<bool>(load >> enfGeomEntry);
         isOK = static_cast<bool>(load >> enfSeparator); // __END_ENTRY__
         if (enfSeparator != "__END_ENTRY__")
           throw std::exception();
       }
-        
+
       if (enfSeparator == "__BEGIN_GROUP__") {  // __BEGIN_GROUP__
         while (isOK && (enfSeparator != "__END_GROUP__")) {
           isOK = static_cast<bool>(load >> enfSeparator);
@@ -2846,15 +2933,15 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
           }
         }
       }
-        
+
       if (enfSeparator == "__BEGIN_COORDS__") {  // __BEGIN_COORDS__
         hasCoords = true;
         isOK = static_cast<bool>(load >> enfCoords[0] >> enfCoords[1] >> enfCoords[2]);
         isOK = static_cast<bool>(load >> enfSeparator); // __END_COORDS__
         if (enfSeparator != "__END_COORDS__")
           throw std::exception();
-      } 
-        
+      }
+
       if (enfSeparator == "__BEGIN_FACELIST__") {  // __BEGIN_FACELIST__
         while (isOK && (enfSeparator != "__END_FACELIST__")) {
           isOK = static_cast<bool>(load >> enfSeparator);
@@ -2862,13 +2949,14 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
             enfFaceEntryList.insert(enfSeparator);
           }
         }
-      } 
+      }
     }
   }
 
   // PERIODICITY
 
-  if (hasPreCADFacesPeriodicity){
+  if (hasPreCADFacesPeriodicity)
+  {
     LoadPreCADPeriodicity(load, "FACES");
 
     isOK = static_cast<bool>(load >> option_or_sm);
@@ -2884,7 +2972,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
     }
   }
 
-  if (hasPreCADEdgesPeriodicity){
+  if (hasPreCADEdgesPeriodicity)
+  {
     LoadPreCADPeriodicity(load, "EDGES");
 
     isOK = static_cast<bool>(load >> option_or_sm);
@@ -2898,8 +2987,9 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
     }
   }
 
-  if (hasFacesPeriodicity){
-      LoadFacesPeriodicity(load);
+  if (hasFacesPeriodicity)
+  {
+    LoadFacesPeriodicity(load);
 
     isOK = static_cast<bool>(load >> option_or_sm);
     if (isOK) {
@@ -2910,8 +3000,9 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
     }
   }
 
-  if (hasEdgesPeriodicity){
-      LoadEdgesPeriodicity(load);
+  if (hasEdgesPeriodicity)
+  {
+    LoadEdgesPeriodicity(load);
 
     isOK = static_cast<bool>(load >> option_or_sm);
     if (isOK)
@@ -2920,7 +3011,38 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load) {
   }
 
   if (hasVerticesPeriodicity)
-      LoadVerticesPeriodicity(load);
+    LoadVerticesPeriodicity(load);
+
+  // HYPER-PATCHES
+  if ( !option_or_sm.empty() && option_or_sm[0] == '_' )
+    isOK = static_cast<bool>(load >> option_or_sm);
+  if ( isOK && !option_or_sm.empty() )
+  {
+    int nbPatches = atoi( option_or_sm.c_str() );
+    if ( nbPatches >= 0 )
+    {
+      _hyperPatchList.resize( nbPatches );
+      for ( int iP = 0; iP < nbPatches && isOK; ++iP )
+      {
+        isOK = static_cast<bool>(load >> i) && i >= 2;
+        if ( !isOK ) break;
+        int nbTags = i;
+        for ( int iT = 0; iT < nbTags; ++iT )
+        {
+          if (( isOK = static_cast<bool>(load >> i)))
+            _hyperPatchList[ iP ].insert( i );
+          else
+            break;
+        }
+      }
+      if ( !isOK ) // remove invalid patches
+      {
+        for ( i = nbPatches - 1; i >= 0; i-- )
+          if ( _hyperPatchList[i].size() < 2 )
+            _hyperPatchList.resize( i );
+      }
+    }
+  }
 
   return load;
 }
@@ -3050,8 +3172,8 @@ void BLSURFPlugin_Hypothesis::LoadEdgesPeriodicity(std::istream & load){
   }
 }
 
-void BLSURFPlugin_Hypothesis::LoadVerticesPeriodicity(std::istream & load){
-
+void BLSURFPlugin_Hypothesis::LoadVerticesPeriodicity(std::istream & load)
+{
   bool isOK = true;
 
   std::string periodicitySeparator;

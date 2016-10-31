@@ -95,6 +95,7 @@ class SMESH_NumberFilter;
 class LightApp_SelectionMgr;
 class BLSURFPluginGUI_StdWidget;
 class BLSURFPluginGUI_AdvWidget;
+class StdMeshersGUI_SubShapeSelectorWdg;
 // class DlgBlSurfHyp_Enforced;
 
 // Name
@@ -178,6 +179,7 @@ typedef struct
   TGroupNameEnfVertexListMap groupNameEnfVertexListMap;
   */
   TPreCadPeriodicityVector preCadPeriodicityVector;
+  QStringList hyperpatches;
   QString myName;
 } BlsurfHypothesisData;
 
@@ -209,10 +211,7 @@ protected slots:
   void                onStateChange();
   // Advanced tab
   void                onAddOption();
-//  void                onDeleteOption();
-//  void                onEditOption( int, int );
   void                onChangeOptionName( int, int );
-//  void                onOptionChosenInPopup( QAction* );
   // Sizemap tab
   void                onMapGeomContentModified();
   void                onSmpItemClicked( QTreeWidgetItem *, int );
@@ -226,22 +225,28 @@ protected slots:
   // Enforced vertices tab
   QTreeWidgetItem*    addEnforcedFace(std::string theFaceEntry, std::string theFaceName);
   void                addEnforcedVertex(double x=0, double y=0, double z=0, 
-                                        std::string vertexName = "", std::string geomEntry = "", std::string groupName = "");
+                                        std::string vertexName = "",
+                                        std::string geomEntry = "",
+                                        std::string groupName = "");
   void                onAddEnforcedVertices();
   void                onRemoveEnforcedVertex();
   void                synchronizeCoords();
   void                updateEnforcedVertexValues(QTreeWidgetItem* , int );
   void                onSelectEnforcedVertex();
-//   void                deactivateSelection(QWidget*, QWidget*);
   void                clearEnforcedVertexWidgets();
   void                onInternalVerticesClicked(int);
   // Periodicity tab
   void                onPeriodicityByVerticesChecked(bool);
-//  void                onPeriodicityRadioButtonChanged();
   void                onAddPeriodicity();
   void                onRemovePeriodicity();
   void                onPeriodicityTreeClicked(QTreeWidgetItem*, int);
   void                onPeriodicityContentModified();
+  // HyperPatch tab
+  void                onHyPatchFaceSelection(bool);
+  void                onHyPatchGroupSelection(bool);
+  void                onHyPatchSelectionChanged();
+  void                onHyPatchAdd();
+  void                onHyPatchRemove();
 
 private:
   bool                readParamsFromHypo( BlsurfHypothesisData& ) const;
@@ -260,6 +265,7 @@ private:
   static LightApp_SelectionMgr* selectionMgr();
   void                avoidSimultaneousSelection(ListOfWidgets &myCustomWidgets) const;
   void                AddPreCadSequenceToVector(BlsurfHypothesisData& h_data, BLSURFPlugin::TPeriodicityList_var preCadFacePeriodicityVector, bool onFace) const;
+  void                addHyPatchToTable(const QString& tags);
 
 private:
   
@@ -305,21 +311,17 @@ private:
   
   
   QWidget*            myEnfGroup;
-//    TODO FACE AND VERTEX SELECTION
   StdMeshersGUI_ObjectReferenceParamWdg *myEnfFaceWdg;
   GEOM::GEOM_Object_var myEnfFace;
   StdMeshersGUI_ObjectReferenceParamWdg *myEnfVertexWdg;
   GEOM::GEOM_Object_var myEnfVertex;
 
-//   DlgBlSurfHyp_Enforced* myEnforcedVertexWidget;
   QTreeWidget*        myEnforcedTreeWidget;
   SMESHGUI_SpinBox*   myXCoord;
   SMESHGUI_SpinBox*   myYCoord;
   SMESHGUI_SpinBox*   myZCoord;
 
   QLineEdit*          myGroupName;
-//   QGroupBox*          makeGroupsCheck;
-//   QCheckBox*          myGlobalGroupName;
 
   QPushButton*        addVertexButton;
   QPushButton*        removeVertexButton;
@@ -330,41 +332,37 @@ private:
   // map =  entry , size map
   QMap<QString, QString>          mySMPMap;           // Map <face entry, size>
   QMap<QString, TAttractorVec >   myATTMap;           // Map <face entry, att. entry, etc>
-  // QMap<QString, double>           myDistMap;          // Map <entry,distance with constant size> 
-  // QMap<QString, double>           myAttDistMap;       // Map <entry, influence distance> 
   QMap<QString, TopAbs_ShapeEnum> mySMPShapeTypeMap;
   GeomSelectionTools*             GeomToolSelected;
   LightApp_SelectionMgr*          aSel;
 
   // Periodicity
-  QWidget* myPeriodicityGroup;
-  QSplitter* myPeriodicitySplitter;
-  QTreeWidget* myPeriodicityTreeWidget;
-  QWidget* myPeriodicityRightWidget;
-  QGridLayout* myPeriodicityRightGridLayout;
-  QGroupBox* myPeriodicityGroupBox1;
-  QGroupBox* myPeriodicityGroupBox2;
+  QWidget*      myPeriodicityGroup;
+  QSplitter*    myPeriodicitySplitter;
+  QTreeWidget*  myPeriodicityTreeWidget;
+  QWidget*      myPeriodicityRightWidget;
+  QGridLayout*  myPeriodicityRightGridLayout;
+  QGroupBox*    myPeriodicityGroupBox1;
+  QGroupBox*    myPeriodicityGroupBox2;
   QGridLayout* aPeriodicityLayout1;
-  QGridLayout* myPeriodicityGroupBox1Layout;
-  QGridLayout* myPeriodicityGroupBox2Layout;
+  QGridLayout*  myPeriodicityGroupBox1Layout;
+  QGridLayout*  myPeriodicityGroupBox2Layout;
   QRadioButton* myPeriodicityOnFaceRadioButton;
   QRadioButton* myPeriodicityOnEdgeRadioButton;
-  QLabel* myPeriodicityMainSourceLabel;
-  QLabel* myPeriodicityMainTargetLabel;
-  QLabel* myPeriodicitySourceLabel;
-  QLabel* myPeriodicityTargetLabel;
+  QLabel*       myPeriodicityMainSourceLabel;
+  QLabel*       myPeriodicityMainTargetLabel;
+  QLabel*       myPeriodicitySourceLabel;
+  QLabel*       myPeriodicityTargetLabel;
   StdMeshersGUI_ObjectReferenceParamWdg* myPeriodicitySourceFaceWdg;
-//  StdMeshersGUI_ObjectReferenceParamWdg* myPeriodicitySourceEdgeWdg;
   GEOM::GEOM_Object_var myPeriodicityFace;
   StdMeshersGUI_ObjectReferenceParamWdg* myPeriodicityTargetFaceWdg;
-//  StdMeshersGUI_ObjectReferenceParamWdg* myPeriodicityTargetEdgeWdg;
   GEOM::GEOM_Object_var myPeriodicityEdge;
-  QLabel* myPeriodicityP1SourceLabel;
-  QLabel* myPeriodicityP2SourceLabel;
-  QLabel* myPeriodicityP3SourceLabel;
-  QLabel* myPeriodicityP1TargetLabel;
-  QLabel* myPeriodicityP2TargetLabel;
-  QLabel* myPeriodicityP3TargetLabel;
+  QLabel*       myPeriodicityP1SourceLabel;
+  QLabel*       myPeriodicityP2SourceLabel;
+  QLabel*       myPeriodicityP3SourceLabel;
+  QLabel*       myPeriodicityP1TargetLabel;
+  QLabel*       myPeriodicityP2TargetLabel;
+  QLabel*       myPeriodicityP3TargetLabel;
   StdMeshersGUI_ObjectReferenceParamWdg* myPeriodicityP1SourceWdg;
   StdMeshersGUI_ObjectReferenceParamWdg* myPeriodicityP2SourceWdg;
   StdMeshersGUI_ObjectReferenceParamWdg* myPeriodicityP3SourceWdg;
@@ -372,9 +370,15 @@ private:
   StdMeshersGUI_ObjectReferenceParamWdg* myPeriodicityP2TargetWdg;
   StdMeshersGUI_ObjectReferenceParamWdg* myPeriodicityP3TargetWdg;
   ListOfWidgets myPeriodicitySelectionWidgets;
-  QPushButton* myPeriodicityAddButton;
-  QPushButton* myPeriodicityRemoveButton;
-  QSpacerItem* myPeriodicityVerticalSpacer;
+  QPushButton*  myPeriodicityAddButton;
+  QPushButton*  myPeriodicityRemoveButton;
+  QSpacerItem*  myPeriodicityVerticalSpacer;
+
+  QTableWidget*                      myHyPatchTable;
+  StdMeshersGUI_SubShapeSelectorWdg* myHyPatchFaceSelector;
+  QLineEdit*                         myHyPatchTagsLE;
+  QPushButton*                       myHyPatchFaceSelBtn;
+  QPushButton*                       myHyPatchGroupSelBtn;
 
   BLSURFPlugin::string_array_var myOptions, myPreCADOptions, myCustomOptions;
 

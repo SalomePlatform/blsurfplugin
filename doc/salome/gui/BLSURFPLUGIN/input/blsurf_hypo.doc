@@ -393,6 +393,27 @@ List of source and target vertices to define a transformation are optional.
 
 \sa Sample TUI Script of the definition of MG-CADSurf periodicity \ref tui_blsurf_periodicity_preCAD "using preCAD".
 
+\section blsurf_hyperpatch Hyper-patch
+
+\image html blsurf_parameters_hyperpatch.png
+
+Hyper-patch tab page allows defining faces that will be meshes together as
+  part of a global hyper-patch.
+
+- <b>Hyper-patch IDs</b> table - shows IDs of faces of defined hyper-patches.
+
+- <b>Face selection</b> - activates selection of faces in the VTK Viewer.
+
+- <b>Group selection</b> - activates selection of faces and groups of
+  faces in the Object Browser.
+
+- \b IDs - allows typing IDs of faces composing a hyper-patch and
+  shows IDs of faces selected in the Viewer or the Object Browser.
+
+- \b Add - adds a new row to the table and moves \b IDs there.
+
+- \b Remove - removes selected hyper-patches from the table.
+
 \ref blsurf_top "Back to top"
 
 For more information on MeshGems-CADSurf, you can read its documentation at $MESHGEMS_ROOT_DIR/Docs/mg-cadsurf_user_manual.pdf

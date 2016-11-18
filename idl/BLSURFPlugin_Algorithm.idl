@@ -447,12 +447,6 @@ module BLSURFPlugin
     boolean GetPreCADMergeEdges();
 
     /*!
-     * To remove tiny UV edges edges.
-     */
-    void SetPreCADRemoveTinyUVEdges(in boolean toRemoveTinyUVEdges);
-    boolean GetPreCADRemoveTinyUVEdges();
-
-    /*!
      * To remove duplicate CAD faces.
      */
     void SetPreCADRemoveDuplicateCADFaces(in boolean toRemoveDuplicateCADFaces);

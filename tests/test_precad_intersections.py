@@ -49,6 +49,7 @@ BLSURF_Parameters = BLSURF_1.Parameters()
 BLSURF_Parameters.SetPhySize( 5 )
 BLSURF_Parameters.SetPreCADMergeEdges( True )
 BLSURF_Parameters.SetPreCADProcess3DTopology( True )
+BLSURF_Parameters.SetPreCADOptionValue( 'remove_tiny_uv_edges', 'yes' )
 
 Mesh_1.Compute()
 

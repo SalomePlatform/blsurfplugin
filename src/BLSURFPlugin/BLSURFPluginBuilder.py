@@ -347,12 +347,6 @@ class BLSURF_Algorithm(Mesh_Algorithm):
     self.Parameters().SetPreCADMergeEdges(toMergeEdges)
     pass
 
-  ## To remove tiny UV edges.
-  #  @param toRemoveTinyUVEdges "remove_tiny_uv_edges" flag value
-  def SetPreCADRemoveTinyUVEdges(self, toRemoveTinyUVEdges=False):
-    self.Parameters().SetPreCADRemoveTinyUVEdges(toRemoveTinyUVEdges)
-    pass
-
   ## To remove duplicate CAD Faces
   #  @param toRemoveDuplicateCADFaces "remove_duplicate_cad_faces" flag value
   def SetPreCADRemoveDuplicateCADFaces(self, toRemoveDuplicateCADFaces=False):

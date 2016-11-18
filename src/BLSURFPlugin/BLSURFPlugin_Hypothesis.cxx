@@ -81,7 +81,6 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   _verb(GetDefaultVerbosity()),
   _topology(GetDefaultTopology()),
   _preCADMergeEdges(GetDefaultPreCADMergeEdges()),
-  _preCADRemoveTinyUVEdges(GetDefaultPreCADRemoveTinyUVEdges()),
   _preCADRemoveDuplicateCADFaces(GetDefaultPreCADRemoveDuplicateCADFaces()),
   _preCADProcess3DTopology(GetDefaultPreCADProcess3DTopology()),
   _preCADDiscardInput(GetDefaultPreCADDiscardInput()),
@@ -143,6 +142,9 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
                                             "debug",                                    // default = 0 
                                             "process_3d_topology",                      // default = 1
                                             // "remove_tiny_edges",                        // default = 0
+                                            // remove_tiny_uv_edges option is not documented
+                                            // but it is useful that the user can change it to disable all preprocessing options
+                                            "remove_tiny_uv_edges",                        // default = 1
                                             "" // mark of end
       };
   const char* preCADintOptionNames[] = {    // "manifold_geometry",                        // default = 0
@@ -208,6 +210,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   _defaultOptionValues["respect_geometry"                       ] = "yes";
   _defaultOptionValues["tiny_edge_avoid_surface_intersections"  ] = "yes";
   _defaultOptionValues["process_3d_topology"                    ] = "no";
+  _defaultOptionValues["remove_tiny_uv_edges"                   ] = "no";
   _defaultOptionValues["closed_geometry"                        ] = "no";
   _defaultOptionValues["debug"                                  ] = "no";
   _defaultOptionValues["discard_input_topology"                 ] = "no";
@@ -761,15 +764,6 @@ void BLSURFPlugin_Hypothesis::SetPreCADMergeEdges(bool theVal)
   if (theVal != ToBool( GetPreCADOptionValue("merge_edges", GET_DEFAULT()))) {
     _preCADMergeEdges = theVal;
     SetPreCADOptionValue("merge_edges", theVal ? "yes" : "no" );
-    NotifySubMeshesHypothesisModification();
-  }
-}
-
-//=============================================================================
-void BLSURFPlugin_Hypothesis::SetPreCADRemoveTinyUVEdges(bool theVal)
-{
-  if (theVal != _preCADRemoveTinyUVEdges) {
-    _preCADRemoveTinyUVEdges = theVal;
     NotifySubMeshesHypothesisModification();
   }
 }
@@ -1901,7 +1895,7 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save)
   save << " " << (int) _phySizeRel << " " << (int) _minSizeRel << " " << (int) _maxSizeRel << " " << _chordalError ;
   save << " " << (int) _anisotropic << " " << _anisotropicRatio << " " << (int) _removeTinyEdges << " " << _tinyEdgeLength ;
   save << " " << (int) _badElementRemoval << " " << _badElementAspectRatio << " " << (int) _optimizeMesh << " " << (int) _quadraticMesh ;
-  save << " " << (int) _preCADProcess3DTopology << " " << (int) _preCADRemoveDuplicateCADFaces << " " << (int) _preCADRemoveTinyUVEdges;
+  save << " " << (int) _preCADProcess3DTopology << " " << (int) _preCADRemoveDuplicateCADFaces;
   save << " " << (int)_optimiseTinyEdges << " " << _tinyEdgeOptimisationLength;
   save << " " << (int)_correctSurfaceIntersec << " " << _corrSurfaceIntersCost;
   save << " " << (int)_useGradation << " " << (int)_useVolumeGradation << " " << _volumeGradation;
@@ -2442,12 +2436,6 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
       isOK = static_cast<bool>(load >> i);
       if (isOK)
         _preCADRemoveDuplicateCADFaces = (bool) i;
-      else
-        load.clear(std::ios::badbit | load.rdstate());
-
-      isOK = static_cast<bool>(load >> i);
-      if (isOK)
-        _preCADRemoveTinyUVEdges = (bool) i;
       else
         load.clear(std::ios::badbit | load.rdstate());
 

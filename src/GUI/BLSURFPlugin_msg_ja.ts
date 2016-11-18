@@ -276,7 +276,7 @@
       <translation>エッジをマージします。</translation>
     </message>
     <message>
-      <source>BLSURF_PRECAD_REMOVE_TINY_UV_EDGES</source>
+      <source>remove_tiny_uv_edges</source>
       <translation>微小UVエッジの削除</translation>
     </message>
     <message>

@@ -287,7 +287,7 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
         <translation>Merge edges</translation>
     </message>
     <message>
-        <source>BLSURF_PRECAD_REMOVE_TINY_UV_EDGES</source>
+        <source>remove_tiny_uv_edges</source>
         <translation>Remove tiny UV edges</translation>
     </message>
     <message>

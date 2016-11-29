@@ -277,7 +277,7 @@
     </message>
     <message>
       <source>remove_tiny_uv_edges</source>
-      <translation>微小UVエッジの削除</translation>
+      <translation>微小なuvエッジの削除</translation>
     </message>
     <message>
       <source>BLSURF_PRECAD_REMOVE_DUPLICATE_CAD_FACES</source>
@@ -583,6 +583,26 @@
       <source>BLSURF_PERIODICITY_SELECT_EDGE</source>
       <translation>Edge</translation>
     </message>
+    <message>
+      <source>BLSURF_HYPATCH_TBL_HEADER</source>
+      <translation>Hyper-patch ID</translation>
+    </message>
+    <message>
+      <source>BLSURF_HYPATCH_SEL_FACE</source>
+      <translation>面選択</translation>
+    </message>
+    <message>
+      <source>BLSURF_HYPATCH_SEL_GROUP</source>
+      <translation>グループ選択</translation>
+    </message>
+    <message>
+      <source>BLSURF_TAGS</source>
+      <translation>ID</translation>
+    </message>
+    <message>
+      <source>BLSURF_HYPERPATCH_TAB</source>
+      <translation>Hyper-patch</translation>
+    </message>
   </context>
   <context>
     <name>BLSURFPluginGUI_AdvWidget</name>
@@ -649,10 +669,6 @@
     <message>
       <source>tags</source>
       <translation>タグ</translation>
-    </message>
-    <message>
-      <source/>
-      <translation type="unfinished"/>
     </message>
   </context>
 </TS>

@@ -594,6 +594,26 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
         <source>BLSURF_PERIODICITY_SELECT_EDGE</source>
         <translation>Arête</translation>
     </message>
+    <message>
+        <source>BLSURF_HYPATCH_TBL_HEADER</source>
+        <translation>IDs de l'hyper-patch</translation>
+    </message>
+    <message>
+        <source>BLSURF_HYPATCH_SEL_FACE</source>
+        <translation>Faces</translation>
+    </message>
+    <message>
+        <source>BLSURF_HYPATCH_SEL_GROUP</source>
+        <translation>Groupes</translation>
+    </message>
+    <message>
+        <source>BLSURF_TAGS</source>
+        <translation>IDs</translation>
+    </message>
+    <message>
+        <source>BLSURF_HYPERPATCH_TAB</source>
+        <translation>Hyper-patch</translation>
+    </message>
 </context>
 <context>
     <name>BLSURFPluginGUI_AdvWidget</name>

@@ -49,7 +49,7 @@ namespace
 }
 
 //=============================================================================
-BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_Gen * gen) :
+BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_Gen * gen, bool hasgeom) :
   SMESH_Hypothesis(hypId, studyId, gen), 
   _physicalMesh(GetDefaultPhysicalMesh()),
   _geometricMesh(GetDefaultGeometricMesh()),
@@ -99,7 +99,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   _preCadEdgesPeriodicityVector(GetDefaultPreCadEdgesPeriodicityVector()),
   _GMFFileName(GetDefaultGMFFile())
 {
-  _name = GetHypType();
+  _name = GetHypType(hasgeom);
   _param_algo_dim = 2;
   
 //   _GMFFileMode = false; // GMF ascii mode
@@ -115,6 +115,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
                                             // "optimise_tiny_edges",                      // default = 0
                                             // "remove_duplicate_cad_faces",               // default = 1
                                             "tiny_edge_avoid_surface_intersections",    // default = 1
+                                            "debug",                                    // default = 0 
                                             // "tiny_edge_respect_geometry",               // default = 0
                                             "" // mark of end
       };
@@ -139,7 +140,6 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
                                             "merge_edges",                              // default =  = 1
                                             "remove_duplicate_cad_faces",               // default = 1
                                             // "create_tag_on_collision",                  // default = 1
-                                            "debug",                                    // default = 0 
                                             "process_3d_topology",                      // default = 1
                                             // "remove_tiny_edges",                        // default = 0
                                             // remove_tiny_uv_edges option is not documented
@@ -167,7 +167,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
     _option2value[boolOptionNames[i++]].clear();
   }
   i = 0;
-  while (preCADboolOptionNames[i][0])
+  while (preCADboolOptionNames[i][0] && hasgeom)
   {
     _boolOptions.insert( preCADboolOptionNames[i] );
     _preCADoption2value[preCADboolOptionNames[i++]].clear();
@@ -177,7 +177,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
     _option2value[intOptionNames[i++]].clear();
   
   i = 0;
-  while (preCADintOptionNames[i][0])
+  while (preCADintOptionNames[i][0] && hasgeom)
     _preCADoption2value[preCADintOptionNames[i++]].clear();
 
   i = 0;
@@ -186,7 +186,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
     _option2value[doubleOptionNames[i++]].clear();
   }
   i = 0;
-  while (preCADdoubleOptionNames[i][0]) {
+  while (preCADdoubleOptionNames[i][0] && hasgeom) {
     _preCADdoubleOptions.insert(preCADdoubleOptionNames[i]);
     _preCADoption2value[preCADdoubleOptionNames[i++]].clear();
   }
@@ -196,7 +196,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
     _option2value[charOptionNames[i++]].clear();
   }
   i = 0;
-  while (preCADcharOptionNames[i][0]) {
+  while (preCADcharOptionNames[i][0] && hasgeom) {
     _preCADcharOptions.insert(preCADcharOptionNames[i]);
     _preCADoption2value[preCADcharOptionNames[i++]].clear();
   }
@@ -209,17 +209,20 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   _defaultOptionValues["rectify_jacobian"                       ] = "yes";
   _defaultOptionValues["respect_geometry"                       ] = "yes";
   _defaultOptionValues["tiny_edge_avoid_surface_intersections"  ] = "yes";
-  _defaultOptionValues["process_3d_topology"                    ] = "no";
-  _defaultOptionValues["remove_tiny_uv_edges"                   ] = "no";
-  _defaultOptionValues["closed_geometry"                        ] = "no";
   _defaultOptionValues["debug"                                  ] = "no";
-  _defaultOptionValues["discard_input_topology"                 ] = "no";
-  _defaultOptionValues["merge_edges"                            ] = "no";
-  _defaultOptionValues["periodic_tolerance"                     ] = "1e-5*D";
-  _defaultOptionValues["remove_duplicate_cad_faces"             ] = "no";
-  _defaultOptionValues["required_entities"                      ] = "respect";
-  _defaultOptionValues["sewing_tolerance"                       ] = "5e-4*D";
-  _defaultOptionValues["tags"                                   ] = "respect";
+  if ( hasgeom )
+  {
+    _defaultOptionValues["closed_geometry"                        ] = "no";
+    _defaultOptionValues["discard_input_topology"                 ] = "no";
+    _defaultOptionValues["merge_edges"                            ] = "no";
+    _defaultOptionValues["periodic_tolerance"                     ] = "1e-5*D";
+    _defaultOptionValues["process_3d_topology"                    ] = "no";
+    _defaultOptionValues["remove_duplicate_cad_faces"             ] = "no";
+    _defaultOptionValues["remove_tiny_uv_edges"                   ] = "no";
+    _defaultOptionValues["required_entities"                      ] = "respect";
+    _defaultOptionValues["sewing_tolerance"                       ] = "5e-4*D";
+    _defaultOptionValues["tags"                                   ] = "respect";
+  }
 
 #ifdef _DEBUG_
   // check validity of option names of _defaultOptionValues
@@ -228,7 +231,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
     ASSERT( _option2value.count( n2v->first ) || _preCADoption2value.count( n2v->first ));
   ASSERT( _option2value.size() + _preCADoption2value.size() == _defaultOptionValues.size() );
 #endif
-      
+
   _sizeMap.clear();
   _attractors.clear();
   _faceEntryEnfVertexListMap.clear();
@@ -802,7 +805,7 @@ void BLSURFPlugin_Hypothesis::SetPreCADDiscardInput(bool theVal)
 // Return true if any PreCAD option is activated
 bool BLSURFPlugin_Hypothesis::HasPreCADOptions(const BLSURFPlugin_Hypothesis* hyp)
 {
-  if ( !hyp )
+  if ( !hyp || hyp->_name == GetHypType(/*hasgeom=*/false))
   {
     return false;
   }

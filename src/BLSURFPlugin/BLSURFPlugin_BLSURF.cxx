@@ -226,6 +226,7 @@ TopTools_IndexedMapOfShape FacesWithEnforcedVertices;
 std::map< int, BLSURFPlugin_Hypothesis::TEnfVertexCoordsList > FaceId2EnforcedVertexCoords;
 std::map< BLSURFPlugin_Hypothesis::TEnfVertexCoords, BLSURFPlugin_Hypothesis::TEnfVertexCoords > EnfVertexCoords2ProjVertex;
 std::map< BLSURFPlugin_Hypothesis::TEnfVertexCoords, BLSURFPlugin_Hypothesis::TEnfVertexList > EnfVertexCoords2EnfVertexList;
+SMESH_MesherHelper* theHelper;
 
 bool HasSizeMapOnFace=false;
 bool HasSizeMapOnEdge=false;
@@ -238,18 +239,22 @@ bool HasSizeMapOnVertex=false;
  */
 //=============================================================================
 
-BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF(int hypId, int studyId,
-                                               SMESH_Gen* gen)
+BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF(int        hypId,
+                                         int        studyId,
+                                         SMESH_Gen* gen,
+                                         bool       theHasGEOM)
   : SMESH_2D_Algo(hypId, studyId, gen)
 {
-  _name = "MG-CADSurf";//"BLSURF";
+  _name = theHasGEOM ? "MG-CADSurf" : "MG-CADSurf_NOGEOM";//"BLSURF";
   _shapeType = (1 << TopAbs_FACE); // 1 bit /shape type
-  _compatibleHypothesis.push_back(BLSURFPlugin_Hypothesis::GetHypType());
-  _compatibleHypothesis.push_back(StdMeshers_ViscousLayers2D::GetHypType());
+  _compatibleHypothesis.push_back(BLSURFPlugin_Hypothesis::GetHypType(theHasGEOM));
+  if ( theHasGEOM )
+    _compatibleHypothesis.push_back(StdMeshers_ViscousLayers2D::GetHypType());
   _requireDiscreteBoundary = false;
   _onlyUnaryInput = false;
   _hypothesis = NULL;
   _supportSubmeshes = true;
+  _requireShape = theHasGEOM;
 
   smeshGen_i = SMESH_Gen_i::GetSMESHGen();
   CORBA::Object_var anObject = smeshGen_i->GetNS()->Resolve("/myStudyManager");
@@ -332,7 +337,8 @@ bool BLSURFPlugin_BLSURF::CheckHypothesis
   {
     theHyp = *itl;
     string hypName = theHyp->GetName();
-    if ( hypName == BLSURFPlugin_Hypothesis::GetHypType() )
+    if ( hypName == BLSURFPlugin_Hypothesis::GetHypType(true) ||
+         hypName == BLSURFPlugin_Hypothesis::GetHypType(false) )
     {
       _hypothesis = static_cast<const BLSURFPlugin_Hypothesis*> (theHyp);
       ASSERT(_hypothesis);
@@ -402,34 +408,85 @@ typedef struct {
         gp_XY uv;
         gp_XYZ xyz;
 } projectionPoint;
+
 /////////////////////////////////////////////////////////
-projectionPoint getProjectionPoint(const TopoDS_Face& face, const gp_Pnt& point)
+
+projectionPoint getProjectionPoint(const TopoDS_Face& theFace, const gp_Pnt& thePoint)
 {
   projectionPoint myPoint;
-  Handle(Geom_Surface) surface = BRep_Tool::Surface(face);
-  GeomAPI_ProjectPointOnSurf projector( point, surface );
-  if ( !projector.IsDone() || projector.NbPoints()==0 )
-    throw "getProjectionPoint: Can't project";
 
-  Quantity_Parameter u,v;
-  projector.LowerDistanceParameters(u,v);
-  myPoint.uv = gp_XY(u,v);
-  gp_Pnt aPnt = projector.NearestPoint();
-  myPoint.xyz = gp_XYZ(aPnt.X(),aPnt.Y(),aPnt.Z());
-  //return gp_XY(u,v);
+  if ( theFace.IsNull() )
+  {
+    TopoDS_Shape foundFace, myShape = theHelper->GetSubShape();
+    TopTools_MapOfShape checkedFaces;
+    std::map< double, std::pair< TopoDS_Face, gp_Pnt2d > > dist2face;
+
+    for ( TopExp_Explorer exp ( myShape, TopAbs_FACE ); exp.More(); exp.Next())
+    {
+      const TopoDS_Face& face = TopoDS::Face( exp.Current() );
+      if ( !checkedFaces.Add( face )) continue;
+
+      // check distance to face
+      Handle(ShapeAnalysis_Surface) surface = theHelper->GetSurface( face );
+      gp_Pnt2d uv = surface->ValueOfUV( thePoint, Precision::Confusion());
+      double distance = surface->Gap();
+      if ( distance > Precision::Confusion() )
+      {
+        // the face is far, store for future analysis
+        dist2face.insert( std::make_pair( distance, std::make_pair( face, uv )));
+      }
+      else
+      {
+        // check location on the face
+        BRepClass_FaceClassifier FC( face, uv, Precision::Confusion());
+        if ( FC.State() == TopAbs_IN )
+        {
+          foundFace   = face;
+          myPoint.uv  = uv.XY();
+          myPoint.xyz = surface->Value( uv ).XYZ();
+          break;
+        }
+      }
+    }
+    if ( foundFace.IsNull() )
+    {
+      // find the closest face
+      std::map< double, std::pair< TopoDS_Face, gp_Pnt2d > >::iterator d2f = dist2face.begin();
+      for ( ; d2f != dist2face.end(); ++d2f )
+      {
+        const TopoDS_Face& face = d2f->second.first;
+        const gp_Pnt2d &     uv = d2f->second.second;
+        BRepClass_FaceClassifier FC( face, uv, Precision::Confusion());
+        if ( FC.State() == TopAbs_IN )
+        {
+          foundFace   = face;
+          myPoint.uv  = uv.XY();
+          myPoint.xyz = theHelper->GetSurface( face )->Value( uv ).XYZ();
+          break;
+        }
+      }
+    }
+    // set the resultShape
+    if ( foundFace.IsNull() )
+      throw SMESH_ComputeError(COMPERR_BAD_PARMETERS,
+                               "getProjectionPoint: can't find a face by a vertex");
+  }
+  else
+  {
+    Handle(Geom_Surface) surface = BRep_Tool::Surface( theFace );
+    GeomAPI_ProjectPointOnSurf projector( thePoint, surface );
+    if ( !projector.IsDone() || projector.NbPoints()==0 )
+      throw SMESH_ComputeError(COMPERR_BAD_PARMETERS,
+                               "getProjectionPoint: can't project a vertex to a face");
+
+    Quantity_Parameter u,v;
+    projector.LowerDistanceParameters(u,v);
+    myPoint.uv = gp_XY(u,v);
+    gp_Pnt aPnt = projector.NearestPoint();
+    myPoint.xyz = gp_XYZ(aPnt.X(),aPnt.Y(),aPnt.Z());
+  }
+
   return myPoint;
-}
-/////////////////////////////////////////////////////////
-
-/////////////////////////////////////////////////////////
-double getT(const TopoDS_Edge& edge, const gp_Pnt& point)
-{
-  Standard_Real f,l;
-  Handle(Geom_Curve) curve = BRep_Tool::Curve(edge, f,l);
-  GeomAPI_ProjectPointOnCurve projector( point, curve);
-  if ( projector.NbPoints() == 0 )
-    throw;
-  return projector.LowerDistanceParameter();
 }
 
 /////////////////////////////////////////////////////////
@@ -510,112 +567,7 @@ void _createEnforcedVertexOnFace(TopoDS_Face faceShape, gp_Pnt aPnt, BLSURFPlugi
     }
   }
 }
-
-/*!
- * \brief Find geom faces supporting given points
- */
-TopoDS_Shape BLSURFPlugin_BLSURF::
-findFaces( const BLSURFPlugin_Hypothesis::TEnfVertexList& enfVertexList )
-{
-  // get points from enfVertexList
-  vector< gp_Pnt > points;
-  BLSURFPlugin_Hypothesis::TEnfVertexList::const_iterator enfVertexListIt = enfVertexList.begin();
-  for( ; enfVertexListIt != enfVertexList.end() ; ++enfVertexListIt )
-  {
-    BLSURFPlugin_Hypothesis::TEnfVertex * enfVertex = *enfVertexListIt;
-    if ( enfVertex->coords.size() >= 3 )
-    {
-      points.push_back( gp_Pnt( enfVertex->coords[0], enfVertex->coords[1], enfVertex->coords[2]));
-    }
-    else
-    {
-      TopoDS_Shape GeomShape = entryToShape( enfVertex->geomEntry );
-      if ( !GeomShape.IsNull() )
-      {
-        if ( GeomShape.ShapeType() == TopAbs_VERTEX )
-          points.push_back( BRep_Tool::Pnt( TopoDS::Vertex( GeomShape )));
-
-        else if ( GeomShape.ShapeType() == TopAbs_COMPOUND)
-          for (TopoDS_Iterator it (GeomShape); it.More(); it.Next())
-           if ( it.Value().ShapeType() == TopAbs_VERTEX )
-             points.push_back( BRep_Tool::Pnt( TopoDS::Vertex( it.Value() )));
-      }
-    }
-  }
-
-  TopoDS_Shape resultShape, myShape = myHelper->GetSubShape();
-  TopoDS_Compound compound;
-
-  for ( size_t i = 0; i <= points.size(); ++i )
-  {
-    TopoDS_Face foundFace;
-    TopTools_MapOfShape checkedFaces;
-    std::map< double, std::pair< TopoDS_Face, gp_Pnt2d > > dist2face;
-
-    for ( TopExp_Explorer exp ( myShape, TopAbs_FACE ); exp.More(); exp.Next())
-    {
-      const TopoDS_Face& face = TopoDS::Face( exp.Current() );
-      if ( !checkedFaces.Add( face )) continue;
-
-      // check distance to face
-      Handle(ShapeAnalysis_Surface) surface = myHelper->GetSurface( face );
-      gp_Pnt2d uv = surface->ValueOfUV( points[i], Precision::Confusion());
-      double distance = surface->Gap();
-      if ( distance > Precision::Confusion() )
-      {
-        // the face is far, store for future analysis
-        dist2face.insert( std::make_pair( distance, std::make_pair( face, uv )));
-      }
-      else
-      {
-        // check location on the face
-        BRepClass_FaceClassifier FC( face, uv, Precision::Confusion());
-        if ( FC.State() == TopAbs_IN )
-        {
-          foundFace = face;
-          break;
-        }
-      }
-    }
-    if ( foundFace.IsNull() )
-    {
-      // find the closest face
-      std::map< double, std::pair< TopoDS_Face, gp_Pnt2d > >::iterator d2f = dist2face.begin();
-      for ( ; d2f != dist2face.end(); ++d2f )
-      {
-        const TopoDS_Face& face = d2f->second.first;
-        const gp_Pnt2d &     uv = d2f->second.second;
-        BRepClass_FaceClassifier FC( face, uv, Precision::Confusion());
-        if ( FC.State() == TopAbs_IN )
-        {
-          foundFace = face;
-          break;
-        }
-      }
-    }
-    // set the resultShape
-    if ( !foundFace.IsNull() )
-    {
-      if ( resultShape.IsNull() )
-      {
-        resultShape = foundFace;
-      }
-      else
-      {
-        BRep_Builder builder;
-        if ( compound.IsNull() )
-        {
-          builder.MakeCompound( compound );
-          resultShape = compound;
-        }
-        builder.Add( compound, foundFace );
-      }
-    }
-  } // loop on points
-
-  return resultShape;
-}
-
+  
 /////////////////////////////////////////////////////////
 void BLSURFPlugin_BLSURF::createEnforcedVertexOnFace(TopoDS_Shape faceShape, BLSURFPlugin_Hypothesis::TEnfVertexList enfVertexList)
 {
@@ -874,11 +826,25 @@ void BLSURFPlugin_BLSURF::createPreCadEdgesPeriodicity(TopoDS_Shape theGeomShape
 
 void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
                                         cadsurf_session_t *            css,
-                                        const TopoDS_Shape&            theGeomShape
-                                        )
+                                        const TopoDS_Shape&            theGeomShape)
 {
   // rnc : Bug 1457
   // Clear map so that it is not stored in the algorithm with old enforced vertices in it
+  FacesWithSizeMap.Clear();
+  FaceId2SizeMap.clear();
+  EdgesWithSizeMap.Clear();
+  EdgeId2SizeMap.clear();
+  VerticesWithSizeMap.Clear();
+  VertexId2SizeMap.clear();
+  FaceId2PythonSmp.clear();
+  EdgeId2PythonSmp.clear();
+  VertexId2PythonSmp.clear();
+  FaceId2AttractorCoords.clear();
+  FaceId2ClassAttractor.clear();
+  FaceIndex2ClassAttractor.clear();
+  FacesWithEnforcedVertices.Clear();
+  FaceId2EnforcedVertexCoords.clear();
+  EnfVertexCoords2ProjVertex.clear();
   EnfVertexCoords2EnfVertexList.clear();
 
   double diagonal               = SMESH_Mesh::GetShapeDiagonalSize( theGeomShape );
@@ -1296,12 +1262,11 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
         GeomShape = entryToShape(enfIt->first);
         if ( GeomShape.IsNull() )
         {
-          GeomShape = findFaces( enfIt->second );
-          if ( GeomShape.IsNull() )
-            continue;
+          createEnforcedVertexOnFace( GeomShape, enfIt->second );
         }
         // Group Management
-        if ( GeomShape.ShapeType() == TopAbs_COMPOUND){
+        else if ( GeomShape.ShapeType() == TopAbs_COMPOUND)
+        {
           for (TopoDS_Iterator it (GeomShape); it.More(); it.Next()){
             if (it.Value().ShapeType() == TopAbs_FACE){
               HasSizeMapOnFace = true;
@@ -1309,7 +1274,8 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
             }
           }
         }
-        if ( GeomShape.ShapeType() == TopAbs_FACE){
+        else if ( GeomShape.ShapeType() == TopAbs_FACE)
+        {
           HasSizeMapOnFace = true;
           createEnforcedVertexOnFace(GeomShape, enfIt->second);
         }
@@ -1411,17 +1377,17 @@ namespace
   /*!
    * \brief Class correctly terminating usage of MG-CADSurf library at destruction
    */
-  class BLSURF_Cleaner
+  struct BLSURF_Cleaner
   {
-    context_t *       _ctx;
+    context_t *        _ctx;
     cadsurf_session_t* _css;
-    cad_t *           _cad;
-    dcad_t *          _dcad;
-  public:
-    BLSURF_Cleaner(context_t *       ctx,
-                   cadsurf_session_t* css,
-                   cad_t *           cad,
-                   dcad_t *          dcad)
+    cad_t *            _cad;
+    dcad_t *           _dcad;
+
+    BLSURF_Cleaner(context_t *        ctx,
+                   cadsurf_session_t* css=0,
+                   cad_t *            cad=0,
+                   dcad_t *           dcad=0)
       : _ctx ( ctx  ),
         _css ( css  ),
         _cad ( cad  ),
@@ -1757,8 +1723,8 @@ status_t interrupt_cb(integer *interrupt_status, void *user_data);
  */
 //=============================================================================
 
-bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape) {
-
+bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape)
+{
   // Fix problem with locales
   Kernel_Utils::Localizer aLocalizer;
 
@@ -1828,7 +1794,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
 
   SMESHDS_Mesh* meshDS = aMesh.GetMeshDS();
   SMESH_MesherHelper helper( aMesh ), helperWithShape( aMesh );
-  myHelper = & helperWithShape;
+  myHelper = theHelper = & helperWithShape;
   // do not call helper.IsQuadraticSubMesh() because sub-meshes
   // may be cleaned and helper.myTLinkNodeMap gets invalid in such a case
   bool haveQuadraticSubMesh = helperWithShape.IsQuadraticSubMesh( aShape );
@@ -1863,15 +1829,6 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   /* create the CAD object we will work on. It is associated to the context ctx. */
   cad_t *c     = cad_new(ctx);
   dcad_t *dcad = dcad_new(c);
-
-  FacesWithSizeMap.Clear();
-  FaceId2SizeMap.clear();
-  FaceId2ClassAttractor.clear();
-  FaceIndex2ClassAttractor.clear();
-  EdgesWithSizeMap.Clear();
-  EdgeId2SizeMap.clear();
-  VerticesWithSizeMap.Clear();
-  VertexId2SizeMap.clear();
 
   /* Now fill the CAD object with data from your CAD
    * environement. This is the most complex part of a successfull
@@ -2851,6 +2808,166 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
 
 //================================================================================
 /*!
+ * \brief Compute a mesh basing on discrete CAD description
+ */
+//================================================================================
+
+bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh & aMesh, SMESH_MesherHelper* aHelper)
+{
+  if ( aMesh.NbFaces() == 0 )
+    return error( COMPERR_BAD_INPUT_MESH, "2D elements are missing" );
+
+  context_t *ctx = context_new();
+  if (!ctx) return error("Pb in context_new()");
+
+  BLSURF_Cleaner cleaner( ctx );
+
+  message_cb_user_data mcud;
+  mcud._error     = & this->SMESH_Algo::_comment;
+  mcud._progress  = & this->SMESH_Algo::_progress;
+  mcud._verbosity =
+    _hypothesis ? _hypothesis->GetVerbosity() : BLSURFPlugin_Hypothesis::GetDefaultVerbosity();
+  meshgems_status_t ret = context_set_message_callback(ctx, message_cb, &mcud);
+  if (ret != STATUS_OK) return error("Pb. in context_set_message_callback() ");
+
+  cadsurf_session_t * css = cadsurf_session_new(ctx);
+  if(!css) return error( "Pb. in cadsurf_session_new() " );
+  cleaner._css = css;
+
+
+  // Fill an input mesh
+
+  mesh_t * msh = meshgems_mesh_new_in_memory( ctx );
+  if ( !msh ) return error("Pb. in meshgems_mesh_new_in_memory()"); 
+
+  // mark nodes used by 2D elements
+  SMESHDS_Mesh* meshDS = aMesh.GetMeshDS();
+  SMDS_NodeIteratorPtr nodeIt = meshDS->nodesIterator();
+  while ( nodeIt->more() )
+  {
+    const SMDS_MeshNode* n = nodeIt->next();
+    n->setIsMarked( n->NbInverseElements( SMDSAbs_Face ));
+  }
+  meshgems_mesh_set_vertex_count( msh, meshDS->NbNodes() );
+
+  // set node coordinates
+  if ( meshDS->NbNodes() != meshDS->MaxNodeID() )
+  {
+    meshDS->compactMesh();
+  }
+  SMESH_TNodeXYZ nXYZ;
+  nodeIt = meshDS->nodesIterator();
+  meshgems_integer i;
+  for ( i = 1; nodeIt->more(); ++i )
+  {
+    nXYZ.Set( nodeIt->next() );
+    meshgems_mesh_set_vertex_coordinates( msh, i, nXYZ._xyz );
+  }
+
+  // set nodes of faces
+  meshgems_mesh_set_triangle_count  ( msh, meshDS->GetMeshInfo().NbTriangles() );
+  meshgems_mesh_set_quadrangle_count( msh, meshDS->GetMeshInfo().NbQuadrangles() );
+  meshgems_integer nodeIDs[4];
+  meshgems_integer iT = 1, iQ = 1;
+  SMDS_FaceIteratorPtr faceIt = meshDS->facesIterator();
+  while ( faceIt->more() )
+  {
+    const SMDS_MeshElement* face = faceIt->next();
+    meshgems_integer nbNodes = face->NbCornerNodes();
+    if ( nbNodes > 4 || face->IsPoly() ) continue;
+
+    for ( i = 0; i < nbNodes; ++i )
+      nodeIDs[i] = face->GetNode( i )->GetID();
+    if ( nbNodes == 3 )
+      meshgems_mesh_set_triangle_vertices  ( msh, iT++, nodeIDs );
+    else
+      meshgems_mesh_set_quadrangle_vertices( msh, iQ++, nodeIDs );
+  }
+
+  ret = cadsurf_set_mesh(css, msh);
+  if ( ret != STATUS_OK ) return error("Pb in cadsurf_set_mesh()");
+
+
+  // Compute the mesh
+
+  SetParameters(_hypothesis, css, aMesh.GetShapeToMesh() );
+
+  ret = cadsurf_compute_mesh(css);
+  if ( ret != STATUS_OK ) return false;
+
+  mesh_t *omsh = 0;
+  cadsurf_get_mesh(css, &omsh);
+  if ( !omsh ) return error( "Pb. in cadsurf_get_mesh()" );
+
+
+  // Update SALOME mesh
+
+  // remove quadrangles and triangles
+  for ( faceIt = meshDS->facesIterator(); faceIt->more();  )
+  {
+    const SMDS_MeshElement* face = faceIt->next();
+    if ( !face->IsPoly() )
+      meshDS->RemoveFreeElement( face, /*sm=*/0, /*fromGroups=*/true );
+  }
+  // remove edges that bound the just removed faces
+  for ( SMDS_EdgeIteratorPtr edgeIt = meshDS->edgesIterator(); edgeIt->more(); )
+  {
+    const SMDS_MeshElement* edge = edgeIt->next();
+    const SMDS_MeshNode* n0 = edge->GetNode(0);
+    const SMDS_MeshNode* n1 = edge->GetNode(1);
+    if ( n0->isMarked() &&
+         n1->isMarked() &&
+         n0->NbInverseElements( SMDSAbs_Volume ) == 0 &&
+         n1->NbInverseElements( SMDSAbs_Volume ) == 0 )
+      meshDS->RemoveFreeElement( edge, /*sm=*/0, /*fromGroups=*/true );
+  }
+  // remove nodes that just became free
+  for ( nodeIt = meshDS->nodesIterator(); nodeIt->more(); )
+  {
+    const SMDS_MeshNode* n = nodeIt->next();
+    if ( n->isMarked() && n->NbInverseElements() == 0 )
+      meshDS->RemoveFreeNode( n, /*sm=*/0, /*fromGroups=*/true );
+  }
+
+  // add nodes
+  meshgems_integer nbvtx = 0, nodeID;
+  meshgems_mesh_get_vertex_count( omsh, &nbvtx );
+  meshgems_real xyz[3];
+  for ( i = 1; i <= nbvtx; ++i )
+  {
+    meshgems_mesh_get_vertex_coordinates( omsh, i, xyz );
+    SMDS_MeshNode* n = meshDS->AddNode( xyz[0], xyz[1], xyz[2] );
+    nodeID = n->GetID();
+    meshgems_mesh_set_vertex_tag( omsh, i, &nodeID ); // save mapping of IDs in MG and SALOME meshes
+  }
+
+  // add triangles
+  meshgems_integer nbtri = 0;
+  meshgems_mesh_get_triangle_count( omsh, &nbtri );
+  const SMDS_MeshNode* nodes[3];
+  for ( i = 1; i <= nbtri; ++i )
+  {
+    meshgems_mesh_get_triangle_vertices( omsh, i, nodeIDs );
+    for ( int j = 0; j < 3; ++j )
+    {
+      meshgems_mesh_get_vertex_tag( omsh, nodeIDs[j], &nodeID );
+      nodes[j] = meshDS->FindNode( nodeID );
+    }
+    meshDS->AddFace( nodes[0], nodes[1], nodes[2] );
+  }
+
+  cadsurf_regain_mesh(css, omsh);
+
+  // as we don't assign the new triangles to a shape (the pseudo-shape),
+  // we mark the shape as always computed to avoid the error messages
+  // that no elements assigned to the shape
+  aMesh.GetSubMesh( aHelper->GetSubShape() )->SetIsAlwaysComputed( true );
+
+  return true;
+}
+
+//================================================================================
+/*!
  * \brief Terminates computation
  */
 //================================================================================
@@ -2866,7 +2983,10 @@ void BLSURFPlugin_BLSURF::CancelCompute()
  */
 //=============================================================================
 
-void BLSURFPlugin_BLSURF::Set_NodeOnEdge(SMESHDS_Mesh* meshDS, const SMDS_MeshNode* node, const TopoDS_Shape& ed) {
+void BLSURFPlugin_BLSURF::Set_NodeOnEdge(SMESHDS_Mesh*        meshDS,
+                                         const SMDS_MeshNode* node,
+                                         const TopoDS_Shape&  ed)
+{
   const TopoDS_Edge edge = TopoDS::Edge(ed);
 
   gp_Pnt pnt(node->X(), node->Y(), node->Z());

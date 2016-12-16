@@ -26,6 +26,7 @@
 //
 #include "BLSURFPluginGUI_HypothesisCreator.h"
 #include "BLSURFPluginGUI_Dlg.h"
+#include "BLSURFPlugin_Hypothesis.hxx"
 
 #include <GeometryGUI.h>
 
@@ -668,6 +669,9 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   if( isCreation() )
     myName = new QLineEdit( myStdGroup );
   myStdWidget = new BLSURFPluginGUI_StdWidget(myStdGroup);
+  if ( !hasGeom() ) {
+    myStdWidget->myPhysicalMesh->removeItem( PhysicalLocalSize );
+  }
   
   int row = 0;
   if( isCreation() ) {
@@ -694,7 +698,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 
   // Size Maps parameters
 
-  mySmpGroup = new QWidget();
+  mySmpGroup = new QWidget( dlg() );
 
   //Layout
   QGridLayout* anSmpLayout = new QGridLayout(mySmpGroup);
@@ -825,7 +829,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   smpTab->setCurrentIndex( SMP_STD_TAB ); 
 
   // Enforced vertices parameters
-  myEnfGroup = new QWidget();
+  myEnfGroup = new QWidget( dlg() );
   QGridLayout* anEnfLayout = new QGridLayout(myEnfGroup);
 
   myEnforcedTreeWidget = new QTreeWidget(myEnfGroup);
@@ -918,7 +922,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 
   // ---
   // Periodicity parameters
-  myPeriodicityGroup = new QWidget();
+  myPeriodicityGroup = new QWidget( dlg() );
   aPeriodicityLayout1 = new QGridLayout(myPeriodicityGroup);
 
   myPeriodicitySplitter = new QSplitter(myPeriodicityGroup);
@@ -1143,14 +1147,24 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   hpLayout->addWidget( hpRemBtn,              2, 3, 1, 2 );
   hpLayout->addWidget( myHyPatchFaceSelector, 3, 1, 1, 4 );
 
+
+
   // ---
   myTabWidget->insertTab( STD_TAB, myStdGroup, tr( "SMESH_ARGUMENTS" ) );
   myTabWidget->insertTab( ADV_TAB, myAdvGroup, tr( "BLSURF_ADV_ARGS" ) );
-  myTabWidget->insertTab( SMP_TAB, mySmpGroup, tr( "LOCAL_SIZE" ) );
-  myTabWidget->insertTab( ENF_TAB, myEnfGroup, tr( "BLSURF_ENF_VER" ) );
-  myTabWidget->insertTab( PERIODICITY_TAB, myPeriodicityGroup, tr( "BLSURF_PERIODICITY" ) );
-  myTabWidget->insertTab( HYPERPATCH_TAB, hpGroup, tr( "BLSURF_HYPERPATCH_TAB" ));
-
+  if ( hasGeom() ) {
+    myTabWidget->insertTab( SMP_TAB, mySmpGroup, tr( "LOCAL_SIZE" ) );
+    myTabWidget->insertTab( ENF_TAB, myEnfGroup, tr( "BLSURF_ENF_VER" ) );
+    myTabWidget->insertTab( PERIODICITY_TAB, myPeriodicityGroup, tr( "BLSURF_PERIODICITY" ) );
+    myTabWidget->insertTab( HYPERPATCH_TAB, hpGroup, tr( "BLSURF_HYPERPATCH_TAB" ));
+  }
+  else
+  {
+    mySmpGroup->hide();
+    myEnfGroup->hide();
+    myPeriodicityGroup->hide();
+    hpGroup->hide();
+  }
   myTabWidget->setCurrentIndex( STD_TAB );
 
   connect( myAdvWidget->addBtn, SIGNAL( clicked() ),           this, SLOT( onAddOption() ) );
@@ -3385,6 +3399,11 @@ void BLSURFPluginGUI_HypothesisCreator::onHyPatchRemove()
     myHyPatchTable->removeRow( items[0]->row() );
     items = myHyPatchTable->selectedItems();
   }
+}
+
+bool BLSURFPluginGUI_HypothesisCreator::hasGeom() const
+{
+  return hypType() == BLSURFPlugin_Hypothesis::GetHypType(true);
 }
 
 QString BLSURFPluginGUI_HypothesisCreator::caption() const

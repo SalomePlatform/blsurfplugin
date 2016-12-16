@@ -37,8 +37,17 @@
 #include "BLSURFPlugin_BLSURF_i.hxx"
 #include "BLSURFPlugin_Hypothesis_i.hxx"
 
-template <class T> class BLSURFPlugin_Creator_i:public HypothesisCreator_i<T>
+template <class T, bool NOGEOM>
+class BLSURFPlugin_Creator_i : public GenericHypothesisCreator_i
 {
+  // Create a hypothesis
+  virtual SMESH_Hypothesis_i* Create(PortableServer::POA_ptr thePOA,
+                                     int                     theStudyId,
+                                     ::SMESH_Gen*            theGenImpl)
+  {
+    return new T (thePOA, theStudyId, theGenImpl, !NOGEOM);
+  }
+
   // as we have 'module BLSURFPlugin' in BLSURFPlugin_Algorithm.idl
   virtual std::string GetModuleName() { return "BLSURFPlugin"; }
 };
@@ -54,19 +63,20 @@ extern "C"
   BLSURFPLUGIN_EXPORT
   GenericHypothesisCreator_i* GetHypothesisCreator (const char* aHypName)
   {
-    MESSAGE("GetHypothesisCreator " << aHypName);
-
     GenericHypothesisCreator_i* aCreator = 0;
 
     // Algorithms
     if (strcmp(aHypName, "BLSURF") == 0 ||
         strcmp(aHypName, "MG-CADSurf") == 0 )
-      aCreator = new BLSURFPlugin_Creator_i<BLSURFPlugin_BLSURF_i>;
+      aCreator = new BLSURFPlugin_Creator_i<BLSURFPlugin_BLSURF_i,false>;
+    else if (strcmp(aHypName, "MG-CADSurf_NOGEOM") == 0 )
+      aCreator = new BLSURFPlugin_Creator_i<BLSURFPlugin_BLSURF_i,true>;
     // Hypotheses
     else if (strcmp(aHypName, "BLSURF_Parameters") == 0 ||
              strcmp(aHypName, "MG-CADSurf Parameters") == 0 )
-      aCreator = new BLSURFPlugin_Creator_i<BLSURFPlugin_Hypothesis_i>;
-    else ;
+      aCreator = new BLSURFPlugin_Creator_i<BLSURFPlugin_Hypothesis_i,false>;
+    else if (strcmp(aHypName, "MG-CADSurf Parameters_NOGEOM") == 0 )
+      aCreator = new BLSURFPlugin_Creator_i<BLSURFPlugin_Hypothesis_i,true>;
 
     return aCreator;
   }

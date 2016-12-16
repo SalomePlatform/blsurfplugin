@@ -75,7 +75,7 @@ class TopoDS_Shape;
 
 class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
   public:
-    BLSURFPlugin_BLSURF(int hypId, int studyId, SMESH_Gen* gen);
+    BLSURFPlugin_BLSURF(int hypId, int studyId, SMESH_Gen* gen, bool theHasGEOM);
 
     virtual ~BLSURFPlugin_BLSURF();
 
@@ -86,6 +86,7 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
     void SetParameters(const BLSURFPlugin_Hypothesis* hyp, cadsurf_session_t *css, const TopoDS_Shape& shape);
 
     virtual bool Compute(SMESH_Mesh& aMesh, const TopoDS_Shape& aShape);
+    virtual bool Compute(SMESH_Mesh & aMesh, SMESH_MesherHelper* aHelper);
 
     virtual void CancelCompute();
     bool computeCanceled() { return _compute_canceled; }
@@ -148,7 +149,6 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
     TopoDS_Shape entryToShape(std::string entry);
     void addCoordsFromVertices(const std::vector<std::string> &theVerticesEntries, std::vector<double> &theVerticesCoords);
     void addCoordsFromVertex(BLSURFPlugin_Hypothesis::TEntry theVertexEntry, std::vector<double> &theVerticesCoords);
-    TopoDS_Shape findFaces( const BLSURFPlugin_Hypothesis::TEnfVertexList& enfVertexList );
     void createEnforcedVertexOnFace(TopoDS_Shape FaceShape, BLSURFPlugin_Hypothesis::TEnfVertexList enfVertexList);
     void createPreCadFacesPeriodicity(TopoDS_Shape theGeomShape, const BLSURFPlugin_Hypothesis::TPreCadPeriodicity &preCadPeriodicity);
     void createPreCadEdgesPeriodicity(TopoDS_Shape theGeomShape, const BLSURFPlugin_Hypothesis::TPreCadPeriodicity &preCadPeriodicity);

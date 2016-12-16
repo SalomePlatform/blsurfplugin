@@ -257,7 +257,6 @@ private:
   bool                sizeMapValidationFromEntry(QString,bool displayError = true);
   GeomSelectionTools* getGeomSelectionTool() const;
   GEOM::GEOM_Gen_var  getGeomEngine();
-  //void                insertElementType( TopAbs_ShapeEnum );
   bool                insertElement( GEOM::GEOM_Object_var, bool modify = false );
   bool                insertAttractor(GEOM::GEOM_Object_var, GEOM::GEOM_Object_var, bool modify = false);
   int                 findRowFromEntry(QString entry);
@@ -266,6 +265,7 @@ private:
   void                avoidSimultaneousSelection(ListOfWidgets &myCustomWidgets) const;
   void                AddPreCadSequenceToVector(BlsurfHypothesisData& h_data, BLSURFPlugin::TPeriodicityList_var preCadFacePeriodicityVector, bool onFace) const;
   void                addHyPatchToTable(const QString& tags);
+  bool                hasGeom() const;
 
 private:
   

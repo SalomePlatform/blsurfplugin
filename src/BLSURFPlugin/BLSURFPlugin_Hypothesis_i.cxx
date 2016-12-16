@@ -46,11 +46,16 @@ using namespace std;
  *  Constructor
  */
 //=============================================================================
-BLSURFPlugin_Hypothesis_i::BLSURFPlugin_Hypothesis_i(PortableServer::POA_ptr thePOA, int theStudyId,
-    ::SMESH_Gen* theGenImpl) :
-  SALOME::GenericObj_i(thePOA), SMESH_Hypothesis_i(thePOA) {
-  MESSAGE( "BLSURFPlugin_Hypothesis_i::BLSURFPlugin_Hypothesis_i" );
-  myBaseImpl = new ::BLSURFPlugin_Hypothesis(theGenImpl->GetANewId(), theStudyId, theGenImpl);
+BLSURFPlugin_Hypothesis_i::BLSURFPlugin_Hypothesis_i(PortableServer::POA_ptr thePOA,
+                                                     int                     theStudyId,
+                                                     ::SMESH_Gen*            theGenImpl,
+                                                     bool                    theHasGEOM) :
+  SALOME::GenericObj_i(thePOA), SMESH_Hypothesis_i(thePOA)
+{
+  myBaseImpl = new ::BLSURFPlugin_Hypothesis(theGenImpl->GetANewId(),
+                                             theStudyId,
+                                             theGenImpl,
+                                             theHasGEOM);
 }
 
 //=============================================================================
@@ -60,8 +65,8 @@ BLSURFPlugin_Hypothesis_i::BLSURFPlugin_Hypothesis_i(PortableServer::POA_ptr the
  *  Destructor
  */
 //=============================================================================
-BLSURFPlugin_Hypothesis_i::~BLSURFPlugin_Hypothesis_i() {
-  MESSAGE( "BLSURFPlugin_Hypothesis_i::~BLSURFPlugin_Hypothesis_i" );
+BLSURFPlugin_Hypothesis_i::~BLSURFPlugin_Hypothesis_i()
+{
 }
 
 //=============================================================================
@@ -74,8 +79,8 @@ BLSURFPlugin_Hypothesis_i::~BLSURFPlugin_Hypothesis_i() {
  */
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetPhysicalMesh(CORBA::Long theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetPhysicalMesh");
+void BLSURFPlugin_Hypothesis_i::SetPhysicalMesh(CORBA::Long theValue)
+{
   ASSERT(myBaseImpl);
   this->GetImpl()->SetPhysicalMesh((::BLSURFPlugin_Hypothesis::PhysicalMesh) theValue);
   SMESH::TPythonDump() << _this() << ".SetPhysicalMesh( " << theValue << " )";
@@ -88,8 +93,8 @@ void BLSURFPlugin_Hypothesis_i::SetPhysicalMesh(CORBA::Long theValue) {
  *  Get PhysicalMesh
  */
 //=============================================================================
-CORBA::Long BLSURFPlugin_Hypothesis_i::GetPhysicalMesh() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetPhysicalMesh");
+CORBA::Long BLSURFPlugin_Hypothesis_i::GetPhysicalMesh()
+{
   ASSERT(myBaseImpl);
   return this->GetImpl()->GetPhysicalMesh();
 }
@@ -102,8 +107,8 @@ CORBA::Long BLSURFPlugin_Hypothesis_i::GetPhysicalMesh() {
  */
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetGeometricMesh(CORBA::Long theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetGeometricMesh");
+void BLSURFPlugin_Hypothesis_i::SetGeometricMesh(CORBA::Long theValue)
+{
   ASSERT(myBaseImpl);
   this->GetImpl()->SetGeometricMesh((::BLSURFPlugin_Hypothesis::GeometricMesh) theValue);
   SMESH::TPythonDump() << _this() << ".SetGeometricMesh( " << theValue << " )";
@@ -116,8 +121,8 @@ void BLSURFPlugin_Hypothesis_i::SetGeometricMesh(CORBA::Long theValue) {
  *  Get GeometricMesh
  */
 //=============================================================================
-CORBA::Long BLSURFPlugin_Hypothesis_i::GetGeometricMesh() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetGeometricMesh");
+CORBA::Long BLSURFPlugin_Hypothesis_i::GetGeometricMesh()
+{
   ASSERT(myBaseImpl);
   return this->GetImpl()->GetGeometricMesh();
 }
@@ -129,8 +134,8 @@ CORBA::Long BLSURFPlugin_Hypothesis_i::GetGeometricMesh() {
  *  Set PhySize
  */
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetPhySize(CORBA::Double theValue) {
-//   MESSAGE("BLSURFPlugin_Hypothesis_i::SetPhySize");
+void BLSURFPlugin_Hypothesis_i::SetPhySize(CORBA::Double theValue)
+{
   ASSERT(myBaseImpl);
   this->GetImpl()->SetPhySize(theValue, false);
   SMESH::TPythonDump() << _this() << ".SetPhySize( " << theValue << " )";
@@ -143,8 +148,8 @@ void BLSURFPlugin_Hypothesis_i::SetPhySize(CORBA::Double theValue) {
  *  Set Relative PhySize
  */
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetPhySizeRel(CORBA::Double theValue) {
-//   MESSAGE("BLSURFPlugin_Hypothesis_i::SetPhySizeRel");
+void BLSURFPlugin_Hypothesis_i::SetPhySizeRel(CORBA::Double theValue)
+{
   ASSERT(myBaseImpl);
   this->GetImpl()->SetPhySize(theValue, true);
   SMESH::TPythonDump() << _this() << ".SetPhySizeRel( " << theValue << " )";
@@ -157,8 +162,8 @@ void BLSURFPlugin_Hypothesis_i::SetPhySizeRel(CORBA::Double theValue) {
  *  Get PhySize
  */
 //=============================================================================
-CORBA::Double BLSURFPlugin_Hypothesis_i::GetPhySize() {
-//   MESSAGE("BLSURFPlugin_Hypothesis_i::GetPhySize");
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetPhySize()
+{
   ASSERT(myBaseImpl);
   return this->GetImpl()->GetPhySize();
 }
@@ -170,15 +175,15 @@ CORBA::Double BLSURFPlugin_Hypothesis_i::GetPhySize() {
  *  Returns True if PhySize is relative
  */
 //=============================================================================
-CORBA::Boolean BLSURFPlugin_Hypothesis_i::IsPhySizeRel() {
-//   MESSAGE("BLSURFPlugin_Hypothesis_i::IsPhySizeRel");
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::IsPhySizeRel()
+{
   ASSERT(myBaseImpl);
   return this->GetImpl()->IsPhySizeRel();
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetMinSize(CORBA::Double theMinSize) {
-  ASSERT(myBaseImpl);
+void BLSURFPlugin_Hypothesis_i::SetMinSize(CORBA::Double theMinSize)
+{
   if (IsMinSizeRel() || GetMinSize() != theMinSize ) {
     this->GetImpl()->SetMinSize(theMinSize, false);
     SMESH::TPythonDump() << _this() << ".SetMinSize( " << theMinSize << " )";
@@ -186,8 +191,8 @@ void BLSURFPlugin_Hypothesis_i::SetMinSize(CORBA::Double theMinSize) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetMinSizeRel(CORBA::Double theMinSize) {
-  ASSERT(myBaseImpl);
+void BLSURFPlugin_Hypothesis_i::SetMinSizeRel(CORBA::Double theMinSize)
+{
   if ( !IsMinSizeRel() || (GetMinSize() != theMinSize) ) {
     this->GetImpl()->SetMinSize(theMinSize, true);
     SMESH::TPythonDump() << _this() << ".SetMinSizeRel( " << theMinSize << " )";
@@ -195,21 +200,20 @@ void BLSURFPlugin_Hypothesis_i::SetMinSizeRel(CORBA::Double theMinSize) {
 }
 
 //=============================================================================
-CORBA::Double BLSURFPlugin_Hypothesis_i::GetMinSize() {
-  ASSERT(myBaseImpl);
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetMinSize()
+{
   return this->GetImpl()->GetMinSize();
 }
 
 //=============================================================================
-CORBA::Boolean BLSURFPlugin_Hypothesis_i::IsMinSizeRel() {
-//   MESSAGE("BLSURFPlugin_Hypothesis_i::IsMinSizeRel");
-  ASSERT(myBaseImpl);
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::IsMinSizeRel()
+{
   return this->GetImpl()->IsMinSizeRel();
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetMaxSize(CORBA::Double theMaxSize) {
-  ASSERT(myBaseImpl);
+void BLSURFPlugin_Hypothesis_i::SetMaxSize(CORBA::Double theMaxSize)
+{
   if (IsMaxSizeRel() || GetMaxSize() != theMaxSize) {
     this->GetImpl()->SetMaxSize(theMaxSize, false);
     SMESH::TPythonDump() << _this() << ".SetMaxSize( " << theMaxSize << " )";
@@ -217,8 +221,8 @@ void BLSURFPlugin_Hypothesis_i::SetMaxSize(CORBA::Double theMaxSize) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetMaxSizeRel(CORBA::Double theMaxSize) {
-  ASSERT(myBaseImpl);
+void BLSURFPlugin_Hypothesis_i::SetMaxSizeRel(CORBA::Double theMaxSize)
+{
   if ( !IsMaxSizeRel() || (GetMaxSize() != theMaxSize) ) {
     this->GetImpl()->SetMaxSize(theMaxSize, true);
     SMESH::TPythonDump() << _this() << ".SetMaxSizeRel( " << theMaxSize << " )";
@@ -226,15 +230,14 @@ void BLSURFPlugin_Hypothesis_i::SetMaxSizeRel(CORBA::Double theMaxSize) {
 }
 
 //=============================================================================
-CORBA::Double BLSURFPlugin_Hypothesis_i::GetMaxSize() {
-  ASSERT(myBaseImpl);
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetMaxSize()
+{
   return this->GetImpl()->GetMaxSize();
 }
 
 //=============================================================================
-CORBA::Boolean BLSURFPlugin_Hypothesis_i::IsMaxSizeRel() {
-//   MESSAGE("BLSURFPlugin_Hypothesis_i::IsMaxSizeRel");
-  ASSERT(myBaseImpl);
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::IsMaxSizeRel()
+{
   return this->GetImpl()->IsMaxSizeRel();
 }
 
@@ -246,9 +249,8 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::IsMaxSizeRel() {
  *  Set true or false
  */
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetUseGradation(CORBA::Boolean theValue) {
-  MESSAGE("BLSURFPlugin_Hypothesis_i::SetUseGradation");
-  ASSERT(myBaseImpl);
+void BLSURFPlugin_Hypothesis_i::SetUseGradation(CORBA::Boolean theValue)
+{
   if ( GetImpl()->GetUseGradation() != bool( theValue ))
   {
     this->GetImpl()->SetUseGradation(theValue);
@@ -264,9 +266,8 @@ void BLSURFPlugin_Hypothesis_i::SetUseGradation(CORBA::Boolean theValue) {
  *  Get true or false
  */
 //=============================================================================
-CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetUseGradation() {
-  MESSAGE("BLSURFPlugin_Hypothesis_i::GetUseGradation");
-  ASSERT(myBaseImpl);
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetUseGradation()
+{
   return this->GetImpl()->GetUseGradation();
 }
 
@@ -277,9 +278,8 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetUseGradation() {
  *  Set Gradation
  */
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetGradation(CORBA::Double theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetGradation");
-  ASSERT(myBaseImpl);
+void BLSURFPlugin_Hypothesis_i::SetGradation(CORBA::Double theValue)
+{
   this->GetImpl()->SetGradation(theValue);
 
   if ( theValue < 0 )
@@ -295,9 +295,8 @@ void BLSURFPlugin_Hypothesis_i::SetGradation(CORBA::Double theValue) {
  *  Get Gradation
  */
 //=============================================================================
-CORBA::Double BLSURFPlugin_Hypothesis_i::GetGradation() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetGradation");
-  ASSERT(myBaseImpl);
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetGradation()
+{
   return this->GetImpl()->GetGradation();
 }
 
@@ -308,9 +307,8 @@ CORBA::Double BLSURFPlugin_Hypothesis_i::GetGradation() {
  *  Set true or false
  */
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetUseVolumeGradation(CORBA::Boolean theValue) {
-  MESSAGE("BLSURFPlugin_Hypothesis_i::SetUseVolumeGradation");
-  ASSERT(myBaseImpl);
+void BLSURFPlugin_Hypothesis_i::SetUseVolumeGradation(CORBA::Boolean theValue)
+{
   if ( GetImpl()->GetUseVolumeGradation() != bool( theValue ))
   {
     this->GetImpl()->SetUseVolumeGradation(theValue);
@@ -326,9 +324,8 @@ void BLSURFPlugin_Hypothesis_i::SetUseVolumeGradation(CORBA::Boolean theValue) {
  *  Get true or false
  */
 //=============================================================================
-CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetUseVolumeGradation() {
-  MESSAGE("BLSURFPlugin_Hypothesis_i::GetUseVolumeGradation");
-  ASSERT(myBaseImpl);
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetUseVolumeGradation()
+{
   return this->GetImpl()->GetUseVolumeGradation();
 }
 
@@ -339,9 +336,8 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetUseVolumeGradation() {
  *  Set VolumeGradation
  */
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetVolumeGradation(CORBA::Double theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetVolumeGradation");
-  ASSERT(myBaseImpl);
+void BLSURFPlugin_Hypothesis_i::SetVolumeGradation(CORBA::Double theValue)
+{
   this->GetImpl()->SetVolumeGradation(theValue);
   if ( theValue < 0 )
     SetUseVolumeGradation( false );
@@ -356,9 +352,8 @@ void BLSURFPlugin_Hypothesis_i::SetVolumeGradation(CORBA::Double theValue) {
  *  Get VolumeGradation
  */
 //=============================================================================
-CORBA::Double BLSURFPlugin_Hypothesis_i::GetVolumeGradation() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetVolumeGradation");
-  ASSERT(myBaseImpl);
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetVolumeGradation()
+{
   return this->GetImpl()->GetVolumeGradation();
 }
 
@@ -369,9 +364,8 @@ CORBA::Double BLSURFPlugin_Hypothesis_i::GetVolumeGradation() {
  *  Set true or false
  */
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetQuadAllowed(CORBA::Boolean theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetQuadAllowed");
-  ASSERT(myBaseImpl);
+void BLSURFPlugin_Hypothesis_i::SetQuadAllowed(CORBA::Boolean theValue)
+{
   this->GetImpl()->SetQuadAllowed(theValue);
   std::string theValueStr = theValue ? "True" : "False";
   SMESH::TPythonDump() << _this() << ".SetQuadAllowed( " << theValueStr.c_str() << " )";
@@ -384,9 +378,8 @@ void BLSURFPlugin_Hypothesis_i::SetQuadAllowed(CORBA::Boolean theValue) {
  *  Get true or false
  */
 //=============================================================================
-CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetQuadAllowed() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetQuadAllowed");
-  ASSERT(myBaseImpl);
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetQuadAllowed()
+{
   return this->GetImpl()->GetQuadAllowed();
 }
 
@@ -397,9 +390,8 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetQuadAllowed() {
  *  Set AngleMesh
  */
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetAngleMesh(CORBA::Double theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetAngleMesh");
-  ASSERT(myBaseImpl);
+void BLSURFPlugin_Hypothesis_i::SetAngleMesh(CORBA::Double theValue)
+{
   this->GetImpl()->SetAngleMesh(theValue);
   SMESH::TPythonDump() << _this() << ".SetAngleMesh( " << theValue << " )";
 }
@@ -411,9 +403,8 @@ void BLSURFPlugin_Hypothesis_i::SetAngleMesh(CORBA::Double theValue) {
  *  Get AngleMesh
  */
 //=============================================================================
-CORBA::Double BLSURFPlugin_Hypothesis_i::GetAngleMesh() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetAngleMesh");
-  ASSERT(myBaseImpl);
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetAngleMesh()
+{
   return this->GetImpl()->GetAngleMesh();
 }
 
@@ -424,9 +415,8 @@ CORBA::Double BLSURFPlugin_Hypothesis_i::GetAngleMesh() {
  *  Set Chordal Error
  */
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetChordalError(CORBA::Double theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetChordalError");
-  ASSERT(myBaseImpl);
+void BLSURFPlugin_Hypothesis_i::SetChordalError(CORBA::Double theValue)
+{
   this->GetImpl()->SetChordalError(theValue);
   SMESH::TPythonDump() << _this() << ".SetChordalError( " << theValue << " )";
 }
@@ -438,9 +428,8 @@ void BLSURFPlugin_Hypothesis_i::SetChordalError(CORBA::Double theValue) {
  *  Get Chordal Error
  */
 //=============================================================================
-CORBA::Double BLSURFPlugin_Hypothesis_i::GetChordalError() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetChordalError");
-  ASSERT(myBaseImpl);
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetChordalError()
+{
   return this->GetImpl()->GetChordalError();
 }
 
@@ -451,9 +440,8 @@ CORBA::Double BLSURFPlugin_Hypothesis_i::GetChordalError() {
  *  Set true or false
  */
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetAnisotropic(CORBA::Boolean theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetAnisotropic");
-  ASSERT(myBaseImpl);
+void BLSURFPlugin_Hypothesis_i::SetAnisotropic(CORBA::Boolean theValue)
+{
   this->GetImpl()->SetAnisotropic(theValue);
   std::string theValueStr = theValue ? "True" : "False";
   SMESH::TPythonDump() << _this() << ".SetAnisotropic( " << theValueStr.c_str() << " )";
@@ -466,9 +454,8 @@ void BLSURFPlugin_Hypothesis_i::SetAnisotropic(CORBA::Boolean theValue) {
  *  Get true or false
  */
 //=============================================================================
-CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetAnisotropic() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetAnisotropic");
-  ASSERT(myBaseImpl);
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetAnisotropic()
+{
   return this->GetImpl()->GetAnisotropic();
 }
 
@@ -479,9 +466,8 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetAnisotropic() {
  *  Set Anisotropic Ratio
  */
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetAnisotropicRatio(CORBA::Double theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetAnisotropicRatio");
-  ASSERT(myBaseImpl);
+void BLSURFPlugin_Hypothesis_i::SetAnisotropicRatio(CORBA::Double theValue)
+{
   this->GetImpl()->SetAnisotropicRatio(theValue);
   SMESH::TPythonDump() << _this() << ".SetAnisotropicRatio( " << theValue << " )";
 }
@@ -493,9 +479,8 @@ void BLSURFPlugin_Hypothesis_i::SetAnisotropicRatio(CORBA::Double theValue) {
  *  Get Anisotropic Ratio
  */
 //=============================================================================
-CORBA::Double BLSURFPlugin_Hypothesis_i::GetAnisotropicRatio() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetAnisotropicRatio");
-  ASSERT(myBaseImpl);
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetAnisotropicRatio()
+{
   return this->GetImpl()->GetAnisotropicRatio();
 }
 
@@ -508,7 +493,6 @@ CORBA::Double BLSURFPlugin_Hypothesis_i::GetAnisotropicRatio() {
  */
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetRemoveTinyEdges(CORBA::Boolean theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetRemoveTinyEdges");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetRemoveTinyEdges(theValue);
   std::string theValueStr = theValue ? "True" : "False";
@@ -523,7 +507,6 @@ void BLSURFPlugin_Hypothesis_i::SetRemoveTinyEdges(CORBA::Boolean theValue) {
  */
 //=============================================================================
 CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetRemoveTinyEdges() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetRemoveTinyEdges");
   ASSERT(myBaseImpl);
   return this->GetImpl()->GetRemoveTinyEdges();
 }
@@ -536,7 +519,6 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetRemoveTinyEdges() {
  */
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetTinyEdgeLength(CORBA::Double theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetTinyEdgeLength");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetTinyEdgeLength(theValue);
   SMESH::TPythonDump() << _this() << ".SetTinyEdgeLength( " << theValue << " )";
@@ -550,7 +532,6 @@ void BLSURFPlugin_Hypothesis_i::SetTinyEdgeLength(CORBA::Double theValue) {
  */
 //=============================================================================
 CORBA::Double BLSURFPlugin_Hypothesis_i::GetTinyEdgeLength() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetTinyEdgeLength");
   ASSERT(myBaseImpl);
   return this->GetImpl()->GetTinyEdgeLength();
 }
@@ -563,7 +544,6 @@ CORBA::Double BLSURFPlugin_Hypothesis_i::GetTinyEdgeLength() {
  */
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetOptimiseTinyEdges(CORBA::Boolean theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetOptimiseTinyEdges");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetOptimiseTinyEdges(theValue);
   std::string theValueStr = theValue ? "True" : "False";
@@ -578,7 +558,6 @@ void BLSURFPlugin_Hypothesis_i::SetOptimiseTinyEdges(CORBA::Boolean theValue) {
  */
 //=============================================================================
 CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetOptimiseTinyEdges() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetOptimiseTinyEdges");
   ASSERT(myBaseImpl);
   return this->GetImpl()->GetOptimiseTinyEdges();
 }
@@ -591,7 +570,6 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetOptimiseTinyEdges() {
  */
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetTinyEdgeOptimisationLength(CORBA::Double theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetTinyEdgeOptimisationLength");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetTinyEdgeOptimisationLength(theValue);
   SMESH::TPythonDump() << _this() << ".SetTinyEdgeOptimisationLength( " << theValue << " )";
@@ -605,7 +583,6 @@ void BLSURFPlugin_Hypothesis_i::SetTinyEdgeOptimisationLength(CORBA::Double theV
  */
 //=============================================================================
 CORBA::Double BLSURFPlugin_Hypothesis_i::GetTinyEdgeOptimisationLength() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetTinyEdgeOptimisationLength");
   ASSERT(myBaseImpl);
   return this->GetImpl()->GetTinyEdgeOptimisationLength();
 }
@@ -618,7 +595,6 @@ CORBA::Double BLSURFPlugin_Hypothesis_i::GetTinyEdgeOptimisationLength() {
  */
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetCorrectSurfaceIntersection(CORBA::Boolean theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetCorrectSurfaceIntersection");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetCorrectSurfaceIntersection(theValue);
   std::string theValueStr = theValue ? "True" : "False";
@@ -633,7 +609,6 @@ void BLSURFPlugin_Hypothesis_i::SetCorrectSurfaceIntersection(CORBA::Boolean the
  */
 //=============================================================================
 CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetCorrectSurfaceIntersection() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetCorrectSurfaceIntersection");
   ASSERT(myBaseImpl);
   return this->GetImpl()->GetCorrectSurfaceIntersection();
 }
@@ -646,7 +621,6 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetCorrectSurfaceIntersection() {
  */
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetCorrectSurfaceIntersectionMaxCost(CORBA::Double theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetCorrectSurfaceIntersectionMaxCost");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetCorrectSurfaceIntersectionMaxCost(theValue);
   SMESH::TPythonDump() << _this() << ".SetCorrectSurfaceIntersectionMaxCost( " << theValue << " )";
@@ -660,7 +634,6 @@ void BLSURFPlugin_Hypothesis_i::SetCorrectSurfaceIntersectionMaxCost(CORBA::Doub
  */
 //=============================================================================
 CORBA::Double BLSURFPlugin_Hypothesis_i::GetCorrectSurfaceIntersectionMaxCost() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetCorrectSurfaceIntersectionMaxCost");
   ASSERT(myBaseImpl);
   return this->GetImpl()->GetCorrectSurfaceIntersectionMaxCost();
 }
@@ -673,7 +646,6 @@ CORBA::Double BLSURFPlugin_Hypothesis_i::GetCorrectSurfaceIntersectionMaxCost() 
  */
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetBadElementRemoval(CORBA::Boolean theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetBadElementRemoval");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetBadElementRemoval(theValue);
   std::string theValueStr = theValue ? "True" : "False";
@@ -688,7 +660,6 @@ void BLSURFPlugin_Hypothesis_i::SetBadElementRemoval(CORBA::Boolean theValue) {
  */
 //=============================================================================
 CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetBadElementRemoval() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetBadElementRemoval");
   ASSERT(myBaseImpl);
   return this->GetImpl()->GetBadElementRemoval();
 }
@@ -701,7 +672,6 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetBadElementRemoval() {
  */
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetBadElementAspectRatio(CORBA::Double theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetBadElementAspectRatio");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetBadElementAspectRatio(theValue);
   SMESH::TPythonDump() << _this() << ".SetBadElementAspectRatio( " << theValue << " )";
@@ -715,7 +685,6 @@ void BLSURFPlugin_Hypothesis_i::SetBadElementAspectRatio(CORBA::Double theValue)
  */
 //=============================================================================
 CORBA::Double BLSURFPlugin_Hypothesis_i::GetBadElementAspectRatio() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetBadElementAspectRatio");
   ASSERT(myBaseImpl);
   return this->GetImpl()->GetBadElementAspectRatio();
 }
@@ -728,7 +697,6 @@ CORBA::Double BLSURFPlugin_Hypothesis_i::GetBadElementAspectRatio() {
  */
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetOptimizeMesh(CORBA::Boolean theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetOptimizeMesh");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetOptimizeMesh(theValue);
   std::string theValueStr = theValue ? "True" : "False";
@@ -743,7 +711,6 @@ void BLSURFPlugin_Hypothesis_i::SetOptimizeMesh(CORBA::Boolean theValue) {
  */
 //=============================================================================
 CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetOptimizeMesh() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetOptimizeMesh");
   ASSERT(myBaseImpl);
   return this->GetImpl()->GetOptimizeMesh();
 }
@@ -756,7 +723,6 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetOptimizeMesh() {
  */
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetQuadraticMesh(CORBA::Boolean theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetQuadraticMesh");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetQuadraticMesh(theValue);
   std::string theValueStr = theValue ? "True" : "False";
@@ -771,7 +737,6 @@ void BLSURFPlugin_Hypothesis_i::SetQuadraticMesh(CORBA::Boolean theValue) {
  */
 //=============================================================================
 CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetQuadraticMesh() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetQuadraticMesh");
   ASSERT(myBaseImpl);
   return this->GetImpl()->GetQuadraticMesh();
 }
@@ -788,7 +753,6 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetQuadraticMesh() {
 
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetTopology(CORBA::Long theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetTopology");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetTopology((::BLSURFPlugin_Hypothesis::Topology) theValue);
   SMESH::TPythonDump() << _this() << ".SetTopology( " << theValue << " )";
@@ -802,7 +766,6 @@ void BLSURFPlugin_Hypothesis_i::SetTopology(CORBA::Long theValue) {
  */
 //=============================================================================
 CORBA::Long BLSURFPlugin_Hypothesis_i::GetTopology() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetTopology");
   ASSERT(myBaseImpl);
   return this->GetImpl()->GetTopology();
 }
@@ -1112,7 +1075,6 @@ BLSURFPlugin::THyperPatchList* BLSURFPlugin_Hypothesis_i::GetHyperPatches()
  */
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetPreCADMergeEdges(CORBA::Boolean theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetPreCADMergeEdges");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetPreCADMergeEdges(theValue);
   std::string theValueStr = theValue ? "True" : "False";
@@ -1127,7 +1089,6 @@ void BLSURFPlugin_Hypothesis_i::SetPreCADMergeEdges(CORBA::Boolean theValue) {
  */
 //=============================================================================
 CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADMergeEdges() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCADMergeEdges");
   ASSERT(myBaseImpl);
   return this->GetImpl()->GetPreCADMergeEdges();
 }
@@ -1140,7 +1101,6 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADMergeEdges() {
  */
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetPreCADRemoveDuplicateCADFaces(CORBA::Boolean theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetPreCADRemoveDuplicateCADFaces");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetPreCADRemoveDuplicateCADFaces(theValue);
   std::string theValueStr = theValue ? "True" : "False";
@@ -1155,7 +1115,6 @@ void BLSURFPlugin_Hypothesis_i::SetPreCADRemoveDuplicateCADFaces(CORBA::Boolean 
  */
 //=============================================================================
 CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADRemoveDuplicateCADFaces() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCADRemoveDuplicateCADFaces");
   ASSERT(myBaseImpl);
   return this->GetImpl()->GetPreCADRemoveDuplicateCADFaces();
 }
@@ -1168,7 +1127,6 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADRemoveDuplicateCADFaces() {
  */
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetPreCADProcess3DTopology(CORBA::Boolean theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetPreCADProcess3DTopology");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetPreCADProcess3DTopology(theValue);
   std::string theValueStr = theValue ? "True" : "False";
@@ -1183,7 +1141,6 @@ void BLSURFPlugin_Hypothesis_i::SetPreCADProcess3DTopology(CORBA::Boolean theVal
  */
 //=============================================================================
 CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADProcess3DTopology() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCADProcess3DTopology");
   ASSERT(myBaseImpl);
   return this->GetImpl()->GetPreCADProcess3DTopology();
 }
@@ -1196,7 +1153,6 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADProcess3DTopology() {
  */
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetPreCADDiscardInput(CORBA::Boolean theValue) {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::SetPreCADDiscardInput");
   ASSERT(myBaseImpl);
   this->GetImpl()->SetPreCADDiscardInput(theValue);
   std::string theValueStr = theValue ? "True" : "False";
@@ -1211,7 +1167,6 @@ void BLSURFPlugin_Hypothesis_i::SetPreCADDiscardInput(CORBA::Boolean theValue) {
  */
 //=============================================================================
 CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADDiscardInput() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCADDiscardInput");
   ASSERT(myBaseImpl);
   return this->GetImpl()->GetPreCADDiscardInput();
 }
@@ -1521,7 +1476,7 @@ BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetAdvancedOptionValues()
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis_i::SetOptionValues(const BLSURFPlugin::string_array& options)
-    throw (SALOME::SALOME_Exception) {
+  throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
   for (CORBA::ULong i = 0; i < options.length(); ++i) {
     string name_value_type = options[i].in();
@@ -1549,7 +1504,7 @@ void BLSURFPlugin_Hypothesis_i::SetOptionValues(const BLSURFPlugin::string_array
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis_i::SetPreCADOptionValues(const BLSURFPlugin::string_array& options)
-    throw (SALOME::SALOME_Exception) {
+  throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
   for ( CORBA::ULong i = 0; i < options.length(); ++i) {
     string name_value_type = options[i].in();
@@ -1677,9 +1632,8 @@ char* BLSURFPlugin_Hypothesis_i::GetPreCADOption(const char* optionName)
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis_i::SetSizeMapEntry(const char* entry, const char* sizeMap)
-    throw (SALOME::SALOME_Exception) {
+  throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
-  MESSAGE("ENGINE : SETSIZEMAP START ENTRY : " << entry);
   if ( !entry || !entry[0] )
     THROW_SALOME_CORBA_EXCEPTION( "SetSizeMapEntry(): empty geom entry", SALOME::BAD_PARAM );
   bool valueChanged = false;
@@ -1697,7 +1651,6 @@ void BLSURFPlugin_Hypothesis_i::SetSizeMapEntry(const char* entry, const char* s
   } catch (SALOME_Exception& ex) {
     THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
   }
-  MESSAGE("ENGINE : SETSIZEMAP END ENTRY : " << entry);
   if (valueChanged)
     SMESH::TPythonDump() << _this() << ".SetSizeMap(" << entry << ", '" << sizeMap << "' )";
 }
@@ -1707,7 +1660,6 @@ void BLSURFPlugin_Hypothesis_i::SetSizeMapEntry(const char* entry, const char* s
 void BLSURFPlugin_Hypothesis_i::SetConstantSizeMapEntry(const char* entry, GEOM::shape_type shapeType, CORBA::Double sizeMap)
   throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
-  MESSAGE("ENGINE : SETSIZEMAP START ENTRY : " << entry);
   bool valueChanged = false;
   std::ostringstream sizeMapFunction;
   switch (shapeType) {
@@ -1730,7 +1682,6 @@ void BLSURFPlugin_Hypothesis_i::SetConstantSizeMapEntry(const char* entry, GEOM:
   } catch (SALOME_Exception& ex) {
     THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
   }
-  MESSAGE("ENGINE : SETSIZEMAP END ENTRY : " << entry);
   if (valueChanged)
     SMESH::TPythonDump() << _this() << ".SetConstantSizeMap(" << entry << ", '" << sizeMap << "' )";
 }
@@ -1738,9 +1689,8 @@ void BLSURFPlugin_Hypothesis_i::SetConstantSizeMapEntry(const char* entry, GEOM:
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis_i::SetAttractorEntry(const char* entry, const char* attractor)
-    throw (SALOME::SALOME_Exception) {
+  throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
-  MESSAGE("ENGINE : SETATTRACTOR START ENTRY : " << entry);
   bool valueChanged = false;
   try {
     valueChanged = ( this->GetImpl()->GetAttractorEntry(entry) != attractor );
@@ -1760,7 +1710,6 @@ void BLSURFPlugin_Hypothesis_i::SetAttractorEntry(const char* entry, const char*
   } catch (SALOME_Exception& ex) {
     THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
   }
-  MESSAGE("ENGINE : SETATTRACTOR END ENTRY : " << entry);
   if (valueChanged)
     SMESH::TPythonDump() << _this() << ".SetAttractor(" << entry << ", '" << attractor << "' )";
 }
@@ -1771,7 +1720,6 @@ void BLSURFPlugin_Hypothesis_i::SetClassAttractorEntry(const char* entry, const 
   throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
-  MESSAGE("ENGINE : SETATTRACTOR START ENTRY : " << entry);
   //bool valueChanged = false;
   try {
     this->GetImpl()->SetClassAttractorEntry(entry, att_entry, StartSize, EndSize, ActionRadius, ConstantRadius);
@@ -1786,7 +1734,6 @@ void BLSURFPlugin_Hypothesis_i::SetClassAttractorEntry(const char* entry, const 
   } catch (SALOME_Exception& ex) {
     THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
   }
-  MESSAGE("ENGINE : SETATTRACTOR END ENTRY : " << entry);
   //if ( valueChanged )
   SMESH::TPythonDump() << _this() << ".SetAttractorGeom( "
                        << entry << ", " << att_entry << ", "<<StartSize<<", "<<EndSize<<", "<<ActionRadius<<", "<<ConstantRadius<<" )";
@@ -1922,7 +1869,6 @@ BLSURFPlugin::TAttParamsMap* BLSURFPlugin_Hypothesis_i::GetAttractorParams()
     double startSize, endSize, infDist, constDist;
     if ( !atIt->second->Empty() ) {
       attEntry = atIt->second->GetAttractorEntry();
-      MESSAGE("GetAttractorParams : attEntry ="<<attEntry)
       std::vector<double> params = atIt->second->GetParameters();
       startSize = params[0];
       endSize = params[1];
@@ -1935,8 +1881,6 @@ BLSURFPlugin::TAttParamsMap* BLSURFPlugin_Hypothesis_i::GetAttractorParams()
     result[i].endSize = endSize;
     result[i].infDist = infDist;
     result[i].constDist = constDist;
-    MESSAGE("GetAttractorParams : result[i].attEntry ="<<result[i].attEntry)
-    MESSAGE("GetAttractorParams : result[i].faceEntry ="<<result[i].faceEntry)
   }
   return result._retn();
 }
@@ -1944,7 +1888,7 @@ BLSURFPlugin::TAttParamsMap* BLSURFPlugin_Hypothesis_i::GetAttractorParams()
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis_i::SetSizeMapEntries(const BLSURFPlugin::string_array& sizeMaps)
-    throw (SALOME::SALOME_Exception) {
+  throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
   for ( CORBA::ULong i = 0; i < sizeMaps.length(); ++i) {
     string entry_sizemap = sizeMaps[i].in();
@@ -1976,8 +1920,6 @@ void BLSURFPlugin_Hypothesis_i::SetSizeMap(const GEOM::GEOM_Object_ptr GeomObj, 
   ASSERT(myBaseImpl);
   string entry;
   entry = GeomObj->GetStudyEntry();
-  MESSAGE("IDL : GetName : " << GeomObj->GetName());
-  MESSAGE("IDL : SETSIZEMAP ( "<< entry << " , " << sizeMap << ")");
   SetSizeMapEntry(entry.c_str(), sizeMap);
 }
 
@@ -1989,8 +1931,6 @@ void BLSURFPlugin_Hypothesis_i::SetConstantSizeMap(const GEOM::GEOM_Object_ptr G
   GEOM::shape_type shapeType = GeomObj->GetShapeType();
   if (shapeType == GEOM::COMPOUND)
     shapeType = GeomObj->GetMaxShapeType();
-  MESSAGE("IDL : GetName : " << GeomObj->GetName());
-  MESSAGE("IDL : SETSIZEMAP ( "<< entry << " , " << sizeMap << ")");
   SetConstantSizeMapEntry(entry.c_str(), shapeType, sizeMap);
 }
 
@@ -1999,8 +1939,6 @@ void BLSURFPlugin_Hypothesis_i::UnsetSizeMap(const GEOM::GEOM_Object_ptr GeomObj
   ASSERT(myBaseImpl);
   string entry;
   entry = GeomObj->GetStudyEntry();
-  MESSAGE("IDL : GetName : " << GeomObj->GetName());
-  MESSAGE("IDL : UNSETSIZEMAP ( "<< entry << ")");
   UnsetEntry(entry.c_str());
   SMESH::TPythonDump() << _this() << ".UnsetSizeMap( " << entry.c_str() << " )";
 }
@@ -2009,8 +1947,6 @@ void BLSURFPlugin_Hypothesis_i::SetAttractor(GEOM::GEOM_Object_ptr GeomObj, cons
   ASSERT(myBaseImpl);
   string entry;
   entry = GeomObj->GetStudyEntry();
-  MESSAGE("IDL : GetName : " << GeomObj->GetName());
-  MESSAGE("IDL : SETATTRACTOR ( "<< entry << " , " << attractor << ")");
   SetAttractorEntry(entry.c_str(), attractor);
 }
 
@@ -2018,8 +1954,6 @@ void BLSURFPlugin_Hypothesis_i::UnsetAttractor(GEOM::GEOM_Object_ptr GeomObj) {
   ASSERT(myBaseImpl);
   string entry;
   entry = GeomObj->GetStudyEntry();
-  MESSAGE("IDL : GetName : " << GeomObj->GetName());
-  MESSAGE("IDL : UNSETATTRACTOR ( "<< entry << ")");
   UnsetEntry(entry.c_str());
   SMESH::TPythonDump() << _this() << ".UnsetAttractor( " << entry.c_str() << " )";
 }
@@ -2065,8 +1999,6 @@ void BLSURFPlugin_Hypothesis_i::SetAttractorGeom(GEOM::GEOM_Object_ptr theFace, 
   
   TopoDS_Face FaceShape = TopoDS::Face(SMESH_Gen_i::GetSMESHGen()->GeomObjectToShape( theFace ));
   TopoDS_Shape AttractorShape = SMESH_Gen_i::GetSMESHGen()->GeomObjectToShape( theAttractor );
-  MESSAGE("IDL : GetName : " << theFace->GetName());
-  MESSAGE("IDL : SETATTRACTOR () ");//<< entry << " , " << att_entry << ")");
   SetClassAttractorEntry( theFaceEntry.c_str(), theAttEntry.c_str(), StartSize, EndSize, ActionRadius, ConstantRadius);
 }
 
@@ -2092,8 +2024,6 @@ void BLSURFPlugin_Hypothesis_i::UnsetAttractorGeom(GEOM::GEOM_Object_ptr theFace
        !theAttrEntry.in() || !theAttrEntry.in()[0] )
     THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
   
-  MESSAGE("IDL : GetName : " << theFace->GetName());
-  MESSAGE("IDL : UNSETATTRACTOR ( "<< theFaceEntry << ")");
   GetImpl()->ClearEntry( theFaceEntry.in(), theAttrEntry.in() );
   SMESH::TPythonDump() << _this() << ".UnsetAttractorGeom( "
                        << theFace << ", " << theAttractor << " )";
@@ -2109,30 +2039,30 @@ void BLSURFPlugin_Hypothesis_i::UnsetAttractorEntry(const char* faceEntry,
 
 
 /*
- void BLSURFPlugin_Hypothesis_i::SetCustomSizeMap(GEOM::GEOM_Object_ptr GeomObj, const char* sizeMap)
- {}
+  void BLSURFPlugin_Hypothesis_i::SetCustomSizeMap(GEOM::GEOM_Object_ptr GeomObj, const char* sizeMap)
+  {}
 
- void BLSURFPlugin_Hypothesis_i::UnsetCustomSizeMap(GEOM::GEOM_Object_ptr GeomObj)
- {}
+  void BLSURFPlugin_Hypothesis_i::UnsetCustomSizeMap(GEOM::GEOM_Object_ptr GeomObj)
+  {}
 
- void BLSURFPlugin_Hypothesis_i::SetCustomSizeMapEntry(const char* entry,const char* sizeMap )  throw (SALOME::SALOME_Exception)
- {}
+  void BLSURFPlugin_Hypothesis_i::SetCustomSizeMapEntry(const char* entry,const char* sizeMap )  throw (SALOME::SALOME_Exception)
+  {}
 
- char* BLSURFPlugin_Hypothesis_i::GetCustomSizeMapEntry(const char* entry)  throw (SALOME::SALOME_Exception)
- {}
+  char* BLSURFPlugin_Hypothesis_i::GetCustomSizeMapEntry(const char* entry)  throw (SALOME::SALOME_Exception)
+  {}
 
- void BLSURFPlugin_Hypothesis_i::UnsetCustomSizeMapEntry(const char* entry)
- {
- ASSERT(myBaseImpl);
- this->GetImpl()->UnsetCustomSizeMap(entry);
- SMESH::TPythonDump() << _this() << ".UnsetCustomSizeMap( " << entry << " )";
- }
+  void BLSURFPlugin_Hypothesis_i::UnsetCustomSizeMapEntry(const char* entry)
+  {
+  ASSERT(myBaseImpl);
+  this->GetImpl()->UnsetCustomSizeMap(entry);
+  SMESH::TPythonDump() << _this() << ".UnsetCustomSizeMap( " << entry << " )";
+  }
 
 
- BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetCustomSizeMapEntries()
- {}
+  BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetCustomSizeMapEntries()
+  {}
 
- */
+*/
 
 // ///////////////////////
 // // ENFORCED VERTICES //
@@ -2145,28 +2075,24 @@ void BLSURFPlugin_Hypothesis_i::UnsetAttractorEntry(const char* faceEntry,
  *
  */
 BLSURFPlugin::TFaceEntryEnfVertexListMap* BLSURFPlugin_Hypothesis_i::GetAllEnforcedVerticesByFace() {
-  MESSAGE("IDL: GetAllEnforcedVerticesByFace()");
   ASSERT(myBaseImpl);
 
   BLSURFPlugin::TFaceEntryEnfVertexListMap_var resultMap = new BLSURFPlugin::TFaceEntryEnfVertexListMap();
 
   const ::BLSURFPlugin_Hypothesis::TFaceEntryEnfVertexListMap faceEntryEnfVertexListMap =
-      this->GetImpl()->_GetAllEnforcedVerticesByFace();
+    this->GetImpl()->_GetAllEnforcedVerticesByFace();
   resultMap->length(faceEntryEnfVertexListMap.size());
-  MESSAGE("Face entry to Enforced Vertex map size is " << resultMap->length());
 
   ::BLSURFPlugin_Hypothesis::TEnfVertexList _enfVertexList;
   ::BLSURFPlugin_Hypothesis::TFaceEntryEnfVertexListMap::const_iterator it_entry = faceEntryEnfVertexListMap.begin();
   for (int i = 0; it_entry != faceEntryEnfVertexListMap.end(); ++it_entry, ++i) {
     BLSURFPlugin::TFaceEntryEnfVertexListMapElement_var mapElement =
-        new BLSURFPlugin::TFaceEntryEnfVertexListMapElement();
+      new BLSURFPlugin::TFaceEntryEnfVertexListMapElement();
     mapElement->faceEntry = CORBA::string_dup(it_entry->first.c_str());
-    MESSAGE("Face Entry: " << mapElement->faceEntry);
 
     _enfVertexList = it_entry->second;
     BLSURFPlugin::TEnfVertexList_var enfVertexList = new BLSURFPlugin::TEnfVertexList();
     enfVertexList->length(_enfVertexList.size());
-    MESSAGE("Number of enf vertex: " << enfVertexList->length());
 
     ::BLSURFPlugin_Hypothesis::TEnfVertexList::const_iterator it_enfVertex = _enfVertexList.begin();
     ::BLSURFPlugin_Hypothesis::TEnfVertex *currentEnfVertex;
@@ -2203,10 +2129,9 @@ BLSURFPlugin::TFaceEntryEnfVertexListMap* BLSURFPlugin_Hypothesis_i::GetAllEnfor
       msg << "Enforced vertex: \n"
           << "Name: " << enfVertex->name << "\n";
       if (coords->length())
-          msg << "Coords: " << enfVertex->coords[0] << ", " << enfVertex->coords[1] << ", " << enfVertex->coords[2] << "\n";
+        msg << "Coords: " << enfVertex->coords[0] << ", " << enfVertex->coords[1] << ", " << enfVertex->coords[2] << "\n";
       msg << "Geom entry: " << enfVertex->geomEntry << "\n"
           << "Group Name: " << enfVertex->grpName;
-      MESSAGE(msg.str());
 
       enfVertexList[j] = enfVertex;
     }
@@ -2224,17 +2149,14 @@ BLSURFPlugin::TFaceEntryEnfVertexListMap* BLSURFPlugin_Hypothesis_i::GetAllEnfor
  *
  */
 BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetAllEnforcedVertices() {
-  MESSAGE("IDL: GetAllEnforcedVertices()");
   ASSERT(myBaseImpl);
   BLSURFPlugin::TEnfVertexList_var resultMap = new BLSURFPlugin::TEnfVertexList();
   const ::BLSURFPlugin_Hypothesis::TEnfVertexList enfVertexList = this->GetImpl()->_GetAllEnforcedVertices();
   resultMap->length(enfVertexList.size());
-  MESSAGE("Enforced Vertex map size is " << resultMap->length());
 
   ::BLSURFPlugin_Hypothesis::TEnfVertexList::const_iterator evlIt = enfVertexList.begin();
   ::BLSURFPlugin_Hypothesis::TEnfVertex *currentEnfVertex;
   for (int i = 0; evlIt != enfVertexList.end(); ++evlIt, ++i) {
-    MESSAGE("Enforced Vertex #" << i);
     currentEnfVertex = (*evlIt);
     BLSURFPlugin::TEnfVertex_var enfVertex = new BLSURFPlugin::TEnfVertex();
     // Name
@@ -2261,10 +2183,9 @@ BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetAllEnforcedVertices(
     msg << "Enforced vertex: \n"
         << "Name: " << enfVertex->name << "\n";
     if (coords->length())
-        msg << "Coords: " << enfVertex->coords[0] << ", " << enfVertex->coords[1] << ", " << enfVertex->coords[2] << "\n";
+      msg << "Coords: " << enfVertex->coords[0] << ", " << enfVertex->coords[1] << ", " << enfVertex->coords[2] << "\n";
     msg << "Geom entry: " << enfVertex->geomEntry << "\n"
         << "Group Name: " << enfVertex->grpName;
-    MESSAGE(msg.str());
 
     resultMap[i] = enfVertex;
   }
@@ -2279,26 +2200,22 @@ BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetAllEnforcedVertices(
  *
  */
 BLSURFPlugin::TFaceEntryCoordsListMap* BLSURFPlugin_Hypothesis_i::GetAllCoordsByFace() {
-  MESSAGE("IDL: GetAllCoordsByFace()");
   ASSERT(myBaseImpl);
 
   BLSURFPlugin::TFaceEntryCoordsListMap_var resultMap = new BLSURFPlugin::TFaceEntryCoordsListMap();
 
   const ::BLSURFPlugin_Hypothesis::TFaceEntryCoordsListMap entryCoordsListMap = this->GetImpl()->_GetAllCoordsByFace();
   resultMap->length(entryCoordsListMap.size());
-  MESSAGE("Enforced Vertex map size is " << resultMap->length());
 
   ::BLSURFPlugin_Hypothesis::TEnfVertexCoordsList _coordsList;
   ::BLSURFPlugin_Hypothesis::TFaceEntryCoordsListMap::const_iterator it_entry = entryCoordsListMap.begin();
   for (int i = 0; it_entry != entryCoordsListMap.end(); ++it_entry, ++i) {
     BLSURFPlugin::TFaceEntryCoordsListMapElement_var mapElement = new BLSURFPlugin::TFaceEntryCoordsListMapElement();
     mapElement->faceEntry = CORBA::string_dup(it_entry->first.c_str());
-    MESSAGE("Face Entry: " << mapElement->faceEntry);
 
     _coordsList = it_entry->second;
     BLSURFPlugin::TEnfVertexCoordsList_var coordsList = new BLSURFPlugin::TEnfVertexCoordsList();
     coordsList->length(_coordsList.size());
-    MESSAGE("Number of coords: " << coordsList->length());
 
     ::BLSURFPlugin_Hypothesis::TEnfVertexCoordsList::const_iterator it_coords = _coordsList.begin();
     for (int j = 0; it_coords != _coordsList.end(); ++it_coords, ++j) {
@@ -2307,7 +2224,6 @@ BLSURFPlugin::TFaceEntryCoordsListMap* BLSURFPlugin_Hypothesis_i::GetAllCoordsBy
       for (CORBA::ULong i=0;i<coords->length();i++)
         coords[i] = (*it_coords)[i];
       coordsList[j] = coords;
-      MESSAGE("Coords #" << j << ": " << coords[0] << ", " << coords[1] << ", " << coords[2]);
     }
     mapElement->coordsList = coordsList;
 
@@ -2322,19 +2238,16 @@ BLSURFPlugin::TFaceEntryCoordsListMap* BLSURFPlugin_Hypothesis_i::GetAllCoordsBy
  * They are the coords of the "manual" enforced vertices.
  */
 BLSURFPlugin::TCoordsEnfVertexMap* BLSURFPlugin_Hypothesis_i::GetAllEnforcedVerticesByCoords() {
-  MESSAGE("IDL: GetAllEnforcedVerticesByCoords()");
   ASSERT(myBaseImpl);
 
   BLSURFPlugin::TCoordsEnfVertexMap_var resultMap = new BLSURFPlugin::TCoordsEnfVertexMap();
   const ::BLSURFPlugin_Hypothesis::TCoordsEnfVertexMap coordsEnfVertexMap =
-      this->GetImpl()->_GetAllEnforcedVerticesByCoords();
+    this->GetImpl()->_GetAllEnforcedVerticesByCoords();
   resultMap->length(coordsEnfVertexMap.size());
-  MESSAGE("Enforced Vertex map size is " << resultMap->length());
 
   ::BLSURFPlugin_Hypothesis::TCoordsEnfVertexMap::const_iterator it_coords = coordsEnfVertexMap.begin();
   ::BLSURFPlugin_Hypothesis::TEnfVertex *currentEnfVertex;
   for (int i = 0; it_coords != coordsEnfVertexMap.end(); ++it_coords, ++i) {
-    MESSAGE("Enforced Vertex #" << i);
     currentEnfVertex = (it_coords->second);
     BLSURFPlugin::TCoordsEnfVertexElement_var mapElement = new BLSURFPlugin::TCoordsEnfVertexElement();
     BLSURFPlugin::TEnfVertexCoords_var coords = new BLSURFPlugin::TEnfVertexCoords();
@@ -2342,7 +2255,6 @@ BLSURFPlugin::TCoordsEnfVertexMap* BLSURFPlugin_Hypothesis_i::GetAllEnforcedVert
     for (CORBA::ULong ind=0;ind<coords->length();ind++)
       coords[ind] = it_coords->first[ind];
     mapElement->coords = coords;
-    MESSAGE("Coords: " << mapElement->coords[0] << ", " << mapElement->coords[1] << ", " << mapElement->coords[2]);
 
     BLSURFPlugin::TEnfVertex_var enfVertex = new BLSURFPlugin::TEnfVertex();
     // Name
@@ -2370,10 +2282,9 @@ BLSURFPlugin::TCoordsEnfVertexMap* BLSURFPlugin_Hypothesis_i::GetAllEnforcedVert
     msg << "Enforced vertex: \n"
         << "Name: " << enfVertex->name << "\n";
     if (coords->length())
-        msg << "Coords: " << enfVertex->coords[0] << ", " << enfVertex->coords[1] << ", " << enfVertex->coords[2] << "\n";
+      msg << "Coords: " << enfVertex->coords[0] << ", " << enfVertex->coords[1] << ", " << enfVertex->coords[2] << "\n";
     msg << "Geom entry: " << enfVertex->geomEntry << "\n"
         << "Group Name: " << enfVertex->grpName;
-    MESSAGE(msg.str());
 
     resultMap[i] = mapElement;
   }
@@ -2387,34 +2298,29 @@ BLSURFPlugin::TCoordsEnfVertexMap* BLSURFPlugin_Hypothesis_i::GetAllEnforcedVert
  *
  */
 BLSURFPlugin::TFaceEntryEnfVertexEntryListMap* BLSURFPlugin_Hypothesis_i::GetAllEnfVertexEntriesByFace() {
-  MESSAGE("IDL: GetAllEnfVertexEntriesByFace()");
   ASSERT(myBaseImpl);
 
   BLSURFPlugin::TFaceEntryEnfVertexEntryListMap_var resultMap = new BLSURFPlugin::TFaceEntryEnfVertexEntryListMap();
 
   const ::BLSURFPlugin_Hypothesis::TFaceEntryEnfVertexEntryListMap entryEnfVertexEntryListMap =
-      this->GetImpl()->_GetAllEnfVertexEntriesByFace();
+    this->GetImpl()->_GetAllEnfVertexEntriesByFace();
   resultMap->length(entryEnfVertexEntryListMap.size());
-  MESSAGE("Enforced Vertex map size is " << resultMap->length());
 
   ::BLSURFPlugin_Hypothesis::TEntryList _enfVertexEntryList;
   ::BLSURFPlugin_Hypothesis::TFaceEntryEnfVertexEntryListMap::const_iterator it_entry =
       entryEnfVertexEntryListMap.begin();
   for (int i = 0; it_entry != entryEnfVertexEntryListMap.end(); ++it_entry, ++i) {
     BLSURFPlugin::TFaceEntryEnfVertexEntryListMapElement_var mapElement =
-        new BLSURFPlugin::TFaceEntryEnfVertexEntryListMapElement();
+      new BLSURFPlugin::TFaceEntryEnfVertexEntryListMapElement();
     mapElement->faceEntry = CORBA::string_dup(it_entry->first.c_str());
-    MESSAGE("Face Entry: " << mapElement->faceEntry);
 
     _enfVertexEntryList = it_entry->second;
     BLSURFPlugin::TEntryList_var enfVertexEntryList = new BLSURFPlugin::TEntryList();
     enfVertexEntryList->length(_enfVertexEntryList.size());
-    MESSAGE("Number of enf vertex entries: " << enfVertexEntryList->length());
 
     ::BLSURFPlugin_Hypothesis::TEntryList::const_iterator it_enfVertexEntry = _enfVertexEntryList.begin();
     for (int j = 0; it_enfVertexEntry != _enfVertexEntryList.end(); ++it_enfVertexEntry, ++j) {
       enfVertexEntryList[j] = CORBA::string_dup((*it_enfVertexEntry).c_str());
-      MESSAGE("Enf Vertex Entry #" << j << ": " << enfVertexEntryList[j]);
     }
     mapElement->enfVertexEntryList = enfVertexEntryList;
 
@@ -2429,23 +2335,19 @@ BLSURFPlugin::TFaceEntryEnfVertexEntryListMap* BLSURFPlugin_Hypothesis_i::GetAll
  * They are the geom entries of the enforced vertices defined with geom shape (vertex, compound, group).
  */
 BLSURFPlugin::TEnfVertexEntryEnfVertexMap* BLSURFPlugin_Hypothesis_i::GetAllEnforcedVerticesByEnfVertexEntry() {
-  MESSAGE("IDL: GetAllEnforcedVerticesByEnfVertexEntry()");
   ASSERT(myBaseImpl);
 
   BLSURFPlugin::TEnfVertexEntryEnfVertexMap_var resultMap = new BLSURFPlugin::TEnfVertexEntryEnfVertexMap();
   const ::BLSURFPlugin_Hypothesis::TEnfVertexEntryEnfVertexMap enfVertexEntryEnfVertexMap =
-      this->GetImpl()->_GetAllEnforcedVerticesByEnfVertexEntry();
+    this->GetImpl()->_GetAllEnforcedVerticesByEnfVertexEntry();
   resultMap->length(enfVertexEntryEnfVertexMap.size());
-  MESSAGE("Enforced Vertex map size is " << resultMap->length());
 
   ::BLSURFPlugin_Hypothesis::TEnfVertexEntryEnfVertexMap::const_iterator it_enfVertexEntry = enfVertexEntryEnfVertexMap.begin();
   ::BLSURFPlugin_Hypothesis::TEnfVertex *currentEnfVertex;
   for (int i = 0; it_enfVertexEntry != enfVertexEntryEnfVertexMap.end(); ++it_enfVertexEntry, ++i) {
-    MESSAGE("Enforced Vertex #" << i);
     currentEnfVertex = it_enfVertexEntry->second;
     BLSURFPlugin::TEnfVertexEntryEnfVertexElement_var mapElement = new BLSURFPlugin::TEnfVertexEntryEnfVertexElement();
     mapElement->enfVertexEntry = CORBA::string_dup(it_enfVertexEntry->first.c_str());;
-    MESSAGE("Enf Vertex Entry #" << i << ": " << mapElement->enfVertexEntry);
 
     BLSURFPlugin::TEnfVertex_var enfVertex = new BLSURFPlugin::TEnfVertex();
     // Name
@@ -2472,10 +2374,9 @@ BLSURFPlugin::TEnfVertexEntryEnfVertexMap* BLSURFPlugin_Hypothesis_i::GetAllEnfo
     msg << "Enforced vertex: \n"
         << "Name: " << enfVertex->name << "\n";
     if (coords->length())
-        msg << "Coords: " << enfVertex->coords[0] << ", " << enfVertex->coords[1] << ", " << enfVertex->coords[2] << "\n";
+      msg << "Coords: " << enfVertex->coords[0] << ", " << enfVertex->coords[1] << ", " << enfVertex->coords[2] << "\n";
     msg << "Geom entry: " << enfVertex->geomEntry << "\n"
         << "Group Name: " << enfVertex->grpName;
-    MESSAGE(msg.str());
 
     mapElement->enfVertex = enfVertex;
     resultMap[i] = mapElement;
@@ -2496,11 +2397,10 @@ void BLSURFPlugin_Hypothesis_i::ClearAllEnforcedVertices() {
  * Set/get/unset an enforced vertex on face - OBSOLETE
  */
 bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertex(GEOM::GEOM_Object_ptr theFace, CORBA::Double x, CORBA::Double y,
-    CORBA::Double z) throw (SALOME::SALOME_Exception) {
+                                                  CORBA::Double z) throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
 
   if ((theFace->GetShapeType() != GEOM::FACE) && (theFace->GetShapeType() != GEOM::COMPOUND)) {
-    MESSAGE("theFace shape type is not FACE or COMPOUND");
     THROW_SALOME_CORBA_EXCEPTION("theFace shape type is not FACE or COMPOUND", SALOME::BAD_PARAM);
   }
 
@@ -2521,8 +2421,6 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertex(GEOM::GEOM_Object_ptr theFace,
   }
   if (theFaceEntry.empty())
     THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
-  MESSAGE("IDL : GetName : " << theFace->GetName());
-  MESSAGE("IDL : SetEnforcedVertex( "<< theFaceEntry << ", " << x << ", " << y << ", " << z << ")");
   try {
     return SetEnforcedVertexEntry(theFaceEntry.c_str(), x, y, z);
   } catch (SALOME_Exception& ex) {
@@ -2534,11 +2432,10 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertex(GEOM::GEOM_Object_ptr theFace,
  * Set/get/unset an enforced vertex with name on face
  */
 bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexNamed(GEOM::GEOM_Object_ptr theFace, CORBA::Double x, CORBA::Double y,
-    CORBA::Double z, const char* theVertexName) throw (SALOME::SALOME_Exception) {
+                                                       CORBA::Double z, const char* theVertexName) throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
 
   if ((theFace->GetShapeType() != GEOM::FACE) && (theFace->GetShapeType() != GEOM::COMPOUND)) {
-    MESSAGE("theFace shape type is not FACE or COMPOUND");
     THROW_SALOME_CORBA_EXCEPTION("theFace shape type is not FACE or COMPOUND", SALOME::BAD_PARAM);
   }
 
@@ -2560,8 +2457,6 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexNamed(GEOM::GEOM_Object_ptr the
   if (theFaceEntry.empty())
     THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
   
-  MESSAGE("IDL : GetName : " << theFace->GetName());
-  MESSAGE("IDL : SetEnforcedVertexNamed( "<< theFaceEntry << ", " << x << ", " << y << ", " << z << ", " << theVertexName << ")");
   try {
     return SetEnforcedVertexEntry(theFaceEntry.c_str(), x, y, z, theVertexName);
   } catch (SALOME_Exception& ex) {
@@ -2573,16 +2468,14 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexNamed(GEOM::GEOM_Object_ptr the
  * Set/get/unset an enforced vertex with geom object on face
  */
 bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeom(GEOM::GEOM_Object_ptr theFace, GEOM::GEOM_Object_ptr theVertex)
-    throw (SALOME::SALOME_Exception) {
+  throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
 
   if ((theFace->GetShapeType() != GEOM::FACE) && (theFace->GetShapeType() != GEOM::COMPOUND)) {
-    MESSAGE("theFace shape type is not FACE or COMPOUND");
     THROW_SALOME_CORBA_EXCEPTION("theFace shape type is not FACE or COMPOUND", SALOME::BAD_PARAM);
   }
 
   if ((theVertex->GetShapeType() != GEOM::VERTEX) && (theVertex->GetShapeType() != GEOM::COMPOUND)) {
-    MESSAGE("theVertex shape type is not VERTEX or COMPOUND");
     THROW_SALOME_CORBA_EXCEPTION("theVertex shape type is not VERTEX or COMPOUND", SALOME::BAD_PARAM);
   }
 
@@ -2629,9 +2522,6 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeom(GEOM::GEOM_Object_ptr theF
     THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
 
   string theVertexName = theVertex->GetName();
-  MESSAGE("IDL : theFace->GetName : " << theFace->GetName());
-  MESSAGE("IDL : theVertex->GetName : " << theVertexName);
-  MESSAGE("IDL : SetEnforcedVertexGeom( "<< theFaceEntry << ", " << theVertexEntry<< ")");
   try {
     return SetEnforcedVertexEntry(theFaceEntry.c_str(), 0, 0, 0, theVertexName.c_str(), theVertexEntry.c_str());
   } catch (SALOME_Exception& ex) {
@@ -2643,12 +2533,11 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeom(GEOM::GEOM_Object_ptr theF
  * Set an enforced vertex with group name on face
  */
 bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexWithGroup(GEOM::GEOM_Object_ptr theFace, CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* theGroupName)
- throw (SALOME::SALOME_Exception)
+  throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
 
   if ((theFace->GetShapeType() != GEOM::FACE) && (theFace->GetShapeType() != GEOM::COMPOUND)) {
-    MESSAGE("theFace shape type is not FACE or COMPOUND");
     THROW_SALOME_CORBA_EXCEPTION("theFace shape type is not FACE or COMPOUND", SALOME::BAD_PARAM);
   }
 
@@ -2669,8 +2558,6 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexWithGroup(GEOM::GEOM_Object_ptr
   }
   if (theFaceEntry.empty())
     THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
-  MESSAGE("IDL : GetName : " << theFace->GetName());
-  MESSAGE("IDL : SetEnforcedVertexWithGroup( "<< theFaceEntry << ", " << x << ", " << y << ", " << z << ", " << theGroupName << ")");
   try {
     return SetEnforcedVertexEntry(theFaceEntry.c_str(), x, y, z, "", "", theGroupName);
   } catch (SALOME_Exception& ex) {
@@ -2683,12 +2570,11 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexWithGroup(GEOM::GEOM_Object_ptr
  */
 bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexNamedWithGroup(GEOM::GEOM_Object_ptr theFace, CORBA::Double x, CORBA::Double y, CORBA::Double z, 
                                                                 const char* theVertexName, const char* theGroupName)
- throw (SALOME::SALOME_Exception)
+  throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
 
   if ((theFace->GetShapeType() != GEOM::FACE) && (theFace->GetShapeType() != GEOM::COMPOUND)) {
-    MESSAGE("theFace shape type is not FACE or COMPOUND");
     THROW_SALOME_CORBA_EXCEPTION("theFace shape type is not FACE or COMPOUND", SALOME::BAD_PARAM);
   }
 
@@ -2709,8 +2595,6 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexNamedWithGroup(GEOM::GEOM_Objec
   }
   if (theFaceEntry.empty())
     THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
-  MESSAGE("IDL : GetName : " << theFace->GetName());
-  MESSAGE("IDL : SetEnforcedVertexNamedWithGroup( "<< theFaceEntry << ", " << x << ", " << y << ", " << z << ", " << theVertexName << ", " << theGroupName << ")");
   try {
     return SetEnforcedVertexEntry(theFaceEntry.c_str(), x, y, z, theVertexName, "", theGroupName);
   } catch (SALOME_Exception& ex) {
@@ -2722,17 +2606,15 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexNamedWithGroup(GEOM::GEOM_Objec
  * Set an enforced vertex with geom entry and group name on face
  */
 bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeomWithGroup(GEOM::GEOM_Object_ptr theFace, GEOM::GEOM_Object_ptr theVertex, const char* theGroupName)
- throw (SALOME::SALOME_Exception)
+  throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
 
   if ((theFace->GetShapeType() != GEOM::FACE) && (theFace->GetShapeType() != GEOM::COMPOUND)) {
-    MESSAGE("theFace shape type is not FACE or COMPOUND");
     THROW_SALOME_CORBA_EXCEPTION("theFace shape type is not FACE or COMPOUND", SALOME::BAD_PARAM);
   }
 
   if ((theVertex->GetShapeType() != GEOM::VERTEX) && (theVertex->GetShapeType() != GEOM::COMPOUND)) {
-    MESSAGE("theVertex shape type is not VERTEX or COMPOUND");
     THROW_SALOME_CORBA_EXCEPTION("theVertex shape type is not VERTEX or COMPOUND", SALOME::BAD_PARAM);
   }
 
@@ -2770,9 +2652,6 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeomWithGroup(GEOM::GEOM_Object
     THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
 
   string theVertexName = theVertex->GetName();
-  MESSAGE("IDL : theFace->GetName : " << theFace->GetName());
-  MESSAGE("IDL : theVertex->GetName : " << theVertexName);
-  MESSAGE("IDL : SetEnforcedVertexGeomWithGroup( "<< theFaceEntry << ", " << theVertexEntry<< ", " << theGroupName<< ")");
   try {
     return SetEnforcedVertexEntry(theFaceEntry.c_str(), 0, 0, 0, theVertexName.c_str(), theVertexEntry.c_str(), theGroupName);
   } catch (SALOME_Exception& ex) {
@@ -2789,7 +2668,6 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeomWithGroup(GEOM::GEOM_Object
 //  ASSERT(myBaseImpl);
 
 //  if ((theFace->GetShapeType() != GEOM::FACE) && (theFace->GetShapeType() != GEOM::COMPOUND)) {
-//    MESSAGE("theFace shape type is not FACE or COMPOUND");
 //    THROW_SALOME_CORBA_EXCEPTION("theFace shape type is not FACE or COMPOUND", SALOME::BAD_PARAM);
 //  }
 
@@ -2811,8 +2689,6 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeomWithGroup(GEOM::GEOM_Object
 //  if (theFaceEntry.empty())
 //    THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
 
-//  MESSAGE("IDL : GetName : " << theFace->GetName());
-//  MESSAGE("IDL : GetInternalEnforcedVertexEntry ( "<< theFaceEntry << ")");
 //  try {
 //    return GetInternalEnforcedVertexEntry(theFaceEntry.c_str());
 //  } catch (SALOME_Exception& ex) {
@@ -2824,11 +2700,10 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeomWithGroup(GEOM::GEOM_Object
  * Get the list of all enforced vertices
  */
 BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVertices(GEOM::GEOM_Object_ptr theFace)
-    throw (SALOME::SALOME_Exception) {
+  throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
 
   if ((theFace->GetShapeType() != GEOM::FACE) && (theFace->GetShapeType() != GEOM::COMPOUND)) {
-    MESSAGE("theFace shape type is not FACE or COMPOUND");
     THROW_SALOME_CORBA_EXCEPTION("theFace shape type is not FACE or COMPOUND", SALOME::BAD_PARAM);
   }
 
@@ -2850,8 +2725,6 @@ BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVertices(GEO
   if (theFaceEntry.empty())
     THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
 
-  MESSAGE("IDL : GetName : " << theFace->GetName());
-  MESSAGE("IDL : GetEnforcedVerticesEntry ( "<< theFaceEntry << ")");
   try {
     return GetEnforcedVerticesEntry(theFaceEntry.c_str());
   } catch (SALOME_Exception& ex) {
@@ -2860,11 +2733,10 @@ BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVertices(GEO
 }
 
 bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertex(GEOM::GEOM_Object_ptr theFace, CORBA::Double x, CORBA::Double y,
-    CORBA::Double z) throw (SALOME::SALOME_Exception) {
+                                                    CORBA::Double z) throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
 
   if ((theFace->GetShapeType() != GEOM::FACE) && (theFace->GetShapeType() != GEOM::COMPOUND)) {
-    MESSAGE("theFace shape type is not FACE or COMPOUND");
     THROW_SALOME_CORBA_EXCEPTION("theFace shape type is not FACE or COMPOUND", SALOME::BAD_PARAM);
   }
 
@@ -2885,8 +2757,6 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertex(GEOM::GEOM_Object_ptr theFac
   }
   if (theFaceEntry.empty())
     THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
-  MESSAGE("IDL : GetName : " << theFace->GetName());
-  MESSAGE("IDL : UnsetEnforcedVertex ( "<< theFaceEntry << ", " << x << ", " << y << ", " << z << ")");
 
   try {
     return UnsetEnforcedVertexEntry(theFaceEntry.c_str(), x, y, z);
@@ -2896,15 +2766,13 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertex(GEOM::GEOM_Object_ptr theFac
 }
 
 bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexGeom(GEOM::GEOM_Object_ptr theFace, GEOM::GEOM_Object_ptr theVertex)
-    throw (SALOME::SALOME_Exception) {
+  throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
 
   if ((theFace->GetShapeType() != GEOM::FACE) && (theFace->GetShapeType() != GEOM::COMPOUND)) {
-    MESSAGE("theFace shape type is not FACE or COMPOUND");
     THROW_SALOME_CORBA_EXCEPTION("theFace shape type is not FACE or COMPOUND", SALOME::BAD_PARAM);
   }
   if ((theVertex->GetShapeType() != GEOM::VERTEX) && (theVertex->GetShapeType() != GEOM::COMPOUND)) {
-    MESSAGE("theVertex shape type is not VERTEX or COMPOUND");
     THROW_SALOME_CORBA_EXCEPTION("theVertex shape type is not VERTEX or COMPOUND", SALOME::BAD_PARAM);
   }
 
@@ -2950,7 +2818,6 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexGeom(GEOM::GEOM_Object_ptr th
   if (theVertexEntry.empty())
     THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
   
-  MESSAGE("IDL : UnsetEnforcedVertexGeom ( "<< theFaceEntry << ", " << theVertexEntry << ")");
 
   try {
     return UnsetEnforcedVertexEntry(theFaceEntry.c_str(), 0, 0, 0, theVertexEntry.c_str());
@@ -2963,7 +2830,6 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertices(GEOM::GEOM_Object_ptr theF
   ASSERT(myBaseImpl);
 
   if ((theFace->GetShapeType() != GEOM::FACE) && (theFace->GetShapeType() != GEOM::COMPOUND)) {
-    MESSAGE("theFace shape type is not FACE or COMPOUND");
     THROW_SALOME_CORBA_EXCEPTION("theFace shape type is not FACE or COMPOUND", SALOME::BAD_PARAM);
   }
 
@@ -2985,8 +2851,6 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertices(GEOM::GEOM_Object_ptr theF
   if (theFaceEntry.empty())
     THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
   
-  MESSAGE("IDL : GetName : " << theFace->GetName());
-  MESSAGE("IDL : UnsetEnforcedVertices ( "<< theFaceEntry << ")");
 
   try {
     return UnsetEnforcedVerticesEntry(theFaceEntry.c_str());
@@ -3025,10 +2889,9 @@ bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexNamed(CORBA::Double x, CORBA::D
  * Set/get/unset an enforced vertex with geom object on face
  */
 bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexGeom(GEOM::GEOM_Object_ptr theVertex)
-    throw (SALOME::SALOME_Exception)
+  throw (SALOME::SALOME_Exception)
 {
   if ((theVertex->GetShapeType() != GEOM::VERTEX) && (theVertex->GetShapeType() != GEOM::COMPOUND)) {
-    MESSAGE("theVertex shape type is not VERTEX or COMPOUND");
     THROW_SALOME_CORBA_EXCEPTION("theVertex shape type is not VERTEX or COMPOUND", SALOME::BAD_PARAM);
   }
   string theVertexEntry = theVertex->GetStudyEntry();
@@ -3062,7 +2925,7 @@ bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexGeom(GEOM::GEOM_Object_ptr theV
  * Set an enforced vertex with group name on face
  */
 bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexWithGroup(CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* theGroupName)
- throw (SALOME::SALOME_Exception)
+  throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
 
@@ -3078,7 +2941,7 @@ bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexWithGroup(CORBA::Double x, CORB
  */
 bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexNamedWithGroup(CORBA::Double x, CORBA::Double y, CORBA::Double z, 
                                                                 const char* theVertexName, const char* theGroupName)
- throw (SALOME::SALOME_Exception)
+  throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
 
@@ -3093,10 +2956,9 @@ bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexNamedWithGroup(CORBA::Double x,
  * Set an enforced vertex with geom entry and group name on face
  */
 bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexGeomWithGroup(GEOM::GEOM_Object_ptr theVertex, const char* theGroupName)
- throw (SALOME::SALOME_Exception)
+  throw (SALOME::SALOME_Exception)
 {
   if ((theVertex->GetShapeType() != GEOM::VERTEX) && (theVertex->GetShapeType() != GEOM::COMPOUND)) {
-    MESSAGE("theVertex shape type is not VERTEX or COMPOUND");
     THROW_SALOME_CORBA_EXCEPTION("theVertex shape type is not VERTEX or COMPOUND", SALOME::BAD_PARAM);
   }
 
@@ -3137,10 +2999,9 @@ bool BLSURFPlugin_Hypothesis_i::RemoveEnforcedVertex(CORBA::Double x, CORBA::Dou
 }
 
 bool BLSURFPlugin_Hypothesis_i::RemoveEnforcedVertexGeom(GEOM::GEOM_Object_ptr theVertex)
-    throw (SALOME::SALOME_Exception)
+  throw (SALOME::SALOME_Exception)
 {
   if ((theVertex->GetShapeType() != GEOM::VERTEX) && (theVertex->GetShapeType() != GEOM::COMPOUND)) {
-    MESSAGE("theVertex shape type is not VERTEX or COMPOUND");
     THROW_SALOME_CORBA_EXCEPTION("theVertex shape type is not VERTEX or COMPOUND", SALOME::BAD_PARAM);
   }
   std::string theVertexEntry = theVertex->GetStudyEntry();
@@ -3258,13 +3119,12 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexEntry(const char* theFaceEntry,
 }
 
 BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVerticesEntry(const char* entry)
-    throw (SALOME::SALOME_Exception)
+  throw (SALOME::SALOME_Exception)
 {
   try {
     BLSURFPlugin::TEnfVertexList_var vertexList = new BLSURFPlugin::TEnfVertexList();
     ::BLSURFPlugin_Hypothesis::TEnfVertexList _vList = this->GetImpl()->GetEnfVertexList(entry);
     vertexList->length(_vList.size());
-    MESSAGE("Number of enforced vertices: " << vertexList->length());
     ::BLSURFPlugin_Hypothesis::TEnfVertexList::const_iterator evlIt = _vList.begin();
     for (int i = 0; evlIt != _vList.end(); ++evlIt, ++i) {
       ::BLSURFPlugin_Hypothesis::TEnfVertex *_enfVertex = (*evlIt);
@@ -3293,7 +3153,6 @@ BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVerticesEntr
 
       vertexList[i] = enfVertex;
     }
-    MESSAGE("ENGINE : GetEnforcedVerticesEntry END ENTRY : " << entry);
     return vertexList._retn();
   } catch (const std::invalid_argument& ex) {
     SALOME::ExceptionStruct ExDescription;
@@ -3318,7 +3177,7 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexEntry(const char* theFaceEntr
 
     if (string(theVertexEntry).empty())
       SMESH::TPythonDump() << "isDone = " << _this() << ".RemoveEnforcedVertex(" << x << ", " << y << ", " << z
-          << ")";
+                           << ")";
     else
       SMESH::TPythonDump() << "isDone = " << _this() << ".RemoveEnforcedVertexGeom(" << theVertexEntry << ")";
 
@@ -3329,7 +3188,6 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexEntry(const char* theFaceEntr
     THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
   }
 
-  MESSAGE("ENGINE : UnsetEnforcedVertexEntry END ENTRY : " << theFaceEntry);
   return res;
 }
 bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVerticesEntry(const char* theFaceEntry) throw (SALOME::SALOME_Exception)
@@ -3406,125 +3264,115 @@ char* BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertexAllFacesGroup()
 /*
  * Enable internal enforced vertices on specific face if requested by user
  *
-void BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertex(GEOM::GEOM_Object_ptr theFace, CORBA::Boolean toEnforceInternalVertices)
+ void BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertex(GEOM::GEOM_Object_ptr theFace, CORBA::Boolean toEnforceInternalVertices)
  throw (SALOME::SALOME_Exception)
-{
-  MESSAGE("BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexForFace");
-  try {
-    SetInternalEnforcedVertexWithGroup(theFace, toEnforceInternalVertices);
-  } catch (SALOME_Exception& ex) {
-    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
-  }
-}
+ {
+ try {
+ SetInternalEnforcedVertexWithGroup(theFace, toEnforceInternalVertices);
+ } catch (SALOME_Exception& ex) {
+ THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+ }
+ }
 
-void BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexWithGroup(GEOM::GEOM_Object_ptr theFace, CORBA::Boolean toEnforceInternalVertices, const char* theGroupName)
+ void BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexWithGroup(GEOM::GEOM_Object_ptr theFace, CORBA::Boolean toEnforceInternalVertices, const char* theGroupName)
  throw (SALOME::SALOME_Exception)
-{
-  MESSAGE("BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexForFaceWithGroup");
+ {
 
-  if ((theFace->GetShapeType() != GEOM::FACE) && (theFace->GetShapeType() != GEOM::COMPOUND)) {
-    MESSAGE("theFace shape type is not FACE or COMPOUND");
-    THROW_SALOME_CORBA_EXCEPTION("theFace shape type is not FACE or COMPOUND", SALOME::BAD_PARAM);
-  }
+ if ((theFace->GetShapeType() != GEOM::FACE) && (theFace->GetShapeType() != GEOM::COMPOUND)) {
+ THROW_SALOME_CORBA_EXCEPTION("theFace shape type is not FACE or COMPOUND", SALOME::BAD_PARAM);
+ }
 
-  string theFaceEntry = theFace->GetStudyEntry();
+ string theFaceEntry = theFace->GetStudyEntry();
 
-  if (theFaceEntry.empty()) {
-    GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
-    SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
-    string aName;
-    if (theFace->GetShapeType() == GEOM::FACE)
-      aName = "Face_";
-    if (theFace->GetShapeType() == GEOM::COMPOUND)
-      aName = "Compound_";
-    aName += theFace->GetEntry();
-    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
-    if (!theSFace->_is_nil())
-      theFaceEntry = theSFace->GetID();
-  }
-  if (theFaceEntry.empty())
-    THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
+ if (theFaceEntry.empty()) {
+ GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+ SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
+ string aName;
+ if (theFace->GetShapeType() == GEOM::FACE)
+ aName = "Face_";
+ if (theFace->GetShapeType() == GEOM::COMPOUND)
+ aName = "Compound_";
+ aName += theFace->GetEntry();
+ SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+ if (!theSFace->_is_nil())
+ theFaceEntry = theSFace->GetID();
+ }
+ if (theFaceEntry.empty())
+ THROW_SALOME_CORBA_EXCEPTION( "Geom object is not published in study" ,SALOME::BAD_PARAM );
 
-  MESSAGE("IDL : GetName : " << theFace->GetName());
-  MESSAGE("IDL : GetInternalEnforcedVertexEntry ( "<< theFaceEntry << ")");
-  try {
-    SetInternalEnforcedVertexEntry(theFaceEntry.c_str(), toEnforceInternalVertices, theGroupName);
-  } catch (SALOME_Exception& ex) {
-    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
-  }
-}
+ try {
+ SetInternalEnforcedVertexEntry(theFaceEntry.c_str(), toEnforceInternalVertices, theGroupName);
+ } catch (SALOME_Exception& ex) {
+ THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+ }
+ }
 
-void BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexEntry(const char* theFaceEntry, CORBA::Boolean toEnforceInternalVertices, const char* theGroupName)
-    throw (SALOME::SALOME_Exception)
-{
-  MESSAGE("BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexForFaceEntry");
-  ASSERT(myBaseImpl);
-  try {
-    this->GetImpl()->SetInternalEnforcedVertex(theFaceEntry, toEnforceInternalVertices, theGroupName);
-    std::string theValueStr = toEnforceInternalVertices ? "True" : "False";
-    if (string(theGroupName).empty())
-      SMESH::TPythonDump() << _this() << ".SetInternalEnforcedVertex( " << theFaceEntry << ", " << theValueStr.c_str() << " )";
-    else
-      SMESH::TPythonDump() << _this() << ".SetInternalEnforcedVertexWithGroup( " << theFaceEntry << ", " << theValueStr.c_str() << ", \"" << theGroupName << "\" )";
-  } catch (const std::exception& ex) {
-    std::cout << "Exception: " << ex.what() << std::endl;
-    THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
-  }
-}
+ void BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexEntry(const char* theFaceEntry, CORBA::Boolean toEnforceInternalVertices, const char* theGroupName)
+ throw (SALOME::SALOME_Exception)
+ {
+ ASSERT(myBaseImpl);
+ try {
+ this->GetImpl()->SetInternalEnforcedVertex(theFaceEntry, toEnforceInternalVertices, theGroupName);
+ std::string theValueStr = toEnforceInternalVertices ? "True" : "False";
+ if (string(theGroupName).empty())
+ SMESH::TPythonDump() << _this() << ".SetInternalEnforcedVertex( " << theFaceEntry << ", " << theValueStr.c_str() << " )";
+ else
+ SMESH::TPythonDump() << _this() << ".SetInternalEnforcedVertexWithGroup( " << theFaceEntry << ", " << theValueStr.c_str() << ", \"" << theGroupName << "\" )";
+ } catch (const std::exception& ex) {
+ std::cout << "Exception: " << ex.what() << std::endl;
+ THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+ }
+ }
 
 */
 
 /* TODO GROUPS
- char* BLSURFPlugin_Hypothesis_i::GetEnforcedVertexGroupName(CORBA::Double x, CORBA::Double y, CORBA::Double z)
- throw (SALOME::SALOME_Exception)
- {
- ASSERT(myBaseImpl);
- MESSAGE("ENGINE : GetEnforcedVertexGroupName START ");
- try {
- return CORBA::string_dup( this->GetImpl()->GetEnforcedVertexGroupName(x, y, z).c_str());
- }
- catch (const std::invalid_argument& ex) {
- SALOME::ExceptionStruct ExDescription;
- ExDescription.text = ex.what();
- ExDescription.type = SALOME::BAD_PARAM;
- ExDescription.sourceFile = "BLSURFPlugin_Hypothesis_i::GetEnforcedVertexGroupName(entry)";
- ExDescription.lineNumber = 1146;
- throw SALOME::SALOME_Exception(ExDescription);
- }
- catch (SALOME_Exception& ex) {
- THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
- }
- MESSAGE("ENGINE : GetEnforcedVertexGroupName END ");
- return 0;
- }
+   char* BLSURFPlugin_Hypothesis_i::GetEnforcedVertexGroupName(CORBA::Double x, CORBA::Double y, CORBA::Double z)
+   throw (SALOME::SALOME_Exception)
+   {
+   ASSERT(myBaseImpl);
+   try {
+   return CORBA::string_dup( this->GetImpl()->GetEnforcedVertexGroupName(x, y, z).c_str());
+   }
+   catch (const std::invalid_argument& ex) {
+   SALOME::ExceptionStruct ExDescription;
+   ExDescription.text = ex.what();
+   ExDescription.type = SALOME::BAD_PARAM;
+   ExDescription.sourceFile = "BLSURFPlugin_Hypothesis_i::GetEnforcedVertexGroupName(entry)";
+   ExDescription.lineNumber = 1146;
+   throw SALOME::SALOME_Exception(ExDescription);
+   }
+   catch (SALOME_Exception& ex) {
+   THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+   }
+   return 0;
+   }
 
 
- void BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGroupName(CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* groupName)
- throw (SALOME::SALOME_Exception)
- {
- ASSERT(myBaseImpl);
- MESSAGE("ENGINE : SetEnforcedVertexGroupName START ");
- try {
- this->GetImpl()->SetEnforcedVertexGroupName(x, y, z, groupName);
- }
- catch (const std::invalid_argument& ex) {
- SALOME::ExceptionStruct ExDescription;
- ExDescription.text = ex.what();
- ExDescription.type = SALOME::BAD_PARAM;
- ExDescription.sourceFile = "BLSURFPlugin_Hypothesis::SetEnforcedVertexGroupName(x,y,z)";
- ExDescription.lineNumber = 1170;
- throw SALOME::SALOME_Exception(ExDescription);
- }
- catch (SALOME_Exception& ex) {
- THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
- }
+   void BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGroupName(CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* groupName)
+   throw (SALOME::SALOME_Exception)
+   {
+   ASSERT(myBaseImpl);
+   try {
+   this->GetImpl()->SetEnforcedVertexGroupName(x, y, z, groupName);
+   }
+   catch (const std::invalid_argument& ex) {
+   SALOME::ExceptionStruct ExDescription;
+   ExDescription.text = ex.what();
+   ExDescription.type = SALOME::BAD_PARAM;
+   ExDescription.sourceFile = "BLSURFPlugin_Hypothesis::SetEnforcedVertexGroupName(x,y,z)";
+   ExDescription.lineNumber = 1170;
+   throw SALOME::SALOME_Exception(ExDescription);
+   }
+   catch (SALOME_Exception& ex) {
+   THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+   }
 
- SMESH::TPythonDump() << _this() << ".SetEnforcedVertexGroupName("
- << x << ", " << y << ", " << z << ", '" << groupName << "' )";
+   SMESH::TPythonDump() << _this() << ".SetEnforcedVertexGroupName("
+   << x << ", " << y << ", " << z << ", '" << groupName << "' )";
 
- MESSAGE("ENGINE : SetEnforcedVertexGroupName END ");
- }
- */
+   }
+*/
 ///////////////////////
 
 ///////////////////////
@@ -3534,7 +3382,6 @@ void BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexEntry(const char* theFa
 
 std::string BLSURFPlugin_Hypothesis_i::ShapeTypeToString(GEOM::shape_type theShapeType)
 {
-//enum shape_type { COMPOUND, COMPSOLID, SOLID, SHELL, FACE, WIRE, EDGE, VERTEX, SHAPE /*, __max_shape_type=0xffffffff */ };
   std::map<GEOM::shape_type, std::string> MapShapeTypeToString;
   MapShapeTypeToString[GEOM::COMPOUND] = std::string("COMPOUND");
   MapShapeTypeToString[GEOM::COMPSOLID] = std::string("COMPSOLID");
@@ -3555,18 +3402,17 @@ void BLSURFPlugin_Hypothesis_i::CheckShapeTypes(GEOM::GEOM_Object_ptr shape, std
   bool ok = false;
   std::stringstream typesTxt;
   for (std::size_t i=0; i<theShapeTypes.size(); i++)
-    {
-      GEOM::shape_type theShapeType = theShapeTypes[i];
-      if (shape->GetShapeType() == theShapeType)
-        ok = true;
-      typesTxt << ShapeTypeToString(theShapeType);
-      if (i < theShapeTypes.size()-1 )
-        typesTxt << ", ";
-    }
+  {
+    GEOM::shape_type theShapeType = theShapeTypes[i];
+    if (shape->GetShapeType() == theShapeType)
+      ok = true;
+    typesTxt << ShapeTypeToString(theShapeType);
+    if (i < theShapeTypes.size()-1 )
+      typesTxt << ", ";
+  }
   if (!ok){
     std::stringstream msg;
-    msg << "shape shape type is not in" << typesTxt.str();
-    MESSAGE(msg.str());
+    msg << "shape type is not in" << typesTxt.str();
     THROW_SALOME_CORBA_EXCEPTION(msg.str().c_str(), SALOME::BAD_PARAM);
   }
 }
@@ -3577,7 +3423,6 @@ void BLSURFPlugin_Hypothesis_i::CheckShapeType(GEOM::GEOM_Object_ptr shape, GEOM
   if (shape->GetShapeType() != theShapeType) {
     std::stringstream msg;
     msg << "shape shape type is not " << ShapeTypeToString(theShapeType);
-    MESSAGE(msg.str());
     THROW_SALOME_CORBA_EXCEPTION(msg.str().c_str(), SALOME::BAD_PARAM);
   }
 }
@@ -3611,26 +3456,26 @@ std::string BLSURFPlugin_Hypothesis_i::FormatVerticesEntries(vector<string> &the
   std::stringstream listEntriesTxt;
 
   if (!theSourceVerticesEntries.empty())
+  {
+    listEntriesTxt << ", [" ;
+    size_t i =0;
+    for (std::vector<std::string>::const_iterator it = theSourceVerticesEntries.begin(); it != theSourceVerticesEntries.end(); it++, i++)
     {
-      listEntriesTxt << ", [" ;
-      size_t i =0;
-      for (std::vector<std::string>::const_iterator it = theSourceVerticesEntries.begin(); it != theSourceVerticesEntries.end(); it++, i++)
-        {
-          if (i>0)
-            listEntriesTxt << ", ";
-          listEntriesTxt << *it;
-        }
-
-      listEntriesTxt << "], [" ;
-      i =0;
-      for (std::vector<std::string>::const_iterator it = theTargetVerticesEntries.begin(); it != theTargetVerticesEntries.end(); it++, i++)
-        {
-          if (i>0)
-            listEntriesTxt << ", ";
-          listEntriesTxt << *it;
-        }
-      listEntriesTxt << "]" ;
+      if (i>0)
+        listEntriesTxt << ", ";
+      listEntriesTxt << *it;
     }
+
+    listEntriesTxt << "], [" ;
+    i =0;
+    for (std::vector<std::string>::const_iterator it = theTargetVerticesEntries.begin(); it != theTargetVerticesEntries.end(); it++, i++)
+    {
+      if (i>0)
+        listEntriesTxt << ", ";
+      listEntriesTxt << *it;
+    }
+    listEntriesTxt << "]" ;
+  }
   return listEntriesTxt.str();
 }
 
@@ -3645,66 +3490,61 @@ void BLSURFPlugin_Hypothesis_i::ClearPreCadPeriodicityVectors() {
 
 BLSURFPlugin::TPeriodicityList* BLSURFPlugin_Hypothesis_i::GetPreCadFacesPeriodicityVector()
 {
-  MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCadFacesPeriodicityVector");
   const ::BLSURFPlugin_Hypothesis::TPreCadPeriodicityVector preCadPeriodicityVector =
-      this->GetImpl()->_GetPreCadFacesPeriodicityVector();
+    this->GetImpl()->_GetPreCadFacesPeriodicityVector();
 
   BLSURFPlugin::TPeriodicityList_var periodicityList = PreCadVectorToSequence(preCadPeriodicityVector);
 
-  MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCadFacesPeriodicityVector end");
   return periodicityList._retn();
 }
 
 BLSURFPlugin::TPeriodicityList* BLSURFPlugin_Hypothesis_i::GetPreCadEdgesPeriodicityVector()
 {
-  MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCadEdgesPeriodicityVector");
   const ::BLSURFPlugin_Hypothesis::TPreCadPeriodicityVector preCadPeriodicityVector =
-      this->GetImpl()->_GetPreCadEdgesPeriodicityVector();
+    this->GetImpl()->_GetPreCadEdgesPeriodicityVector();
 
   BLSURFPlugin::TPeriodicityList_var periodicityList = PreCadVectorToSequence(preCadPeriodicityVector);
 
-  MESSAGE("BLSURFPlugin_Hypothesis_i::GetPreCadEdgesPeriodicityVector end");
   return periodicityList._retn();
 }
 
 // convert a vector preCadPeriodicityVector into TPeriodicityList Corba sequence
 BLSURFPlugin::TPeriodicityList* BLSURFPlugin_Hypothesis_i::PreCadVectorToSequence(const ::BLSURFPlugin_Hypothesis::TPreCadPeriodicityVector& preCadPeriodicityVector)
 {
-  MESSAGE("BLSURFPlugin_Hypothesis_i::PreCadVectorToSequence");
   BLSURFPlugin::TPeriodicityList_var periodicityList = new BLSURFPlugin::TPeriodicityList();
 
-    periodicityList->length(preCadPeriodicityVector.size());
+  periodicityList->length(preCadPeriodicityVector.size());
 
-    for (size_t i = 0; i<preCadPeriodicityVector.size(); i++)
-      {
-        ::BLSURFPlugin_Hypothesis::TPreCadPeriodicity preCadPeriodicityVector_i = preCadPeriodicityVector[i];
+  for (size_t i = 0; i<preCadPeriodicityVector.size(); i++)
+  {
+    ::BLSURFPlugin_Hypothesis::TPreCadPeriodicity preCadPeriodicityVector_i = preCadPeriodicityVector[i];
 
-        BLSURFPlugin::TPreCadPeriodicity_var myPreCadPeriodicity = new BLSURFPlugin::TPreCadPeriodicity();
-        myPreCadPeriodicity->shape1Entry = CORBA::string_dup(preCadPeriodicityVector_i.shape1Entry.c_str());
-        myPreCadPeriodicity->shape2Entry = CORBA::string_dup(preCadPeriodicityVector_i.shape2Entry.c_str());
+    BLSURFPlugin::TPreCadPeriodicity_var myPreCadPeriodicity = new BLSURFPlugin::TPreCadPeriodicity();
+    myPreCadPeriodicity->shape1Entry = CORBA::string_dup(preCadPeriodicityVector_i.shape1Entry.c_str());
+    myPreCadPeriodicity->shape2Entry = CORBA::string_dup(preCadPeriodicityVector_i.shape2Entry.c_str());
 
-        BLSURFPlugin::TEntryList_var sourceVertices = new BLSURFPlugin::TEntryList();
-        if (! preCadPeriodicityVector_i.theSourceVerticesEntries.empty())
-          {
-            sourceVertices->length(preCadPeriodicityVector_i.theSourceVerticesEntries.size());
-            for (size_t j=0; j<preCadPeriodicityVector_i.theSourceVerticesEntries.size(); j++)
-              sourceVertices[j]=CORBA::string_dup(preCadPeriodicityVector_i.theSourceVerticesEntries[j].c_str());
-          }
+    BLSURFPlugin::TEntryList_var sourceVertices = new BLSURFPlugin::TEntryList();
+    if (! preCadPeriodicityVector_i.theSourceVerticesEntries.empty())
+    {
+      sourceVertices->length(preCadPeriodicityVector_i.theSourceVerticesEntries.size());
+      for (size_t j=0; j<preCadPeriodicityVector_i.theSourceVerticesEntries.size(); j++)
+        sourceVertices[j]=CORBA::string_dup(preCadPeriodicityVector_i.theSourceVerticesEntries[j].c_str());
+    }
 
-        myPreCadPeriodicity->theSourceVerticesEntries = sourceVertices;
+    myPreCadPeriodicity->theSourceVerticesEntries = sourceVertices;
 
-        BLSURFPlugin::TEntryList_var targetVertices = new BLSURFPlugin::TEntryList();
-        if (! preCadPeriodicityVector_i.theTargetVerticesEntries.empty())
-           {
-            targetVertices->length(preCadPeriodicityVector_i.theTargetVerticesEntries.size());
-             for (size_t j=0; j<preCadPeriodicityVector_i.theTargetVerticesEntries.size(); j++)
-               targetVertices[j]=CORBA::string_dup(preCadPeriodicityVector_i.theTargetVerticesEntries[j].c_str());
-           }
+    BLSURFPlugin::TEntryList_var targetVertices = new BLSURFPlugin::TEntryList();
+    if (! preCadPeriodicityVector_i.theTargetVerticesEntries.empty())
+    {
+      targetVertices->length(preCadPeriodicityVector_i.theTargetVerticesEntries.size());
+      for (size_t j=0; j<preCadPeriodicityVector_i.theTargetVerticesEntries.size(); j++)
+        targetVertices[j]=CORBA::string_dup(preCadPeriodicityVector_i.theTargetVerticesEntries[j].c_str());
+    }
 
-        myPreCadPeriodicity->theTargetVerticesEntries = targetVertices;
+    myPreCadPeriodicity->theTargetVerticesEntries = targetVertices;
 
-        periodicityList[i] = myPreCadPeriodicity;
-      }
+    periodicityList[i] = myPreCadPeriodicity;
+  }
 
 
   return periodicityList._retn();
@@ -3712,7 +3552,7 @@ BLSURFPlugin::TPeriodicityList* BLSURFPlugin_Hypothesis_i::PreCadVectorToSequenc
 
 
 void BLSURFPlugin_Hypothesis_i::AddPreCadFacesPeriodicity(GEOM::GEOM_Object_ptr theFace1, GEOM::GEOM_Object_ptr theFace2)
-throw (SALOME::SALOME_Exception)
+  throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
   const GEOM::ListOfGO theSourceVertices;
@@ -3722,11 +3562,10 @@ throw (SALOME::SALOME_Exception)
 
 
 void BLSURFPlugin_Hypothesis_i::AddPreCadFacesPeriodicityWithVertices(GEOM::GEOM_Object_ptr theFace1, GEOM::GEOM_Object_ptr theFace2,
-    const GEOM::ListOfGO& theSourceVertices, const GEOM::ListOfGO& theTargetVertices)
-throw (SALOME::SALOME_Exception)
+                                                                      const GEOM::ListOfGO& theSourceVertices, const GEOM::ListOfGO& theTargetVertices)
+  throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
-  MESSAGE("BLSURFPlugin_Hypothesis_i::AddPreCadFacesPeriodicityWithVertices");
 
   size_t theLength = theSourceVertices.length();
   if (theLength != theTargetVertices.length())
@@ -3750,27 +3589,24 @@ throw (SALOME::SALOME_Exception)
   GEOM::GEOM_Object_ptr theVtx_i;
   string theEntry_i;
   for (size_t ind = 0; ind < theLength; ind++) {
-      theVtx_i = theSourceVertices[ind];
-      theEntry_i = PublishIfNeeded(theVtx_i, GEOM::VERTEX, prefix3);
-      theSourceVerticesEntries[ind] = CORBA::string_dup(theEntry_i.c_str());
+    theVtx_i = theSourceVertices[ind];
+    theEntry_i = PublishIfNeeded(theVtx_i, GEOM::VERTEX, prefix3);
+    theSourceVerticesEntries[ind] = CORBA::string_dup(theEntry_i.c_str());
   }
 
   string prefix4 = "Target_vertex_";
   BLSURFPlugin::TEntryList_var theTargetVerticesEntries = new BLSURFPlugin::TEntryList();
   theTargetVerticesEntries->length(theLength);
   for (size_t ind = 0; ind < theLength; ind++) {
-      theVtx_i = theTargetVertices[ind];
-      theEntry_i = PublishIfNeeded(theVtx_i, GEOM::VERTEX, prefix4);
-      theTargetVerticesEntries[ind] = CORBA::string_dup(theEntry_i.c_str());
+    theVtx_i = theTargetVertices[ind];
+    theEntry_i = PublishIfNeeded(theVtx_i, GEOM::VERTEX, prefix4);
+    theTargetVerticesEntries[ind] = CORBA::string_dup(theEntry_i.c_str());
   }
 
   string theFace2Name = theFace2->GetName();
-  MESSAGE("IDL : theFace1->GetName : " << theFace1->GetName());
-  MESSAGE("IDL : theFace2->GetName : " << theFace2->GetName());
-  MESSAGE("IDL : AddPreCadFacesPeriodicity( "<< theFace1Entry << ", " << theFace2Entry <<  ")");
   try {
-      AddPreCadFacesPeriodicityEntry(theFace1Entry.c_str(), theFace2Entry.c_str(),
-          theSourceVerticesEntries, theTargetVerticesEntries);
+    AddPreCadFacesPeriodicityEntry(theFace1Entry.c_str(), theFace2Entry.c_str(),
+                                   theSourceVerticesEntries, theTargetVerticesEntries);
   } catch (SALOME_Exception& ex) {
     THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
   }
@@ -3778,8 +3614,8 @@ throw (SALOME::SALOME_Exception)
 
 
 void BLSURFPlugin_Hypothesis_i::AddPreCadFacesPeriodicityEntry(const char* theFace1Entry, const char* theFace2Entry,
-    const BLSURFPlugin::TEntryList& theSourceVerticesEntriesCorba, const BLSURFPlugin::TEntryList& theTargetVerticesEntriesCorba)
-    throw (SALOME::SALOME_Exception)
+                                                               const BLSURFPlugin::TEntryList& theSourceVerticesEntriesCorba, const BLSURFPlugin::TEntryList& theTargetVerticesEntriesCorba)
+  throw (SALOME::SALOME_Exception)
 {
 
   ASSERT(myBaseImpl);
@@ -3787,31 +3623,29 @@ void BLSURFPlugin_Hypothesis_i::AddPreCadFacesPeriodicityEntry(const char* theFa
   // Convert BLSURFPlugin::TEntryList to vector<string>
   vector<string> theSourceVerticesEntries, theTargetVerticesEntries;
   for (size_t ind = 0; ind < theSourceVerticesEntriesCorba.length(); ind++) {
-      theSourceVerticesEntries.push_back(theSourceVerticesEntriesCorba[ind].in());
-      theTargetVerticesEntries.push_back(theTargetVerticesEntriesCorba[ind].in());
+    theSourceVerticesEntries.push_back(theSourceVerticesEntriesCorba[ind].in());
+    theTargetVerticesEntries.push_back(theTargetVerticesEntriesCorba[ind].in());
   }
 
   string listEntriesTxt = FormatVerticesEntries(theSourceVerticesEntries, theTargetVerticesEntries);
 
-  MESSAGE("IDL : AddPreCadFacesPeriodicityEntry(" << theFace1Entry << ", " << theFace2Entry << listEntriesTxt.c_str() << ")");
 
   this->GetImpl()->AddPreCadFacesPeriodicity(theFace1Entry, theFace2Entry,
-      theSourceVerticesEntries, theTargetVerticesEntries);
+                                             theSourceVerticesEntries, theTargetVerticesEntries);
 
   SMESH::TPythonDump pd;
   if (!theSourceVerticesEntries.empty())
-    {
-      pd << _this() << ".AddPreCadFacesPeriodicityWithVertices(" << theFace1Entry << ", " << theFace2Entry;
-      pd << listEntriesTxt.c_str();
-      pd << ")";
-    }
+  {
+    pd << _this() << ".AddPreCadFacesPeriodicityWithVertices(" << theFace1Entry << ", " << theFace2Entry;
+    pd << listEntriesTxt.c_str();
+    pd << ")";
+  }
   else
     pd << _this() << ".AddPreCadFacesPeriodicity(" << theFace1Entry << ", " << theFace2Entry << ")";
-  MESSAGE("IDL : AddPreCadFacesPeriodicityEntry END");
 }
 
 void BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicity(GEOM::GEOM_Object_ptr theEdge1, GEOM::GEOM_Object_ptr theEdge2)
-      throw (SALOME::SALOME_Exception)
+  throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
   const GEOM::ListOfGO theSourceVertices;
@@ -3820,10 +3654,9 @@ void BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicity(GEOM::GEOM_Object_ptr 
 }
 
 void BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicityWithVertices(GEOM::GEOM_Object_ptr theEdge1, GEOM::GEOM_Object_ptr theEdge2,
-    const GEOM::ListOfGO& theSourceVertices, const GEOM::ListOfGO& theTargetVertices)
-      throw (SALOME::SALOME_Exception)
+                                                                      const GEOM::ListOfGO& theSourceVertices, const GEOM::ListOfGO& theTargetVertices)
+  throw (SALOME::SALOME_Exception)
 {
-  MESSAGE("BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicityWithVertices");
   ASSERT(myBaseImpl);
 
   size_t theLength = theSourceVertices.length();
@@ -3848,27 +3681,24 @@ void BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicityWithVertices(GEOM::GEOM
   GEOM::GEOM_Object_ptr theVtx_i;
   string theEntry_i;
   for (size_t ind = 0; ind < theLength; ind++) {
-      theVtx_i = theSourceVertices[ind];
-      theEntry_i = PublishIfNeeded(theVtx_i, GEOM::VERTEX, prefix3);
-      theSourceVerticesEntries[ind] = CORBA::string_dup(theEntry_i.c_str());
+    theVtx_i = theSourceVertices[ind];
+    theEntry_i = PublishIfNeeded(theVtx_i, GEOM::VERTEX, prefix3);
+    theSourceVerticesEntries[ind] = CORBA::string_dup(theEntry_i.c_str());
   }
 
   string prefix4 = "Target_vertex_";
   BLSURFPlugin::TEntryList_var theTargetVerticesEntries = new BLSURFPlugin::TEntryList();
   theTargetVerticesEntries->length(theLength);
   for (size_t ind = 0; ind < theLength; ind++) {
-      theVtx_i = theTargetVertices[ind];
-      theEntry_i = PublishIfNeeded(theVtx_i, GEOM::VERTEX, prefix4);
-      theTargetVerticesEntries[ind] = CORBA::string_dup(theEntry_i.c_str());
+    theVtx_i = theTargetVertices[ind];
+    theEntry_i = PublishIfNeeded(theVtx_i, GEOM::VERTEX, prefix4);
+    theTargetVerticesEntries[ind] = CORBA::string_dup(theEntry_i.c_str());
   }
 
   string theEdge2Name = theEdge2->GetName();
-  MESSAGE("IDL : theEdge1->GetName : " << theEdge1->GetName());
-  MESSAGE("IDL : theEdge2->GetName : " << theEdge2->GetName());
-  MESSAGE("IDL : AddPreCadEdgesPeriodicity( "<< theEdge1Entry << ", " << theEdge2Entry << ")");
   try {
-      AddPreCadEdgesPeriodicityEntry(theEdge1Entry.c_str(), theEdge2Entry.c_str(),
-          theSourceVerticesEntries, theTargetVerticesEntries);
+    AddPreCadEdgesPeriodicityEntry(theEdge1Entry.c_str(), theEdge2Entry.c_str(),
+                                   theSourceVerticesEntries, theTargetVerticesEntries);
   } catch (SALOME_Exception& ex) {
     THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
   }
@@ -3876,8 +3706,8 @@ void BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicityWithVertices(GEOM::GEOM
 
 
 void BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicityEntry(const char* theEdge1Entry, const char* theEdge2Entry,
-    const BLSURFPlugin::TEntryList& theSourceVerticesEntriesCorba, const BLSURFPlugin::TEntryList& theTargetVerticesEntriesCorba)
-    throw (SALOME::SALOME_Exception)
+                                                               const BLSURFPlugin::TEntryList& theSourceVerticesEntriesCorba, const BLSURFPlugin::TEntryList& theTargetVerticesEntriesCorba)
+  throw (SALOME::SALOME_Exception)
 {
 
   ASSERT(myBaseImpl);
@@ -3885,27 +3715,25 @@ void BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicityEntry(const char* theEd
   // Convert BLSURFPlugin::TEntryList to vector<string>
   vector<string> theSourceVerticesEntries, theTargetVerticesEntries;
   for (size_t ind = 0; ind < theSourceVerticesEntriesCorba.length(); ind++) {
-      theSourceVerticesEntries.push_back(theSourceVerticesEntriesCorba[ind].in());
-      theTargetVerticesEntries.push_back(theTargetVerticesEntriesCorba[ind].in());
+    theSourceVerticesEntries.push_back(theSourceVerticesEntriesCorba[ind].in());
+    theTargetVerticesEntries.push_back(theTargetVerticesEntriesCorba[ind].in());
   }
 
   string listEntriesTxt = FormatVerticesEntries(theSourceVerticesEntries, theTargetVerticesEntries);
 
-  MESSAGE("IDL : AddPreCadEdgesPeriodicityEntry(" << theEdge1Entry << ", " << theEdge2Entry << listEntriesTxt.c_str() << ")");
   this->GetImpl()->AddPreCadEdgesPeriodicity(theEdge1Entry, theEdge2Entry,
-      theSourceVerticesEntries, theTargetVerticesEntries);
+                                             theSourceVerticesEntries, theTargetVerticesEntries);
 
   SMESH::TPythonDump pd;
   if (!theSourceVerticesEntries.empty())
-    {
-      pd << _this() << ".AddPreCadEdgesPeriodicityWithVertices(" << theEdge1Entry << ", " << theEdge2Entry;
-      pd << listEntriesTxt.c_str();
-      pd << ")";
-    }
+  {
+    pd << _this() << ".AddPreCadEdgesPeriodicityWithVertices(" << theEdge1Entry << ", " << theEdge2Entry;
+    pd << listEntriesTxt.c_str();
+    pd << ")";
+  }
   else
     pd << _this() << ".AddPreCadEdgesPeriodicity(" << theEdge1Entry << ", " << theEdge2Entry << ")";
 
-  MESSAGE("IDL : AddPreCadEdgesPeriodicityEntry END");
 }
 
 
@@ -3920,11 +3748,10 @@ void BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicityEntry(const char* theEd
 // void BLSURFPlugin_Hypothesis_i::SetGMFFile(const char* theFileName, CORBA::Boolean isBinary) {
 void BLSURFPlugin_Hypothesis_i::SetGMFFile(const char* theFileName) {
   ASSERT(myBaseImpl);
-  MESSAGE("IDL : SetGMFFile(" << theFileName << ")");
   bool valueChanged/*, modeChanged*/ = false;
   try {
     valueChanged = (this->GetImpl()->GetGMFFile() != theFileName);
-//     modeChanged = (this->GetImpl()->GetGMFFileMode() != isBinary);
+    //     modeChanged = (this->GetImpl()->GetGMFFileMode() != isBinary);
     if (valueChanged)// or (!valueChanged && modeChanged))
       this->GetImpl()->SetGMFFile(theFileName);// ,isBinary);
   } catch (const std::exception& ex) {
@@ -3932,7 +3759,6 @@ void BLSURFPlugin_Hypothesis_i::SetGMFFile(const char* theFileName) {
   }
   if (valueChanged)// or (!valueChanged && modeChanged))
     SMESH::TPythonDump() << _this() << ".SetGMFFile(\"" << theFileName << "\")"; //", " << isBinary << ")";
-  MESSAGE("IDL : SetGMFFile END ");
 }
 
 //================================================================================
@@ -3945,7 +3771,6 @@ void BLSURFPlugin_Hypothesis_i::SetGMFFile(const char* theFileName) {
 //================================================================================  
 char* BLSURFPlugin_Hypothesis_i::GetGMFFile() {
   ASSERT(myBaseImpl);
-//   MESSAGE("IDL : GetGMFFile()");
   return CORBA::string_dup(this->GetImpl()->GetGMFFile().c_str());
 }
 
@@ -3959,7 +3784,6 @@ char* BLSURFPlugin_Hypothesis_i::GetGMFFile() {
 // //================================================================================  
 // CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetGMFFileMode() {
 //   ASSERT(myBaseImpl);
-//   MESSAGE("IDL : GetGMFFileMode()");
 //   return this->GetImpl()->GetGMFFileMode();
 // }
 
@@ -3971,7 +3795,6 @@ char* BLSURFPlugin_Hypothesis_i::GetGMFFile() {
  */
 //=============================================================================
 ::BLSURFPlugin_Hypothesis* BLSURFPlugin_Hypothesis_i::GetImpl() {
-  // MESSAGE("BLSURFPlugin_Hypothesis_i::GetImpl");
   return (::BLSURFPlugin_Hypothesis*) myBaseImpl;
 }
 
@@ -4035,7 +3858,7 @@ void BLSURFPlugin_Hypothesis_i::SetDecimesh(CORBA::Boolean theValue) {
 CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetDecimesh() {
   std::string theValueStr = this->GetOptionValue("respect_geometry");
   if (theValueStr.empty() || theValueStr == "respect")
-      return true;
+    return true;
   return false;
 }
 void BLSURFPlugin_Hypothesis_i::SetPreCADRemoveNanoEdges(CORBA::Boolean theValue) {
@@ -4045,7 +3868,7 @@ void BLSURFPlugin_Hypothesis_i::SetPreCADRemoveNanoEdges(CORBA::Boolean theValue
 CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADRemoveNanoEdges() {
   std::string theValueStr = this->GetPreCADOption("remove_tiny_edges");
   if (theValueStr == "1")
-      return true;
+    return true;
   return false;
 }
 void BLSURFPlugin_Hypothesis_i::SetPreCADEpsNano(CORBA::Double theValue) {

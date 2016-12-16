@@ -31,7 +31,50 @@
                server-lib="BLSURFEngine"
                gui-lib="BLSURFPluginGUI">
   <hypotheses>
+
     <hypothesis type="MG-CADSurf Parameters"
+		label-id="MG-CADSurf Parameters"
+		icon-id="mesh_hypo_BLSURF.png"
+		dim="2">
+      <python-wrap>
+        <accumulative-methods>
+          SetOptionValue,
+          SetPreCADOptionValue,
+          UnsetOption,
+          UnsetPreCADOption,
+          AddOption,
+          AddPreCADOption,
+          SetSizeMap,
+          SetConstantSizeMap,
+          UnsetSizeMap,
+          SetAttractor,
+          UnsetAttractor,
+          SetAttractorGeom,
+          UnsetAttractorGeom,
+          SetEnforcedVertex,
+          SetEnforcedVertexNamed,
+          SetEnforcedVertexGeom,
+          SetEnforcedVertexWithGroup,
+          SetEnforcedVertexNamedWithGroup,
+          SetEnforcedVertexGeomWithGroup,
+          UnsetEnforcedVertex,
+          UnsetEnforcedVertexGeom,
+          UnsetEnforcedVertices,
+          AddEnforcedVertex,
+          AddEnforcedVertexNamed,
+          AddEnforcedVertexGeom,
+          AddEnforcedVertexWithGroup,
+          AddEnforcedVertexNamedWithGroup,
+          AddEnforcedVertexGeomWithGroup,
+          RemoveEnforcedVertex,
+          RemoveEnforcedVertexGeom,
+          RemoveEnforcedVertices,
+          AddPreCadFacesPeriodicity
+        </accumulative-methods>
+      </python-wrap>
+    </hypothesis>
+
+    <hypothesis type="MG-CADSurf Parameters_NOGEOM"
 		label-id="MG-CADSurf Parameters"
 		icon-id="mesh_hypo_BLSURF.png"
 		dim="2">
@@ -89,6 +132,19 @@
         <algo>MG-CADSurf=Triangle(algo=smeshBuilder.MG_CADSurf)</algo>
         <hypo>MG-CADSurf Parameters=Parameters()</hypo>
         <hypo>ViscousLayers2D=ViscousLayers2D(SetTotalThickness(),SetNumberLayers(),SetStretchFactor(),SetIgnoreEdges())</hypo>
+      </python-wrap>
+    </algorithm>
+
+    <algorithm type="MG-CADSurf_NOGEOM"
+               label-id="MG-CADSurf"
+               icon-id="mesh_algo_BLSURF.png"
+               opt-hypos="MG-CADSurf Parameters_NOGEOM"
+               output="TRIA,QUAD"
+               need-geom="never"
+               dim="2">
+      <python-wrap>
+        <algo>MG-CADSurf_NOGEOM=Triangle(algo=smeshBuilder.MG_CADSurf)</algo>
+        <hypo>MG-CADSurf Parameters_NOGEOM=Parameters()</hypo>
       </python-wrap>
     </algorithm>
 

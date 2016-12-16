@@ -87,7 +87,11 @@ class BLSURF_Algorithm(Mesh_Algorithm):
     Mesh_Algorithm.__init__(self)
     if noBLSURFPlugin:
       print "Warning: BLSURFPlugin module unavailable"
-    self.Create(mesh, geom, BLSURF, LIBRARY)
+    if mesh.GetMesh().HasShapeToMesh():
+      self.Create(mesh, geom, self.algoType, LIBRARY)
+    else:
+      self.Create(mesh, geom, self.algoType+"_NOGEOM", LIBRARY)
+      mesh.smeshpyD.SetName( self.algo, self.algoType )
     self.params=None
     self.geompyD = mesh.geompyD
     #self.SetPhysicalMesh() - PAL19680
@@ -643,8 +647,13 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   #  @return hypothesis object
   def Parameters(self):
     if not self.params:
-      self.params = self.Hypothesis("MG-CADSurf Parameters", [],
-                                    LIBRARY, UseExisting=0)
+      hypType = "MG-CADSurf Parameters"
+      hasGeom = self.mesh.GetMesh().HasShapeToMesh()
+      if hasGeom:
+        self.params = self.Hypothesis(hypType, [], LIBRARY, UseExisting=0)
+      else:
+        self.params = self.Hypothesis(hypType + "_NOGEOM", [], LIBRARY, UseExisting=0)
+        self.mesh.smeshpyD.SetName( self.params, hypType )
       pass
     return self.params
 

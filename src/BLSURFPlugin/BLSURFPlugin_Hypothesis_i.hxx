@@ -37,11 +37,16 @@ class GEOM_Object;
 
 // BLSURFPlugin parameters hypothesis
 
-class BLSURFPlugin_Hypothesis_i: public virtual POA_BLSURFPlugin::BLSURFPlugin_Hypothesis,
-    public virtual SMESH_Hypothesis_i {
+class BLSURFPlugin_Hypothesis_i:
+  public virtual POA_BLSURFPlugin::BLSURFPlugin_Hypothesis,
+  public virtual SMESH_Hypothesis_i
+{
 public:
   // Constructor
-  BLSURFPlugin_Hypothesis_i(PortableServer::POA_ptr thePOA, int theStudyId, ::SMESH_Gen* theGenImpl);
+  BLSURFPlugin_Hypothesis_i(PortableServer::POA_ptr thePOA,
+                            int                     theStudyId,
+                            ::SMESH_Gen*            theGenImpl,
+                            bool                    theHasGEOM);
   // Destructor
   virtual ~BLSURFPlugin_Hypothesis_i();
 

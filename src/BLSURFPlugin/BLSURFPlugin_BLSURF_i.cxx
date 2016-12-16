@@ -38,16 +38,17 @@
 
 BLSURFPlugin_BLSURF_i::BLSURFPlugin_BLSURF_i( PortableServer::POA_ptr thePOA,
                                               int                     theStudyId,
-                                              ::SMESH_Gen*            theGenImpl )
+                                              ::SMESH_Gen*            theGenImpl,
+                                              bool                    theHasGEOM )
      : SALOME::GenericObj_i( thePOA ), 
        SMESH_Hypothesis_i( thePOA ), 
        SMESH_Algo_i( thePOA ),
        SMESH_2D_Algo_i( thePOA )
 {
-  MESSAGE( "BLSURFPlugin_BLSURF_i::BLSURFPlugin_BLSURF_i" );
   myBaseImpl = new ::BLSURFPlugin_BLSURF( theGenImpl->GetANewId(),
                                           theStudyId,
-                                          theGenImpl );
+                                          theGenImpl,
+                                          theHasGEOM);
 }
 
 //=============================================================================
@@ -60,7 +61,6 @@ BLSURFPlugin_BLSURF_i::BLSURFPlugin_BLSURF_i( PortableServer::POA_ptr thePOA,
 
 BLSURFPlugin_BLSURF_i::~BLSURFPlugin_BLSURF_i()
 {
-  MESSAGE( "BLSURFPlugin_BLSURF_i::~BLSURFPlugin_BLSURF_i" );
 }
 
 //=============================================================================
@@ -73,6 +73,5 @@ BLSURFPlugin_BLSURF_i::~BLSURFPlugin_BLSURF_i()
 
 ::BLSURFPlugin_BLSURF* BLSURFPlugin_BLSURF_i::GetImpl()
 {
-  MESSAGE( "BLSURFPlugin_BLSURF_i::GetImpl" );
   return ( ::BLSURFPlugin_BLSURF* )myBaseImpl;
 }

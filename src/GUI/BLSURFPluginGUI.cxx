@@ -43,8 +43,9 @@ extern "C"
   SMESHGUI_GenericHypothesisCreator* GetHypothesisCreator( const QString& aHypType )
   {
     SMESHGUI_GenericHypothesisCreator* aCreator = NULL;
-    if( aHypType=="BLSURF_Parameters" ||
-        aHypType=="MG-CADSurf Parameters")
+    if ( aHypType == "BLSURF_Parameters" ||
+         aHypType == "MG-CADSurf Parameters" ||
+         aHypType == "MG-CADSurf Parameters_NOGEOM")
       aCreator =  new BLSURFPluginGUI_HypothesisCreator( aHypType );
     return aCreator;
   }

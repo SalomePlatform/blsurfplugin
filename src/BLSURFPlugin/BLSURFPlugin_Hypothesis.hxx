@@ -43,7 +43,7 @@
 class BLSURFPlugin_Hypothesis: public SMESH_Hypothesis
 {
 public:
-  BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_Gen * gen);
+  BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_Gen * gen, bool hasgeom);
 
   enum Topology {
     FromCAD,
@@ -64,8 +64,9 @@ public:
     GeometricalLocalSize
   };
 
-  static const char* GetHypType() { return "MG-CADSurf Parameters"; }
-  
+  static const char* GetHypType(bool hasgeom)
+  { return hasgeom ? "MG-CADSurf Parameters" : "MG-CADSurf Parameters_NOGEOM"; }
+
   TopoDS_Shape entryToShape(std::string entry);
 
   void SetPhysicalMesh(PhysicalMesh thePhysicalMesh);

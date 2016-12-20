@@ -411,7 +411,7 @@ typedef struct {
 
 /////////////////////////////////////////////////////////
 
-projectionPoint getProjectionPoint(const TopoDS_Face& theFace, const gp_Pnt& thePoint)
+projectionPoint getProjectionPoint(TopoDS_Face& theFace, const gp_Pnt& thePoint)
 {
   projectionPoint myPoint;
 
@@ -470,6 +470,7 @@ projectionPoint getProjectionPoint(const TopoDS_Face& theFace, const gp_Pnt& the
     if ( foundFace.IsNull() )
       throw SMESH_ComputeError(COMPERR_BAD_PARMETERS,
                                "getProjectionPoint: can't find a face by a vertex");
+    theFace = TopoDS::Face( foundFace );
   }
   else
   {

@@ -438,14 +438,18 @@ projectionPoint getProjectionPoint(TopoDS_Face& theFace, const gp_Pnt& thePoint)
       else
       {
         // check location on the face
-        BRepClass_FaceClassifier FC( face, uv, Precision::Confusion());
+        BRepClass_FaceClassifier FC( face, uv, BRep_Tool::Tolerance( face ));
         if ( FC.State() == TopAbs_IN )
         {
+          if ( !foundFace.IsNull() )
+            return myPoint; // thePoint seems to be TopAbs_ON
           foundFace   = face;
           myPoint.uv  = uv.XY();
           myPoint.xyz = surface->Value( uv ).XYZ();
-          break;
+          // break;
         }
+        if ( FC.State() == TopAbs_ON )
+          return myPoint;
       }
     }
     if ( foundFace.IsNull() )
@@ -467,9 +471,9 @@ projectionPoint getProjectionPoint(TopoDS_Face& theFace, const gp_Pnt& thePoint)
       }
     }
     // set the resultShape
-    if ( foundFace.IsNull() )
-      throw SMESH_ComputeError(COMPERR_BAD_PARMETERS,
-                               "getProjectionPoint: can't find a face by a vertex");
+    // if ( foundFace.IsNull() )
+    //   throw SMESH_ComputeError(COMPERR_BAD_PARMETERS,
+    //                            "getProjectionPoint: can't find a face by a vertex");
     theFace = TopoDS::Face( foundFace );
   }
   else
@@ -485,6 +489,10 @@ projectionPoint getProjectionPoint(TopoDS_Face& theFace, const gp_Pnt& thePoint)
     myPoint.uv = gp_XY(u,v);
     gp_Pnt aPnt = projector.NearestPoint();
     myPoint.xyz = gp_XYZ(aPnt.X(),aPnt.Y(),aPnt.Z());
+
+    BRepClass_FaceClassifier FC( theFace, myPoint.uv, Precision::Confusion());
+    if ( FC.State() != TopAbs_IN )
+      theFace.Nullify();
   }
 
   return myPoint;
@@ -513,8 +521,10 @@ void _createEnforcedVertexOnFace(TopoDS_Face faceShape, gp_Pnt aPnt, BLSURFPlugi
 {
   BLSURFPlugin_Hypothesis::TEnfVertexCoords enf_coords, coords, s_coords;
 
-  // Get the (u,v) values of the enforced vertex on the face
+  // Find the face and get the (u,v) values of the enforced vertex on the face
   projectionPoint myPoint = getProjectionPoint(faceShape,aPnt);
+  if ( faceShape.IsNull() )
+    return;
 
   enf_coords.push_back(aPnt.X());
   enf_coords.push_back(aPnt.Y());
@@ -589,18 +599,22 @@ void BLSURFPlugin_BLSURF::createEnforcedVertexOnFace(TopoDS_Shape faceShape, BLS
     if (enfVertex->geomEntry != "") {
       TopoDS_Shape GeomShape = entryToShape(enfVertex->geomEntry);
       TopAbs_ShapeEnum GeomType  = GeomShape.ShapeType();
-       if (GeomType == TopAbs_VERTEX){
-         aPnt = BRep_Tool::Pnt(TopoDS::Vertex(GeomShape));
+       if (GeomType == TopAbs_VERTEX)
+       {
+         enfVertex->vertex = TopoDS::Vertex( GeomShape );
+         aPnt = BRep_Tool::Pnt( enfVertex->vertex );
          _createEnforcedVertexOnFace( TopoDS::Face(faceShape),  aPnt, enfVertex);
        }
        // Group Management
-       if (GeomType == TopAbs_COMPOUND){
-         for (TopoDS_Iterator it (GeomShape); it.More(); it.Next()){
-           if (it.Value().ShapeType() == TopAbs_VERTEX){
-             aPnt = BRep_Tool::Pnt(TopoDS::Vertex(it.Value()));
+       if (GeomType == TopAbs_COMPOUND)
+       {
+         for (TopoDS_Iterator it (GeomShape); it.More(); it.Next())
+           if (it.Value().ShapeType() == TopAbs_VERTEX)
+           {
+             enfVertex->vertex = TopoDS::Vertex( it.Value() );
+             aPnt = BRep_Tool::Pnt( enfVertex->vertex );
              _createEnforcedVertexOnFace( TopoDS::Face(faceShape),  aPnt, enfVertex);
            }
-         }
        }
     }
   }
@@ -1996,72 +2010,44 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
       }
     } // if (HasSizeMapOnFace && !use_precad)
 
-      // ------------------
-      // Enforced Vertices
-      // ------------------
+    // ------------------
+    // Enforced Vertices
+    // ------------------
     faceKey = FacesWithEnforcedVertices.FindIndex(f);
     std::map<int,BLSURFPlugin_Hypothesis::TEnfVertexCoordsList >::const_iterator evmIt = FaceId2EnforcedVertexCoords.find(faceKey);
-    if (evmIt != FaceId2EnforcedVertexCoords.end()) {
-      BLSURFPlugin_Hypothesis::TEnfVertexCoordsList evl;
-      evl = evmIt->second;
+    if (evmIt != FaceId2EnforcedVertexCoords.end())
+    {
+      BLSURFPlugin_Hypothesis::TEnfVertexCoordsList evl = evmIt->second;
       BLSURFPlugin_Hypothesis::TEnfVertexCoordsList::const_iterator evlIt = evl.begin();
-      for (; evlIt != evl.end(); ++evlIt) {
+      for (; evlIt != evl.end(); ++evlIt)
+      {
+        double uvCoords[2] = { evlIt->at(0), evlIt->at(1) };
+        ienf++;
+        cad_point_t* point_p = cad_point_new(fce, ienf, uvCoords);
+        int tag = 0;
         BLSURFPlugin_Hypothesis::TEnfVertexCoords xyzCoords;
         xyzCoords.push_back(evlIt->at(2));
         xyzCoords.push_back(evlIt->at(3));
         xyzCoords.push_back(evlIt->at(4));
-        gp_Pnt P(xyzCoords[0],xyzCoords[1],xyzCoords[2]);
-        BRepClass_FaceClassifier scl(f,P,1e-7);
-        // OCC 6.3sp6 : scl.Perform() is bugged. The function was rewritten
-        // BRepClass_FaceClassifierPerform(&scl,f,P,1e-7);
-        // OCC 6.5.2: scl.Perform() is not bugged anymore
-        scl.Perform(f, P, 1e-7);
-        TopAbs_State result = scl.State();
-        if ( result == TopAbs_OUT ) {
-          if (EnfVertexCoords2ProjVertex.find(xyzCoords) != EnfVertexCoords2ProjVertex.end()) {
-            EnfVertexCoords2ProjVertex.erase(xyzCoords);
-            // isssue 22783. Do not erase as this point can be IN other face of a group
-            //EnfVertexCoords2EnfVertexList.erase(xyzCoords);
-          }
-        }
-        if ( result == TopAbs_UNKNOWN ) {
-          if (EnfVertexCoords2ProjVertex.find(xyzCoords) != EnfVertexCoords2ProjVertex.end()) {
-            EnfVertexCoords2ProjVertex.erase(xyzCoords);
-            //EnfVertexCoords2EnfVertexList.erase(xyzCoords);
-          }
-        }
-        if ( result == TopAbs_ON ) {
-          if (EnfVertexCoords2ProjVertex.find(xyzCoords) != EnfVertexCoords2ProjVertex.end()) {
-            EnfVertexCoords2ProjVertex.erase(xyzCoords);
-            //EnfVertexCoords2EnfVertexList.erase(xyzCoords);
-          }
-        }
-        if ( result == TopAbs_IN )
+        std::map< BLSURFPlugin_Hypothesis::TEnfVertexCoords, BLSURFPlugin_Hypothesis::TEnfVertexList >::const_iterator enfCoordsIt = EnfVertexCoords2EnfVertexList.find(xyzCoords);
+        if (enfCoordsIt != EnfVertexCoords2EnfVertexList.end() &&
+            !enfCoordsIt->second.empty() )
         {
-          // Point is inside face and not on border
-          double uvCoords[2]   = {evlIt->at(0),evlIt->at(1)};
-          ienf++;
-          cad_point_t* point_p = cad_point_new(fce, ienf, uvCoords);
-          int tag = 0;
-          std::map< BLSURFPlugin_Hypothesis::TEnfVertexCoords, BLSURFPlugin_Hypothesis::TEnfVertexList >::const_iterator enfCoordsIt = EnfVertexCoords2EnfVertexList.find(xyzCoords);
-          if (enfCoordsIt != EnfVertexCoords2EnfVertexList.end() &&
-              !enfCoordsIt->second.empty() )
+          // to merge nodes of an INTERNAL vertex belonging to several faces
+          TopoDS_Vertex     v = (*enfCoordsIt->second.begin() )->vertex;
+          if ( v.IsNull() ) v = (*enfCoordsIt->second.rbegin())->vertex;
+          if ( !v.IsNull() && meshDS->ShapeToIndex( v ) > 0 )
           {
-            // to merge nodes of an INTERNAL vertex belonging to several faces
-            TopoDS_Vertex     v = (*enfCoordsIt->second.begin())->vertex;
-            if ( v.IsNull() ) v = (*enfCoordsIt->second.rbegin())->vertex;
-            if ( !v.IsNull() ) {
-              tag = pmap.Add( v );
-              SMESH_subMesh* vSM = aMesh.GetSubMesh( v );
-              vSM->ComputeStateEngine( SMESH_subMesh::COMPUTE );
-              mergeSubmeshes.insert( vSM->GetSubMeshDS() );
-              // //if ( tag != pmap.Extent() )
-              // needMerge = true;
-            }
+            tag = pmap.Add( v );
+            SMESH_subMesh* vSM = aMesh.GetSubMesh( v );
+            vSM->ComputeStateEngine( SMESH_subMesh::COMPUTE );
+            mergeSubmeshes.insert( vSM->GetSubMeshDS() );
+            // //if ( tag != pmap.Extent() )
+            // needMerge = true;
           }
-          if ( tag == 0 ) tag = ienf;
-          cad_point_set_tag(point_p, tag);
         }
+        if ( tag == 0 ) tag = ienf;
+        cad_point_set_tag(point_p, tag);
       }
       FaceId2EnforcedVertexCoords.erase(faceKey);
 

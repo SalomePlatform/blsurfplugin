@@ -55,7 +55,8 @@ algo2d.AddEnforcedVertexGeom( pp )
 algo2d.AddEnforcedVertexGeom( p6 )
 algo2d.AddEnforcedVertex( *xyz7 )
 
-Mesh.Compute()
+assert Mesh.Compute()
+assert not Mesh.FindCoincidentNodes( 1e-7 )
 
 for x,y,z in allEnforcedCoords:
 

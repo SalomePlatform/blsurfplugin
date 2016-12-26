@@ -61,17 +61,19 @@ extern "C"{
 // OPENCASCADE includes
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_MakePolygon.hxx>
-//#include <BRepBuilderAPI_MakeVertex.hxx>
+#include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepGProp.hxx>
 #include <BRepTools.hxx>
 #include <BRep_Builder.hxx>
 #include <BRep_Tool.hxx>
 #include <GProp_GProps.hxx>
 #include <Geom2d_Curve.hxx>
+#include <Geom2d_Line.hxx>
 #include <GeomAPI_ProjectPointOnCurve.hxx>
 #include <GeomAPI_ProjectPointOnSurf.hxx>
 #include <Geom_Curve.hxx>
 #include <Geom_Surface.hxx>
+#include <NCollection_DataMap.hxx>
 #include <NCollection_Map.hxx>
 #include <Standard_ErrorHandler.hxx>
 #include <TopExp.hxx>
@@ -1589,32 +1591,43 @@ namespace
       if ( err && err->IsKO() )
         throw *err.get(); // it should be caught at SMESH_subMesh
 
+      SMESH_MesherHelper helper( *origMesh );
+      helper.SetSubShape( origFace );
+      const bool hasSeam = helper.HasRealSeam();
+
       // proxy nodes and corresponding tmp VERTEXes
       std::vector<const SMDS_MeshNode*> origNodes;
       std::vector<TopoDS_Vertex>        tmpVertex;
 
       // create a proxy FACE
-      TopoDS_Shape origFaceCopy = origFace.EmptyCopied();
-      BRepBuilderAPI_MakeFace newFace( TopoDS::Face( origFaceCopy ));
+      TopoDS_Face origFaceCopy = TopoDS::Face( origFace.EmptyCopied() );
+      BRepBuilderAPI_MakeFace newFace( origFaceCopy );
+      bool hasPCurves = false;
       for ( size_t iW = 0; iW != wireVec.size(); ++iW )
       {
         StdMeshers_FaceSidePtr& wireData = wireVec[iW];
-        const UVPtStructVec& wirePoints = wireData->GetUVPtStruct();
+        const UVPtStructVec&  wirePoints = wireData->GetUVPtStruct();
         if ( wirePoints.size() < 3 )
           continue;
 
-        BRepBuilderAPI_MakePolygon wire;
+        BRepBuilderAPI_MakePolygon polygon;
         const size_t i0 = tmpVertex.size();
         for ( size_t iN = 0; iN < wirePoints.size(); ++iN )
         {
-          wire.Add( SMESH_TNodeXYZ( wirePoints[ iN ].node ));
+          polygon.Add( SMESH_TNodeXYZ( wirePoints[ iN ].node ));
           origNodes.push_back( wirePoints[ iN ].node );
-          tmpVertex.push_back( wire.LastVertex() );
+          tmpVertex.push_back( polygon.LastVertex() );
+
+          // check presence of a pcurve
+          checkPCurve( polygon, origFaceCopy, hasPCurves, &wirePoints[ iN-1 ] );
         }
-        tmpVertex[ i0 ] = wire.FirstVertex(); // wire.LastVertex()==NULL for 1 vertex in wire
-        wire.Close();
-        if ( !wire.IsDone() )
+        tmpVertex[ i0 ] = polygon.FirstVertex(); // polygon.LastVertex()==NULL for 1 vertex in wire
+        polygon.Close();
+        if ( !polygon.IsDone() )
           throw SALOME_Exception("BLSURFPlugin_BLSURF: BRepBuilderAPI_MakePolygon failed");
+        TopoDS_Wire wire = polygon;
+        if ( hasSeam )
+          wire = updateSeam( wire, origNodes );
         newFace.Add( wire );
       }
       _proxyFace = newFace;
@@ -1628,9 +1641,6 @@ namespace
 
       ShapeToMesh( auxCompoundToMesh );
 
-      //TopExp_Explorer fExp( auxCompoundToMesh, TopAbs_FACE );
-      //_proxyFace = TopoDS::Face( fExp.Current() );
-
 
       // Make input mesh for MG-CADSurf: segments on EDGE's of newFace
 
@@ -1642,8 +1652,8 @@ namespace
         GetSubMesh( tmpVertex[i] )->ComputeStateEngine( SMESH_subMesh::COMPUTE );
         if ( const SMDS_MeshNode* tmpN = SMESH_Algo::VertexNode( tmpVertex[i], tmpMeshDS ))
           _tmp2origNN.insert( _tmp2origNN.end(), make_pair( tmpN, origNodes[i] ));
-        else
-          throw SALOME_Exception("BLSURFPlugin_BLSURF: a proxy vertex not meshed");
+        // else -- it can be a seam vertex replaced by updateSeam()
+        //   throw SALOME_Exception("BLSURFPlugin_BLSURF: a proxy vertex not meshed");
       }
 
       // make segments
@@ -1660,6 +1670,69 @@ namespace
       }
 
       return _proxyFace;
+    }
+
+    //--------------------------------------------------------------------------------
+    /*!
+     * \brief Add pcurve to the last edge of a wire
+     */
+    //--------------------------------------------------------------------------------
+
+    void checkPCurve( BRepBuilderAPI_MakePolygon& wire,
+                      const TopoDS_Face&          face,
+                      bool &                      hasPCurves,
+                      const uvPtStruct *          wirePoints )
+    {
+      if ( hasPCurves )
+        return;
+      TopoDS_Edge edge = wire.Edge();
+      if ( edge.IsNull() ) return;
+      double f,l;
+      if ( BRep_Tool::CurveOnSurface(edge, face, f, l))
+      {
+        hasPCurves = true;
+        return;
+      }
+      gp_XY p1 = wirePoints[ 0 ].UV(), p2 = wirePoints[ 1 ].UV();
+      Handle(Geom2d_Line) pcurve = new Geom2d_Line( p1, gp_Dir2d( p2 - p1 ));
+      BRep_Builder().UpdateEdge( edge, Handle(Geom_Curve)(), Precision::Confusion() );
+      BRep_Builder().UpdateEdge( edge, pcurve, face, Precision::Confusion() );
+      BRep_Builder().Range( edge, 0, ( p2 - p1 ).Modulus() );
+      // cout << "n1 = mesh.AddNode( " << p1.X()*10 << ", " << p1.Y() << ", 0 )" << endl
+      //      << "n2 = mesh.AddNode( " << p2.X()*10 << ", " << p2.Y() << ", 0 )" << endl
+      //      << "mesh.AddEdge( [ n1, n2 ] )" << endl;
+    }
+
+    //--------------------------------------------------------------------------------
+    /*!
+     * \brief Replace coincident EDGEs with reversed copies.
+     */
+    //--------------------------------------------------------------------------------
+
+    TopoDS_Wire updateSeam( const TopoDS_Wire&                       wire,
+                            const std::vector<const SMDS_MeshNode*>& nodesOfVertices )
+    {
+      BRepBuilderAPI_MakeWire newWire;
+
+      typedef NCollection_DataMap<SMESH_TLink, TopoDS_Edge, SMESH_TLink > TSeg2EdgeMap;
+      TSeg2EdgeMap seg2EdgeMap;
+
+      TopoDS_Iterator edgeIt( wire );
+      for ( int iSeg = 1; edgeIt.More(); edgeIt.Next(), ++iSeg )
+      {
+        SMESH_TLink link( nodesOfVertices[ iSeg-1 ], nodesOfVertices[ iSeg ]);
+        TopoDS_Edge edge( TopoDS::Edge( edgeIt.Value() ));
+
+        TopoDS_Edge* edgeInMap = seg2EdgeMap.Bound( link, edge );
+        bool            isSeam = ( *edgeInMap != edge );
+        if ( isSeam )
+        {
+          edgeInMap->Reverse();
+          edge = *edgeInMap;
+        }
+        newWire.Add( edge );
+      }
+      return newWire;
     }
 
     //--------------------------------------------------------------------------------

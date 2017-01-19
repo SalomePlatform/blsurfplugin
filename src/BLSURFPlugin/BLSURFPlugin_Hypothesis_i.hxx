@@ -144,6 +144,9 @@ public:
   void SetMaxNumberOfPointsPerPatch( CORBA::Long nb ) throw (SALOME::SALOME_Exception);
   CORBA::Long GetMaxNumberOfPointsPerPatch();
 
+  void SetMaxNumberOfThreads( CORBA::Long nb ) throw (SALOME::SALOME_Exception);
+  CORBA::Long GetMaxNumberOfThreads();
+
   void SetRespectGeometry( CORBA::Boolean toRespect );
   CORBA::Boolean GetRespectGeometry();
 

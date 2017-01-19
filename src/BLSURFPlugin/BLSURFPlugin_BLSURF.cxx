@@ -1918,6 +1918,9 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   cad_t *c     = cad_new(ctx);
   dcad_t *dcad = dcad_new(c);
 
+  // To enable multithreading
+  cad_set_thread_safety(c, 1);
+
   /* Now fill the CAD object with data from your CAD
    * environement. This is the most complex part of a successfull
    * integration.

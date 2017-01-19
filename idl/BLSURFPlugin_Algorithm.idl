@@ -353,6 +353,15 @@ module BLSURFPlugin
     void SetMaxNumberOfPointsPerPatch( in long nb ) raises (SALOME::SALOME_Exception);
     long GetMaxNumberOfPointsPerPatch();
 
+
+    /*!
+     * Set max_number_of_threads parameter
+     *
+     * Set the maximum of threads to use for multithreading mesh computation.
+     */
+    void SetMaxNumberOfThreads( in long nb ) raises (SALOME::SALOME_Exception);
+    long GetMaxNumberOfThreads();
+
     /*!
      * Set respect_geometry parameter
      *

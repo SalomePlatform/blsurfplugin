@@ -121,6 +121,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
       };
 
   const char* intOptionNames[] = {          "max_number_of_points_per_patch",           // default = 100000
+                                            "max_number_of_threads",                    // default = 4
                                             "" // mark of end
       };
   const char* doubleOptionNames[] = {       // "surface_intersections_processing_max_cost",// default = 15
@@ -206,6 +207,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   _defaultOptionValues["enforce_cad_edge_sizes"                 ] = "no";
   _defaultOptionValues["jacobian_rectification_respect_geometry"] = "yes";
   _defaultOptionValues["max_number_of_points_per_patch"         ] = "0";
+  _defaultOptionValues["max_number_of_threads"                  ] = "4";
   _defaultOptionValues["rectify_jacobian"                       ] = "yes";
   _defaultOptionValues["respect_geometry"                       ] = "yes";
   _defaultOptionValues["tiny_edge_avoid_surface_intersections"  ] = "yes";
@@ -552,6 +554,25 @@ void BLSURFPlugin_Hypothesis::SetMaxNumberOfPointsPerPatch( int nb )
 int BLSURFPlugin_Hypothesis::GetMaxNumberOfPointsPerPatch()
 {
   return ToInt( GetOptionValue("max_number_of_points_per_patch", GET_DEFAULT()));
+}
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis::SetMaxNumberOfThreads( int nb )
+  throw (std::invalid_argument)
+{
+  if ( nb < 0 )
+    throw std::invalid_argument( SMESH_Comment("Invalid number of threads: ") << nb );
+
+  if ( GetMaxNumberOfThreads() != nb )
+  {
+    SetOptionValue("max_number_of_threads", SMESH_Comment( nb ));
+    NotifySubMeshesHypothesisModification();
+  }
+}
+//=============================================================================
+int BLSURFPlugin_Hypothesis::GetMaxNumberOfThreads()
+{
+  return ToInt( GetOptionValue("max_number_of_threads", GET_DEFAULT()));
 }
 //=============================================================================
 

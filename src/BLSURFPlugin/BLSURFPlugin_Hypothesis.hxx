@@ -163,6 +163,9 @@ public:
   void SetMaxNumberOfPointsPerPatch( int nb ) throw (std::invalid_argument);
   int  GetMaxNumberOfPointsPerPatch();
 
+  void SetMaxNumberOfThreads( int nb ) throw (std::invalid_argument);
+  int  GetMaxNumberOfThreads();
+
   void SetRespectGeometry( bool toRespect );
   bool GetRespectGeometry();
 

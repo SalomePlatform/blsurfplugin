@@ -251,6 +251,13 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   def SetMaxNumberOfPointsPerPatch( self, nb ):
     self.Parameters().SetMaxNumberOfPointsPerPatch( nb )
 
+  ## Set max_number_of_threads parameter
+  #
+  #  Set the maximum of threads to use for multithreading mesh computation
+  #
+  def SetMaxNumberOfThreads( self, nb ):
+    self.Parameters().SetMaxNumberOfThreads( nb )
+
   ## Set respect_geometry parameter
   #  
   #  This patch independent option can be deactivated to allow MeshGems-CADSurf

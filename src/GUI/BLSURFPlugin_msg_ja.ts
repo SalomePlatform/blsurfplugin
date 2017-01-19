@@ -619,6 +619,10 @@
       <translation>1パッチの最大点数</translation>
     </message>
     <message>
+      <source>max_number_of_threads</source>
+      <translation type="unfinished">Maximal number of threads</translation>
+    </message>
+    <message>
       <source>rectify_jacobian</source>
       <translation>ヤコビアンの修正</translation>
     </message>

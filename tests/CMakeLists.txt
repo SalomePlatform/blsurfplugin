@@ -18,6 +18,7 @@
 #
 
 SET(BLSURFPLUGIN_TEST_FILES
+  test_cadsurf_multithread.py
   test_enforced_internal_vertex.py
   test_enforced_vertex.py
   test_periodicity_2D_precad.py

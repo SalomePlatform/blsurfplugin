@@ -630,6 +630,10 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
         <translation>Maximal number of points per patch</translation>
     </message>
     <message>
+        <source>max_number_of_threads</source>
+        <translation>Maximal number of threads</translation>
+    </message>
+    <message>
         <source>rectify_jacobian</source>
         <translation>Rectify Jacobian</translation>
     </message>

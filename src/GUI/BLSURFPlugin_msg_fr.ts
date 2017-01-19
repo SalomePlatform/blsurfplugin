@@ -630,6 +630,10 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
         <translation>Nombre de points maximal par patch</translation>
     </message>
     <message>
+        <source>max_number_of_threads</source>
+        <translation>Nombre de threads maximal</translation>
+    </message>
+    <message>
         <source>rectify_jacobian</source>
         <translation>Ajustement du Jacobien</translation>
     </message>

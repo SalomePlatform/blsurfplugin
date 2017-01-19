@@ -854,6 +854,28 @@ CORBA::Long BLSURFPlugin_Hypothesis_i::GetMaxNumberOfPointsPerPatch()
 }
 //=============================================================================
 
+void BLSURFPlugin_Hypothesis_i::SetMaxNumberOfThreads( CORBA::Long nb ) throw (SALOME::SALOME_Exception)
+{
+  if ( GetMaxNumberOfThreads() != nb )
+  {
+    try {
+      this->GetImpl()->SetMaxNumberOfThreads(nb);
+
+    } catch (const std::invalid_argument& ex) {
+      THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+    } catch (SALOME_Exception& ex) {
+      THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
+    }
+    SMESH::TPythonDump() << _this() << ".SetMaxNumberOfThreads( " << nb << " )";
+  }
+}
+//=============================================================================
+CORBA::Long BLSURFPlugin_Hypothesis_i::GetMaxNumberOfThreads()
+{
+  return this->GetImpl()->GetMaxNumberOfThreads();
+}
+//=============================================================================
+
 void BLSURFPlugin_Hypothesis_i::SetRespectGeometry( CORBA::Boolean toRespect )
 {
   if ( GetRespectGeometry() != toRespect )
@@ -1192,6 +1214,9 @@ void BLSURFPlugin_Hypothesis_i::SetOptionValue(const char* optionName, const cha
 
     else if ( name == "max_number_of_points_per_patch" )
       SetMaxNumberOfPointsPerPatch( GetImpl()->ToInt( optionValue ));
+
+    else if ( name == "max_number_of_threads" )
+      SetMaxNumberOfThreads( GetImpl()->ToInt( optionValue ));
 
     else if ( name == "rectify_jacobian" )
       SetJacobianRectification( GetImpl()->ToBool( optionValue ));

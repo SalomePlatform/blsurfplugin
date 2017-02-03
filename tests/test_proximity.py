@@ -4,7 +4,6 @@ import sys
 import salome
 
 salome.salome_init()
-theStudy = salome.myStudy
 
 ###
 ### GEOM component
@@ -16,7 +15,7 @@ import math
 import SALOMEDS
 
 
-geompy = geomBuilder.New(theStudy)
+geompy = geomBuilder.New()
 
 # Create a box
 box = geompy.MakeBoxDXDYDZ(100, 100, 100)
@@ -50,7 +49,7 @@ geompy.addToStudyInFather(part, gr_spheres_faces, "spheres_faces")
 import  SMESH, SALOMEDS
 from salome.smesh import smeshBuilder
 
-smesh = smeshBuilder.New(theStudy)
+smesh = smeshBuilder.New()
 Mesh_1 = smesh.Mesh(part, "Mesh_part")
 BLSURF = Mesh_1.Triangle(algo=smeshBuilder.BLSURF)
 BLSURF_Parameters_1 = BLSURF.Parameters()
@@ -86,4 +85,4 @@ if min_area > 1.5:
     raise Exception("Wrong minimal area on box. Proximity has not worked.")
 
 if salome.sg.hasDesktop():
-  salome.sg.updateObjBrowser(True)
+  salome.sg.updateObjBrowser()

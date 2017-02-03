@@ -5,7 +5,7 @@ import math
 
 import GEOM
 from salome.geom import geomBuilder
-geompy = geomBuilder.New(salome.myStudy)
+geompy = geomBuilder.New()
 
 simple = False
 
@@ -90,7 +90,7 @@ geompy.addToStudyInFather(part, sources, "sources")
 
 import SMESH
 from salome.smesh import smeshBuilder
-smesh = smeshBuilder.New(salome.myStudy)
+smesh = smeshBuilder.New()
 
 Mesh = smesh.Mesh(part, "Mesh")
 
@@ -136,5 +136,5 @@ checkProjection(gr_right, left_translated)
 checkProjection(gr_back, front_translated)
 checkProjection(gr_top, bottom_translated)
 
-salome.sg.updateObjBrowser(True)
+salome.sg.updateObjBrowser()
 

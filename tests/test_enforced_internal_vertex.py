@@ -5,7 +5,7 @@ import math
 
 import GEOM
 from salome.geom import geomBuilder
-geompy = geomBuilder.New(salome.myStudy)
+geompy = geomBuilder.New()
 
 r = 10
 dist = 10
@@ -31,7 +31,7 @@ geompy.addToStudyInFather(box, left, "left")
 
 import SMESH
 from salome.smesh import smeshBuilder
-smesh = smeshBuilder.New(salome.myStudy)
+smesh = smeshBuilder.New()
 
 Mesh = smesh.Mesh(part, "Mesh")
 
@@ -50,5 +50,5 @@ x, y, z = Mesh.GetNodeXYZ(id_node)
 
 assert("%.2f, %.2f, %.2f"%(x, y, z) == "%.2f, %.2f, %.2f"%(dist_coin, 0, dist_coin))
 
-salome.sg.updateObjBrowser(True)
+salome.sg.updateObjBrowser()
 

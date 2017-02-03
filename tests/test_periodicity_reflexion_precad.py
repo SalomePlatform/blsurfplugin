@@ -6,7 +6,7 @@ import math
 
 import GEOM
 from salome.geom import geomBuilder
-geompy = geomBuilder.New(salome.myStudy)
+geompy = geomBuilder.New()
 
 simple = False
 
@@ -77,7 +77,7 @@ geompy.addToStudy(p5, "p5")
 
 import SMESH
 from salome.smesh import smeshBuilder
-smesh = smeshBuilder.New(salome.myStudy)
+smesh = smeshBuilder.New()
 
 Mesh = smesh.Mesh(part, "Mesh")
 
@@ -118,5 +118,5 @@ def checkProjection(gr, mesh_translated, tol=1e-7):
         
 checkProjection(gr_front, left_rotated)
 
-salome.sg.updateObjBrowser(True)
+salome.sg.updateObjBrowser()
 

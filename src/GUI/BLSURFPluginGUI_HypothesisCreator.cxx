@@ -478,9 +478,8 @@ BLSURFPluginGUI_HypothesisCreator::~BLSURFPluginGUI_HypothesisCreator()
 GeomSelectionTools* BLSURFPluginGUI_HypothesisCreator::getGeomSelectionTool() const
 {
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
-  _PTR(Study) aStudy = SMESH::GetActiveStudyDocument();
-  if (that->GeomToolSelected == NULL || that->GeomToolSelected->getMyStudy() != aStudy) {
-    that->GeomToolSelected = new GeomSelectionTools(aStudy);
+  if (that->GeomToolSelected == NULL) {
+    that->GeomToolSelected = new GeomSelectionTools();
   }
   return that->GeomToolSelected;
 }
@@ -3384,10 +3383,8 @@ LightApp_SelectionMgr* BLSURFPluginGUI_HypothesisCreator::selectionMgr()
 
 CORBA::Object_var BLSURFPluginGUI_HypothesisCreator::entryToObject(QString entry)
 {
-  SMESH_Gen_i* smeshGen_i = SMESH_Gen_i::GetSMESHGen();
-  SALOMEDS::Study_var myStudy = smeshGen_i->GetStudy();
   CORBA::Object_var obj;
-  SALOMEDS::SObject_var aSObj = myStudy->FindObjectID( entry.toStdString().c_str() );
+  SALOMEDS::SObject_var aSObj = SMESH_Gen_i::getStudyServant()->FindObjectID( entry.toStdString().c_str() );
   if (!aSObj->_is_nil()) {
     obj = aSObj->GetObject();
     aSObj->UnRegister();

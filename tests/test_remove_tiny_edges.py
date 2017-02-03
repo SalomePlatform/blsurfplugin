@@ -4,7 +4,7 @@ import salome
 
 import GEOM
 from salome.geom import geomBuilder
-geompy = geomBuilder.New(salome.myStudy)
+geompy = geomBuilder.New()
 
 import math
 
@@ -64,7 +64,7 @@ for i, face in enumerate(faces):
 
 import SMESH
 from salome.smesh import smeshBuilder
-smesh = smeshBuilder.New(salome.myStudy)
+smesh = smeshBuilder.New()
 
 Mesh = smesh.Mesh(part, "Mesh")
 
@@ -107,4 +107,4 @@ if min_length<tiny_edge_length:
     raise Exception("Small edge has not been removed")
 
 if salome.sg.hasDesktop():
-  salome.sg.updateObjBrowser(True)
+  salome.sg.updateObjBrowser()

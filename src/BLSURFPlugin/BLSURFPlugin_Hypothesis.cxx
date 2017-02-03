@@ -246,18 +246,16 @@ TopoDS_Shape BLSURFPlugin_Hypothesis::entryToShape(std::string entry)
 {
   MESSAGE("BLSURFPlugin_Hypothesis::entryToShape "<<entry );
   GEOM::GEOM_Object_var aGeomObj;
-  SMESH_Gen_i* smeshGen_i = SMESH_Gen_i::GetSMESHGen();
-  SALOMEDS::Study_ptr myStudy = smeshGen_i->GetStudy();
   
   TopoDS_Shape S = TopoDS_Shape();
-  SALOMEDS::SObject_var aSObj = myStudy->FindObjectID( entry.c_str() );
+  SALOMEDS::SObject_var aSObj = SMESH_Gen_i::getStudyServant()->FindObjectID( entry.c_str() );
   if (!aSObj->_is_nil() ) {
     CORBA::Object_var obj = aSObj->GetObject();
     aGeomObj = GEOM::GEOM_Object::_narrow(obj);
     aSObj->UnRegister();
   }
   if ( !aGeomObj->_is_nil() )
-    S = smeshGen_i->GeomObjectToShape( aGeomObj.in() );
+    S = SMESH_Gen_i::GetSMESHGen()->GeomObjectToShape( aGeomObj.in() );
   return S;
 }
 

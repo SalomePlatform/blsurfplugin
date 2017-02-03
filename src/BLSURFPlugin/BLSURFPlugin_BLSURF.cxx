@@ -252,12 +252,6 @@ BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF(int hypId, SMESH_Gen* gen)
   _hypothesis = NULL;
   _supportSubmeshes = true;
 
-  smeshGen_i = SMESH_Gen_i::GetSMESHGen();
-  CORBA::Object_var anObject = smeshGen_i->GetNS()->Resolve("/Study");
-  myStudy = SALOMEDS::Study::_narrow(anObject);
-  if ( !myStudy->_is_nil() )
-    MESSAGE("myStudy not empty");
-
   /* Initialize the Python interpreter */
   assert(Py_IsInitialized());
   PyGILState_STATE gstate;
@@ -439,14 +433,14 @@ TopoDS_Shape BLSURFPlugin_BLSURF::entryToShape(std::string entry)
   MESSAGE("BLSURFPlugin_BLSURF::entryToShape "<<entry );
   GEOM::GEOM_Object_var aGeomObj;
   TopoDS_Shape S = TopoDS_Shape();
-  SALOMEDS::SObject_var aSObj = myStudy->FindObjectID( entry.c_str() );
+  SALOMEDS::SObject_var aSObj = SMESH_Gen_i::getStudyServant()->FindObjectID( entry.c_str() );
   if (!aSObj->_is_nil()) {
     CORBA::Object_var obj = aSObj->GetObject();
     aGeomObj = GEOM::GEOM_Object::_narrow(obj);
     aSObj->UnRegister();
   }
   if ( !aGeomObj->_is_nil() )
-    S = smeshGen_i->GeomObjectToShape( aGeomObj.in() );
+    S = SMESH_Gen_i::GetSMESHGen()->GeomObjectToShape( aGeomObj.in() );
   return S;
 }
 

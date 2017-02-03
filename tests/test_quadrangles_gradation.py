@@ -4,7 +4,7 @@ import salome
 
 import GEOM
 from salome.geom import geomBuilder
-geompy = geomBuilder.New(salome.myStudy)
+geompy = geomBuilder.New()
 
 import math
 
@@ -76,7 +76,7 @@ for i, face in enumerate(faces):
 
 import SMESH
 from salome.smesh import smeshBuilder
-smesh = smeshBuilder.New(salome.myStudy)
+smesh = smeshBuilder.New()
 
 # Test gradation with quadrangles
 Mesh_1 = smesh.Mesh(part, "Mesh")
@@ -150,6 +150,6 @@ if abs(nb_faces_2-nb_faces_2_ref) > nb_faces_tolerance:
   raise Exception("Number of faces of Mesh_2 incorrect")
 
 if salome.sg.hasDesktop():
-  salome.sg.updateObjBrowser(True)
+  salome.sg.updateObjBrowser()
 
 

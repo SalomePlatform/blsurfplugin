@@ -67,10 +67,11 @@ BLSURFPluginGUI_AdvWidget::~BLSURFPluginGUI_AdvWidget()
 void BLSURFPluginGUI_AdvWidget::onChooseGMFFile()
 {
   QString fileName = QFileDialog::getSaveFileName(0, tr("BLSURF_GMF_FILE_DIALOG"), myGMFFileName->text(), tr("BLSURF_GMF_FILE_FORMAT"));
-  std::cout << "fileName: " << fileName.toStdString() << std::endl;
-  if (!fileName.endsWith(".mesh") && !fileName.endsWith(".meshb"))
-    fileName.append(".mesh");
-  myGMFFileName->setText(fileName);
+  if ( !fileName.isEmpty() ) {
+    if (!fileName.endsWith(".mesh") && !fileName.endsWith(".meshb"))
+      fileName.append(".mesh");
+    myGMFFileName->setText(fileName);
+  }
 }
 
 void BLSURFPluginGUI_AdvWidget::AddOption( int iTable, const char* option )
@@ -107,6 +108,7 @@ void BLSURFPluginGUI_AdvWidget::AddOption( int iTable, const char* option )
     if ( !option )
     {
       myOptionTable->scrollToItem( row );
+      myOptionTable->setCurrentItem( row );
       myOptionTable->editItem( row, NAME_COL );
     }
   }

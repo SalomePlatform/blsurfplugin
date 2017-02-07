@@ -12,9 +12,12 @@
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0" colspan="3">
-    <widget class="QTreeWidget" name="myOptionTable">
+    <widget class="BLSURFPluginGUI_TreeWidget" name="myOptionTable">
      <property name="editTriggers">
-      <set>QAbstractItemView::DoubleClicked</set>
+      <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
+     </property>
+     <property name="tabKeyNavigation">
+      <bool>true</bool>
      </property>
      <column>
       <property name="text">
@@ -122,6 +125,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>BLSURFPluginGUI_TreeWidget</class>
+   <extends>QTreeWidget</extends>
+   <header location="global">BLSURFPluginGUI_TreeWidget.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>addBtn</tabstop>
   <tabstop>myVerbosity</tabstop>

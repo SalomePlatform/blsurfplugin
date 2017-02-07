@@ -36,6 +36,7 @@ INCLUDE_DIRECTORIES(
   ${CMAKE_CURRENT_BINARY_DIR}
   ${PROJECT_BINARY_DIR}/idl
   ${PROJECT_SOURCE_DIR}/src/BLSURFPlugin
+  ${PROJECT_SOURCE_DIR}/src/GUI
 )
 
 # additional preprocessor / compiler flags
@@ -73,6 +74,7 @@ SET(_link_LIBRARIES
 SET(BLSURFPluginGUI_HEADERS
   BLSURFPluginGUI_HypothesisCreator.h
   BLSURFPluginGUI_Dlg.h
+  BLSURFPluginGUI_TreeWidget.h
 )
 
 # --- sources ---
@@ -86,6 +88,7 @@ SET(_other_SOURCES
   BLSURFPluginGUI_StdWidget.cxx
   BLSURFPluginGUI_AdvWidget.cxx
   BLSURFPluginGUI_HypothesisCreator.cxx
+  BLSURFPluginGUI_TreeWidget.cxx
 )
 
 # --- resources ---

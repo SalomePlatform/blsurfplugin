@@ -119,7 +119,7 @@ def checkProjection(gr, mesh_translated, tol=1e-7):
         
 checkProjection(gr_right, bottom_rotated)
 
-#salome.myStudy.SaveAs("test.hdf", 0)
+#salome.myStudy.SaveAs("test.hdf", 0, 0)
 
 if salome.sg.hasDesktop():
   salome.sg.updateObjBrowser()

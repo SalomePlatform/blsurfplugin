@@ -765,7 +765,7 @@ BLSURFPlugin_BLSURF::TListOfIDs _getSubShapeIDsInMainShape(SMESH_Mesh*      theM
   {
     int face_id = theMesh->GetMeshDS()->ShapeToIndex(face_iter.Current());
     if (face_id == 0)
-      throw SALOME_Exception ( SMESH_Comment("Sub_shape not found in main_shape"));
+      throw SALOME_Exception ( "Periodicity: sub_shape not found in main_shape");
     face_ids.push_back(face_id);
   }
 
@@ -1894,6 +1894,9 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
 
   TopTools_IndexedMapOfShape pmap, emap, fmap;
 
+  TopTools_IndexedDataMapOfShapeListOfShape e2ffmap;
+  TopExp::MapShapesAndAncestors( aShape, TopAbs_EDGE, TopAbs_FACE, e2ffmap );
+
   // Issue 0019864. On DebianSarge, FE signals do not obey to OSD::SetSignal(false)
 #ifndef WIN32
   feclearexcept( FE_ALL_EXCEPT );
@@ -2211,18 +2214,17 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
       bool isInHyperPatch = false;
       {
         std::set< int > faceTags;
-        PShapeIteratorPtr faceIf = helper.GetAncestors( e, aMesh, TopAbs_FACE );
-        while ( const TopoDS_Shape* face = faceIf->next() )
-          if ( helper.IsSubShape( *face, aShape ))
+        TopTools_ListIteratorOfListOfShape fIt( e2ffmap.FindFromKey( e ));
+        for ( ; fIt.More(); fIt.Next() )
+        {
+          int faceTag = meshDS->ShapeToIndex( fIt.Value() );
+          int hpTag   = BLSURFPlugin_Hypothesis::GetHyperPatchTag( faceTag, _hypothesis );
+          if ( !faceTags.insert( hpTag ).second )
           {
-            int faceTag = meshDS->ShapeToIndex( *face );
-            int hpTag   = BLSURFPlugin_Hypothesis::GetHyperPatchTag( faceTag, _hypothesis );
-            if ( !faceTags.insert( hpTag ).second )
-            {
-              isInHyperPatch = true;
-              break;
-            }
+            isInHyperPatch = true;
+            break;
           }
+        }
       }
       if ( !isInHyperPatch )
         cad_edge_set_tag(edg, ic);

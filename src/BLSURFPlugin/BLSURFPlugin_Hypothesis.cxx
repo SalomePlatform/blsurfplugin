@@ -3291,7 +3291,7 @@ void BLSURFPlugin_Hypothesis::LoadPreCADPeriodicity(std::istream & load, const c
         if (hasTargetVertices)
           periodicity_i->theTargetVerticesEntries = theTargetVerticesEntries;
 
-        if ( shapeType  &&  strcmp( shapeType, "FACES" ))
+        if ( shapeType  &&  strcmp( shapeType, "FACES" ) == 0 )
           _preCadFacesPeriodicityVector.push_back(*periodicity_i);
         else
           _preCadEdgesPeriodicityVector.push_back(*periodicity_i);

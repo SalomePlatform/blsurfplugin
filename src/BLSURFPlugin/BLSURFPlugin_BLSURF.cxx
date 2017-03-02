@@ -729,29 +729,26 @@ void createAttractorOnFace(TopoDS_Shape GeomShape, std::string AttractorFunction
 }
 
 // One sub-shape to get ids from
-BLSURFPlugin_BLSURF::TListOfIDs _getSubShapeIDsInMainShape(TopoDS_Shape theMainShape, TopoDS_Shape theSubShape,
-    TopAbs_ShapeEnum theShapeType)
+BLSURFPlugin_BLSURF::TListOfIDs _getSubShapeIDsInMainShape(const TopoDS_Shape& theMainShape,
+                                                           const TopoDS_Shape& theSubShape,
+                                                           TopAbs_ShapeEnum    theShapeType)
 {
   BLSURFPlugin_BLSURF::TListOfIDs face_ids;
+
+  TopTools_MapOfShape subShapes;
   TopTools_IndexedMapOfShape anIndices;
-  anIndices.Clear();
   TopExp::MapShapes(theMainShape, theShapeType, anIndices);
 
-//  Standard_Boolean result = BRepTools::Write(theMainShape,"main_shape.brep");
-
   for (TopExp_Explorer face_iter(theSubShape,theShapeType);face_iter.More();face_iter.Next())
+  {
+    if ( subShapes.Add( face_iter.Current() )) // issue 23416
     {
-      int face_id = anIndices.FindIndex(face_iter.Current());
-      if (face_id == 0)
-        throw SALOME_Exception ( SMESH_Comment("Sub_shape not found in main_shape"));
-      face_ids.push_back(face_id);
-//      std::ostringstream o;
-//      o << "face_" << face_id << ".brep";
-//      std::string face_name = o.str();
-//      const TopoDS_Face& face = TopoDS::Face(face_iter.Current());
-//      Standard_Boolean result = BRepTools::Write(face,face_name.c_str());
+      int face_id = anIndices.FindIndex( face_iter.Current() );
+      if ( face_id == 0 )
+        throw SALOME_Exception( "Periodicity: sub_shape not found in main_shape");
+      face_ids.push_back( face_id );
     }
-
+  }
   return face_ids;
 }
 
@@ -2393,6 +2390,8 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
       for (std::size_t j=0; j < theFace2_ids.size(); j++)
         o << theFace2_ids[j] << ", ";
       o << "]";
+      // if ( _hypothesis->GetVerbosity() > _hypothesis->GetDefaultVerbosity() )
+      //   cout << o.str() << endl;
       if (_preCadFacesIDsPeriodicityVector[i].theSourceVerticesCoords.empty())
       {
         // If no source points, call peridoicity without transformation function
@@ -2435,6 +2434,8 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
       for (std::size_t j=0; j < theEdge2_ids.size(); j++)
         o << theEdge2_ids[j] << ", ";
       o << "]";
+      // if ( _hypothesis->GetVerbosity() > _hypothesis->GetDefaultVerbosity() )
+      //   cout << o.str() << endl;
 
       if (_preCadEdgesIDsPeriodicityVector[i].theSourceVerticesCoords.empty())
       {

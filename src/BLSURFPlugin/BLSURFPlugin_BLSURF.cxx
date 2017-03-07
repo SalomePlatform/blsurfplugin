@@ -1579,18 +1579,19 @@ namespace
     const TopoDS_Face& makeProxyFace( SMESH_ProxyMesh::Ptr& viscousMesh,
                                       const TopoDS_Face&    origFace)
     {
-      // get data of nodes on inner boundary of viscous layers
       SMESH_Mesh* origMesh = viscousMesh->GetMesh();
-      TError err;
-      TSideVector wireVec = StdMeshers_FaceSide::GetFaceWires(origFace, *origMesh,
-                                                              /*skipMediumNodes = */true,
-                                                              err, viscousMesh );
-      if ( err && err->IsKO() )
-        throw *err.get(); // it should be caught at SMESH_subMesh
 
       SMESH_MesherHelper helper( *origMesh );
       helper.SetSubShape( origFace );
       const bool hasSeam = helper.HasRealSeam();
+
+      // get data of nodes on inner boundary of viscous layers
+      TError err;
+      TSideVector wireVec = StdMeshers_FaceSide::GetFaceWires(origFace, *origMesh,
+                                                              /*skipMediumNodes = */true,
+                                                              err, &helper, viscousMesh );
+      if ( err && err->IsKO() )
+        throw *err.get(); // it should be caught at SMESH_subMesh
 
       // proxy nodes and corresponding tmp VERTEXes
       std::vector<const SMDS_MeshNode*> origNodes;
@@ -2210,11 +2211,13 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
       // IMP23368. Do not set tag to an EDGE shared by FACEs of a hyper-patch
       bool isInHyperPatch = false;
       {
-        std::set< int > faceTags;
+        std::set< int > faceTags, faceIDs;
         TopTools_ListIteratorOfListOfShape fIt( e2ffmap.FindFromKey( e ));
         for ( ; fIt.More(); fIt.Next() )
         {
           int faceTag = meshDS->ShapeToIndex( fIt.Value() );
+          if ( !faceIDs.insert( faceTag ).second )
+            continue; // a face encounters twice for a seam edge
           int hpTag   = BLSURFPlugin_Hypothesis::GetHyperPatchTag( faceTag, _hypothesis );
           if ( !faceTags.insert( hpTag ).second )
           {

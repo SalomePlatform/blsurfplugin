@@ -72,8 +72,8 @@ algo2d.SetEnforcedVertex(Face_1, 150, 150, 150)
 
 # Retrieve and print the list of enforced vertices defines on Face_1
 enfList = algo2d.GetEnforcedVertices(Face_1)
-print "List of enforced vertices for Face_1: "
-print enfList
+print("List of enforced vertices for Face_1: ")
+print(enfList)
 
 # compute the mesh
 cadsurfMesh.Compute()
@@ -81,8 +81,8 @@ cadsurfMesh.Compute()
 # Remove an enforced vertex and print the list
 algo2d.UnsetEnforcedVertex(Face_1, 50, 50, 50)
 enfList = algo2d.GetEnforcedVertices(Face_1)
-print "List of enforced vertices for Face_1: "
-print enfList
+print("List of enforced vertices for Face_1: ")
+print(enfList)
 
 # compute the mesh
 cadsurfMesh.Compute()

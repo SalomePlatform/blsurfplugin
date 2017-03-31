@@ -115,7 +115,7 @@ def checkProjection(gr, mesh_translated, tol=1e-7):
         non_coincident_nodes = list(set(mesh_nodes) - set(coincident_nodes))
         mesh_check.MakeGroupByIds("non_coincident_nodes", SMESH.NODE, non_coincident_nodes)
         #raise Exception("Projection failed for %s"%name)
-        print "Projection failed for %s"%name
+        print("Projection failed for %s"%name)
         
 checkProjection(gr_right, bottom_rotated)
 

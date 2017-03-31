@@ -101,7 +101,7 @@ for elem in elems:
 min_length = min(edges_length)
 x1, y1, z1 = Mesh.GetNodeXYZ(node)
 
-print min_length
+print(min_length)
 
 if min_length<tiny_edge_length:
     raise Exception("Small edge has not been removed")

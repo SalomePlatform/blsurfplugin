@@ -57,7 +57,7 @@ time1 = time.time()
 
 time_multithread = time1-time0
 
-print "Time in 4 proc: %.3s"%(time_multithread)
+print("Time in 4 proc: %.3s"%(time_multithread))
 
 Mesh_2 = smesh.Mesh(flight_solid_brep_1)
 MG_CADSurf = Mesh_2.Triangle(algo=smeshBuilder.MG_CADSurf)
@@ -75,7 +75,7 @@ isDone = Mesh_2.Compute()
 time3 = time.time()
 
 time_singlethread = time3-time2
-print "Time in 1 proc: %.3s"%(time_singlethread)
+print("Time in 1 proc: %.3s"%(time_singlethread))
 
 assert time_multithread < time_singlethread/2.
 

@@ -8,7 +8,7 @@ geompy = geomBuilder.New(salome.myStudy)
 
 import math
 
-area_tolerance = 1e-2
+area_tolerance = 0.1
 nb_faces_tolerance = 20
 
 ## Return the min and max areas of a mesh

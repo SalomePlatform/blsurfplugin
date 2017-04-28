@@ -899,6 +899,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
   //int _precadProcess3DTopology  = BLSURFPlugin_Hypothesis::GetDefaultPreCADProcess3DTopology();
   //int _precadDiscardInput       = BLSURFPlugin_Hypothesis::GetDefaultPreCADDiscardInput();
 
+  const BLSURFPlugin_Hypothesis::TPreCadPeriodicityVector preCadFacesPeriodicityVector = BLSURFPlugin_Hypothesis::GetPreCadFacesPeriodicityVector(hyp);
 
   if (hyp) {
     _physicalMesh  = (int) hyp->GetPhysicalMesh();
@@ -956,10 +957,19 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
 
     const BLSURFPlugin_Hypothesis::TOptionValues& opts = hyp->GetOptionValues();
     BLSURFPlugin_Hypothesis::TOptionValues::const_iterator opIt;
-    for ( opIt = opts.begin(); opIt != opts.end(); ++opIt )
+    for ( opIt = opts.begin(); opIt != opts.end(); ++opIt ){
+      MESSAGE("OptionValue: " << opIt->first.c_str() << ", value: " << opIt->second.c_str());
       if ( !opIt->second.empty() ) {
-        set_param(css, opIt->first.c_str(), opIt->second.c_str());
+		// With MeshGems 2.4-5, there are issues with periodicity and multithread
+		// => As a temporary workaround, we enforce to use only one thread if periodicity is used.
+        if (opIt->first == "max_number_of_threads" && opIt->second != "1" && ! preCadFacesPeriodicityVector.empty()){
+          std::cout << "INFO: Disabling multithread to avoid periodicity issues" << std::endl;
+          set_param(css, opIt->first.c_str(), "1");
+        }
+        else
+          set_param(css, opIt->first.c_str(), opIt->second.c_str());
       }
+    }
 
     const BLSURFPlugin_Hypothesis::TOptionValues& custom_opts = hyp->GetCustomOptionValues();
     for ( opIt = custom_opts.begin(); opIt != custom_opts.end(); ++opIt )
@@ -1340,8 +1350,6 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
    // reset vectors
    _preCadFacesIDsPeriodicityVector.clear();
    _preCadEdgesIDsPeriodicityVector.clear();
-
-  const BLSURFPlugin_Hypothesis::TPreCadPeriodicityVector preCadFacesPeriodicityVector = BLSURFPlugin_Hypothesis::GetPreCadFacesPeriodicityVector(hyp);
 
   for (std::size_t i = 0; i<preCadFacesPeriodicityVector.size(); i++){
     createPreCadFacesPeriodicity(theGeomShape, preCadFacesPeriodicityVector[i]);
@@ -2397,7 +2405,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
       //   cout << o.str() << endl;
       if (_preCadFacesIDsPeriodicityVector[i].theSourceVerticesCoords.empty())
       {
-        // If no source points, call peridoicity without transformation function
+        // If no source points, call periodicity without transformation function
         meshgems_cad_periodicity_transformation_t periodicity_transformation = NULL;
         status = cad_add_face_multiple_periodicity_with_transformation_function(c, theFace1_ids_c, theFace1_ids.size(),
                                                                                 theFace2_ids_c, theFace2_ids.size(), periodicity_transformation, NULL);
@@ -2425,7 +2433,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     for (std::size_t i=0; i < _preCadEdgesIDsPeriodicityVector.size(); i++){
       std::vector<int> theEdge1_ids = _preCadEdgesIDsPeriodicityVector[i].shape1IDs;
       std::vector<int> theEdge2_ids = _preCadEdgesIDsPeriodicityVector[i].shape2IDs;
-      // Use the address of the first element of the vector to initialise the array
+      // Use the address of the first element of the vector to initialize the array
       int* theEdge1_ids_c = &theEdge1_ids[0];
       int* theEdge2_ids_c = &theEdge2_ids[0];
 
@@ -2442,7 +2450,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
 
       if (_preCadEdgesIDsPeriodicityVector[i].theSourceVerticesCoords.empty())
       {
-        // If no source points, call peridoicity without transformation function
+        // If no source points, call periodicity without transformation function
         meshgems_cad_periodicity_transformation_t periodicity_transformation = NULL;
         status = cad_add_edge_multiple_periodicity_with_transformation_function(c, theEdge1_ids_c, theEdge1_ids.size(),
                                                                                 theEdge2_ids_c, theEdge2_ids.size(), periodicity_transformation, NULL);

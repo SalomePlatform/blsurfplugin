@@ -122,6 +122,9 @@ mesh features are then removed only if it does not lead to surface intersections
 deactivated by setting this parameter to 0, giving priority to the tiny edge or bad surface element
 removal.
 
+  - <b>use deprecated patch mesher</b> - This option reproduces the mesher behaviour of previous MG-CADSurf versions
+(MeshGems 2.1-11 and older, before SALOME 8.2). This has proved useful on some particular cases such as very small 
+local size on a vertex situated on a border curve.
 
 - <b>CAD preprocessor</b> options. The CAD preprocessor (formerly known as PreCAD) has two main goals:
 
@@ -259,6 +262,11 @@ used by default, but this can be modified by the parameter
 \ref blsurf_hmean_flag "hmean flag". In the same way, in order to
 interpolate two values, a linear interpolation is used by default, but
 this can be modified by \ref blsurf_hinterpol_flag "hinterpol flag". 
+
+<b>Note:</b> on some particular configurations, the mesher behaviour is
+not the same as before (SALOME versions before 8.2). See "use deprecated patch mesher"
+on advanced tag.
+
 
 \ref blsurf_local_size "Back to \"Local size\""\n
 \ref blsurf_top "Back to top"

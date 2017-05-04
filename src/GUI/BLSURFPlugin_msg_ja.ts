@@ -627,6 +627,10 @@
       <translation>ヤコビアンの修正</translation>
     </message>
     <message>
+        <source>use_deprecated_patch_mesher</source>
+        <translation>use deprecated patch mesher</translation>
+    </message>
+    <message>
       <source>respect_geometry</source>
       <translation>ジオメトリの尊重</translation>
     </message>

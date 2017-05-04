@@ -832,6 +832,21 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetJacobianRectification()
 }
 //=============================================================================
 
+void BLSURFPlugin_Hypothesis_i::SetUseDeprecatedPatchMesher( CORBA::Boolean useDeprecatedPatchMesher )
+{
+  if ( GetUseDeprecatedPatchMesher() != useDeprecatedPatchMesher )
+  {
+    this->GetImpl()->SetUseDeprecatedPatchMesher(useDeprecatedPatchMesher);
+    SMESH::TPythonDump() << _this() << ".SetUseDeprecatedPatchMesher( " << useDeprecatedPatchMesher << " )";
+  }
+}
+//=============================================================================
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetUseDeprecatedPatchMesher()
+{
+  return this->GetImpl()->GetUseDeprecatedPatchMesher();
+}
+//=============================================================================
+
 void BLSURFPlugin_Hypothesis_i::SetMaxNumberOfPointsPerPatch( CORBA::Long nb ) throw (SALOME::SALOME_Exception)
 {
   if ( GetMaxNumberOfPointsPerPatch() != nb )
@@ -1220,6 +1235,9 @@ void BLSURFPlugin_Hypothesis_i::SetOptionValue(const char* optionName, const cha
 
     else if ( name == "rectify_jacobian" )
       SetJacobianRectification( GetImpl()->ToBool( optionValue ));
+
+    else if ( name == "use_deprecated_patch_mesher" )
+      SetUseDeprecatedPatchMesher( GetImpl()->ToBool( optionValue ));
 
     else if ( name == "respect_geometry" )
       SetRespectGeometry( GetImpl()->ToBool( optionValue ));

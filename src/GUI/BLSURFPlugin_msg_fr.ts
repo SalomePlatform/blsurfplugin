@@ -638,6 +638,10 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
         <translation>Ajustement du Jacobien</translation>
     </message>
     <message>
+        <source>use_deprecated_patch_mesher</source>
+        <translation>use deprecated patch mesher</translation>
+    </message>
+    <message>
         <source>respect_geometry</source>
         <translation>Respect de la géométrie</translation>
     </message>

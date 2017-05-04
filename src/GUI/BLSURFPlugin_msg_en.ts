@@ -638,6 +638,10 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
         <translation>Rectify Jacobian</translation>
     </message>
     <message>
+        <source>use_deprecated_patch_mesher</source>
+        <translation>use deprecated patch mesher</translation>
+    </message>
+    <message>
         <source>respect_geometry</source>
         <translation>Respect geometry</translation>
     </message>

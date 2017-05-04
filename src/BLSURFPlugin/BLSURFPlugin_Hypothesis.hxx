@@ -157,6 +157,9 @@ public:
   void SetJacobianRectificationRespectGeometry( bool allowRectification );
   bool GetJacobianRectificationRespectGeometry();
     
+  void SetUseDeprecatedPatchMesher( bool useDeprecatedPatchMesher );
+  bool GetUseDeprecatedPatchMesher();
+
   void SetJacobianRectification( bool allowRectification );
   bool GetJacobianRectification();
 

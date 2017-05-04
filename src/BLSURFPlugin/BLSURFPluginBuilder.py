@@ -234,6 +234,14 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   def SetJacobianRectification( self, allowRectification ):
     self.Parameters().SetJacobianRectification( allowRectification )
 
+  ## Set use_deprecated_patch_mesher parameter (compatibility with older versions of Meshgems)
+  #  
+  # the use_deprecated_patch_mesher parameter allows to keep the same behaviour than
+  # in salome < 8.3 (meshgems 2.1.11 instead of meshgems >= 2.4.5)
+  #  
+  def SetUseDeprecatedPatchMesher( self, useDeprecatedPatchMesher ):
+    self.Parameters().SetUseDeprecatedPatchMesher( useDeprecatedPatchMesher )
+
   ## Set respect_geometry parameter
   #  
   #  This patch independent option can be deactivated to allow MeshGems-CADSurf

@@ -138,6 +138,9 @@ public:
   void SetJacobianRectificationRespectGeometry( CORBA::Boolean allowRectification );
   CORBA::Boolean GetJacobianRectificationRespectGeometry();
 
+  void SetUseDeprecatedPatchMesher( CORBA::Boolean useDeprecatedPatchMesher );
+  CORBA::Boolean GetUseDeprecatedPatchMesher();
+
   void SetJacobianRectification( CORBA::Boolean allowRectification );
   CORBA::Boolean GetJacobianRectification();
 

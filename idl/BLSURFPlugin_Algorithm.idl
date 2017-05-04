@@ -344,6 +344,15 @@ module BLSURFPlugin
     boolean GetJacobianRectification();
 
     /*!
+     * Set use_deprecated_patch_mesher parameter (compatibility with older versions of Meshgems)
+     *
+     * the use_deprecated_patch_mesher parameter allows to keep the same behaviour than
+     * in salome < 8.3 (meshgems 2.1.11 instead of meshgems >= 2.4.5)
+     */
+    void SetUseDeprecatedPatchMesher( in boolean useDeprecatedPatchMesher );
+    boolean GetUseDeprecatedPatchMesher();
+
+    /*!
      * Set max_number_of_points_per_patch parameter
      * 
      * This parameter controls the maximum amount of points MeshGems-CADSurf is allowed

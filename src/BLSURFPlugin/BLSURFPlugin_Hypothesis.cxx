@@ -116,6 +116,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
                                             // "remove_duplicate_cad_faces",               // default = 1
                                             "tiny_edge_avoid_surface_intersections",    // default = 1
                                             "debug",                                    // default = 0 
+                                            "use_deprecated_patch_mesher",              // default 0
                                             // "tiny_edge_respect_geometry",               // default = 0
                                             "" // mark of end
       };
@@ -209,8 +210,10 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
   _defaultOptionValues["max_number_of_points_per_patch"         ] = "0";
   _defaultOptionValues["max_number_of_threads"                  ] = "4";
   _defaultOptionValues["rectify_jacobian"                       ] = "yes";
+  _defaultOptionValues["use_deprecated_patch_mesher"            ] = "yes";
   _defaultOptionValues["respect_geometry"                       ] = "yes";
   _defaultOptionValues["tiny_edge_avoid_surface_intersections"  ] = "yes";
+  _defaultOptionValues["use_deprecated_patch_mesher"            ] = "no";
   _defaultOptionValues["debug"                                  ] = "no";
   if ( hasgeom )
   {
@@ -535,6 +538,21 @@ void BLSURFPlugin_Hypothesis::SetJacobianRectification( bool allowRectification 
 bool BLSURFPlugin_Hypothesis::GetJacobianRectification()
 {
   return ToBool( GetOptionValue("rectify_jacobian", GET_DEFAULT()));
+}
+//=============================================================================
+
+void BLSURFPlugin_Hypothesis::SetUseDeprecatedPatchMesher( bool useDeprecatedPatchMesher )
+{
+  if ( GetUseDeprecatedPatchMesher() != useDeprecatedPatchMesher )
+  {
+    SetOptionValue( "use_deprecated_patch_mesher", useDeprecatedPatchMesher ? "yes" : "no" );
+    NotifySubMeshesHypothesisModification();
+  }
+}
+//=============================================================================
+bool BLSURFPlugin_Hypothesis::GetUseDeprecatedPatchMesher()
+{
+  return ToBool( GetOptionValue("use_deprecated_patch_mesher", GET_DEFAULT()));
 }
 //=============================================================================
 

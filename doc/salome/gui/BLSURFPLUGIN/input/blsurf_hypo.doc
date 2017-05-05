@@ -123,7 +123,7 @@ deactivated by setting this parameter to 0, giving priority to the tiny edge or 
 removal.
 
   - <b>use deprecated patch mesher</b> - This option reproduces the mesher behaviour of previous MG-CADSurf versions
-(MeshGems 2.1-11 and older, before SALOME 8.2). This has proved useful on some particular cases such as very small 
+(MeshGems before 2.3, i.e. before SALOME 8.2). This has proved useful on some particular cases such as very small 
 local size on a vertex situated on a border curve.
 
 - <b>CAD preprocessor</b> options. The CAD preprocessor (formerly known as PreCAD) has two main goals:
@@ -264,7 +264,10 @@ interpolate two values, a linear interpolation is used by default, but
 this can be modified by \ref blsurf_hinterpol_flag "hinterpol flag". 
 
 <b>Note:</b> on some particular configurations, the mesher behaviour is
-not the same as before (SALOME versions before 8.2). See "use deprecated patch mesher"
+not the same as before (SALOME versions before 8.2 i.e. MeshGems before 2.3).
+For a small local size defined on a point situated on a border curve,
+the previous mesher behaviour may be prefered: 
+see "use deprecated patch mesher"
 on advanced tag.
 
 

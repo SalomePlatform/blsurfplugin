@@ -4,7 +4,6 @@ import sys
 import salome
 
 salome.salome_init()
-theStudy = salome.myStudy
 
 ###
 ### GEOM component
@@ -12,10 +11,10 @@ theStudy = salome.myStudy
 
 import GEOM
 from salome.geom import geomBuilder
-geompy = geomBuilder.New(salome.myStudy)
+geompy = geomBuilder.New()
 
 
-geompy.init_geom(theStudy)
+geompy.init_geom()
 
 Face_1 = geompy.MakeFaceHW(10, 10, 1)
 Translation_1 = geompy.MakeTranslation(Face_1, 10.0001, 0.0001, 0)
@@ -39,7 +38,7 @@ geompy.addToStudyInFather(Partition_1, gr_vertices, "vertices")
 
 import SMESH
 from salome.smesh import smeshBuilder
-smesh = smeshBuilder.New(salome.myStudy)
+smesh = smeshBuilder.New()
 
 
 Mesh_1 = smesh.Mesh(Partition_1)
@@ -67,4 +66,4 @@ nodesGroup = Mesh_1.MakeGroupByIds("nodes", SMESH.NODE, nodes)
 assert nodesGroup.Size() == 1, nodesGroup.GetIDs()
 
 if salome.sg.hasDesktop():
-  salome.sg.updateObjBrowser(True)
+  salome.sg.updateObjBrowser()

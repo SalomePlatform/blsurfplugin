@@ -49,8 +49,8 @@ namespace
 }
 
 //=============================================================================
-BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_Gen * gen, bool hasgeom) :
-  SMESH_Hypothesis(hypId, studyId, gen), 
+BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, SMESH_Gen * gen, bool hasgeom) :
+  SMESH_Hypothesis(hypId, gen), 
   _physicalMesh(GetDefaultPhysicalMesh()),
   _geometricMesh(GetDefaultGeometricMesh()),
   _phySize(GetDefaultPhySize()),
@@ -256,18 +256,16 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_G
 TopoDS_Shape BLSURFPlugin_Hypothesis::entryToShape(std::string entry)
 {
   GEOM::GEOM_Object_var aGeomObj;
-  SMESH_Gen_i* smeshGen_i = SMESH_Gen_i::GetSMESHGen();
-  SALOMEDS::Study_ptr myStudy = smeshGen_i->GetCurrentStudy();
   
   TopoDS_Shape S = TopoDS_Shape();
-  SALOMEDS::SObject_var aSObj = myStudy->FindObjectID( entry.c_str() );
+  SALOMEDS::SObject_var aSObj = SMESH_Gen_i::getStudyServant()->FindObjectID( entry.c_str() );
   if (!aSObj->_is_nil() ) {
     CORBA::Object_var obj = aSObj->GetObject();
     aGeomObj = GEOM::GEOM_Object::_narrow(obj);
     aSObj->UnRegister();
   }
   if ( !aGeomObj->_is_nil() )
-    S = smeshGen_i->GeomObjectToShape( aGeomObj.in() );
+    S = SMESH_Gen_i::GetSMESHGen()->GeomObjectToShape( aGeomObj.in() );
   return S;
 }
 

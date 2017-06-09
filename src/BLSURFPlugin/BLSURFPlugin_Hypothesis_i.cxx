@@ -47,13 +47,12 @@ using namespace std;
  */
 //=============================================================================
 BLSURFPlugin_Hypothesis_i::BLSURFPlugin_Hypothesis_i(PortableServer::POA_ptr thePOA,
-                                                     int                     theStudyId,
                                                      ::SMESH_Gen*            theGenImpl,
                                                      bool                    theHasGEOM) :
   SALOME::GenericObj_i(thePOA), SMESH_Hypothesis_i(thePOA)
 {
   myBaseImpl = new ::BLSURFPlugin_Hypothesis(theGenImpl->GetANewId(),
-                                             theStudyId,
+                                             
                                              theGenImpl,
                                              theHasGEOM);
 }
@@ -1759,7 +1758,7 @@ void BLSURFPlugin_Hypothesis_i::SetAttractorEntry(const char* entry, const char*
 
 //=============================================================================
 
-void BLSURFPlugin_Hypothesis_i::SetClassAttractorEntry(const char* entry, const char* att_entry, CORBA::Double StartSize, CORBA::Double EndSize, CORBA::Double ActionRadius, CORBA::Double ConstantRadius) //TODO à finir
+void BLSURFPlugin_Hypothesis_i::SetClassAttractorEntry(const char* entry, const char* att_entry, CORBA::Double StartSize, CORBA::Double EndSize, CORBA::Double ActionRadius, CORBA::Double ConstantRadius) //TODO ?? finir
   throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
@@ -1822,7 +1821,7 @@ char* BLSURFPlugin_Hypothesis_i::GetAttractorEntry(const char* entry) throw (SAL
 
 // //=============================================================================
 // 
-// // TODO coder cette fonction (utilisée pour savoir si la valeur a changé
+// // TODO coder cette fonction (utilis??e pour savoir si la valeur a chang??
 // // A finir pour le dump
 // char* BLSURFPlugin_Hypothesis_i::GetClassAttractorEntry(const char* entry)
 //   throw (SALOME::SALOME_Exception)
@@ -2010,13 +2009,12 @@ void BLSURFPlugin_Hypothesis_i::SetAttractorGeom(GEOM::GEOM_Object_ptr theFace, 
   theAttEntry  = theAttractor->GetStudyEntry();
   
   GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
-  SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
   string aName;
   
   if (theFaceEntry.empty()) {
     aName = "Face_";
     aName += theFace->GetEntry();
-    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(NULL, theFace, aName.c_str());
     if (!theSFace->_is_nil())
       theFaceEntry = theSFace->GetID();
   }
@@ -2033,7 +2031,7 @@ void BLSURFPlugin_Hypothesis_i::SetAttractorGeom(GEOM::GEOM_Object_ptr theFace, 
     if (theAttractor->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theAttractor->GetEntry();
-    SALOMEDS::SObject_wrap theSAtt = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theAttractor, aName.c_str());
+    SALOMEDS::SObject_wrap theSAtt = geomGen->PublishInStudy(NULL, theAttractor, aName.c_str());
     if (!theSAtt->_is_nil())
       theAttEntry = theSAtt->GetID();
   }
@@ -2053,13 +2051,12 @@ void BLSURFPlugin_Hypothesis_i::UnsetAttractorGeom(GEOM::GEOM_Object_ptr theFace
   CORBA::String_var theAttrEntry = theAttractor->GetStudyEntry();
   
   // GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
-  // SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
   // string aName;
   
   // if (theFaceEntry.empty()) {
   //   aName = "Face_";
   //   aName += theFace->GetEntry();
-  //   SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+  //   SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(NULL, theFace, aName.c_str());
   //   if (!theSFace->_is_nil())
   //     theFaceEntry = theSFace->GetID();
   // }
@@ -2451,14 +2448,13 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertex(GEOM::GEOM_Object_ptr theFace,
   
   if (theFaceEntry.empty()) {
     GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
-    SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
     string aName;
     if (theFace->GetShapeType() == GEOM::FACE)
       aName = "Face_";
     if (theFace->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theFace->GetEntry();
-    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(NULL, theFace, aName.c_str());
     if (!theSFace->_is_nil())
       theFaceEntry = theSFace->GetID();
   }
@@ -2486,14 +2482,13 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexNamed(GEOM::GEOM_Object_ptr the
   
   if (theFaceEntry.empty()) {
     GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
-    SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
     string aName;
     if (theFace->GetShapeType() == GEOM::FACE)
       aName = "Face_";
     if (theFace->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theFace->GetEntry();
-    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(NULL, theFace, aName.c_str());
     if (!theSFace->_is_nil())
       theFaceEntry = theSFace->GetID();
   }
@@ -2523,7 +2518,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeom(GEOM::GEOM_Object_ptr theF
   }
 
   //  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
-  //  GEOM::GEOM_IMeasureOperations_var measureOp = geomGen->GetIMeasureOperations(this->GetImpl()->GetStudyId());
+  //  GEOM::GEOM_IMeasureOperations_var measureOp = geomGen->GetIMeasureOperations();
   //  if (CORBA::is_nil(measureOp))
   //    return false;
   //
@@ -2535,7 +2530,6 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeom(GEOM::GEOM_Object_ptr theF
   string theVertexEntry = theVertex->GetStudyEntry();
   
   GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
-  SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
   string aName;
   
   if (theFaceEntry.empty()) {
@@ -2544,7 +2538,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeom(GEOM::GEOM_Object_ptr theF
     if (theFace->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theFace->GetEntry();
-    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(NULL, theFace, aName.c_str());
     if (!theSFace->_is_nil())
       theFaceEntry = theSFace->GetID();
   }
@@ -2557,7 +2551,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeom(GEOM::GEOM_Object_ptr theF
     if (theVertex->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theVertex->GetEntry();
-    SALOMEDS::SObject_wrap theSVertex = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theVertex, aName.c_str());
+    SALOMEDS::SObject_wrap theSVertex = geomGen->PublishInStudy(NULL, theVertex, aName.c_str());
     if (!theSVertex->_is_nil())
       theVertexEntry = theSVertex->GetID();
   }
@@ -2588,14 +2582,13 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexWithGroup(GEOM::GEOM_Object_ptr
   
   if (theFaceEntry.empty()) {
     GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
-    SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
     string aName;
     if (theFace->GetShapeType() == GEOM::FACE)
       aName = "Face_";
     if (theFace->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theFace->GetEntry();
-    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(NULL, theFace, aName.c_str());
     if (!theSFace->_is_nil())
       theFaceEntry = theSFace->GetID();
   }
@@ -2625,14 +2618,13 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexNamedWithGroup(GEOM::GEOM_Objec
   
   if (theFaceEntry.empty()) {
     GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
-    SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
     string aName;
     if (theFace->GetShapeType() == GEOM::FACE)
       aName = "Face_";
     if (theFace->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theFace->GetEntry();
-    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(NULL, theFace, aName.c_str());
     if (!theSFace->_is_nil())
       theFaceEntry = theSFace->GetID();
   }
@@ -2665,7 +2657,6 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeomWithGroup(GEOM::GEOM_Object
   string theVertexEntry = theVertex->GetStudyEntry();
   
   GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
-  SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
   string aName;
   
   if (theFaceEntry.empty()) {
@@ -2674,7 +2665,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeomWithGroup(GEOM::GEOM_Object
     if (theFace->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theFace->GetEntry();
-    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(NULL, theFace, aName.c_str());
     if (!theSFace->_is_nil())
       theFaceEntry = theSFace->GetID();
   }
@@ -2687,7 +2678,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeomWithGroup(GEOM::GEOM_Object
     if (theVertex->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theVertex->GetEntry();
-    SALOMEDS::SObject_wrap theSVertex = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theVertex, aName.c_str());
+    SALOMEDS::SObject_wrap theSVertex = geomGen->PublishInStudy(NULL, theVertex, aName.c_str());
     if (!theSVertex->_is_nil())
       theVertexEntry = theSVertex->GetID();
   }
@@ -2718,14 +2709,13 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeomWithGroup(GEOM::GEOM_Object
   
 //  if (theFaceEntry.empty()) {
 //    GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
-//    SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
 //    string aName;
 //    if (theFace->GetShapeType() == GEOM::FACE)
 //      aName = "Face_";
 //    if (theFace->GetShapeType() == GEOM::COMPOUND)
 //      aName = "Compound_";
 //    aName += theFace->GetEntry();
-//    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+//    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(NULL, theFace, aName.c_str());
 //    if (!theSFace->_is_nil())
 //      theFaceEntry = theSFace->GetID();
 //  }
@@ -2754,14 +2744,13 @@ BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVertices(GEO
   
   if (theFaceEntry.empty()) {
     GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
-    SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
     string aName;
     if (theFace->GetShapeType() == GEOM::FACE)
       aName = "Face_";
     if (theFace->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theFace->GetEntry();
-    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(NULL, theFace, aName.c_str());
     if (!theSFace->_is_nil())
       theFaceEntry = theSFace->GetID();
   }
@@ -2787,14 +2776,13 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertex(GEOM::GEOM_Object_ptr theFac
   
   if (theFaceEntry.empty()) {
     GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
-    SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
     string aName;
     if (theFace->GetShapeType() == GEOM::FACE)
       aName = "Face_";
     if (theFace->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theFace->GetEntry();
-    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(NULL, theFace, aName.c_str());
     if (!theSFace->_is_nil())
       theFaceEntry = theSFace->GetID();
   }
@@ -2820,7 +2808,7 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexGeom(GEOM::GEOM_Object_ptr th
   }
 
   //  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
-  //  GEOM::GEOM_IMeasureOperations_var measureOp = geomGen->GetIMeasureOperations(this->GetImpl()->GetStudyId());
+  //  GEOM::GEOM_IMeasureOperations_var measureOp = geomGen->GetIMeasureOperations();
   //  if (CORBA::is_nil(measureOp))
   //    return false;
   //
@@ -2832,7 +2820,6 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexGeom(GEOM::GEOM_Object_ptr th
   std::string theVertexEntry = theVertex->GetStudyEntry();
   
   GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
-  SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
   string aName;
   
   if (theFaceEntry.empty()) {
@@ -2841,7 +2828,7 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexGeom(GEOM::GEOM_Object_ptr th
     if (theFace->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theFace->GetEntry();
-    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(NULL, theFace, aName.c_str());
     if (!theSFace->_is_nil())
       theFaceEntry = theSFace->GetID();
   }
@@ -2854,7 +2841,7 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexGeom(GEOM::GEOM_Object_ptr th
     if (theVertex->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theVertex->GetEntry();
-    SALOMEDS::SObject_wrap theSVertex = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theVertex, aName.c_str());
+    SALOMEDS::SObject_wrap theSVertex = geomGen->PublishInStudy(NULL, theVertex, aName.c_str());
     if (!theSVertex->_is_nil())
       theVertexEntry = theSVertex->GetID();
   }
@@ -2880,14 +2867,13 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertices(GEOM::GEOM_Object_ptr theF
   
   if (theFaceEntry.empty()) {
     GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
-    SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
     string aName;
     if (theFace->GetShapeType() == GEOM::FACE)
       aName = "Face_";
     if (theFace->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theFace->GetEntry();
-    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(NULL, theFace, aName.c_str());
     if (!theSFace->_is_nil())
       theFaceEntry = theSFace->GetID();
   }
@@ -2949,7 +2935,7 @@ bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexGeom(GEOM::GEOM_Object_ptr theV
     if (theVertex->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theVertex->GetEntry();
-    SALOMEDS::SObject_wrap theSVertex = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theVertex, aName.c_str());
+    SALOMEDS::SObject_wrap theSVertex = geomGen->PublishInStudy( NULL, theVertex, aName.c_str());
     if (!theSVertex->_is_nil())
       theVertexEntry = theSVertex->GetID();
   }
@@ -3017,7 +3003,7 @@ bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexGeomWithGroup(GEOM::GEOM_Object
     if (theVertex->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theVertex->GetEntry();
-    SALOMEDS::SObject_wrap theSVertex = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theVertex, aName.c_str());
+    SALOMEDS::SObject_wrap theSVertex = geomGen->PublishInStudy( NULL, theVertex, aName.c_str());
     if (!theSVertex->_is_nil())
       theVertexEntry = theSVertex->GetID();
   }
@@ -3059,7 +3045,7 @@ bool BLSURFPlugin_Hypothesis_i::RemoveEnforcedVertexGeom(GEOM::GEOM_Object_ptr t
     if (theVertex->GetShapeType() == GEOM::COMPOUND)
       aName = "Compound_";
     aName += theVertex->GetEntry();
-    SALOMEDS::SObject_wrap theSVertex = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theVertex, aName.c_str());
+    SALOMEDS::SObject_wrap theSVertex = geomGen->PublishInStudy( NULL, theVertex, aName.c_str());
     if (!theSVertex->_is_nil())
       theVertexEntry = theSVertex->GetID();
   }
@@ -3336,7 +3322,7 @@ char* BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertexAllFacesGroup()
  if (theFace->GetShapeType() == GEOM::COMPOUND)
  aName = "Compound_";
  aName += theFace->GetEntry();
- SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, theFace, aName.c_str());
+ SALOMEDS::SObject_wrap theSFace = geomGen->PublishInStudy(NULL, theFace, aName.c_str());
  if (!theSFace->_is_nil())
  theFaceEntry = theSFace->GetID();
  }
@@ -3476,7 +3462,6 @@ std::string BLSURFPlugin_Hypothesis_i::PublishIfNeeded(GEOM::GEOM_Object_ptr sha
   string shapeEntry = shape->GetStudyEntry();
 
   GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
-  SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
   string aName;
 
   // Publish shape if needed
@@ -3484,7 +3469,7 @@ std::string BLSURFPlugin_Hypothesis_i::PublishIfNeeded(GEOM::GEOM_Object_ptr sha
     if (shape->GetShapeType() == theShapeType)
       aName = prefix;
     aName += shape->GetEntry();
-    SALOMEDS::SObject_wrap theSFace1 = geomGen->PublishInStudy(smeshGen->GetCurrentStudy(), NULL, shape, aName.c_str());
+    SALOMEDS::SObject_wrap theSFace1 = geomGen->PublishInStudy(NULL, shape, aName.c_str());
     if (!theSFace1->_is_nil())
       shapeEntry = theSFace1->GetID();
   }

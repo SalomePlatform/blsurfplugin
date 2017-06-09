@@ -37,7 +37,6 @@
 //=============================================================================
 
 BLSURFPlugin_BLSURF_i::BLSURFPlugin_BLSURF_i( PortableServer::POA_ptr thePOA,
-                                              int                     theStudyId,
                                               ::SMESH_Gen*            theGenImpl,
                                               bool                    theHasGEOM )
      : SALOME::GenericObj_i( thePOA ), 
@@ -46,7 +45,6 @@ BLSURFPlugin_BLSURF_i::BLSURFPlugin_BLSURF_i( PortableServer::POA_ptr thePOA,
        SMESH_2D_Algo_i( thePOA )
 {
   myBaseImpl = new ::BLSURFPlugin_BLSURF( theGenImpl->GetANewId(),
-                                          theStudyId,
                                           theGenImpl,
                                           theHasGEOM);
 }

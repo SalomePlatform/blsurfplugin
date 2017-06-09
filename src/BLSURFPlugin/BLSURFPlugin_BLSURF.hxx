@@ -75,7 +75,7 @@ class TopoDS_Shape;
 
 class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
   public:
-    BLSURFPlugin_BLSURF(int hypId, int studyId, SMESH_Gen* gen, bool theHasGEOM);
+    BLSURFPlugin_BLSURF(int hypId, SMESH_Gen* gen, bool theHasGEOM);
 
     virtual ~BLSURFPlugin_BLSURF();
 
@@ -159,8 +159,6 @@ class BLSURFPlugin_BLSURF: public SMESH_2D_Algo {
       PyObject *          main_mod;
       PyObject *          main_dict;
       SMESH_MesherHelper* myHelper;
-      SALOMEDS::Study_var myStudy;
-      SMESH_Gen_i*        smeshGen_i;
 
       volatile bool _compute_canceled;
 };

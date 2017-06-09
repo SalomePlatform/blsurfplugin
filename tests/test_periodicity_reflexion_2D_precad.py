@@ -11,7 +11,7 @@ import math
 
 import GEOM
 from salome.geom import geomBuilder
-geompy = geomBuilder.New(salome.myStudy)
+geompy = geomBuilder.New()
 
 O = geompy.MakeVertex(0, 0, 0)
 OX = geompy.MakeVectorDXDYDZ(1, 0, 0)
@@ -74,7 +74,7 @@ geompy.addToStudy(p_haut_droite, "p_haut_droite")
 
 import SMESH
 from salome.smesh import smeshBuilder
-smesh = smeshBuilder.New(salome.myStudy)
+smesh = smeshBuilder.New()
 
 Mesh = smesh.Mesh(part, "Mesh")
 
@@ -119,8 +119,8 @@ def checkProjection(gr, mesh_translated, tol=1e-7):
         
 checkProjection(gr_right, bottom_rotated)
 
-#salome.myStudyManager.SaveAs("test.hdf", salome.myStudy, 0)
+#salome.myStudy.SaveAs("test.hdf", 0, 0)
 
 if salome.sg.hasDesktop():
-  salome.sg.updateObjBrowser(True)
+  salome.sg.updateObjBrowser()
   

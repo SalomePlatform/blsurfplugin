@@ -86,7 +86,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   def __init__(self, mesh, geom=0):
     Mesh_Algorithm.__init__(self)
     if noBLSURFPlugin:
-      print "Warning: BLSURFPlugin module unavailable"
+      print("Warning: BLSURFPlugin module unavailable")
     if mesh.GetMesh().HasShapeToMesh():
       self.Create(mesh, geom, self.algoType, LIBRARY)
     else:
@@ -190,7 +190,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   # <li>PreCAD - by pre-processing with PreCAD a CAD model</li></ul>
   def SetTopology(self, way):
     if way != PreCAD and way != FromCAD:
-      print "Warning: topology mode %d is no longer supported. Mode FromCAD is used."%way
+      print("Warning: topology mode %d is no longer supported. Mode FromCAD is used."%way)
       way = FromCAD
     self.Parameters().SetTopology(way)
     pass
@@ -737,8 +737,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
           for f in faces:
             ids.append( self.mesh.geompyD.GetSubShapeID( self.mesh.geom, f ))
         else:
-          raise TypeError, \
-            "Face of hyper-patch should be either ID or GEOM_Object, not %s" % type(face)
+          raise TypeError("Face of hyper-patch should be either ID or GEOM_Object, not %s" % type(face))
         pass
       hpl.append( ids )
       pass
@@ -757,7 +756,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
     """
     Obsolete function. Use SetMinSize.
     """
-    print "Warning: SetPhyMin is obsolete. Please use SetMinSize"
+    print("Warning: SetPhyMin is obsolete. Please use SetMinSize")
     self.SetMinSize(theVal)
     pass
 
@@ -766,7 +765,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
     """
     Obsolete function. Use SetMaxSize.
     """
-    print "Warning: SetPhyMax is obsolete. Please use SetMaxSize"
+    print("Warning: SetPhyMax is obsolete. Please use SetMaxSize")
     self.SetMaxSize(theVal)
     pass
 
@@ -775,7 +774,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
     """
     Obsolete function. Use SetAngleMesh.
     """
-    print "Warning: SetAngleMeshS is obsolete. Please use SetAngleMesh"
+    print("Warning: SetAngleMeshS is obsolete. Please use SetAngleMesh")
     self.SetAngleMesh(theVal)
     pass
 
@@ -784,7 +783,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
     """
     Obsolete function. Use SetAngleMesh.
     """
-    print "Warning: SetAngleMeshC is obsolete. Please use SetAngleMesh"
+    print("Warning: SetAngleMeshC is obsolete. Please use SetAngleMesh")
     self.SetAngleMesh(theVal)
     pass
 
@@ -793,7 +792,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
     """
     Obsolete function. Use SetMinSize.
     """
-    print "Warning: SetGeoMin is obsolete. Please use SetMinSize"
+    print("Warning: SetGeoMin is obsolete. Please use SetMinSize")
     self.SetMinSize(theVal)
     pass
 
@@ -802,7 +801,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
     """
     Obsolete function. Use SetMaxSize.
     """
-    print "Warning: SetGeoMax is obsolete. Please use SetMaxSize"
+    print("Warning: SetGeoMax is obsolete. Please use SetMaxSize")
     self.SetMaxSize(theVal)
     pass
 

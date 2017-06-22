@@ -56,8 +56,9 @@ enum {
 // BLSURFPluginGUI_StdWidget
 //////////////////////////////////////////
 
-#include "ui_BLSURFPluginGUI_StdWidget_QTD.h"
+// WARNING: include order is important, do not swap !
 #include "BLSURFPluginGUI_HypothesisCreator.h"
+#include "ui_BLSURFPluginGUI_StdWidget_QTD.h"
 
 class BLSURFPLUGIN_GUI_EXPORT BLSURFPluginGUI_StdWidget : public QWidget, 
                                             public Ui::BLSURFPluginGUI_StdWidget_QTD

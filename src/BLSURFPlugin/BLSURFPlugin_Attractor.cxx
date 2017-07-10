@@ -40,6 +40,9 @@
 #include <Precision.hxx>
 #include <GeomLib_IsPlanarSurface.hxx>
 
+// kernel includes
+#include <Basics_OCCTVersion.hxx>
+
 BLSURFPlugin_Attractor::BLSURFPlugin_Attractor ()
   : _face(),
   _attractorShape(),
@@ -181,7 +184,11 @@ void BLSURFPlugin_Attractor::edgeInit(Handle(Geom_Surface) theSurf, const TopoDS
   Handle(Geom_Curve) aCurve3d = BRep_Tool::Curve (anEdge, first, last);
   ShapeConstruct_ProjectCurveOnSurface curveProjector;
   curveProjector.Init(theSurf, Precision::Confusion());
+#if OCC_VERSION_LARGE > 0x07010000
+  curveProjector.Perform (aCurve3d, first, last, aCurve2d);
+#else
   curveProjector.PerformAdvanced (aCurve3d, first, last, aCurve2d);
+#endif
   
   int N = 1200;
   for (i=0; i<=N; i++){

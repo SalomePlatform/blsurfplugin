@@ -477,7 +477,7 @@ projectionPoint getProjectionPoint(TopoDS_Face& theFace, const gp_Pnt& thePoint)
       throw SMESH_ComputeError(COMPERR_BAD_PARMETERS,
                                "getProjectionPoint: can't project a vertex to a face");
 
-    Quantity_Parameter u,v;
+    Standard_Real u,v;
     projector.LowerDistanceParameters(u,v);
     myPoint.uv = gp_XY(u,v);
     gp_Pnt aPnt = projector.NearestPoint();

@@ -96,8 +96,32 @@
       <translation>四角形を許可</translation>
     </message>
     <message>
-      <source>BLSURF_ALLOW_QUADRANGLES_TOOLTIP</source>
-      <translation>ドミナント四角形要素の生成</translation>
+        <source>BLSURF_ELEMENT_TYPE</source>
+        <translation type="unfinished">Element type</translation>
+    </message>
+    <message>
+        <source>BLSURF_TRIANGLES</source>
+        <translation type="unfinished">Triangles</translation>
+    </message>
+    <message>
+        <source>BLSURF_QUADRANGLE_DOMINANT</source>
+        <translation type="unfinished">Quadrangle dominant</translation>
+    </message>
+    <message>
+        <source>BLSURF_QUADRANGLES</source>
+        <translation type="unfinished">Quadrangles</translation>
+    </message>
+    <message>
+        <source>BLSURF_ALLOW_QUADRANGLES_TOOLTIP</source>
+        <translation>ドミナント四角形要素の生成</translation>
+    </message>
+    <message>
+        <source>BLSURF_TRIANGLES_TOOLTIP</source>
+        <translation type="unfinished">To generate triangles-only mesh</translation>
+    </message>
+    <message>
+        <source>BLSURF_QUADRANGLES_TOOLTIP</source>
+        <translation type="unfinished">To generate quadrangles-only mesh</translation>
     </message>
     <message>
       <source>BLSURF_GEOMETRICAL_SIZE</source>

@@ -87,7 +87,7 @@ params.SetGeometricMesh( 1 )
 params.SetAngleMesh( 4 )
 params.SetPhySize( 8 )
 algo2d.SetGradation(1.05)
-params.SetQuadAllowed( True )
+params.SetElementType( True )
 
 ok = Mesh_1.Compute()
 
@@ -124,7 +124,7 @@ params.SetGeometricMesh( 1 )
 params.SetAngleMesh( 4 )
 params.SetPhySize( 8 )
 algo2d.SetGradation(1.05)
-params.SetQuadAllowed( True )
+params.SetElementType( 1 )
 params.SetAnisotropic(True)
 
 ok = Mesh_2.Compute()

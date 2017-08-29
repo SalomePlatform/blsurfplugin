@@ -875,7 +875,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
   double _gradation             = BLSURFPlugin_Hypothesis::GetDefaultGradation();
   double _use_volume_gradation  = BLSURFPlugin_Hypothesis::GetDefaultUseVolumeGradation();
   double _volume_gradation      = BLSURFPlugin_Hypothesis::GetDefaultVolumeGradation();
-  bool   _quadAllowed           = BLSURFPlugin_Hypothesis::GetDefaultQuadAllowed();
+  BLSURFPlugin_Hypothesis::ElementType _elementType = BLSURFPlugin_Hypothesis::GetDefaultElementType();
   double _angleMesh             = BLSURFPlugin_Hypothesis::GetDefaultAngleMesh();
   double _chordalError          = BLSURFPlugin_Hypothesis::GetDefaultChordalError(diagonal);
   bool   _anisotropic           = BLSURFPlugin_Hypothesis::GetDefaultAnisotropic();
@@ -925,7 +925,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
     _use_volume_gradation    = hyp->GetUseVolumeGradation();
     if (hyp->GetVolumeGradation() > 0 && _use_volume_gradation )
       _volume_gradation      = hyp->GetVolumeGradation();
-    _quadAllowed     = hyp->GetQuadAllowed();
+    _elementType     = hyp->GetElementType();
     if (hyp->GetAngleMesh() > 0)
       _angleMesh     = hyp->GetAngleMesh();
     if (hyp->GetChordalError() > 0)
@@ -1055,13 +1055,29 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
      set_param(css, "max_size", _maxSizeRel ? val_to_string_rel(_maxSize).c_str() : val_to_string(_maxSize).c_str());
    }
    // anisotropic and quadrangle mesh requires disabling gradation
-   if ( _anisotropic && _quadAllowed )
+   if ( _anisotropic && _elementType != BLSURFPlugin_Hypothesis::Triangles )
      useGradation = false; // limitation of V1.3
    if ( useGradation && _use_gradation )
      set_param(css, "gradation",                       val_to_string(_gradation).c_str());
    if ( useGradation && _use_volume_gradation )
      set_param(css, "volume_gradation",                val_to_string(_volume_gradation).c_str());
-   set_param(css, "element_generation",                _quadAllowed ? "quad_dominant" : "triangle");
+
+   // New since MeshGems 2.5: add full_quad
+   const char * element_generation = "";
+   switch ( _elementType )
+   {
+     case BLSURFPlugin_Hypothesis::Triangles:
+       element_generation = "triangle";
+       break;
+     case BLSURFPlugin_Hypothesis::QuadrangleDominant:
+       element_generation = "quad_dominant";
+       break;
+     case BLSURFPlugin_Hypothesis::Quadrangles:
+       element_generation = "full_quad";
+       break;
+     default: ;
+   }
+   set_param(css, "element_generation",                element_generation);
 
 
    set_param(css, "metric",                            _anisotropic ? "anisotropic" : "isotropic");
@@ -3378,7 +3394,7 @@ bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh&         aMesh,
   bool   _phySizeRel    = BLSURFPlugin_Hypothesis::GetDefaultPhySizeRel();
   //int    _geometricMesh = BLSURFPlugin_Hypothesis::GetDefaultGeometricMesh();
   double _angleMesh     = BLSURFPlugin_Hypothesis::GetDefaultAngleMesh();
-  bool   _quadAllowed   = BLSURFPlugin_Hypothesis::GetDefaultQuadAllowed();
+  BLSURFPlugin_Hypothesis::ElementType   _elementType   = BLSURFPlugin_Hypothesis::GetDefaultElementType();
   if(_hypothesis) {
     _physicalMesh  = (int) _hypothesis->GetPhysicalMesh();
     _phySizeRel         = _hypothesis->IsPhySizeRel();
@@ -3387,7 +3403,7 @@ bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh&         aMesh,
     //_geometricMesh = (int) hyp->GetGeometricMesh();
     if (_hypothesis->GetAngleMesh() > 0)
       _angleMesh        = _hypothesis->GetAngleMesh();
-    _quadAllowed        = _hypothesis->GetQuadAllowed();
+    _elementType        = _hypothesis->GetElementType();
   } else {
     //0020968: EDF1545 SMESH: Problem in the creation of a mesh group on geometry
     // GetDefaultPhySize() sometimes leads to computation failure
@@ -3467,7 +3483,7 @@ bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh&         aMesh,
     int nbQuad = 0;
     int nbTria = (int) ( anArea/( ELen*ELen*sqrt(3.) / 4 ) );
     int nbNodes = (int) ( ( nbTria*3 - (nb1d-1)*2 ) / 6 + 1 );
-    if ( _quadAllowed )
+    if ( _elementType != BLSURFPlugin_Hypothesis::Quadrangles )
     {
       if ( nb1dVec.size() == 4 ) // quadrangle geom face
       {

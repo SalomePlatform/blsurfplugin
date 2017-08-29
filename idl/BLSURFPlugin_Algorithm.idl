@@ -199,7 +199,8 @@ module BLSURFPlugin
      * Sets to create quadrilateral elements or not
      */
     void SetQuadAllowed(in boolean allowed);
-    boolean GetQuadAllowed();
+    void SetElementType(in long elementType);
+    long GetElementType();
 
     /*!
      * Sets angular deflection (in degrees) of a mesh face and edge from CAD surface

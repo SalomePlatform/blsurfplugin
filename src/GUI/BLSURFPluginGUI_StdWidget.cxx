@@ -61,6 +61,9 @@ BLSURFPluginGUI_StdWidget::BLSURFPluginGUI_StdWidget( QWidget* parent, Qt::Windo
   myTinyEdgeOptimisLength->setText("");
   myCorrectSurfaceIntersectionMaxCost->setText("");
   myBadElementAspectRatio->setText("");
+  myButtonGroupElementType->setId(myRadioButtonTriangles, Triangles);
+  myButtonGroupElementType->setId(myRadioButtonQuadrangleDominant, QuadrangleDominant);
+  myButtonGroupElementType->setId(myRadioButtonQuadrangles, Quadrangles);
 }
 
 BLSURFPluginGUI_StdWidget::~BLSURFPluginGUI_StdWidget()

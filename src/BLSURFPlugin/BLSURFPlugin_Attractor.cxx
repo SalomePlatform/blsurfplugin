@@ -222,6 +222,19 @@ double BLSURFPlugin_Attractor::_distanceFromMap(double u, double v){
   int i = floor ( (u - _u1) * _gridU / (_u2 - _u1) + 0.5 );
   int j = floor ( (v - _v1) * _gridV / (_v2 - _v1) + 0.5 );
   
+  // avoid out of bounds of _DMap
+  if (i > _DMap.size())
+    i = _DMap.size()-1;
+
+  if (i < 0)
+    i = 0;
+
+  if (j > _DMap[i].size())
+    j = _DMap[i].size()-1;
+
+  if (j < 0)
+    j = 0;
+
   return _DMap[i][j];
 }
 

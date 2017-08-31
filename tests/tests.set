@@ -18,6 +18,7 @@
 #
 
 SET(TEST_NAMES
+  attractor
   enforced_internal_vertex
   enforced_vertex
   multithread

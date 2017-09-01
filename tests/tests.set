@@ -19,6 +19,8 @@
 
 SET(TEST_NAMES
   attractor
+  attractor_edge_on_border
+  attractor_point_outside_face
   enforced_internal_vertex
   enforced_vertex
   multithread

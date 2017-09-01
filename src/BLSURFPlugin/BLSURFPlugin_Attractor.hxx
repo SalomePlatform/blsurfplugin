@@ -88,6 +88,7 @@ class BLSURFPlugin_Attractor {
     
     bool init();                                                // Calculates the discrete points correponding to attractor 
                                                                 // and intialises the map of distances
+    void avoidOutOfBounds(int& i, int&j);
     void edgeInit(Handle(Geom_Surface) aSurf, const TopoDS_Edge& anEdge);
     
     double              GetSize (double u, double v);

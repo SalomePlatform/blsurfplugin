@@ -4,9 +4,12 @@ import os
 import sys
 import salome
 import time
+import multiprocessing
 
 salome.salome_init()
 theStudy = salome.myStudy
+
+cpu_count = multiprocessing.cpu_count()
 
 ###
 ### GEOM component
@@ -77,7 +80,10 @@ time3 = time.time()
 time_singlethread = time3-time2
 print "Time in 1 proc: %.3s"%(time_singlethread)
 
-assert time_multithread < time_singlethread/2.
+if cpu_count == 1:
+    print "Warning: cannot validate test - only 1 cpu core is available"
+else:
+    assert time_multithread < time_singlethread/2.
 
 if salome.sg.hasDesktop():
   salome.sg.updateObjBrowser(True)

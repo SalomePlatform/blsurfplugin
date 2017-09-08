@@ -10,6 +10,9 @@ salome.salome_init()
 theStudy = salome.myStudy
 
 cpu_count = multiprocessing.cpu_count()
+divider = cpu_count/2.
+
+print "Running test on workstation with %d available cores" % cpu_count
 
 ###
 ### GEOM component
@@ -60,7 +63,7 @@ time1 = time.time()
 
 time_multithread = time1-time0
 
-print "Time in 4 proc: %.3s"%(time_multithread)
+print "Time in multi thread (%d cores): %.3s"%(cpu_count, time_multithread)
 
 Mesh_2 = smesh.Mesh(flight_solid_brep_1)
 MG_CADSurf = Mesh_2.Triangle(algo=smeshBuilder.MG_CADSurf)
@@ -78,12 +81,12 @@ isDone = Mesh_2.Compute()
 time3 = time.time()
 
 time_singlethread = time3-time2
-print "Time in 1 proc: %.3s"%(time_singlethread)
+print "Time in single thread (1 proc): %.3s"%(time_singlethread)
 
 if cpu_count == 1:
     print "Warning: cannot validate test - only 1 cpu core is available"
 else:
-    assert time_multithread < time_singlethread/2.
+    assert time_multithread < time_singlethread/divider
 
 if salome.sg.hasDesktop():
   salome.sg.updateObjBrowser(True)

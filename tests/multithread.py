@@ -10,7 +10,7 @@ salome.salome_init()
 theStudy = salome.myStudy
 
 cpu_count = multiprocessing.cpu_count()
-divider = cpu_count/2.
+divider = min(4, cpu_count)/2.
 
 print "Running test on workstation with %d available cores" % cpu_count
 

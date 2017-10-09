@@ -92,36 +92,32 @@
       <translation>3D要素内の２本の隣接エッジ長間の最大比</translation>
     </message>
     <message>
-      <source>BLSURF_ALLOW_QUADRANGLES</source>
-      <translation>四角形を許可</translation>
+      <source>BLSURF_ELEMENT_TYPE</source>
+      <translation>要素タイプ</translation>
     </message>
     <message>
-        <source>BLSURF_ELEMENT_TYPE</source>
-        <translation type="unfinished">Element type</translation>
+      <source>BLSURF_TRIANGLES</source>
+      <translation>三角形要素</translation>
     </message>
     <message>
-        <source>BLSURF_TRIANGLES</source>
-        <translation type="unfinished">Triangles</translation>
+      <source>BLSURF_QUADRANGLE_DOMINANT</source>
+      <translation>四辺形優位な</translation>
     </message>
     <message>
-        <source>BLSURF_QUADRANGLE_DOMINANT</source>
-        <translation type="unfinished">Quadrangle dominant</translation>
+      <source>BLSURF_QUADRANGLES</source>
+      <translation>四辺形要素</translation>
     </message>
     <message>
-        <source>BLSURF_QUADRANGLES</source>
-        <translation type="unfinished">Quadrangles</translation>
+      <source>BLSURF_ALLOW_QUADRANGLES_TOOLTIP</source>
+      <translation>ドミナント四角形要素の生成</translation>
     </message>
     <message>
-        <source>BLSURF_ALLOW_QUADRANGLES_TOOLTIP</source>
-        <translation>ドミナント四角形要素の生成</translation>
+      <source>BLSURF_TRIANGLES_TOOLTIP</source>
+      <translation>三角形要素のみのメッシュ生成</translation>
     </message>
     <message>
-        <source>BLSURF_TRIANGLES_TOOLTIP</source>
-        <translation type="unfinished">To generate triangles-only mesh</translation>
-    </message>
-    <message>
-        <source>BLSURF_QUADRANGLES_TOOLTIP</source>
-        <translation type="unfinished">To generate quadrangles-only mesh</translation>
+      <source>BLSURF_QUADRANGLES_TOOLTIP</source>
+      <translation>四辺形要素のみのメッシュ生成</translation>
     </message>
     <message>
       <source>BLSURF_GEOMETRICAL_SIZE</source>
@@ -644,15 +640,15 @@
     </message>
     <message>
       <source>max_number_of_threads</source>
-      <translation type="unfinished">Maximal number of threads</translation>
+      <translation>最大スレッド数</translation>
     </message>
     <message>
       <source>rectify_jacobian</source>
       <translation>ヤコビアンの修正</translation>
     </message>
     <message>
-        <source>use_deprecated_patch_mesher</source>
-        <translation>use deprecated patch mesher</translation>
+      <source>use_deprecated_patch_mesher</source>
+      <translation>非推奨パッチメッシャの使用</translation>
     </message>
     <message>
       <source>respect_geometry</source>

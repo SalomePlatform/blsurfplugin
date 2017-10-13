@@ -42,12 +42,15 @@ ok = Mesh_1.Compute()
 if not ok:
     raise Exception("Error when computing surface mesh")
 
-Mesh_1.Tetrahedron(algo=smeshBuilder.MG_Tetra)
+try:
+    Mesh_1.Tetrahedron(algo=smeshBuilder.MG_Tetra)
 
-ok = Mesh_1.Compute()
+    ok = Mesh_1.Compute()
 
-if not ok:
-    raise Exception("Error when computing volume mesh")
+    if not ok:
+        raise Exception("Error when computing volume mesh")
+except AttributeError:
+    print "Warning: Cannot build volume mesh: MG-Tetra plugin seems to be unavailable"
 
 if salome.sg.hasDesktop():
   salome.sg.updateObjBrowser(True)

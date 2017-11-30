@@ -371,7 +371,7 @@ CORBA::Double BLSURFPlugin_Hypothesis_i::GetVolumeGradation()
 void BLSURFPlugin_Hypothesis_i::SetQuadAllowed(CORBA::Boolean theValue)
 {
   ::BLSURFPlugin_Hypothesis::ElementType theElementType = theValue ?
-		  ::BLSURFPlugin_Hypothesis::QuadrangleDominant : ::BLSURFPlugin_Hypothesis::Triangles;
+                  ::BLSURFPlugin_Hypothesis::QuadrangleDominant : ::BLSURFPlugin_Hypothesis::Triangles;
   this->GetImpl()->SetElementType(theElementType);
   SMESH::TPythonDump() << _this() << ".SetElementType( " << theElementType << " )";
 }

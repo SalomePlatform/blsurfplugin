@@ -960,8 +960,8 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
     for ( opIt = opts.begin(); opIt != opts.end(); ++opIt ){
       MESSAGE("OptionValue: " << opIt->first.c_str() << ", value: " << opIt->second.c_str());
       if ( !opIt->second.empty() ) {
-		// With MeshGems 2.4-5, there are issues with periodicity and multithread
-		// => As a temporary workaround, we enforce to use only one thread if periodicity is used.
+        // With MeshGems 2.4-5, there are issues with periodicity and multithread
+        // => As a temporary workaround, we enforce to use only one thread if periodicity is used.
         if (opIt->first == "max_number_of_threads" && opIt->second != "1" && ! preCadFacesPeriodicityVector.empty()){
           std::cout << "INFO: Disabling multithread to avoid periodicity issues" << std::endl;
           set_param(css, opIt->first.c_str(), "1");
@@ -975,7 +975,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
     for ( opIt = custom_opts.begin(); opIt != custom_opts.end(); ++opIt )
       if ( !opIt->second.empty() ) {
         set_param(css, opIt->first.c_str(), opIt->second.c_str());
-     }
+      }
 
     const BLSURFPlugin_Hypothesis::TOptionValues& preCADopts = hyp->GetPreCADOptionValues();
     for ( opIt = preCADopts.begin(); opIt != preCADopts.end(); ++opIt )
@@ -2284,7 +2284,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
           //      << "\t uv = ( " << uv[0] << ","<< uv[1] << " ) "
           //      << "\t u = " << nData.param
           //      << "\t ID = " << nData.node->GetID() << endl;
-          dcad_edge_discretization_set_vertex_coordinates( dedge, iN+1, t, uv, nXYZ._xyz );
+          dcad_edge_discretization_set_vertex_coordinates( dedge, iN+1, t, uv, nXYZ.ChangeData() );
         }
         dcad_edge_discretization_set_property(dedge, DISTENE_DCAD_PROPERTY_REQUIRED);
       }
@@ -2948,13 +2948,13 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh & aMesh, SMESH_MesherHelper* aHelpe
   {
     meshDS->compactMesh();
   }
-  SMESH_TNodeXYZ nXYZ;
+  SMESH_NodeXYZ nXYZ;
   nodeIt = meshDS->nodesIterator();
   meshgems_integer i;
   for ( i = 1; nodeIt->more(); ++i )
   {
     nXYZ.Set( nodeIt->next() );
-    meshgems_mesh_set_vertex_coordinates( msh, i, nXYZ._xyz );
+    meshgems_mesh_set_vertex_coordinates( msh, i, nXYZ.ChangeData() );
   }
 
   // set nodes of faces
@@ -3207,7 +3207,7 @@ status_t surf_fun(real *uv, real *xyz, real*du, real *dv,
 status_t size_on_surface(integer face_id, real *uv, real *size, void *user_data)
 {
   TId2ClsAttractorVec::iterator f2attVec;
-  if (FaceId2PythonSmp.count(face_id) != 0){
+  if (FaceId2PythonSmp.count(face_id) != 0) {
     assert(Py_IsInitialized());
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();

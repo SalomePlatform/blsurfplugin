@@ -1484,12 +1484,8 @@ namespace
     bool operator()( const SMDS_MeshNode* n1, const SMDS_MeshNode* n2 ) const
     {
       // NEW ORDER: nodes earlier added to sub-mesh are considered "less"
-      return n1->getIdInShape() < n2->getIdInShape();
-      // SMDS_TypeOfPosition pos1 = n1->GetPosition()->GetTypeOfPosition();
-      // SMDS_TypeOfPosition pos2 = n2->GetPosition()->GetTypeOfPosition();
-      // if ( pos1 == pos2 ) return 0;
-      // if ( pos1 < pos2 || pos1 == SMDS_TOP_3DSPACE ) return 1;
-      // return -1;
+      //return n1->getIdInShape() < n2->getIdInShape();
+      return n1->GetID() < n2->GetID(); // earlier created nodes have less IDs
     }
     // sort sub-meshes in order: EDGE, VERTEX
     bool operator()( const SMESHDS_SubMesh* s1, const SMESHDS_SubMesh* s2 ) const
@@ -1525,11 +1521,10 @@ namespace
     }
     case TopAbs_EDGE: {
       std::multimap< double, const SMDS_MeshNode* > u2node;
-      const SMDS_EdgePosition* ePos;
       while ( nIt->more() )
       {
         const SMDS_MeshNode* n = nIt->next();
-        if (( ePos = dynamic_cast< const SMDS_EdgePosition* >( n->GetPosition() )))
+        if ( SMDS_EdgePositionPtr ePos = n->GetPosition() )
           u2node.insert( make_pair( ePos->GetUParameter(), n ));
       }
       if ( u2node.size() < 2 ) return;
@@ -1776,7 +1771,7 @@ namespace
       const SMDS_MeshNode* nodes[27];
       const SMDS_MeshNode* nullNode = 0;
       double xyz[3];
-      SMDS_FaceIteratorPtr fIt = GetMeshDS()->facesIterator(/*idInceasingOrder=*/true);
+      SMDS_FaceIteratorPtr fIt = GetMeshDS()->facesIterator();
       while ( fIt->more() )
       {
         const SMDS_MeshElement* f = fIt->next();
@@ -2945,7 +2940,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh & aMesh, SMESH_MesherHelper* aHelpe
   // set node coordinates
   if ( meshDS->NbNodes() != meshDS->MaxNodeID() )
   {
-    meshDS->compactMesh();
+    meshDS->CompactMesh();
   }
   SMESH_NodeXYZ nXYZ;
   nodeIt = meshDS->nodesIterator();

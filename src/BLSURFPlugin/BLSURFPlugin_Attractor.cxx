@@ -40,9 +40,6 @@
 #include <Precision.hxx>
 #include <GeomLib_IsPlanarSurface.hxx>
 
-// kernel includes
-#include <Basics_OCCTVersion.hxx>
-
 BLSURFPlugin_Attractor::BLSURFPlugin_Attractor ()
   : _face(),
   _attractorShape(),
@@ -174,6 +171,19 @@ bool BLSURFPlugin_Attractor::init(){
   return true;
 }
 
+// check that i and j are inside the bounds of the grid to avoid out of bounds errors
+// in affectation of the grid's vectors
+void BLSURFPlugin_Attractor::avoidOutOfBounds(int& i, int& j){
+  if (i > _gridU)
+    i = _gridU;
+  if (i < 0)
+    i = 0;
+  if (j > _gridV)
+    j = _gridV;
+  if (j < 0)
+    j = 0;
+}
+
 void BLSURFPlugin_Attractor::edgeInit(Handle(Geom_Surface) theSurf, const TopoDS_Edge& anEdge){
   gp_Pnt2d P2;
   double first;
@@ -184,17 +194,17 @@ void BLSURFPlugin_Attractor::edgeInit(Handle(Geom_Surface) theSurf, const TopoDS
   Handle(Geom_Curve) aCurve3d = BRep_Tool::Curve (anEdge, first, last);
   ShapeConstruct_ProjectCurveOnSurface curveProjector;
   curveProjector.Init(theSurf, Precision::Confusion());
-#if OCC_VERSION_LARGE > 0x07010000
   curveProjector.Perform (aCurve3d, first, last, aCurve2d);
-#else
-  curveProjector.PerformAdvanced (aCurve3d, first, last, aCurve2d);
-#endif
-  
+
   int N = 1200;
   for (i=0; i<=N; i++){
     P2 = aCurve2d->Value(first + i * (last-first) / N);
     i0 = floor( (P2.X() - _u1) * _gridU / (_u2 - _u1) + 0.5 );
     j0 = floor( (P2.Y() - _v1) * _gridV / (_v2 - _v1) + 0.5 );
+
+    // Avoid out of bounds errors when the ends of the edge are outside the face
+    avoidOutOfBounds(i0, j0);
+
     TPnt[0] = 0.;
     TPnt[1] = i0;
     TPnt[2] = j0;
@@ -222,6 +232,9 @@ double BLSURFPlugin_Attractor::_distanceFromMap(double u, double v){
   int i = floor ( (u - _u1) * _gridU / (_u2 - _u1) + 0.5 );
   int j = floor ( (v - _v1) * _gridV / (_v2 - _v1) + 0.5 );
   
+  // Avoid out of bounds errors in _DMap
+  avoidOutOfBounds(i, j);
+
   return _DMap[i][j];
 }
 
@@ -271,15 +284,17 @@ void BLSURFPlugin_Attractor::BuildMap() {
   TTrialSet::iterator min;
   TTrialSet::iterator found;
   Handle(Geom_Surface) aSurf = BRep_Tool::Surface(_face);
-  
+
   // While there are points in "Trial" (representing a kind of advancing front), loop on them -----------------------------------------------------------
   while (_trial.size() > 0 ) {
     min = _trial.begin();                        // Get trial point with min distance from start
     i0 = (*min)[1];
     j0 = (*min)[2];
+    // Avoid out of bounds errors in _known affectations
+    avoidOutOfBounds(i0, j0);
     _known[i0][j0] = true;                       // Move it to "Known"
     _trial.erase(min);                           // Remove it from "Trial"
-    
+
     // Loop on neighbours of the trial min --------------------------------------------------------------------------------------------------------------
     for (i=i0 - 1 ; i <= i0 + 1 ; i++){ 
       if (!aSurf->IsUPeriodic()){                          // Periodic conditions in U  
@@ -290,7 +305,7 @@ void BLSURFPlugin_Attractor::BuildMap() {
       }
       ip = (i + _gridU + 1) % (_gridU+1);                  // We get a periodic index :
       for (j=j0 - 1 ; j <= j0 + 1 ; j++){                  //    ip=modulo(i,N+2) so that  i=-1->ip=N; i=0 -> ip=0 ; ... ; i=N+1 -> ip=0;  
-        if (!aSurf->IsVPeriodic()){                        // Periodic conditions in V . 
+          if (!aSurf->IsVPeriodic()){                        // Periodic conditions in V .
           if (j > _gridV ){
             break; }
           else if (j < 0){

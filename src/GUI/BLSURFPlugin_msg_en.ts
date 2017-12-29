@@ -100,12 +100,32 @@ The default computed value is &lt;em&gt;diag&lt;/em&gt;/5.</translation>
         <translation>Maximum ratio between the lengths of two adjacent edges in 3D mesh.</translation>
     </message>
     <message>
-        <source>BLSURF_ALLOW_QUADRANGLES</source>
-        <translation>Allow Quadrangles</translation>
+        <source>BLSURF_ELEMENT_TYPE</source>
+        <translation>Elements type</translation>
+    </message>
+    <message>
+        <source>BLSURF_TRIANGLES</source>
+        <translation>Triangles</translation>
+    </message>
+    <message>
+        <source>BLSURF_QUADRANGLE_DOMINANT</source>
+        <translation>Quadrangle dominant</translation>
+    </message>
+    <message>
+        <source>BLSURF_QUADRANGLES</source>
+        <translation>Quadrangles</translation>
     </message>
     <message>
         <source>BLSURF_ALLOW_QUADRANGLES_TOOLTIP</source>
         <translation>To generate quadrangle dominant mesh</translation>
+    </message>
+    <message>
+        <source>BLSURF_TRIANGLES_TOOLTIP</source>
+        <translation>To generate triangles-only mesh</translation>
+    </message>
+    <message>
+        <source>BLSURF_QUADRANGLES_TOOLTIP</source>
+        <translation>To generate quadrangles-only mesh</translation>
     </message>
     <message>
         <source>BLSURF_GEOMETRICAL_SIZE</source>

@@ -37,7 +37,6 @@ extern "C"{
 
 
 #include <Basics_Utils.hxx>
-#include <Basics_OCCTVersion.hxx>
 
 #include <SMDS_EdgePosition.hxx>
 #include <SMESHDS_Group.hxx>
@@ -863,7 +862,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
   double _gradation             = BLSURFPlugin_Hypothesis::GetDefaultGradation();
   double _use_volume_gradation  = BLSURFPlugin_Hypothesis::GetDefaultUseVolumeGradation();
   double _volume_gradation      = BLSURFPlugin_Hypothesis::GetDefaultVolumeGradation();
-  bool   _quadAllowed           = BLSURFPlugin_Hypothesis::GetDefaultQuadAllowed();
+  BLSURFPlugin_Hypothesis::ElementType _elementType = BLSURFPlugin_Hypothesis::GetDefaultElementType();
   double _angleMesh             = BLSURFPlugin_Hypothesis::GetDefaultAngleMesh();
   double _chordalError          = BLSURFPlugin_Hypothesis::GetDefaultChordalError(diagonal);
   bool   _anisotropic           = BLSURFPlugin_Hypothesis::GetDefaultAnisotropic();
@@ -913,7 +912,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
     _use_volume_gradation    = hyp->GetUseVolumeGradation();
     if (hyp->GetVolumeGradation() > 0 && _use_volume_gradation )
       _volume_gradation      = hyp->GetVolumeGradation();
-    _quadAllowed     = hyp->GetQuadAllowed();
+    _elementType     = hyp->GetElementType();
     if (hyp->GetAngleMesh() > 0)
       _angleMesh     = hyp->GetAngleMesh();
     if (hyp->GetChordalError() > 0)
@@ -948,8 +947,8 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
     for ( opIt = opts.begin(); opIt != opts.end(); ++opIt ){
       MESSAGE("OptionValue: " << opIt->first.c_str() << ", value: " << opIt->second.c_str());
       if ( !opIt->second.empty() ) {
-		// With MeshGems 2.4-5, there are issues with periodicity and multithread
-		// => As a temporary workaround, we enforce to use only one thread if periodicity is used.
+        // With MeshGems 2.4-5, there are issues with periodicity and multithread
+        // => As a temporary workaround, we enforce to use only one thread if periodicity is used.
         if (opIt->first == "max_number_of_threads" && opIt->second != "1" && ! preCadFacesPeriodicityVector.empty()){
           std::cout << "INFO: Disabling multithread to avoid periodicity issues" << std::endl;
           set_param(css, opIt->first.c_str(), "1");
@@ -963,7 +962,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
     for ( opIt = custom_opts.begin(); opIt != custom_opts.end(); ++opIt )
       if ( !opIt->second.empty() ) {
         set_param(css, opIt->first.c_str(), opIt->second.c_str());
-     }
+      }
 
     const BLSURFPlugin_Hypothesis::TOptionValues& preCADopts = hyp->GetPreCADOptionValues();
     for ( opIt = preCADopts.begin(); opIt != preCADopts.end(); ++opIt )
@@ -1043,13 +1042,29 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
      set_param(css, "max_size", _maxSizeRel ? val_to_string_rel(_maxSize).c_str() : val_to_string(_maxSize).c_str());
    }
    // anisotropic and quadrangle mesh requires disabling gradation
-   if ( _anisotropic && _quadAllowed )
+   if ( _anisotropic && _elementType != BLSURFPlugin_Hypothesis::Triangles )
      useGradation = false; // limitation of V1.3
    if ( useGradation && _use_gradation )
      set_param(css, "gradation",                       val_to_string(_gradation).c_str());
    if ( useGradation && _use_volume_gradation )
      set_param(css, "volume_gradation",                val_to_string(_volume_gradation).c_str());
-   set_param(css, "element_generation",                _quadAllowed ? "quad_dominant" : "triangle");
+
+   // New since MeshGems 2.5: add full_quad
+   const char * element_generation = "";
+   switch ( _elementType )
+   {
+     case BLSURFPlugin_Hypothesis::Triangles:
+       element_generation = "triangle";
+       break;
+     case BLSURFPlugin_Hypothesis::QuadrangleDominant:
+       element_generation = "quad_dominant";
+       break;
+     case BLSURFPlugin_Hypothesis::Quadrangles:
+       element_generation = "full_quad";
+       break;
+     default: ;
+   }
+   set_param(css, "element_generation",                element_generation);
 
 
    set_param(css, "metric",                            _anisotropic ? "anisotropic" : "isotropic");
@@ -1991,11 +2006,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
      * (For this face, it will be called by cadsurf with your_face_object_ptr
      * as last parameter.
      */
-#if OCC_VERSION_MAJOR < 7
-    cad_face_t *fce = cad_face_new(c, iface, surf_fun, surfaces.back());
-#else
     cad_face_t *fce = cad_face_new(c, iface, surf_fun, surfaces.back().get());
-#endif
 
     /* by default a face has no tag (color).
        The following call sets it to the same value as the Geom module ID : */
@@ -2196,11 +2207,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
       }
 
       /* attach the edge to the current cadsurf face */
-#if OCC_VERSION_MAJOR < 7
-      cad_edge_t *edg = cad_edge_new(fce, ic, tmin, tmax, curv_fun, curves.back());
-#else
       cad_edge_t *edg = cad_edge_new(fce, ic, tmin, tmax, curv_fun, curves.back().get());
-#endif
 
       /* by default an edge has no tag (color).
          The following call sets it to the same value as the edge_id : */
@@ -2256,7 +2263,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
           //      << "\t uv = ( " << uv[0] << ","<< uv[1] << " ) "
           //      << "\t u = " << nData.param
           //      << "\t ID = " << nData.node->GetID() << endl;
-          dcad_edge_discretization_set_vertex_coordinates( dedge, iN+1, t, uv, nXYZ._xyz );
+          dcad_edge_discretization_set_vertex_coordinates( dedge, iN+1, t, uv, nXYZ.ChangeData() );
         }
         dcad_edge_discretization_set_property(dedge, DISTENE_DCAD_PROPERTY_REQUIRED);
       }
@@ -2920,13 +2927,13 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh & aMesh, SMESH_MesherHelper* aHelpe
   {
     meshDS->compactMesh();
   }
-  SMESH_TNodeXYZ nXYZ;
+  SMESH_NodeXYZ nXYZ;
   nodeIt = meshDS->nodesIterator();
   meshgems_integer i;
   for ( i = 1; nodeIt->more(); ++i )
   {
     nXYZ.Set( nodeIt->next() );
-    meshgems_mesh_set_vertex_coordinates( msh, i, nXYZ._xyz );
+    meshgems_mesh_set_vertex_coordinates( msh, i, nXYZ.ChangeData() );
   }
 
   // set nodes of faces
@@ -3179,7 +3186,7 @@ status_t surf_fun(real *uv, real *xyz, real*du, real *dv,
 status_t size_on_surface(integer face_id, real *uv, real *size, void *user_data)
 {
   TId2ClsAttractorVec::iterator f2attVec;
-  if (FaceId2PythonSmp.count(face_id) != 0){
+  if (FaceId2PythonSmp.count(face_id) != 0) {
     assert(Py_IsInitialized());
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -3366,7 +3373,7 @@ bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh&         aMesh,
   bool   _phySizeRel    = BLSURFPlugin_Hypothesis::GetDefaultPhySizeRel();
   //int    _geometricMesh = BLSURFPlugin_Hypothesis::GetDefaultGeometricMesh();
   double _angleMesh     = BLSURFPlugin_Hypothesis::GetDefaultAngleMesh();
-  bool   _quadAllowed   = BLSURFPlugin_Hypothesis::GetDefaultQuadAllowed();
+  BLSURFPlugin_Hypothesis::ElementType   _elementType   = BLSURFPlugin_Hypothesis::GetDefaultElementType();
   if(_hypothesis) {
     _physicalMesh  = (int) _hypothesis->GetPhysicalMesh();
     _phySizeRel         = _hypothesis->IsPhySizeRel();
@@ -3375,7 +3382,7 @@ bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh&         aMesh,
     //_geometricMesh = (int) hyp->GetGeometricMesh();
     if (_hypothesis->GetAngleMesh() > 0)
       _angleMesh        = _hypothesis->GetAngleMesh();
-    _quadAllowed        = _hypothesis->GetQuadAllowed();
+    _elementType        = _hypothesis->GetElementType();
   } else {
     //0020968: EDF1545 SMESH: Problem in the creation of a mesh group on geometry
     // GetDefaultPhySize() sometimes leads to computation failure
@@ -3455,7 +3462,7 @@ bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh&         aMesh,
     int nbQuad = 0;
     int nbTria = (int) ( anArea/( ELen*ELen*sqrt(3.) / 4 ) );
     int nbNodes = (int) ( ( nbTria*3 - (nb1d-1)*2 ) / 6 + 1 );
-    if ( _quadAllowed )
+    if ( _elementType != BLSURFPlugin_Hypothesis::Quadrangles )
     {
       if ( nb1dVec.size() == 4 ) // quadrangle geom face
       {

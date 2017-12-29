@@ -63,7 +63,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, SMESH_Gen * gen, boo
   _gradation(GetDefaultGradation()),
   _useVolumeGradation(GetDefaultUseVolumeGradation()),
   _volumeGradation(GetDefaultVolumeGradation()),
-  _quadAllowed(GetDefaultQuadAllowed()),
+  _elementType(GetDefaultElementType()),
   _angleMesh(GetDefaultAngleMesh()),
   _chordalError(GetDefaultChordalError()), 
   _anisotropic(GetDefaultAnisotropic()),
@@ -358,9 +358,9 @@ void BLSURFPlugin_Hypothesis::SetVolumeGradation(double theVal) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetQuadAllowed(bool theVal) {
-  if (theVal != _quadAllowed) {
-    _quadAllowed = theVal;
+void BLSURFPlugin_Hypothesis::SetElementType(ElementType theElementType) {
+  if (theElementType != _elementType) {
+    _elementType = theElementType;
     NotifySubMeshesHypothesisModification();
   }
 }
@@ -1928,7 +1928,7 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save)
   }
 
   save << " " << (int) _topology << " " << (int) _physicalMesh << " " << (int) _geometricMesh << " " << _phySize << " "
-       << _angleMesh << " " << _gradation << " " << (int) _quadAllowed << " " << _decimesh;
+       << _angleMesh << " " << _gradation << " " << (int) _elementType << " " << _decimesh;
   save << " " << _minSize << " " << _maxSize << " " << _angleMesh << " " << _minSize << " " << _maxSize << " " << _verb;
   save << " " << (int) _preCADMergeEdges << " " << _preCADRemoveNanoEdges << " " << (int) _preCADDiscardInput << " " << _preCADEpsNano ;
   save << " " << (int) _enforcedInternalVerticesAllFaces;
@@ -2255,7 +2255,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
 
   isOK = static_cast<bool>(load >> i);
   if (isOK)
-    _quadAllowed = (bool) i;
+    _elementType = (ElementType) i;
   else
     load.clear(std::ios::badbit | load.rdstate());
 

@@ -1166,7 +1166,6 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   myTabWidget->setCurrentIndex( STD_TAB );
 
   connect( myAdvWidget->addBtn, SIGNAL( clicked() ),           this, SLOT( onAddOption() ) );
-  connect( myStdWidget->myAllowQuadrangles, SIGNAL( stateChanged( int ) ), this, SLOT( onStateChange() ));
 
   // Size Maps
   connect( addMapButton,        SIGNAL( clicked()),                    this,         SLOT( onAddMap() ) );
@@ -1800,8 +1799,14 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
     myStdWidget->myVolumeGradation->setText("");
   else
     myStdWidget->myVolumeGradation->SetValue( data.myVolumeGradation );
-  myStdWidget->myAllowQuadrangles->setChecked( data.myAllowQuadrangles );
   
+  foreach (QAbstractButton* button, myStdWidget->myButtonGroupElementType->buttons()) {
+    if (myStdWidget->myButtonGroupElementType->id(button) == data.myElementType) {
+      button->setChecked(true);
+      break;
+    }
+  }
+
   if (data.myAngleMesh < 0)
     myStdWidget->myAngleMesh->setText("");
   else
@@ -2000,7 +2005,7 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   h_data.myGradation              = h->GetGradation();
   h_data.myUseVolumeGradation     = h->GetUseVolumeGradation();
   h_data.myVolumeGradation        = h->GetVolumeGradation();
-  h_data.myAllowQuadrangles       = h->GetQuadAllowed();
+  h_data.myElementType            = h->GetElementType();
   double angle                    = h->GetAngleMesh();
   h_data.myAngleMesh              = angle > 0 ? angle : -1.0;
   double chordalError             = h->GetChordalError();
@@ -2259,8 +2264,8 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
     if ( h->GetVolumeGradation() !=  h_data.myVolumeGradation )
       h->SetVolumeGradation( h_data.myVolumeGradation <= 0 ? -1 : h_data.myVolumeGradation );
 
-    if ( h->GetQuadAllowed() != h_data.myAllowQuadrangles )
-      h->SetQuadAllowed( h_data.myAllowQuadrangles );
+    if ( h->GetElementType() != h_data.myElementType )
+      h->SetElementType( h_data.myElementType );
     
     if ( (int) h_data.myGeometricMesh != DefaultGeom ) {
       if ( h->GetAngleMesh() != h_data.myAngleMesh )
@@ -2491,7 +2496,7 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
   h_data.myGradation             = h_data.myUseGradation ? myStdWidget->myGradation->GetValue() : -1.0;
   h_data.myUseVolumeGradation    = myStdWidget->myUseVolumeGradation->isChecked() && !myStdWidget->myVolumeGradation->text().isEmpty();
   h_data.myVolumeGradation       = h_data.myUseVolumeGradation ? myStdWidget->myVolumeGradation->GetValue() : -1. ;
-  h_data.myAllowQuadrangles      = myStdWidget->myAllowQuadrangles->isChecked();
+  h_data.myElementType           = myStdWidget->myButtonGroupElementType->checkedId();
   h_data.myAngleMesh             = myStdWidget->myAngleMesh->text().isEmpty() ? -1.0 : myStdWidget->myAngleMesh->GetValue();
   h_data.myChordalError          = myStdWidget->myChordalError->text().isEmpty() ? -1.0 : myStdWidget->myChordalError->GetValue();
   h_data.myAnisotropic           = myStdWidget->myAnisotropic->isChecked();
@@ -2522,7 +2527,7 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
   guiHyp += tr("BLSURF_MAXSIZE") + " = "+ QString::number( h_data.myMaxSize ) + "; ";
   guiHyp += tr("BLSURF_MAXSIZE") + " " + tr("BLSURF_SIZE_REL") + " = " + QString(h_data.myMaxSizeRel ? "yes" : "no") + "; ";
   guiHyp += tr("BLSURF_GRADATION") + " = " + QString::number( h_data.myGradation ) + "; ";
-  guiHyp += tr("BLSURF_ALLOW_QUADRANGLES") + " = " + QString(h_data.myAllowQuadrangles ? "yes" : "no") + "; ";
+  guiHyp += tr("BLSURF_ELEMENT_TYPE") + " = " + QString::number(h_data.myElementType) + "; ";
   guiHyp += tr("BLSURF_ANGLE_MESH") + " = " + QString::number( h_data.myAngleMesh ) + "; ";
   guiHyp += tr("BLSURF_CHORDAL_ERROR") + " = " + QString::number( h_data.myChordalError ) + "; ";
   guiHyp += tr("BLSURF_ANISOTROPIC") + " = " + QString(h_data.myAnisotropic ? "yes" : "no") + "; ";

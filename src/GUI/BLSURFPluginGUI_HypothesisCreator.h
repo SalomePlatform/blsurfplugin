@@ -169,7 +169,8 @@ typedef struct
   bool    myAnisotropic, myOptimiseTinyEdges, myRemoveTinyEdges, myForceBadElementRemoval, myCorrectSurfaceIntersection;
   double  myAnisotropicRatio, myTinyEdgeLength, myTinyEdgeOptimisLength, myBadElementAspectRatio, myCorrectSurfaceIntersectionMaxCost;
   bool    myOptimizeMesh, myQuadraticMesh;
-  bool    myAllowQuadrangles, mySmpsurface,mySmpedge,mySmppoint,myEnforcedVertex,myInternalEnforcedVerticesAllFaces;
+  bool    mySmpsurface,mySmpedge,mySmppoint,myEnforcedVertex,myInternalEnforcedVerticesAllFaces;
+  long    myElementType;
   // bool    myPreCADMergeEdges, myPreCADProcess3DTopology, myPreCADDiscardInput;
 //   bool    myGMFFileMode;
   std::string myGMFFileName, myInternalEnforcedVerticesAllFacesGroup;

@@ -361,25 +361,42 @@ CORBA::Double BLSURFPlugin_Hypothesis_i::GetVolumeGradation()
  *  BLSURFPlugin_Hypothesis_i::SetQuadAllowed
  *
  *  Set true or false
+ *
+ *  DEPRACATED, kept for python script compatibility
+ *
+ *  TO be removed in Salome 9
  */
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetQuadAllowed(CORBA::Boolean theValue)
 {
-  this->GetImpl()->SetQuadAllowed(theValue);
-  std::string theValueStr = theValue ? "True" : "False";
-  SMESH::TPythonDump() << _this() << ".SetQuadAllowed( " << theValueStr.c_str() << " )";
+  ::BLSURFPlugin_Hypothesis::ElementType theElementType = theValue ?
+                  ::BLSURFPlugin_Hypothesis::QuadrangleDominant : ::BLSURFPlugin_Hypothesis::Triangles;
+  this->GetImpl()->SetElementType(theElementType);
+  SMESH::TPythonDump() << _this() << ".SetElementType( " << theElementType << " )";
 }
 
 //=============================================================================
 /*!
- *  BLSURFPlugin_Hypothesis_i::GetQuadAllowed
+ *  BLSURFPlugin_Hypothesis_i::SetElementType
  *
- *  Get true or false
+ *  Set ElementType
  */
 //=============================================================================
-CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetQuadAllowed()
+void BLSURFPlugin_Hypothesis_i::SetElementType(CORBA::Long theValue)
 {
-  return this->GetImpl()->GetQuadAllowed();
+  this->GetImpl()->SetElementType((::BLSURFPlugin_Hypothesis::ElementType) theValue);
+  SMESH::TPythonDump() << _this() << ".SetElementType( " << theValue << " )";
+}
+//=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetElementType
+ *
+ *  Get ElementType
+ */
+//=============================================================================
+CORBA::Long BLSURFPlugin_Hypothesis_i::GetElementType()
+{
+  return this->GetImpl()->GetElementType();
 }
 
 //=============================================================================

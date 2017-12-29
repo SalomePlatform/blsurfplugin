@@ -104,12 +104,32 @@ La valeur par défaut est calculée par &lt;em&gt;diag&lt;/em&gt;/5.</translatio
         <translation>Ratio maximum entre les longueurs de deux segments adjacents.</translation>
     </message>
     <message>
-        <source>BLSURF_ALLOW_QUADRANGLES</source>
-        <translation>Autoriser les quadrangles</translation>
+        <source>BLSURF_ELEMENT_TYPE</source>
+        <translation>Type d'éléments</translation>
+    </message>
+    <message>
+        <source>BLSURF_TRIANGLES</source>
+        <translation>Triangles</translation>
+    </message>
+    <message>
+        <source>BLSURF_QUADRANGLE_DOMINANT</source>
+        <translation>Quadrangles en majorité</translation>
+    </message>
+    <message>
+        <source>BLSURF_QUADRANGLES</source>
+        <translation>Quadrangles</translation>
     </message>
     <message>
         <source>BLSURF_ALLOW_QUADRANGLES_TOOLTIP</source>
         <translation>Générer un maillage à majorité de quadrangles</translation>
+    </message>
+    <message>
+        <source>BLSURF_TRIANGLES_TOOLTIP</source>
+        <translation>Générer un maillage en triangles uniquement</translation>
+    </message>
+    <message>
+        <source>BLSURF_QUADRANGLES_TOOLTIP</source>
+        <translation>Générer un maillage en quadrangles uniquement</translation>
     </message>
     <message>
         <source>BLSURF_GEOMETRICAL_SIZE</source>
@@ -619,11 +639,11 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
     <name>BLSURFPluginGUI_AdvWidget</name>
     <message>
         <source>enforce_cad_edge_sizes</source>
-        <translation>enforce_cad_edge_sizes</translation>
+        <translation>Force la taille des éléments par la CAO</translation>
     </message>
     <message>
         <source>jacobian_rectification_respect_geometry</source>
-        <translation> Priorité de la géométrie sur le Jacobien</translation>
+        <translation>Priorité de la géométrie sur le Jacobien</translation>
     </message>
     <message>
         <source>max_number_of_points_per_patch</source>
@@ -659,7 +679,7 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
     </message>
     <message>
         <source>discard_input_topology</source>
-        <translation>discard_input_topology</translation>
+        <translation>Ignorer la topologie</translation>
     </message>
     <message>
         <source>process_3d_topology</source>

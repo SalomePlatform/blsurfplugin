@@ -122,15 +122,17 @@ Partition_1 = geompy.MakePartition([Face_3, Vertex_2], [], [], [], geompy.ShapeT
 OX = geompy.MakeVectorDXDYDZ(1, 0, 0)
 OY = geompy.MakeVectorDXDYDZ(0, 1, 0)
 Multi_Translation_1 = geompy.MakeMultiTranslation2D(Partition_1, OX, 1, 10, OY, 1, 10)
+Multi_Translation_glued = geompy.MakeGlueEdges(Multi_Translation_1, 1e-7)
 geompy.addToStudy( Face_3, 'Face_3' )
 geompy.addToStudy( Vertex_2, 'Vertex_2' )
 geompy.addToStudy( Partition_1, 'Partition_1' )
 geompy.addToStudy( OX, 'OX' )
 geompy.addToStudy( OY, 'OY' )
-geompy.addToStudy( Multi_Translation_1, 'Multi-Translation_1' )
+geompy.addToStudy( Multi_Translation_1, 'Multi_Translation_1' )
+geompy.addToStudy( Multi_Translation_glued, 'Multi_Translation_glued' )
 
 # The mesh on the geometry with internal vertices
-cadsurfMesh_internal = smesh.Mesh(Multi_Translation_1, "cadsurfMesh_internal")
+cadsurfMesh_internal = smesh.Mesh(Multi_Translation_glued, "cadsurfMesh_internal")
 algo2d = cadsurfMesh_internal.Triangle(algo=smeshBuilder.MG_CADSurf)
 algo2d.SetPhySize( 0.1 )
 

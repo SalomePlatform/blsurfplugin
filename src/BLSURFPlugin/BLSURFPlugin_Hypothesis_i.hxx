@@ -81,7 +81,9 @@ public:
   CORBA::Double GetVolumeGradation();
 
   void SetQuadAllowed(CORBA::Boolean theValue);
-  CORBA::Boolean GetQuadAllowed();
+
+  void SetElementType(CORBA::Long theValue);
+  CORBA::Long GetElementType();
 
   void SetAngleMesh(CORBA::Double theValue);
   CORBA::Double GetAngleMesh();

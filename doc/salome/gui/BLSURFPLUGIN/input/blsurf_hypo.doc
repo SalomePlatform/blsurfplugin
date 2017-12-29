@@ -57,7 +57,13 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
 
 - <b>Mesh optimisation</b> - if checked, the mesh will be optimized in order to get better shaped elements.
 
-- <b>Allow Quadrangles</b> - if checked, allows the creation of quadrilateral elements.
+- <b>Elements type</b> - Type of the elements to generate the mesh with:
+
+  - Triangles: generate a mesh with only triangles.
+
+  - Quadrangle dominant: generate a mesh with a majority of quadrangles and a few triangles.
+
+  - Quadrangles: generate a mesh with only quadrangles.
 
 - <b>Anisotropic</b> - if checked, this parameter defines the maximum anisotropic ratio of the metric governing the anisotropic meshing process.
 The default value (0) means that the metric (and thus the generated elements) can be arbitrarily stretched.

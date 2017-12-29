@@ -37,6 +37,12 @@ enum GeometricMesh
     GeometricalLocalSize
   };
 
+enum ElementType {
+  Triangles,
+  QuadrangleDominant,
+  Quadrangles
+};
+
 enum Topology {
     FromCAD = 0,
     Process,

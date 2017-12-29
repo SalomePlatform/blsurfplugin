@@ -26,6 +26,9 @@ import GEOM
 
 LIBRARY = "libBLSURFEngine.so"
 
+# ElementType enum
+Triangles, QuadrangleDominant, Quadrangles = 0, 1, 2
+
 # Topology treatment way of MG-CADSurf
 FromCAD, PreProcess, PreProcessPlus, PreCAD = 0,1,2,3
 
@@ -652,10 +655,17 @@ class BLSURF_Algorithm(Mesh_Algorithm):
     self.Parameters().ClearSizeMaps()
     pass
 
-  ## Sets QuadAllowed flag.
+  ## Sets QuadAllowed flag (DEPRECATED: use SetElementType)
   #  @param toAllow "allow quadrangles" flag value
+  # TODO: to remove in Salome 9
   def SetQuadAllowed(self, toAllow=True):
     self.Parameters().SetQuadAllowed(toAllow)
+    pass
+
+  ## Sets elements type
+  #  @param theElementType: 0 (Triangles), 1 (QuadrangleDominant), 2 (Quadrangles)
+  def SetElementType(self, theElementType=Triangles):
+    self.Parameters().SetElementType(theElementType)
     pass
 
   ## Defines hypothesis having several parameters

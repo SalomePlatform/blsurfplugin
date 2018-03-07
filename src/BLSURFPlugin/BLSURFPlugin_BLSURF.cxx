@@ -2277,6 +2277,14 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
           //      << "\t ID = " << nData.node->GetID() << endl;
           dcad_edge_discretization_set_vertex_coordinates( dedge, iN+1, t, uv, nXYZ.ChangeData() );
         }
+        TopoDS_Shape v = helper.GetSubShapeByNode( nodeDataVec[0].node, meshDS );
+        if ( !v.IsNull() && v.ShapeType() == TopAbs_VERTEX )
+          dcad_edge_discretization_set_vertex_tag( dedge, 1, pmap.Add( v ));
+
+        v = helper.GetSubShapeByNode( nodeDataVec.back().node, meshDS );
+        if ( !v.IsNull() && v.ShapeType() == TopAbs_VERTEX )
+          dcad_edge_discretization_set_vertex_tag( dedge, nbNodes, pmap.Add( v ));
+
         dcad_edge_discretization_set_property(dedge, DISTENE_DCAD_PROPERTY_REQUIRED);
       }
 

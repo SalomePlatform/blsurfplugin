@@ -202,7 +202,7 @@ MeshGems-CADSurf [0-10].
 
 Local sizes can be defined on faces, edges or vertices:
 
-- The faces, edges and vertices can belong to the meshed geometrical
+- The faces, edges and vertices should belong to the meshed geometrical
 object or to its sub-shapes (created using <b>Explode</b> command).
 
 - Groups of faces, edges and vertices are also handled.

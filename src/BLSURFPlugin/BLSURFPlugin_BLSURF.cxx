@@ -2568,9 +2568,9 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     nodes[iv] = NULL;
     if ( tag > 0 && tag <= pmap.Extent() ) {
       TopoDS_Vertex v = TopoDS::Vertex(pmap(tag));
-      double tol = BRep_Tool::Tolerance( v );
-      gp_Pnt p = BRep_Tool::Pnt( v );
-      if ( p.IsEqual( gp_Pnt( xyz[0], xyz[1], xyz[2]), 2*tol))
+      double      tol = BRep_Tool::Tolerance( v );
+      gp_Pnt        p = BRep_Tool::Pnt( v );
+      if ( p.IsEqual( gp_Pnt( xyz[0], xyz[1], xyz[2]), 1e3*tol))
         xyz[0] = p.X(), xyz[1] = p.Y(), xyz[2] = p.Z();
       else
         tag = 0; // enforced or attracted vertex

@@ -5,7 +5,7 @@ import math
 
 import GEOM
 from salome.geom import geomBuilder
-geompy = geomBuilder.New(salome.myStudy)
+geompy = geomBuilder.New()
 
 dist_coin = 10.1
 
@@ -40,7 +40,7 @@ xyz7 = allEnforcedCoords[4]
 
 import SMESH
 from salome.smesh import smeshBuilder
-smesh = smeshBuilder.New(salome.myStudy)
+smesh = smeshBuilder.New()
 
 Mesh = smesh.Mesh(box, "Mesh")
 
@@ -68,4 +68,5 @@ for x,y,z in allEnforcedCoords:
         "%.2f, %.2f, %.2f != %.2f, %.2f, %.2f"%( xn, yn, zn, x,y,z )
 
 
-salome.sg.updateObjBrowser(True)
+salome.sg.updateObjBrowser()
+

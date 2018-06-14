@@ -4,7 +4,6 @@ import sys
 import salome
 
 salome.salome_init()
-theStudy = salome.myStudy
 
 ###
 ### GEOM component
@@ -12,10 +11,10 @@ theStudy = salome.myStudy
 
 import GEOM
 from salome.geom import geomBuilder
-geompy = geomBuilder.New(salome.myStudy)
+geompy = geomBuilder.New()
 
 
-geompy.init_geom(theStudy)
+geompy.init_geom()
 
 sphere = geompy.MakeSphereR(10)
 geompy.addToStudy( sphere, 'sphere' )
@@ -26,7 +25,7 @@ geompy.addToStudy( sphere, 'sphere' )
 
 import SMESH
 from salome.smesh import smeshBuilder
-smesh = smeshBuilder.New(salome.myStudy)
+smesh = smeshBuilder.New()
 
 
 Mesh_1 = smesh.Mesh(sphere)
@@ -50,7 +49,7 @@ try:
     if not ok:
         raise Exception("Error when computing volume mesh")
 except AttributeError:
-    print "Warning: Cannot build volume mesh: MG-Tetra plugin seems to be unavailable"
+    print("Warning: Cannot build volume mesh: MG-Tetra plugin seems to be unavailable")
 
 if salome.sg.hasDesktop():
-  salome.sg.updateObjBrowser(True)
+  salome.sg.updateObjBrowser()

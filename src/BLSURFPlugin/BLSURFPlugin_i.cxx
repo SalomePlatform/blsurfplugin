@@ -42,10 +42,9 @@ class BLSURFPlugin_Creator_i : public GenericHypothesisCreator_i
 {
   // Create a hypothesis
   virtual SMESH_Hypothesis_i* Create(PortableServer::POA_ptr thePOA,
-                                     int                     theStudyId,
                                      ::SMESH_Gen*            theGenImpl)
   {
-    return new T (thePOA, theStudyId, theGenImpl, !NOGEOM);
+    return new T (thePOA, theGenImpl, !NOGEOM);
   }
 
   // as we have 'module BLSURFPlugin' in BLSURFPlugin_Algorithm.idl

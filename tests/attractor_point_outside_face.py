@@ -4,7 +4,6 @@ import sys
 import salome
 
 salome.salome_init()
-theStudy = salome.myStudy
 
 import  SMESH, SALOMEDS
 
@@ -24,7 +23,7 @@ import math
 import SALOMEDS
 
 
-geompy = geomBuilder.New(theStudy)
+geompy = geomBuilder.New()
 
 O = geompy.MakeVertex(0, 0, 0)
 OX = geompy.MakeVectorDXDYDZ(1, 0, 0)
@@ -71,7 +70,7 @@ geompy.addToStudyInFather(Part_1, face_2, "face_2")
 
 from salome.smesh import smeshBuilder
 
-smesh = smeshBuilder.New(theStudy)
+smesh = smeshBuilder.New()
 Mesh_1 = smesh.Mesh(Part_1)
 MG_CADSurf = Mesh_1.Triangle(algo=smeshBuilder.MG_CADSurf)
 MG_CADSurf_Parameters_1 = MG_CADSurf.Parameters()
@@ -88,7 +87,7 @@ if not ok:
 
 min_area_without_attractor = getMinArea(Mesh_1)
 
-print "min_area_without_attractor: ", min_area_without_attractor
+print("min_area_without_attractor: ", min_area_without_attractor)
 
 MG_CADSurf_Parameters_1.SetAttractorGeom( face_1, edge_vert_opp_1, 1, 14.1421, 5, 5 )
 # the attractor is not on the face. It is done on purpose to test this out of bounds case.
@@ -101,7 +100,7 @@ if not ok:
 
 min_area_with_attractor = getMinArea(Mesh_1)
 
-print "min_area_with_attractor: ", min_area_with_attractor
+print("min_area_with_attractor: ", min_area_with_attractor)
 
 assert min_area_with_attractor < min_area_without_attractor
 

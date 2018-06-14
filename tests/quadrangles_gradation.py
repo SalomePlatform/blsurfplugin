@@ -13,6 +13,8 @@ theStudy = salome.myStudy
 
 import GEOM
 from salome.geom import geomBuilder
+geompy = geomBuilder.New()
+
 import math
 import SALOMEDS
 
@@ -47,7 +49,7 @@ from salome.smesh import smeshBuilder
 
 from salome.BLSURFPlugin import BLSURFPluginBuilder
 
-smesh = smeshBuilder.New(theStudy)
+smesh = smeshBuilder.New()
 
 # First mesh with quadrangle-dominant gradation
 Mesh_1 = smesh.Mesh(Fuse_1, "Mesh_1")
@@ -83,4 +85,6 @@ min_2, max_2 = Mesh_2.GetMinMax(SMESH.FT_Area)
 assert max_2/min_2 > 20
 
 if salome.sg.hasDesktop():
-  salome.sg.updateObjBrowser(True)
+  salome.sg.updateObjBrowser()
+
+

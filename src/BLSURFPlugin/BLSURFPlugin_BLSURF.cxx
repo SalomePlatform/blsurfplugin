@@ -145,8 +145,7 @@ namespace
   static PyTypeObject PyStdOut_Type = {
     /* The ob_type field must be initialized in the module init function
      * to be portable to Windows without using C++. */
-    PyObject_HEAD_INIT(NULL)
-    0,                            /*ob_size*/
+    PyVarObject_HEAD_INIT(NULL, 0)
     "PyOut",                      /*tp_name*/
     sizeof(PyStdOut),             /*tp_basicsize*/
     0,                            /*tp_itemsize*/
@@ -241,10 +240,9 @@ bool HasSizeMapOnVertex=false;
 //=============================================================================
 
 BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF(int        hypId,
-                                         int        studyId,
                                          SMESH_Gen* gen,
                                          bool       theHasGEOM)
-  : SMESH_2D_Algo(hypId, studyId, gen)
+  : SMESH_2D_Algo(hypId, gen)
 {
   _name = theHasGEOM ? "MG-CADSurf" : "MG-CADSurf_NOGEOM";//"BLSURF";
   _shapeType = (1 << TopAbs_FACE); // 1 bit /shape type
@@ -256,13 +254,6 @@ BLSURFPlugin_BLSURF::BLSURFPlugin_BLSURF(int        hypId,
   _hypothesis = NULL;
   _supportSubmeshes = true;
   _requireShape = theHasGEOM;
-
-  smeshGen_i = SMESH_Gen_i::GetSMESHGen();
-  CORBA::Object_var anObject = smeshGen_i->GetNS()->Resolve("/myStudyManager");
-  SALOMEDS::StudyManager_var aStudyMgr = SALOMEDS::StudyManager::_narrow(anObject);
-
-  myStudy = NULL;
-  myStudy = aStudyMgr->GetStudyByID(_studyId);
 
   /* Initialize the Python interpreter */
   assert(Py_IsInitialized());
@@ -502,19 +493,16 @@ projectionPoint getProjectionPoint(TopoDS_Face& theFace, const gp_Pnt& thePoint)
 /////////////////////////////////////////////////////////
 TopoDS_Shape BLSURFPlugin_BLSURF::entryToShape(std::string entry)
 {
-  TopoDS_Shape S;
-  if ( !entry.empty() )
-  {
-    GEOM::GEOM_Object_var aGeomObj;
-    SALOMEDS::SObject_var aSObj = myStudy->FindObjectID( entry.c_str() );
-    if (!aSObj->_is_nil()) {
-      CORBA::Object_var obj = aSObj->GetObject();
-      aGeomObj = GEOM::GEOM_Object::_narrow(obj);
-      aSObj->UnRegister();
-    }
-    if ( !aGeomObj->_is_nil() )
-      S = smeshGen_i->GeomObjectToShape( aGeomObj.in() );
+  GEOM::GEOM_Object_var aGeomObj;
+  TopoDS_Shape S = TopoDS_Shape();
+  SALOMEDS::SObject_var aSObj = SMESH_Gen_i::getStudyServant()->FindObjectID( entry.c_str() );
+  if (!aSObj->_is_nil()) {
+    CORBA::Object_var obj = aSObj->GetObject();
+    aGeomObj = GEOM::GEOM_Object::_narrow(obj);
+    aSObj->UnRegister();
   }
+  if ( !aGeomObj->_is_nil() )
+    S = SMESH_Gen_i::GetSMESHGen()->GeomObjectToShape( aGeomObj.in() );
   return S;
 }
 

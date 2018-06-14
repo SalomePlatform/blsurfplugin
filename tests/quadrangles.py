@@ -4,7 +4,6 @@ import sys
 import salome
 
 salome.salome_init()
-theStudy = salome.myStudy
 
 ###
 ### GEOM component
@@ -16,7 +15,7 @@ import math
 import SALOMEDS
 
 
-geompy = geomBuilder.New(theStudy)
+geompy = geomBuilder.New()
 
 O = geompy.MakeVertex(0, 0, 0)
 OX = geompy.MakeVectorDXDYDZ(1, 0, 0)
@@ -42,7 +41,7 @@ from salome.smesh import smeshBuilder
 
 from salome.BLSURFPlugin import BLSURFPluginBuilder
 
-smesh = smeshBuilder.New(theStudy)
+smesh = smeshBuilder.New()
 Mesh_1 = smesh.Mesh(Partition_1)
 MG_CADSurf = Mesh_1.Triangle(algo=smeshBuilder.MG_CADSurf)
 MG_CADSurf_Parameters_1 = MG_CADSurf.Parameters()

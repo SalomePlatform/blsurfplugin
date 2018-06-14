@@ -43,7 +43,7 @@
 class BLSURFPlugin_Hypothesis: public SMESH_Hypothesis
 {
 public:
-  BLSURFPlugin_Hypothesis(int hypId, int studyId, SMESH_Gen * gen, bool hasgeom);
+  BLSURFPlugin_Hypothesis(int hypId, SMESH_Gen * gen, bool hasgeom);
 
   enum Topology {
     FromCAD,
@@ -249,7 +249,7 @@ public:
  */
   
   typedef std::multimap< std::string, BLSURFPlugin_Attractor* > TAttractorMap;
-  typedef std::map< std::string, std::vector<double> > TParamsMap; //TODO à finir 
+  typedef std::map< std::string, std::vector<double> > TParamsMap; //TODO ?? finir 
   
   void SetClassAttractorEntry(const std::string& entry, const std::string& att_entry, double StartSize, double EndSize, double ActionRadius, double ConstantRadius);
   std::string  GetClassAttractorEntry(const std::string& entry);

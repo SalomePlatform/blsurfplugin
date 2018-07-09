@@ -88,4 +88,4 @@ else:
     assert time_multithread < time_singlethread/divider
 
 if salome.sg.hasDesktop():
-  salome.sg.updateObjBrowser(True)
+  salome.sg.updateObjBrowser()

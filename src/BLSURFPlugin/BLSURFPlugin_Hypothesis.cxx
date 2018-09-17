@@ -1444,16 +1444,10 @@ bool BLSURFPlugin_Hypothesis::SetEnforcedVertex(TEntry        theFaceEntry,
 //   //////// CREATE ////////////
   if (toCreate) {
     toNotify = true;
-    _faceEntryEnfVertexListMap[theFaceEntry].insert(newEnfVertex);
-    _enfVertexList.insert(newEnfVertex);
-    if (theVertexEntry == "") {
-      _faceEntryCoordsListMap[theFaceEntry].insert(newEnfVertex->coords);
-      _coordsEnfVertexMap[newEnfVertex->coords] = newEnfVertex;
-    }
-    else {
-      _faceEntryEnfVertexEntryListMap[theFaceEntry].insert(newEnfVertex->geomEntry);
-      _enfVertexEntryEnfVertexMap[newEnfVertex->geomEntry] = newEnfVertex;
-    }
+    AddEnforcedVertex( theFaceEntry, newEnfVertex );
+  }
+  else {
+    delete newEnfVertex;
   }
 
   if (toNotify)
@@ -1462,6 +1456,27 @@ bool BLSURFPlugin_Hypothesis::SetEnforcedVertex(TEntry        theFaceEntry,
   return toNotify;
 }
 
+//=======================================================================
+//function : AddEnforcedVertex
+//=======================================================================
+
+void BLSURFPlugin_Hypothesis::AddEnforcedVertex( const TEntry& faceEntry,
+                                                 TEnfVertex *  newEnfVertex )
+{
+  if ( newEnfVertex )
+  {
+    _faceEntryEnfVertexListMap[faceEntry].insert(newEnfVertex);
+    _enfVertexList.insert(newEnfVertex);
+    if ( newEnfVertex->geomEntry.empty() ) {
+      _faceEntryCoordsListMap[faceEntry].insert(newEnfVertex->coords);
+      _coordsEnfVertexMap[newEnfVertex->coords] = newEnfVertex;
+    }
+    else {
+      _faceEntryEnfVertexEntryListMap[faceEntry].insert(newEnfVertex->geomEntry);
+      _enfVertexEntryEnfVertexMap[newEnfVertex->geomEntry] = newEnfVertex;
+    }
+  }
+}
 
 //=======================================================================
 //function : GetEnforcedVertices
@@ -1706,17 +1721,24 @@ bool BLSURFPlugin_Hypothesis::ClearEnforcedVertices(const TEntry& theFaceEntry) 
 //=======================================================================
 //function : ClearAllEnforcedVertices
 //=======================================================================
-void BLSURFPlugin_Hypothesis::ClearAllEnforcedVertices() {
+void BLSURFPlugin_Hypothesis::ClearAllEnforcedVertices()
+{
   _faceEntryEnfVertexListMap.clear();
-  _enfVertexList.clear();
   _faceEntryCoordsListMap.clear();
   _coordsEnfVertexMap.clear();
   _faceEntryEnfVertexEntryListMap.clear();
   _enfVertexEntryEnfVertexMap.clear();
+  
+  TEnfVertexList::iterator it_enfVertex = _enfVertexList.begin();
+  for ( ; it_enfVertex != _enfVertexList.end(); ++it_enfVertex )
+    delete *it_enfVertex;
+  _enfVertexList.clear();
+
 //  Enable internal enforced vertices on specific face if requested by user
 //  _faceEntryInternalVerticesList.clear();
   NotifySubMeshesHypothesisModification();
 }
+
 
 //================================================================================
 /*!
@@ -2821,7 +2843,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
         break;
       isOK = static_cast<bool>(load >> newAtShapeEntry);
       if (!isOK)
-    break;
+        break;
       isOK = static_cast<bool>(load >> attParams[0]>>attParams[1]>>attParams[2]>>attParams[3]); //>>step);
     }
     if (isOK) {
@@ -2978,6 +3000,22 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
           }
         }
       }
+    }
+  }
+
+  if ( hasEnforcedVertex ) {
+    isOK = static_cast<bool>(load >> option_or_sm);
+    if (isOK) {
+      if (option_or_sm == "__PRECAD_FACES_PERIODICITY_BEGIN__")
+        hasPreCADFacesPeriodicity = true;
+      else if (option_or_sm == "__PRECAD_EDGES_PERIODICITY_BEGIN__")
+        hasPreCADEdgesPeriodicity = true;
+      else if (option_or_sm == "__FACES_PERIODICITY_BEGIN__")
+        hasFacesPeriodicity = true;
+      else if (option_or_sm == "__EDGES_PERIODICITY_BEGIN__")
+        hasEdgesPeriodicity = true;
+      else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
+        hasVerticesPeriodicity = true;
     }
   }
 

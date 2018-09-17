@@ -1298,7 +1298,6 @@ void BLSURFPluginGUI_HypothesisCreator::onSelectEnforcedVertex() {
 
     myEnfVertex = myEnfVertexWdg->GetObject< GEOM::GEOM_Object >(nbSelEnfVertex-1);
     if (myEnfVertex->GetShapeType() == GEOM::VERTEX) {
-      BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
       GEOM::GEOM_IMeasureOperations_var measureOp = getGeomEngine()->GetIMeasureOperations();
       if (CORBA::is_nil(measureOp))
         return;
@@ -1449,8 +1448,6 @@ This method is called when a item is added into the enforced vertices tree widge
 */
 void BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices()
 {
-  BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
-
   getGeomSelectionTool()->selectionMgr()->clearFilters();
   myEnfVertexWdg->deactivateSelection();
 
@@ -2194,14 +2191,16 @@ void BLSURFPluginGUI_HypothesisCreator::AddPreCadSequenceToVector(BlsurfHypothes
         {
           periodicity_i[PERIODICITY_P1_SOURCE_COLUMN] = sourceVertices[0].in();
           periodicity_i[PERIODICITY_P2_SOURCE_COLUMN] = sourceVertices[1].in();
-          periodicity_i[PERIODICITY_P3_SOURCE_COLUMN] = sourceVertices[2].in();
+          if ( onFace )
+            periodicity_i[PERIODICITY_P3_SOURCE_COLUMN] = sourceVertices[2].in();
         }
 
       if (targetVertices.length()!=0)
         {
           periodicity_i[PERIODICITY_P1_TARGET_COLUMN] = targetVertices[0].in();
           periodicity_i[PERIODICITY_P2_TARGET_COLUMN] = targetVertices[1].in();
-          periodicity_i[PERIODICITY_P3_TARGET_COLUMN] = targetVertices[2].in();
+          if ( onFace )
+            periodicity_i[PERIODICITY_P3_TARGET_COLUMN] = targetVertices[2].in();
         }
 
       if (onFace)

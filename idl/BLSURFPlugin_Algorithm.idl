@@ -674,32 +674,8 @@ module BLSURFPlugin
     /*!
      * Sets the file for export resulting mesh in GMF format
      */
-//     void SetGMFFile(in string theFileName, in boolean isBinary);
     void SetGMFFile(in string theFileName);
     string GetGMFFile();
-//     boolean GetGMFFileMode();
-
-    //
-    // Obsolete methods - To be removed in V7
-    //
-    void SetPhyMin(in double theMinSize);
-    double GetPhyMin();
-    void SetPhyMax(in double theMaxSize);
-    double GetPhyMax();
-    void SetGeoMin(in double theMinSize);
-    double GetGeoMin();
-    void SetGeoMax(in double theMaxSize);
-    double GetGeoMax();
-    void SetAngleMeshS(in double angle);
-    double GetAngleMeshS();
-    void SetAngleMeshC(in double angle);
-    double GetAngleMeshC();
-    void SetDecimesh(in boolean toIgnoreEdges);
-    boolean GetDecimesh();
-    void SetPreCADRemoveNanoEdges(in boolean toRemoveNanoEdges);
-    boolean GetPreCADRemoveNanoEdges();
-    void SetPreCADEpsNano(in double epsNano);
-    double GetPreCADEpsNano();
   };
 };
 

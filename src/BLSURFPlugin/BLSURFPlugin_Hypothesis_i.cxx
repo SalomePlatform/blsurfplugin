@@ -1742,7 +1742,7 @@ void BLSURFPlugin_Hypothesis_i::SetConstantSizeMapEntry(const char* entry, GEOM:
     THROW_SALOME_CORBA_EXCEPTION( ex.what() ,SALOME::BAD_PARAM );
   }
   if (valueChanged)
-    SMESH::TPythonDump() << _this() << ".SetConstantSizeMap(" << entry << ", '" << sizeMap << "' )";
+    SMESH::TPythonDump() << _this() << ".SetConstantSizeMap(" << entry << ", " << sizeMap << " )";
 }
 
 //=============================================================================
@@ -2943,7 +2943,6 @@ bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexGeom(GEOM::GEOM_Object_ptr theV
   string theVertexEntry = theVertex->GetStudyEntry();
   
   GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
-  SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
   string aName;
   
   if (theVertexEntry.empty()) {
@@ -3011,7 +3010,6 @@ bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexGeomWithGroup(GEOM::GEOM_Object
   string theVertexEntry = theVertex->GetStudyEntry();
   
   GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
-  SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
   string aName;
   
   if (theVertexEntry.empty()) {
@@ -3053,7 +3051,6 @@ bool BLSURFPlugin_Hypothesis_i::RemoveEnforcedVertexGeom(GEOM::GEOM_Object_ptr t
   std::string theVertexEntry = theVertex->GetStudyEntry();
   
   GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
-  SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
   string aName;
   
   if (theVertexEntry.empty()) {
@@ -3845,85 +3842,249 @@ char* BLSURFPlugin_Hypothesis_i::GetGMFFile() {
 
 //================================================================================
 /*!
- * \brief Verify whether hypothesis supports given entity type 
+ * \brief Verify whether hypothesis supports given entity type
  * \param type - dimension (see SMESH::Dimension enumeration)
  * \retval CORBA::Boolean - TRUE if dimension is supported, FALSE otherwise
- * 
+ *
  * Verify whether hypothesis supports given entity type (see SMESH::Dimension enumeration)
  */
-//================================================================================  
+//================================================================================
 CORBA::Boolean BLSURFPlugin_Hypothesis_i::IsDimSupported(SMESH::Dimension type) {
   return type == SMESH::DIM_2D;
 }
 
-//
-// Obsolete methods - To be removed in V7
-//
 
-void BLSURFPlugin_Hypothesis_i::SetPhyMin(CORBA::Double theMinSize) {
-  this->SetMinSize(theMinSize);
+//================================================================================
+/*!
+ * \brief Return geometry this hypothesis depends on. Return false if there is no geometry parameter
+ */
+//================================================================================
+
+bool
+BLSURFPlugin_Hypothesis_i::getObjectsDependOn( std::vector< std::string > & entryArray,
+                                               std::vector< int >         & subIDArray ) const
+{
+  typedef ::BLSURFPlugin_Hypothesis BH;
+  const BH* impl = static_cast<const BH*>( myBaseImpl );
+
+  {
+    const BH::TSizeMap& sizeMap = impl->_GetSizeMapEntries();
+    BH::TSizeMap::const_iterator entry2size = sizeMap.cbegin();
+    for ( ; entry2size != sizeMap.cend(); ++entry2size )
+      entryArray.push_back( entry2size->first );
+  }
+  {
+    const BH::TSizeMap& sizeMap = impl->_GetAttractorEntries();
+    BH::TSizeMap::const_iterator entry2size = sizeMap.cbegin();
+    for ( ; entry2size != sizeMap.cend(); ++entry2size )
+      entryArray.push_back( entry2size->first );
+  }
+  {
+    const BH::TAttractorMap& classAttractors = impl-> _GetClassAttractorEntries();
+    BH::TAttractorMap::const_iterator entry2size = classAttractors.cbegin();
+    for ( ; entry2size != classAttractors.cend(); ++entry2size )
+      entryArray.push_back( entry2size->first );
+  }
+  {
+    const BH::TFaceEntryEnfVertexListMap& faceEntryEnfVertexListMap = impl->_GetAllEnforcedVerticesByFace();
+    BH::TFaceEntryEnfVertexListMap::const_iterator entry2evList = faceEntryEnfVertexListMap.cbegin();
+    for ( ; entry2evList != faceEntryEnfVertexListMap.cend(); ++entry2evList )
+    {
+      entryArray.push_back( entry2evList->first );
+
+      const BH::TEnfVertexList& evList = entry2evList->second;
+      BH::TEnfVertexList::const_iterator evIt = evList.cbegin();
+      for ( ; evIt != evList.cend(); ++evIt )
+      {
+        const BH::TEnfVertex* ev = *evIt;
+        entryArray.push_back( ev->geomEntry );
+        entryArray.insert( entryArray.end(), ev->faceEntries.cbegin(), ev->faceEntries.cend() );
+      }
+    }
+  }
+  // { // duplicated data of faceEntryEnfVertexListMap
+  //   const BH::TEnfVertexList& enfVertexList = impl->_GetAllEnforcedVertices();
+  //   const BH::TFaceEntryCoordsListMap& faceEntryCoordsListMap = impl->_GetAllCoordsByFace();
+  //   const BH::TFaceEntryEnfVertexEntryListMap& faceEntryEnfVertexEntryListMap = impl->_GetAllEnfV  //   const BH::TEnfVertexEntryEnfVertexMap& enfVertexEntryEnfVertexMap = impl->_GetAllEnforcedVert  // }
+  {
+    const BH::TPreCadPeriodicityVector& preCadFacesPeriodicityVector = impl->_GetPreCadFacesPeriodicityVector();
+    BH::TPreCadPeriodicityVector::const_iterator pcp = preCadFacesPeriodicityVector.cbegin();
+    for ( ; pcp != preCadFacesPeriodicityVector.cend(); ++pcp )
+    {
+      entryArray.push_back( pcp->shape1Entry );
+      entryArray.push_back( pcp->shape2Entry );
+      entryArray.insert( entryArray.end(),
+                         pcp->theSourceVerticesEntries.cbegin(),
+                         pcp->theSourceVerticesEntries.cend() );
+      entryArray.insert( entryArray.end(),
+                         pcp->theTargetVerticesEntries.cbegin(),
+                         pcp->theTargetVerticesEntries.cend() );
+    }
+  }
+  {
+    const BH::TPreCadPeriodicityVector& preCadEdgesPeriodicityVector = impl->_GetPreCadEdgesPeriodicityVector();
+    BH::TPreCadPeriodicityVector::const_iterator pcp = preCadEdgesPeriodicityVector.cbegin();
+    for ( ; pcp != preCadEdgesPeriodicityVector.cend(); ++pcp )
+    {
+      entryArray.push_back( pcp->shape1Entry );
+      entryArray.push_back( pcp->shape2Entry );
+      entryArray.insert( entryArray.end(),
+                         pcp->theSourceVerticesEntries.cbegin(),
+                         pcp->theSourceVerticesEntries.cend() );
+      entryArray.insert( entryArray.end(),
+                         pcp->theTargetVerticesEntries.cbegin(),
+                         pcp->theTargetVerticesEntries.cend() );
+    }
+  }
+  {
+    const BH::THyperPatchList& hyperPatchList = impl->GetHyperPatches();
+    BH::THyperPatchList::const_iterator idSet = hyperPatchList.cbegin();
+    for ( ; idSet != hyperPatchList.cend(); ++idSet )
+    {
+      subIDArray.insert( subIDArray.end(), idSet->cbegin(), idSet->cend() );
+    }
+  }
+  return true;
 }
-CORBA::Double BLSURFPlugin_Hypothesis_i::GetPhyMin() {
-  return this->GetMinSize();
-}
-void BLSURFPlugin_Hypothesis_i::SetPhyMax(CORBA::Double theMaxSize) {
-  this->SetMaxSize(theMaxSize);
-}
-CORBA::Double BLSURFPlugin_Hypothesis_i::GetPhyMax() {
-  return this->GetMaxSize();
-}
-void BLSURFPlugin_Hypothesis_i::SetGeoMin(CORBA::Double theMinSize) {
-  this->SetMinSize(theMinSize);
-}
-CORBA::Double BLSURFPlugin_Hypothesis_i::GetGeoMin() {
-  return this->GetMinSize();
-}
-void BLSURFPlugin_Hypothesis_i::SetGeoMax(CORBA::Double theMaxSize) {
-  this->SetMaxSize(theMaxSize);
-}
-CORBA::Double BLSURFPlugin_Hypothesis_i::GetGeoMax() {
-  return this->GetMaxSize();
-}
-void BLSURFPlugin_Hypothesis_i::SetAngleMeshS(CORBA::Double theValue) {
-  this->SetAngleMesh(theValue);
-}
-CORBA::Double BLSURFPlugin_Hypothesis_i::GetAngleMeshS() {
-  return this->GetAngleMesh();
-}
-void BLSURFPlugin_Hypothesis_i::SetAngleMeshC(CORBA::Double theValue) {
-  this->SetAngleMesh(theValue);
-}
-CORBA::Double BLSURFPlugin_Hypothesis_i::GetAngleMeshC() {
-  return this->GetAngleMesh();
-}
-void BLSURFPlugin_Hypothesis_i::SetDecimesh(CORBA::Boolean theValue) {
-  std::string theValueStr = theValue ? "1" : "0";
-  this->SetOptionValue("respect_geometry",theValueStr.c_str());
-}
-CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetDecimesh() {
-  std::string theValueStr = this->GetOptionValue("respect_geometry");
-  if (theValueStr.empty() || theValueStr == "respect")
-    return true;
-  return false;
-}
-void BLSURFPlugin_Hypothesis_i::SetPreCADRemoveNanoEdges(CORBA::Boolean theValue) {
-  std::string theValueStr = theValue ? "1" : "0";
-  this->AddPreCADOption("remove_tiny_edges",theValueStr.c_str());
-}
-CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADRemoveNanoEdges() {
-  std::string theValueStr = this->GetPreCADOption("remove_tiny_edges");
-  if (theValueStr == "1")
-    return true;
-  return false;
-}
-void BLSURFPlugin_Hypothesis_i::SetPreCADEpsNano(CORBA::Double theValue) {
-  std::ostringstream theValueStr;
-  theValueStr << theValue;
-  this->AddPreCADOption("tiny_edge_length",theValueStr.str().c_str());
-}
-CORBA::Double BLSURFPlugin_Hypothesis_i::GetPreCADEpsNano() {
-  std::istringstream theValueStr(this->GetPreCADOption("tiny_edge_length"));
-  double result;
-  theValueStr >> result;
-  return result;
+
+//================================================================================
+/*!
+ * \brief Set new geometry instead of that returned by getObjectsDependOn()
+ */
+//================================================================================
+
+bool
+BLSURFPlugin_Hypothesis_i::setObjectsDependOn( std::vector< std::string > & entryArray,
+                                               std::vector< int >         & subIDArray )
+{
+  typedef ::BLSURFPlugin_Hypothesis BH;
+  BH* impl = static_cast<BH*>( myBaseImpl );
+
+  size_t iEnt = 0;
+  {
+    BH::TSizeMap& sizeMapNew = const_cast< BH::TSizeMap& >( impl->_GetSizeMapEntries() );
+    BH::TSizeMap sizeMap;
+    sizeMap.swap( sizeMapNew );
+    BH::TSizeMap::const_iterator entry2size = sizeMap.cbegin();
+    for ( ; entry2size != sizeMap.cend(); ++entry2size, ++iEnt )
+      if ( entryArray[ iEnt ].empty() == entry2size->first.empty() )
+        sizeMapNew[ entryArray[ iEnt ]] =  entry2size->second;
+  }
+  {
+    BH::TSizeMap& sizeMapNew = const_cast< BH::TSizeMap& >( impl->_GetAttractorEntries() );
+    BH::TSizeMap sizeMap;
+    sizeMap.swap( sizeMapNew );
+    BH::TSizeMap::const_iterator entry2size = sizeMap.cbegin();
+    for ( ; entry2size != sizeMap.cend(); ++entry2size, ++iEnt )
+      if ( entryArray[ iEnt ].empty() == entry2size->first.empty() )
+        sizeMapNew[ entryArray[ iEnt ]] =  entry2size->second;
+  }
+  {
+    BH::TAttractorMap& attrMapNew =
+      const_cast< BH::TAttractorMap& > ( impl->_GetClassAttractorEntries() );
+    BH::TAttractorMap attrMap;
+    attrMap.swap( attrMapNew );
+    BH::TAttractorMap::const_iterator entry2size = attrMap.cbegin();
+    for ( ; entry2size != attrMap.cend(); ++entry2size, ++iEnt )
+      if ( entryArray[ iEnt ].empty() == entry2size->first.empty() )
+        attrMapNew.insert( std::make_pair( entryArray[ iEnt ], entry2size->second ));
+      else
+        delete entry2size->second;
+  }
+  {
+    BH::TFaceEntryEnfVertexListMap& faceEntryEnfVertexListMapNew =
+      const_cast< BH::TFaceEntryEnfVertexListMap& >( impl->_GetAllEnforcedVerticesByFace() );
+    BH::TFaceEntryEnfVertexListMap faceEntryEnfVertexListMap;
+    faceEntryEnfVertexListMap.swap( faceEntryEnfVertexListMapNew );
+
+    BH::TEnfVertexList& enfVertexList =
+      const_cast< BH::TEnfVertexList& > ( impl->_GetAllEnforcedVertices() );
+    enfVertexList.clear(); // avoid removal
+
+    impl->ClearAllEnforcedVertices();
+
+    BH::TFaceEntryEnfVertexListMap::iterator entry2evList = faceEntryEnfVertexListMap.begin();
+    for ( ; entry2evList != faceEntryEnfVertexListMap.end(); ++entry2evList )
+    {
+      const BH::TEntry& entry = entryArray[ iEnt++ ];
+      bool faceOk = ( entry.empty() == entry2evList->first.empty() );
+
+      BH::TEnfVertexList& evList = entry2evList->second;
+      BH::TEnfVertexList::iterator evIt = evList.begin();
+      for ( ; evIt != evList.end(); ++evIt )
+      {
+        BH::TEnfVertex* ev = *evIt;
+        bool ok = faceOk && ( ev->geomEntry.empty() != entryArray[ iEnt ].empty() );
+        ev->geomEntry = entryArray[ iEnt++ ];
+        BH::TEntryList faceEntriesNew;
+        BH::TEntryList::iterator fEnt = ev->faceEntries.begin();
+        for ( ; fEnt != ev->faceEntries.end(); ++fEnt, ++iEnt )
+        {
+          if ( !entryArray[ iEnt ].empty() )
+            faceEntriesNew.insert( entryArray[ iEnt ]);
+        }
+        if ( ok )
+        {
+          ev->faceEntries.swap( faceEntriesNew );
+          impl->AddEnforcedVertex( entry, ev );
+        }
+        else
+        {
+          delete ev;
+        }
+      }
+    }
+  }
+  {
+    BH::TPreCadPeriodicityVector& preCadPeriodicityVector =
+      const_cast< BH::TPreCadPeriodicityVector&> ( impl->_GetPreCadFacesPeriodicityVector() );
+    BH::TPreCadPeriodicityVector::iterator pcp = preCadPeriodicityVector.begin();
+    for ( ; pcp != preCadPeriodicityVector.end(); ++pcp )
+    {
+      pcp->shape1Entry = entryArray[ iEnt++ ];
+      pcp->shape2Entry = entryArray[ iEnt++ ];
+      for ( size_t i = 0; i < pcp->theSourceVerticesEntries.size(); ++i, iEnt++ )
+        pcp->theSourceVerticesEntries[i] = entryArray[ iEnt ];
+
+      for ( size_t i = 0; i < pcp->theTargetVerticesEntries.size(); ++i, iEnt++ )
+        pcp->theTargetVerticesEntries[i] = entryArray[ iEnt ];
+    }
+  }
+  {
+    BH::TPreCadPeriodicityVector& preCadPeriodicityVector =
+      const_cast< BH::TPreCadPeriodicityVector&> ( impl->_GetPreCadEdgesPeriodicityVector() );
+    BH::TPreCadPeriodicityVector::iterator pcp = preCadPeriodicityVector.begin();
+    for ( ; pcp != preCadPeriodicityVector.end(); ++pcp )
+    {
+      pcp->shape1Entry = entryArray[ iEnt++ ];
+      pcp->shape2Entry = entryArray[ iEnt++ ];
+      for ( size_t i = 0; i < pcp->theSourceVerticesEntries.size(); ++i, iEnt++ )
+        pcp->theSourceVerticesEntries[i] = entryArray[ iEnt ];
+
+      for ( size_t i = 0; i < pcp->theTargetVerticesEntries.size(); ++i, iEnt++ )
+        pcp->theTargetVerticesEntries[i] = entryArray[ iEnt ];
+    }
+  }
+
+  size_t iID = 0;
+  {
+    BH::THyperPatchList& hyperPatchListNew =
+      const_cast< BH::THyperPatchList& >( impl->GetHyperPatches() );
+    BH::THyperPatchList hyperPatchList;
+    hyperPatchList.swap( hyperPatchListNew );
+    BH::THyperPatchList::iterator idSet = hyperPatchList.begin();
+    for ( ; idSet != hyperPatchList.end(); ++idSet )
+    {
+      BH::THyperPatchTags& ids = *idSet;
+      BH::THyperPatchTags idsNew;
+      BH::THyperPatchTags::iterator i = ids.begin();
+      for ( ; i != ids.end(); ++i, ++iID )
+        if ( subIDArray[ iID ] > 0 )
+          idsNew.insert( subIDArray[ iID ]);
+      if ( !idsNew.empty() )
+        hyperPatchListNew.push_back( idsNew );
+    }
+  }
+
+  return ( iEnt == entryArray.size() && iID == subIDArray.size() );
 }

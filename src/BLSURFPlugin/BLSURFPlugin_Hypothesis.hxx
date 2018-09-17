@@ -373,15 +373,16 @@ public:
   bool ClearEnforcedVertices(const TEntry& theFaceEntry) throw (std::invalid_argument);
 
   void ClearAllEnforcedVertices();
+  void AddEnforcedVertex( const TEntry& theFaceEntry, TEnfVertex * theEnfVertex );
 
-  const TFaceEntryEnfVertexListMap  _GetAllEnforcedVerticesByFace() const { return _faceEntryEnfVertexListMap; }
-  const TEnfVertexList              _GetAllEnforcedVertices() const { return _enfVertexList; }
+  const TFaceEntryEnfVertexListMap&  _GetAllEnforcedVerticesByFace() const { return _faceEntryEnfVertexListMap; }
+  const TEnfVertexList&              _GetAllEnforcedVertices() const { return _enfVertexList; }
 
-  const TFaceEntryCoordsListMap     _GetAllCoordsByFace() const { return _faceEntryCoordsListMap; }
-  const TCoordsEnfVertexMap         _GetAllEnforcedVerticesByCoords() const { return _coordsEnfVertexMap; }
+  const TFaceEntryCoordsListMap&     _GetAllCoordsByFace() const { return _faceEntryCoordsListMap; }
+  const TCoordsEnfVertexMap&         _GetAllEnforcedVerticesByCoords() const { return _coordsEnfVertexMap; }
 
-  const TFaceEntryEnfVertexEntryListMap _GetAllEnfVertexEntriesByFace() const { return _faceEntryEnfVertexEntryListMap; }
-  const TEnfVertexEntryEnfVertexMap     _GetAllEnforcedVerticesByEnfVertexEntry() const { return _enfVertexEntryEnfVertexMap; }
+  const TFaceEntryEnfVertexEntryListMap& _GetAllEnfVertexEntriesByFace() const { return _faceEntryEnfVertexEntryListMap; }
+  const TEnfVertexEntryEnfVertexMap&     _GetAllEnforcedVerticesByEnfVertexEntry() const { return _enfVertexEntryEnfVertexMap; }
 
 //   TODO GROUPS
 //   const TEnfVertexGroupNameMap _GetEnforcedVertexGroupNameMap() const { return _enfVertexGroupNameMap; }
@@ -480,23 +481,23 @@ public:
 //  const TPreCadPeriodicityEntriesVector _GetPreCadFacesPeriodicityEntries() const { return _preCadFacesPeriodicityEntriesVector; }
 
   static TPreCadPeriodicityVector GetDefaultPreCadFacesPeriodicityVector() { return TPreCadPeriodicityVector(); }
-  const TPreCadPeriodicityVector  _GetPreCadFacesPeriodicityVector() const { return _preCadFacesPeriodicityVector; }
+  const TPreCadPeriodicityVector&  _GetPreCadFacesPeriodicityVector() const { return _preCadFacesPeriodicityVector; }
   static TPreCadPeriodicityVector GetPreCadFacesPeriodicityVector(const BLSURFPlugin_Hypothesis* hyp);
 
   static TPreCadPeriodicityVector GetDefaultPreCadEdgesPeriodicityVector() { return TPreCadPeriodicityVector(); }
-  const TPreCadPeriodicityVector  _GetPreCadEdgesPeriodicityVector() const { return _preCadEdgesPeriodicityVector; }
+  const TPreCadPeriodicityVector&  _GetPreCadEdgesPeriodicityVector() const { return _preCadEdgesPeriodicityVector; }
   static TPreCadPeriodicityVector GetPreCadEdgesPeriodicityVector(const BLSURFPlugin_Hypothesis* hyp);
 
   static TFacesPeriodicityVector GetDefaultFacesPeriodicityVector() { return TFacesPeriodicityVector(); }
-  const TFacesPeriodicityVector  _GetFacesPeriodicityVector() const { return _facesPeriodicityVector; }
+  const TFacesPeriodicityVector&  _GetFacesPeriodicityVector() const { return _facesPeriodicityVector; }
   static TFacesPeriodicityVector GetFacesPeriodicityVector(const BLSURFPlugin_Hypothesis* hyp);
 
   static TEdgesPeriodicityVector GetDefaultEdgesPeriodicityVector() { return TEdgesPeriodicityVector(); }
-  const TEdgesPeriodicityVector  _GetEdgesPeriodicityVector() const { return _edgesPeriodicityVector; }
+  const TEdgesPeriodicityVector&  _GetEdgesPeriodicityVector() const { return _edgesPeriodicityVector; }
   static TEdgesPeriodicityVector GetEdgesPeriodicityVector(const BLSURFPlugin_Hypothesis* hyp);
 
   static TVerticesPeriodicityVector GetDefaultVerticesPeriodicityVector() { return TVerticesPeriodicityVector(); }
-  const TVerticesPeriodicityVector  _GetVerticesPeriodicityVector() const { return _verticesPeriodicityVector; }
+  const TVerticesPeriodicityVector&  _GetVerticesPeriodicityVector() const { return _verticesPeriodicityVector; }
   static TVerticesPeriodicityVector GetVerticesPeriodicityVector(const BLSURFPlugin_Hypothesis* hyp);
 
   void ClearPreCadPeriodicityVectors();
@@ -605,8 +606,6 @@ private:
   TSizeMap        _sizeMap;
   TSizeMap        _attractors;
   TAttractorMap   _classAttractors;
-  TSizeMap        _attEntry;
-  TParamsMap      _attParams;
 
   TFaceEntryEnfVertexListMap      _faceEntryEnfVertexListMap;
   TEnfVertexList                  _enfVertexList;

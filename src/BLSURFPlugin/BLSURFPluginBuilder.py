@@ -198,15 +198,6 @@ class BLSURF_Algorithm(Mesh_Algorithm):
     self.Parameters().SetTopology(way)
     pass
 
-  ## To respect geometrical edges or not.
-  #  @param toIgnoreEdges "ignore edges" flag value
-  def SetDecimesh(self, toIgnoreEdges=False):
-    if toIgnoreEdges:
-      self.SetOptionValue("respect_geometry","0")
-    else:
-      self.SetOptionValue("respect_geometry","1")
-    pass
-
   ## Sets verbosity level in the range 0 to 100.
   #  @param level verbosity level
   def SetVerbosity(self, level):

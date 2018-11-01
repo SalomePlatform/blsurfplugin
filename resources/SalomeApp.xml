@@ -27,7 +27,6 @@
     <parameter name="plugins" value="NETGENPlugin,GHS3DPlugin,BLSURFPlugin"/>
   </section>
   <section name="smesh_help" >
-    <parameter name="User's Guide/Mesh module/Plug-ins/MG-CADSurf plugin" value="${BLSURFPLUGIN_ROOT_DIR}/share/doc/salome/gui/BLSURFPLUGIN/index.html"/>
-    <parameter name="Developer's Guide/Mesh module/Plug-ins/MG-CADSurf plugin" value="${BLSURFPLUGIN_ROOT_DIR}/share/doc/salome/tui/BLSURFPLUGIN/index.html"/>
+    <parameter name="User's Guide/Mesh module/Plug-ins/MG-CADSurf plugin" value="${BLSURFPLUGIN_ROOT_DIR}/share/doc/salome/gui/BLSURFPLUGIN/index.html;;http://docs.salome-platform.org/latest/gui/BLSURFPLUGIN/index.html"/>
   </section>
 </document>

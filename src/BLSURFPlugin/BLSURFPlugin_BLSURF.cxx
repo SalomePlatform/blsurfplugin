@@ -2599,8 +2599,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
           }
           if (!groupDone)
           {
-            int groupId;
-            SMESH_Group* aGroup = aMesh.AddGroup(SMDSAbs_Node, currentEnfVertex->grpName.c_str(), groupId);
+            SMESH_Group* aGroup = aMesh.AddGroup( SMDSAbs_Node, currentEnfVertex->grpName.c_str() );
             aGroup->SetName( currentEnfVertex->grpName.c_str() );
             SMESHDS_Group* aGroupDS = static_cast<SMESHDS_Group*>( aGroup->GetGroupDS() );
             aGroupDS->SMDSGroup().Add(nodes[iv]);

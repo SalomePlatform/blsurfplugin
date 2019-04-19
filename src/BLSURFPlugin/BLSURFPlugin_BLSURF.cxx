@@ -2700,6 +2700,8 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
                             nodes[evtri[0]], nodes[evtri[1]], nodes[evtri[2]]);
     }
     else {
+      if ( helper.GetIsQuadratic() )
+        helper.SetSubShape( tag );
       tri = helper.AddFace(nodes[vtx[0]], nodes[vtx[1]], nodes[vtx[2]]);
     }
     meshDS->SetMeshElementOnShape(tri, tag);

@@ -2731,7 +2731,6 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     };
     if (type == MESHGEMS_MESH_ELEMENT_TYPE_QUAD9) {
       // QUADRATIC QUADRANGLE
-      std::cout << "This is a quadratic quadrangle" << std::endl;
       if (tags[evquad[0]]) {
         meshDS->SetNodeOnFace(nodes[evquad[0]], tag);
         tags[evquad[0]] = false;

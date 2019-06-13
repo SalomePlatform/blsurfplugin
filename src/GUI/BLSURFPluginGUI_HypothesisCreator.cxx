@@ -564,12 +564,6 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams(QString& msg) const
       }
     }
   }
-  if ( !ok )
-  {
-    h->SetOptionValues( myOptions ); // restore values
-    h->SetPreCADOptionValues( myPreCADOptions ); // restore values
-    return ok;
-  }
 
   // SizeMap and attractors
   if ( ok )
@@ -590,7 +584,7 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams(QString& msg) const
           try {
             e = entry.toStdString();
             s = that->mySMPMap[entry].toStdString();
-            h->SetSizeMapEntry( e.c_str(), s.c_str() );
+            //h->SetSizeMapEntry( e.c_str(), s.c_str() );
           }
           catch ( const SALOME::SALOME_Exception& ex )
           {
@@ -637,8 +631,60 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams(QString& msg) const
       msg = tr("ZERO_VALUE_OF").arg( tr("BLSURF_CHORDAL_ERROR"));
   }
 
+  // #16954 EDF 19466 - localsize
+  // Warn the user if local size is less than Min Size
+  if ( ok &&
+       !myStdWidget->myMinSizeRel->isChecked() &&
+       !myStdWidget->myMinSize->text().isEmpty() )
+  {
+    const double minSize = myStdWidget->myMinSize->GetValue();
+    bool isValue;
+    for ( QMapIterator<QString,QString> i( mySMPMap ); i.hasNext() &&  ok ; )
+    {
+      i.next();
+      double size = i.value().toDouble( &isValue );
+      ok = ( !isValue || size >= minSize );
+    }
+    for ( QMapIterator<QString, TAttractorVec > i( myATTMap ); i.hasNext() &&  ok ; i.next() )
+    {
+      const TAttractorVec& attVec = i.value();
+      for ( size_t i = 0; i < attVec.size(); ++i )
+        ok = ( attVec[i].IsToDelete()  || attVec[i].startSize >= minSize );
+    }
+    if ( !ok )
+      msg = tr( "TOO_SMALL_LOCAL_SIZE" );
+  }
+  // Warn the user if local size is more than User Size
+  if ( ok &&
+       !myStdWidget->myPhySizeRel->isChecked() &&
+       !myStdWidget->myPhySize->text().isEmpty() )
+  {
+    const double userSize = myStdWidget->myPhySize->GetValue();
+    bool isValue;
+    for ( QMapIterator<QString,QString> i( mySMPMap ); i.hasNext() &&  ok ; )
+    {
+      i.next();
+      double size = i.value().toDouble( &isValue );
+      ok = ( !isValue || size <= userSize );
+    }
+    for ( QMapIterator<QString, TAttractorVec > i( myATTMap ); i.hasNext() &&  ok ; i.next() )
+    {
+      const TAttractorVec& attVec = i.value();
+      for ( size_t i = 0; i < attVec.size(); ++i )
+        ok = ( attVec[i].IsToDelete()  || attVec[i].startSize <= userSize );
+    }
+    if ( !ok )
+      msg = tr( "TOO_LARGE_LOCAL_SIZE" );
+  }
+
   // Enforced vertices
   // TODO
+
+  if ( !ok )
+  {
+    h->SetOptionValues( myOptions ); // restore values
+    h->SetPreCADOptionValues( myPreCADOptions ); // restore values
+  }
 
   return ok;
 }
@@ -2760,7 +2806,6 @@ void BLSURFPluginGUI_HypothesisCreator::onTabChanged(int tab)
       myHyPatchFaceSelBtn->toggle();
     if ( myHyPatchGroupSelBtn->isChecked() )
       myHyPatchGroupSelBtn->toggle();
-    return;
   }
   else if ( sender() == smpTab )
   {
@@ -2776,6 +2821,22 @@ void BLSURFPluginGUI_HypothesisCreator::onTabChanged(int tab)
     myAttSelWdg->SetObject(CORBA::Object::_nil());
     myAttractorCheck->setChecked(false);
     myConstSizeCheck->setChecked(false);
+  }
+
+  if ( tab == SMP_TAB ) // [#16954] limit local size by Min and User Size
+  {
+    double minSize = 0, maxSize = COORD_MAX;
+
+    if ( !myStdWidget->myMinSizeRel->isChecked() &&
+         !myStdWidget->myMinSize->text().isEmpty() )
+      minSize = myStdWidget->myMinSize->GetValue();
+
+    if ( !myStdWidget->myPhySizeRel->isChecked() &&
+         !myStdWidget->myPhySize->text().isEmpty() )
+      maxSize = myStdWidget->myPhySize->GetValue();
+
+    mySmpSizeSpin->RangeStepAndValidator(minSize, maxSize, 1.0, "length_precision");
+    myAttSizeSpin->RangeStepAndValidator(minSize, maxSize, 1.0, "length_precision");
   }
 }
 

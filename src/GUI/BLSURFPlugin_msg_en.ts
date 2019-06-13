@@ -503,6 +503,14 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
         <translation>Invalid value (zero) of "%1"</translation>
     </message>
     <message>
+        <source>TOO_SMALL_LOCAL_SIZE</source>
+        <translation>Local size should be more than Min Size</translation>
+    </message>
+    <message>
+        <source>TOO_LARGE_LOCAL_SIZE</source>
+        <translation>Local size should be less than User Size</translation>
+    </message>
+    <message>
         <source>BLSURF_PERIODICITY</source>
         <translation>Periodicity</translation>
     </message>

@@ -18,7 +18,9 @@
 # See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 #
 
-
+# TA 24-04-2018 : quadrangle_gradation replaces 
+# new_1331_test_quadrangles_gradation.py as the starting geometrical part should
+# be 3D and not 2D. A 2D part does not constitute a representative case.
 import sys
 import salome
 
@@ -31,13 +33,11 @@ theStudy = salome.myStudy
 
 import GEOM
 from salome.geom import geomBuilder
-geompy = geomBuilder.New()
-
 import math
 import SALOMEDS
 
 
-geompy = geomBuilder.New(theStudy)
+geompy = geomBuilder.New()
 
 h = 5
 
@@ -97,12 +97,27 @@ MG_CADSurf_Parameters_2.SetAngleMesh( 4 )
 MG_CADSurf_Parameters_2.SetAnisotropic( True )
 isDone = Mesh_2.Compute()
 
-min_2, max_2 = Mesh_2.GetMinMax(SMESH.FT_Area)
 
-# Check that min and max ration increase with anisotropy
-assert max_2/min_2 > 20
+errorMsg = ''
+
+# retrieve the 2D lengths
+length_1 = Mesh_1.GetMinMax(SMESH.FT_Length)[1]
+length_2 = Mesh_2.GetMinMax(SMESH.FT_Length)[1]
+
+# TEST: expecting the max length to be larger for Mesh_2
+if length_1 > length_2:
+  errorMsg += '\n' + ' -> Inconsistent max lengths comparison: Mesh_1 = {} Mesh_2 = {}'.format(length_1,length_2)
+
+# retrieve the max aspect ratio for the meshes
+aspectRatio_1 = Mesh_1.GetMinMax(SMESH.FT_AspectRatio)[1]
+aspectRatio_2 = Mesh_2.GetMinMax(SMESH.FT_AspectRatio)[1]
+
+# TEST: expecting the max value for the aspect ratio to be larger for Mesh_2 
+if aspectRatio_1 > aspectRatio_2:
+  errorMsg += '\n' + ' -> Inconsistent Aspect ratios comparison: Mesh_1 = {} Mesh_2 = {}'.format(aspectRatio_1,aspectRatio_2)
+
+if errorMsg != '':
+  raise RuntimeError("Aspect ratio check the isotropic option with MG-CADSURF algo. The test is KO." + errorMsg )
 
 if salome.sg.hasDesktop():
   salome.sg.updateObjBrowser()
-
-

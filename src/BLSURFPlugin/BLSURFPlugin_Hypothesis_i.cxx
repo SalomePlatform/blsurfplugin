@@ -790,16 +790,16 @@ CORBA::Long BLSURFPlugin_Hypothesis_i::GetTopology() {
 /*!
  *  Activate/deactivate surface proximity computation
  */
-void BLSURFPlugin_Hypothesis_i::SetUseSurfaceProximity( CORBA::Boolean toUse )
+void BLSURFPlugin_Hypothesis_i::SetSurfaceProximity( CORBA::Boolean toUse )
 {
-  if ( GetUseSurfaceProximity() != toUse )
+  if ( GetSurfaceProximity() != toUse )
   {
     this->GetImpl()->SetUseSurfaceProximity( toUse );
-    SMESH::TPythonDump() << _this() << ".SetUseSurfaceProximity( " << toUse << " )";
+    SMESH::TPythonDump() << _this() << ".SetSurfaceProximity( " << toUse << " )";
   }
 }
 
-CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetUseSurfaceProximity()
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetSurfaceProximity()
 {
   return this->GetImpl()->GetUseSurfaceProximity();
 }
@@ -844,16 +844,16 @@ CORBA::Double BLSURFPlugin_Hypothesis_i::GetSurfaceProximityRatio()
 /*!
  *  Activate/deactivate volume proximity computation
  */
-void BLSURFPlugin_Hypothesis_i::SetUseVolumeProximity( CORBA::Boolean toUse )
+void BLSURFPlugin_Hypothesis_i::SetVolumeProximity( CORBA::Boolean toUse )
 {
-  if ( GetUseVolumeProximity() != toUse )
+  if ( GetVolumeProximity() != toUse )
   {
     this->GetImpl()->SetUseVolumeProximity( toUse );
-    SMESH::TPythonDump() << _this() << ".SetUseVolumeProximity( " << toUse << " )";
+    SMESH::TPythonDump() << _this() << ".SetVolumeProximity( " << toUse << " )";
   }
 }
 
-CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetUseVolumeProximity()
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetVolumeProximity()
 {
   return this->GetImpl()->GetUseVolumeProximity();
 }

@@ -202,7 +202,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   # @param toUse boolean flag
   #
   def SetSurfaceProximity(self, toUse ):
-    self.Parameters().SetUseSurfaceProximity(toUse)
+    self.Parameters().SetSurfaceProximity(toUse)
     return
 
   ## Set number of surface element layers to be generated due to surface proximity
@@ -223,7 +223,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   # @param toUse boolean flag
   #
   def SetVolumeProximity(self, toUse ):
-    self.Parameters().SetUseVolumeProximity(toUse)
+    self.Parameters().SetVolumeProximity(toUse)
     return
   
   ## Set number of surface element layers to be generated due to volume proximity

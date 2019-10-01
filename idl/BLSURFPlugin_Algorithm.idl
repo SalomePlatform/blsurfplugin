@@ -315,8 +315,8 @@ module BLSURFPlugin
     /*!
      *  Activate/deactivate surface proximity computation
      */
-    void SetUseSurfaceProximity( in boolean toUse );
-    boolean GetUseSurfaceProximity();
+    void SetSurfaceProximity( in boolean toUse );
+    boolean GetSurfaceProximity();
 
     /*!
      * Set number of surface element layers to be generated due to surface proximity
@@ -333,8 +333,8 @@ module BLSURFPlugin
     /*!
      *  Activate/deactivate volume proximity computation
      */
-    void SetUseVolumeProximity( in boolean toUse );
-    boolean GetUseVolumeProximity();
+    void SetVolumeProximity( in boolean toUse );
+    boolean GetVolumeProximity();
 
     /*!
      * Set number of surface element layers to be generated due to volume proximity

@@ -134,8 +134,8 @@ public:
   /*!
    *  Activate/deactivate surface proximity computation
    */
-  void SetUseSurfaceProximity( CORBA::Boolean toUse );
-  CORBA::Boolean GetUseSurfaceProximity();
+  void SetSurfaceProximity( CORBA::Boolean toUse );
+  CORBA::Boolean GetSurfaceProximity();
 
   /*!
    * Set number of surface element layers to be generated due to surface proximity
@@ -152,8 +152,8 @@ public:
   /*!
    *  Activate/deactivate volume proximity computation
    */
-  void SetUseVolumeProximity( CORBA::Boolean toUse );
-  CORBA::Boolean GetUseVolumeProximity();
+  void SetVolumeProximity( CORBA::Boolean toUse );
+  CORBA::Boolean GetVolumeProximity();
 
   /*!
    * Set number of surface element layers to be generated due to volume proximity

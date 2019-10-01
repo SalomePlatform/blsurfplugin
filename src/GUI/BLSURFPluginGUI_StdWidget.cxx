@@ -52,6 +52,8 @@ BLSURFPluginGUI_StdWidget::BLSURFPluginGUI_StdWidget( QWidget* parent, Qt::Windo
   myTinyEdgeOptimisLength->RangeStepAndValidator(0, COORD_MAX, 0.1, "length_precision");
   myCorrectSurfaceIntersectionMaxCost->RangeStepAndValidator(0, COORD_MAX, 1);
   myBadElementAspectRatio->RangeStepAndValidator(0, COORD_MAX, 1000, "length_precision");
+  mySurfaceProximityRatio->RangeStepAndValidator(1, COORD_MAX, 1, "length_precision");
+  myVolumeProximityRatio->RangeStepAndValidator(1, COORD_MAX, 1, "length_precision");
   myMinSize->setText("");
   myMaxSize->setText("");
   myAngleMesh->setText("");
@@ -131,25 +133,3 @@ void BLSURFPluginGUI_StdWidget::onEditingFinished() {
     spinBox->setText("");
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

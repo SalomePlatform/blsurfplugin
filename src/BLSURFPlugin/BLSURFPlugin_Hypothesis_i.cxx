@@ -787,6 +787,115 @@ CORBA::Long BLSURFPlugin_Hypothesis_i::GetTopology() {
 }
 
 //=============================================================================
+/*!
+ *  Activate/deactivate surface proximity computation
+ */
+void BLSURFPlugin_Hypothesis_i::SetUseSurfaceProximity( CORBA::Boolean toUse )
+{
+  if ( GetUseSurfaceProximity() != toUse )
+  {
+    this->GetImpl()->SetUseSurfaceProximity( toUse );
+    SMESH::TPythonDump() << _this() << ".SetUseSurfaceProximity( " << toUse << " )";
+  }
+}
+
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetUseSurfaceProximity()
+{
+  return this->GetImpl()->GetUseSurfaceProximity();
+}
+
+//=============================================================================
+/*!
+ * Set number of surface element layers to be generated due to surface proximity
+ */
+void BLSURFPlugin_Hypothesis_i::SetNbSurfaceProximityLayers( CORBA::Short nbLayers )
+{
+  if ( GetNbSurfaceProximityLayers() != nbLayers )
+  {
+    this->GetImpl()->SetNbSurfaceProximityLayers( nbLayers );
+    SMESH::TPythonDump() << _this() << ".SetNbSurfaceProximityLayers( " << nbLayers << " )";
+  }
+}
+
+CORBA::Short BLSURFPlugin_Hypothesis_i::GetNbSurfaceProximityLayers()
+{
+  return this->GetImpl()->GetNbSurfaceProximityLayers();
+}
+
+//=============================================================================
+/*!
+ * Set coefficient by which size of element refined due to surface proximity is increased
+ */
+void BLSURFPlugin_Hypothesis_i::SetSurfaceProximityRatio( CORBA::Double ratio )
+{
+  if ( GetSurfaceProximityRatio() != ratio )
+  {
+    this->GetImpl()->SetSurfaceProximityRatio( ratio );
+    SMESH::TPythonDump() << _this() << ".SetSurfaceProximityRatio( " << ratio << " )";
+  }
+}
+
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetSurfaceProximityRatio()
+{
+  return this->GetImpl()->GetSurfaceProximityRatio();
+}
+
+//=============================================================================
+/*!
+ *  Activate/deactivate volume proximity computation
+ */
+void BLSURFPlugin_Hypothesis_i::SetUseVolumeProximity( CORBA::Boolean toUse )
+{
+  if ( GetUseVolumeProximity() != toUse )
+  {
+    this->GetImpl()->SetUseVolumeProximity( toUse );
+    SMESH::TPythonDump() << _this() << ".SetUseVolumeProximity( " << toUse << " )";
+  }
+}
+
+CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetUseVolumeProximity()
+{
+  return this->GetImpl()->GetUseVolumeProximity();
+}
+
+
+//=============================================================================
+/*!
+ * Set number of surface element layers to be generated due to volume proximity
+ */
+void BLSURFPlugin_Hypothesis_i::SetNbVolumeProximityLayers( CORBA::Short nbLayers )
+{
+  if ( GetNbVolumeProximityLayers() != nbLayers )
+  {
+    this->GetImpl()->SetNbVolumeProximityLayers( nbLayers );
+    SMESH::TPythonDump() << _this() << ".SetNbVolumeProximityLayers( " << nbLayers << " )";
+  }
+}
+
+CORBA::Short BLSURFPlugin_Hypothesis_i::GetNbVolumeProximityLayers()
+{
+  return this->GetImpl()->GetNbVolumeProximityLayers();
+}
+
+//=============================================================================
+  /*!
+   * Set coefficient by which size of element refined due to volume proximity is increased
+   */
+void BLSURFPlugin_Hypothesis_i::SetVolumeProximityRatio( CORBA::Double ratio )
+{
+  if ( GetVolumeProximityRatio() != ratio )
+  {
+    this->GetImpl()->SetVolumeProximityRatio( ratio );
+    SMESH::TPythonDump() << _this() << ".SetVolumeProximityRatio( " << ratio << " )";
+  }
+}
+
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetVolumeProximityRatio()
+{
+  return this->GetImpl()->GetVolumeProximityRatio();
+}
+
+//=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetVerbosity(CORBA::Short theVal) throw (SALOME::SALOME_Exception) {
   ASSERT(myBaseImpl);
   if (theVal < 0 || theVal > 100)

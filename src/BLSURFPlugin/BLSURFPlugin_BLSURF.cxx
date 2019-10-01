@@ -879,6 +879,12 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
   bool   _quadraticMesh         = BLSURFPlugin_Hypothesis::GetDefaultQuadraticMesh();
   int    _verb                  = BLSURFPlugin_Hypothesis::GetDefaultVerbosity();
   //int    _topology              = BLSURFPlugin_Hypothesis::GetDefaultTopology();
+  bool   _useSurfaceProximity      = BLSURFPlugin_Hypothesis::GetDefaultUseSurfaceProximity     ();
+  int    _nbSurfaceProximityLayers = BLSURFPlugin_Hypothesis::GetDefaultNbSurfaceProximityLayers();
+  double _surfaceProximityRatio    = BLSURFPlugin_Hypothesis::GetDefaultSurfaceProximityRatio   ();
+  bool   _useVolumeProximity       = BLSURFPlugin_Hypothesis::GetDefaultUseVolumeProximity      ();
+  int    _nbVolumeProximityLayers  = BLSURFPlugin_Hypothesis::GetDefaultNbVolumeProximityLayers ();
+  double _volumeProximityRatio     = BLSURFPlugin_Hypothesis::GetDefaultVolumeProximityRatio    ();
 
   // PreCAD
   //int _precadMergeEdges         = BLSURFPlugin_Hypothesis::GetDefaultPreCADMergeEdges();
@@ -941,6 +947,13 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
     //_precadRemoveDuplicateCADFaces = hyp->GetPreCADRemoveDuplicateCADFaces();
     //_precadProcess3DTopology = hyp->GetPreCADProcess3DTopology();
     //_precadDiscardInput      = hyp->GetPreCADDiscardInput();
+    _useSurfaceProximity      = hyp->GetUseSurfaceProximity     ();
+    _nbSurfaceProximityLayers = hyp->GetNbSurfaceProximityLayers();
+    _surfaceProximityRatio    = hyp->GetSurfaceProximityRatio   ();
+    _useVolumeProximity       = hyp->GetUseVolumeProximity      ();
+    _nbVolumeProximityLayers  = hyp->GetNbVolumeProximityLayers ();
+    _volumeProximityRatio     = hyp->GetVolumeProximityRatio    ();
+
 
     const BLSURFPlugin_Hypothesis::TOptionValues& opts = hyp->GetOptionValues();
     BLSURFPlugin_Hypothesis::TOptionValues::const_iterator opIt;
@@ -1085,6 +1098,19 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
    set_param(css, "optimisation",                      _optimizeMesh ? "yes" : "no");
    set_param(css, "element_order",                     _quadraticMesh ? "quadratic" : "linear");
    set_param(css, "verbose",                           val_to_string(_verb).c_str());
+
+   set_param(css, "use_surface_proximity",             _useSurfaceProximity ? "yes" : "no" );
+   if ( _useSurfaceProximity )
+   {
+     set_param(css, "surface_proximity_layers",        SMESH_Comment( _nbSurfaceProximityLayers ));
+     set_param(css, "surface_proximity_ratio",         SMESH_Comment( _surfaceProximityRatio ));
+   }
+   set_param(css, "use_volume_proximity",             _useVolumeProximity ? "yes" : "no" );
+   if ( _useVolumeProximity )
+   {
+     set_param(css, "volume_proximity_layers",        SMESH_Comment( _nbVolumeProximityLayers ));
+     set_param(css, "volume_proximity_ratio",         SMESH_Comment( _volumeProximityRatio ));
+   }
 
    _smp_phy_size = _phySizeRel ? _phySize*diagonal : _phySize;
    if ( _verb > 0 )

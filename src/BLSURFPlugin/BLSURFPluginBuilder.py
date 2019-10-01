@@ -198,6 +198,49 @@ class BLSURF_Algorithm(Mesh_Algorithm):
     self.Parameters().SetTopology(way)
     pass
 
+  ## Activate/deactivate surface proximity computation
+  # @param toUse boolean flag
+  #
+  def SetSurfaceProximity(self, toUse ):
+    self.Parameters().SetUseSurfaceProximity(toUse)
+    return
+
+  ## Set number of surface element layers to be generated due to surface proximity
+  # @param nbLayers number of layers
+  #
+  def SetNbSurfaceProximityLayers(self, nbLayers ):
+    self.Parameters().SetNbSurfaceProximityLayers( nbLayers )
+    return
+
+  ## Set coefficient by which size of element refined due to surface proximity is increased
+  # @param ratio proximity coefficient
+  #
+  def SetSurfaceProximityRatio(self, ratio ):
+    self.Parameters().SetSurfaceProximityRatio(ratio)
+    return
+  
+  ## Activate/deactivate volume proximity computation
+  # @param toUse boolean flag
+  #
+  def SetVolumeProximity(self, toUse ):
+    self.Parameters().SetUseVolumeProximity(toUse)
+    return
+  
+  ## Set number of surface element layers to be generated due to volume proximity
+  # @param nbLayers number of layers
+  #
+  def SetNbVolumeProximityLayers(self, nbLayers ):
+    self.Parameters().SetNbVolumeProximityLayers(nbLayers)
+    return
+
+  ## Set coefficient by which size of element refined due to volume proximity is increased
+  # @param ratio proximity coefficient
+  #
+  def SetVolumeProximityRatio(self, ratio ):
+    self.Parameters().SetVolumeProximityRatio(ratio)
+    return
+
+
   ## Sets verbosity level in the range 0 to 100.
   #  @param level verbosity level
   def SetVerbosity(self, level):
@@ -332,6 +375,28 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   #  
   def SetTags( self, howToTreat ):
     self.Parameters().SetTags( howToTreat )
+
+  ## Activate/deactivate fully patch independent meshing
+  #   @param isIndependent boolean flag
+  #
+  # This feature can only be used if the @a tags parameter is set to "respect".
+  # By default this option deactivated.
+  #
+  def SetPatchIndependent( self, isIndependent ):
+    self.SetOptionValue( "allow_patch_independent", "yes" if isIndependent else "no" )
+
+  ## Set to preserve lines defined by a sharp angle in the input discrete geometry
+  #   @param toCompute boolean flag
+  #
+  # If this option is deactivated, MeshGems-CADSurf will not try to preserve lines
+  # defined by a sharp angle in the input discrete geometry. Only input ridges, free
+  # edges, non manifold edges and separation betwen zones with different attributes
+  # will be respected (if tags is set to respect).
+  # By default this option activated.
+  #
+  def SetComputeRidges( self, toCompute ):
+    self.SetOptionValue( "compute_ridges", "yes" if toCompute else "no" )
+
 
   ## Activate removal of the tiny edges from the generated
   # mesh when it improves the local mesh quality, without taking into account the

@@ -50,7 +50,7 @@ namespace
 
 //=============================================================================
 BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, SMESH_Gen * gen, bool hasgeom) :
-  SMESH_Hypothesis(hypId, gen), 
+  SMESH_Hypothesis(hypId, gen),
   _physicalMesh(GetDefaultPhysicalMesh()),
   _geometricMesh(GetDefaultGeometricMesh()),
   _phySize(GetDefaultPhySize()),
@@ -65,7 +65,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, SMESH_Gen * gen, boo
   _volumeGradation(GetDefaultVolumeGradation()),
   _elementType(GetDefaultElementType()),
   _angleMesh(GetDefaultAngleMesh()),
-  _chordalError(GetDefaultChordalError()), 
+  _chordalError(GetDefaultChordalError()),
   _anisotropic(GetDefaultAnisotropic()),
   _anisotropicRatio(GetDefaultAnisotropicRatio()),
   _removeTinyEdges(GetDefaultRemoveTinyEdges()),
@@ -80,6 +80,12 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, SMESH_Gen * gen, boo
   _quadraticMesh(GetDefaultQuadraticMesh()),
   _verb(GetDefaultVerbosity()),
   _topology(GetDefaultTopology()),
+  _useSurfaceProximity(GetDefaultUseSurfaceProximity()),
+  _nbSurfaceProximityLayers(GetDefaultNbSurfaceProximityLayers()),
+  _surfaceProximityRatio(GetDefaultSurfaceProximityRatio()),
+  _useVolumeProximity(GetDefaultUseVolumeProximity()),
+  _nbVolumeProximityLayers(GetDefaultNbVolumeProximityLayers()),
+  _volumeProximityRatio(GetDefaultVolumeProximityRatio()),
   _preCADMergeEdges(GetDefaultPreCADMergeEdges()),
   _preCADRemoveDuplicateCADFaces(GetDefaultPreCADRemoveDuplicateCADFaces()),
   _preCADProcess3DTopology(GetDefaultPreCADProcess3DTopology()),
@@ -101,8 +107,6 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, SMESH_Gen * gen, boo
 {
   _name = GetHypType(hasgeom);
   _param_algo_dim = 2;
-  
-//   _GMFFileMode = false; // GMF ascii mode
 
   // Advanced options with their defaults according to MG User Manual
 
@@ -115,8 +119,10 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, SMESH_Gen * gen, boo
                                             // "optimise_tiny_edges",                      // default = 0
                                             // "remove_duplicate_cad_faces",               // default = 1
                                             "tiny_edge_avoid_surface_intersections",    // default = 1
-                                            "debug",                                    // default = 0 
-                                            "use_deprecated_patch_mesher",              // default 0
+                                            "debug",                                    // default = 0
+                                            "allow_patch_independent",                   // false
+
+                                            //"use_deprecated_patch_mesher",              // default 0
                                             // "tiny_edge_respect_geometry",               // default = 0
                                             "" // mark of end
       };
@@ -147,6 +153,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, SMESH_Gen * gen, boo
                                             // remove_tiny_uv_edges option is not documented
                                             // but it is useful that the user can change it to disable all preprocessing options
                                             "remove_tiny_uv_edges",                        // default = 1
+                                            "compute_ridges",                             // true
                                             "" // mark of end
       };
   const char* preCADintOptionNames[] = {    // "manifold_geometry",                        // default = 0
@@ -210,11 +217,11 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, SMESH_Gen * gen, boo
   _defaultOptionValues["max_number_of_points_per_patch"         ] = "0";
   _defaultOptionValues["max_number_of_threads"                  ] = "4";
   _defaultOptionValues["rectify_jacobian"                       ] = "yes";
-  _defaultOptionValues["use_deprecated_patch_mesher"            ] = "yes";
   _defaultOptionValues["respect_geometry"                       ] = "yes";
   _defaultOptionValues["tiny_edge_avoid_surface_intersections"  ] = "yes";
-  _defaultOptionValues["use_deprecated_patch_mesher"            ] = "no";
+  //_defaultOptionValues["use_deprecated_patch_mesher"          ] = "no";
   _defaultOptionValues["debug"                                  ] = "no";
+  _defaultOptionValues["allow_patch_independent"                ] = "no";
   if ( hasgeom )
   {
     _defaultOptionValues["closed_geometry"                        ] = "no";
@@ -227,6 +234,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, SMESH_Gen * gen, boo
     _defaultOptionValues["required_entities"                      ] = "respect";
     _defaultOptionValues["sewing_tolerance"                       ] = "5e-4*D";
     _defaultOptionValues["tags"                                   ] = "respect";
+    _defaultOptionValues["compute_ridges"                         ] = "yes";
   }
 
 #ifdef _DEBUG_
@@ -237,20 +245,6 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, SMESH_Gen * gen, boo
   ASSERT( _option2value.size() + _preCADoption2value.size() == _defaultOptionValues.size() );
 #endif
 
-  _sizeMap.clear();
-  _attractors.clear();
-  _faceEntryEnfVertexListMap.clear();
-  _enfVertexList.clear();
-  _faceEntryCoordsListMap.clear();
-  _coordsEnfVertexMap.clear();
-  _faceEntryEnfVertexEntryListMap.clear();
-  _enfVertexEntryEnfVertexMap.clear();
-  _groupNameNodeIDMap.clear();
-
-  /* TODO GROUPS
-   _groupNameEnfVertexListMap.clear();
-   _enfVertexGroupNameMap.clear();
-   */
 }
 
 TopoDS_Shape BLSURFPlugin_Hypothesis::entryToShape(std::string entry)
@@ -486,6 +480,66 @@ void BLSURFPlugin_Hypothesis::SetTopology(Topology theTopology) {
 }
 
 //=============================================================================
+void BLSURFPlugin_Hypothesis::SetUseSurfaceProximity( bool toUse )
+{
+  if ( _useSurfaceProximity != toUse )
+  {
+    _useSurfaceProximity = toUse;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetNbSurfaceProximityLayers( int nbLayers )
+{
+  if ( _nbSurfaceProximityLayers != nbLayers )
+  {
+    _nbSurfaceProximityLayers = nbLayers;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetSurfaceProximityRatio( double ratio )
+{
+  if ( _surfaceProximityRatio != ratio )
+  {
+    _surfaceProximityRatio = ratio;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetUseVolumeProximity( bool toUse )
+{
+  if ( _useVolumeProximity != toUse )
+  {
+    _useVolumeProximity = toUse;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetNbVolumeProximityLayers( int nbLayers )
+{
+  if ( _nbVolumeProximityLayers != nbLayers )
+  {
+    _nbVolumeProximityLayers = nbLayers;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetVolumeProximityRatio( double ratio )
+{
+  if ( _volumeProximityRatio != ratio )
+  {
+    _volumeProximityRatio = ratio;
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//=============================================================================
 void BLSURFPlugin_Hypothesis::SetVerbosity(int theVal) {
   if (theVal != _verb) {
     _verb = theVal;
@@ -541,16 +595,16 @@ bool BLSURFPlugin_Hypothesis::GetJacobianRectification()
 
 void BLSURFPlugin_Hypothesis::SetUseDeprecatedPatchMesher( bool useDeprecatedPatchMesher )
 {
-  if ( GetUseDeprecatedPatchMesher() != useDeprecatedPatchMesher )
-  {
-    SetOptionValue( "use_deprecated_patch_mesher", useDeprecatedPatchMesher ? "yes" : "no" );
-    NotifySubMeshesHypothesisModification();
-  }
+  // if ( GetUseDeprecatedPatchMesher() != useDeprecatedPatchMesher )
+  // {
+  //   SetOptionValue( "use_deprecated_patch_mesher", useDeprecatedPatchMesher ? "yes" : "no" );
+  //   NotifySubMeshesHypothesisModification();
+  // }
 }
 //=============================================================================
 bool BLSURFPlugin_Hypothesis::GetUseDeprecatedPatchMesher()
 {
-  return ToBool( GetOptionValue("use_deprecated_patch_mesher", GET_DEFAULT()));
+  return false;//ToBool( GetOptionValue("use_deprecated_patch_mesher", GET_DEFAULT()));
 }
 //=============================================================================
 
@@ -2097,6 +2151,14 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save)
       save << *tag << " ";
   }
 
+  // New options in 2.9.6 (issue #17784)
+  save << " " << _useSurfaceProximity;
+  save << " " << _nbSurfaceProximityLayers;
+  save << " " << _surfaceProximityRatio;
+  save << " " << _useVolumeProximity;
+  save << " " << _nbVolumeProximityLayers;
+  save << " " << _volumeProximityRatio;
+
   return save;
 }
 
@@ -3108,6 +3170,16 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
             _hyperPatchList.resize( i );
       }
     }
+  }
+
+  // New options in 2.9.6 (issue #17784)
+  if ( static_cast<bool>( load >> _useSurfaceProximity ));
+  {
+    load >> _nbSurfaceProximityLayers;
+    load >> _surfaceProximityRatio;
+    load >> _useVolumeProximity;
+    load >> _nbVolumeProximityLayers;
+    isOK = static_cast<bool>( load >> _volumeProximityRatio );
   }
 
   return load;

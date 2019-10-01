@@ -130,6 +130,44 @@ public:
   void SetTopology(CORBA::Long theValue);
   CORBA::Long GetTopology();
 
+
+  /*!
+   *  Activate/deactivate surface proximity computation
+   */
+  void SetUseSurfaceProximity( CORBA::Boolean toUse );
+  CORBA::Boolean GetUseSurfaceProximity();
+
+  /*!
+   * Set number of surface element layers to be generated due to surface proximity
+   */
+  void SetNbSurfaceProximityLayers( CORBA::Short nbLayers );
+  CORBA::Short GetNbSurfaceProximityLayers();
+
+  /*!
+   * Set coefficient by which size of element refined due to surface proximity is increased
+   */
+  void SetSurfaceProximityRatio( CORBA::Double ratio );
+  CORBA::Double GetSurfaceProximityRatio();
+
+  /*!
+   *  Activate/deactivate volume proximity computation
+   */
+  void SetUseVolumeProximity( CORBA::Boolean toUse );
+  CORBA::Boolean GetUseVolumeProximity();
+
+  /*!
+   * Set number of surface element layers to be generated due to volume proximity
+   */
+  void SetNbVolumeProximityLayers( CORBA::Short nbLayers );
+  CORBA::Short GetNbVolumeProximityLayers();
+
+  /*!
+   * Set coefficient by which size of element refined due to volume proximity is increased
+   */
+  void SetVolumeProximityRatio( CORBA::Double ratio );
+  CORBA::Double GetVolumeProximityRatio();
+
+
   void SetVerbosity(CORBA::Short theVal) throw (SALOME::SALOME_Exception);
   CORBA::Short GetVerbosity();
 

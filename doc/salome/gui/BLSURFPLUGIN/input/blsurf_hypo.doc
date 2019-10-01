@@ -65,6 +65,20 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
 
   - Quadrangles: generate a mesh with only quadrangles.
 
+- <b>Surface proximity</b> - activates surface proximity based refinement.
+
+  - <b>Number of layers</b> - number of surface element layers to be generated.
+
+  - <b>Ratio</b> -  a multiplicative coefficient which will be used to scale the size computed by
+the surface proximity detection.
+
+- <b>Volume proximity</b> - activates volume proximity based refinement.
+
+  - <b>Number of layers</b> - number of surface element layers to be generated.
+
+  - <b>Ratio</b> -  a multiplicative coefficient which will be used to scale the size computed by
+the volume proximity detection.
+
 - <b>Anisotropic</b> - if checked, this parameter defines the maximum anisotropic ratio of the metric governing the anisotropic meshing process.
 The default value (0) means that the metric (and thus the generated elements) can be arbitrarily stretched.
 
@@ -101,6 +115,8 @@ The notion of <i>diag</i> used in the descriptions means the diagonal of the bou
 \b Advanced page tab expose mostly useful advanced options. Initially, default values of the options are displayed and they are not modifiable. If an option is activated using a check-box, its value becomes modifiable.
 
 - \b Meshing options
+
+  - <b>Independent patches</b> - This parameter can be used to activate the more complete patch independent meshing, by generating the mesh on global user-defined hyperpatches.
 
   - <b>Enforce CAD edge sizes</b> - Relaxes the given sizemap constraint around CAD edges to allow a better
 element quality and a better geometric approximation. It is only useful in combination with the
@@ -140,6 +156,12 @@ local size on a vertex situated on a border curve.
   enhancement for mesh generation.
 
   \n All options are unchecked by default. No cleanup is made by default so that the mesh matches the shape. If the user has a bad shape (e.g. imported shape), he can activate some options to improve the mesh.
+
+  - <b>Compute ridges</b> -  If this option is deactivated,
+  MeshGems-CADSurf will not try to preserve lines defined by a sharp
+  angle in the input discrete geometry. Only input ridges, free edges,
+  non manifold edges and separation betwen zones with different
+  attributes will be respected (if tags is set to respect).
 
   - <b>Closed geometry</b> - describes whether the working geometry should be closed or not. 
   When activated, this option helps PreCAD to process the dirtiest geometries.

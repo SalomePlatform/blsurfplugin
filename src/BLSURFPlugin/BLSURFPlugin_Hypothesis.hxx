@@ -151,9 +151,27 @@ public:
   void SetTopology(Topology theTopology);
   Topology GetTopology() const { return _topology; }
 
+  bool GetUseSurfaceProximity() const { return _useSurfaceProximity; }
+  void SetUseSurfaceProximity( bool toUse );
+
+  int GetNbSurfaceProximityLayers() const { return _nbSurfaceProximityLayers; }
+  void SetNbSurfaceProximityLayers( int nbLayers );
+
+  double GetSurfaceProximityRatio() const { return _surfaceProximityRatio; }
+  void SetSurfaceProximityRatio( double ratio );
+
+  bool GetUseVolumeProximity() const { return _useVolumeProximity; }
+  void SetUseVolumeProximity( bool toUse );
+
+  int GetNbVolumeProximityLayers() const { return _nbVolumeProximityLayers; }
+  void SetNbVolumeProximityLayers( int nbLayers );
+
+  double GetVolumeProximityRatio() const { return _volumeProximityRatio; }
+  void SetVolumeProximityRatio( double ratio );
+
   void SetVerbosity(int theVal);
   int GetVerbosity() const { return _verb; }
-  
+
   void ClearEntry(const std::string& entry, const char * attEntry = 0);
   void ClearSizeMaps();
 
@@ -162,7 +180,7 @@ public:
 
   void SetJacobianRectificationRespectGeometry( bool allowRectification );
   bool GetJacobianRectificationRespectGeometry();
-    
+
   void SetUseDeprecatedPatchMesher( bool useDeprecatedPatchMesher );
   bool GetUseDeprecatedPatchMesher();
 
@@ -434,7 +452,13 @@ public:
   static double          GetDefaultVolumeGradation() { return 2; }
   static ElementType     GetDefaultElementType() { return Triangles; }
   static double          GetDefaultAngleMesh() { return 8.0; }
-  
+  static bool            GetDefaultUseSurfaceProximity() { return false; }
+  static int             GetDefaultNbSurfaceProximityLayers() { return 1; }
+  static double          GetDefaultSurfaceProximityRatio() { return 1.; }
+  static bool            GetDefaultUseVolumeProximity() { return false; }
+  static int             GetDefaultNbVolumeProximityLayers() { return 1; }
+  static double          GetDefaultVolumeProximityRatio() { return 1.; }
+
   static double          GetDefaultChordalError(double diagonal);
   static double          GetDefaultChordalError() { return undefinedDouble(); }
   static bool            GetDefaultAnisotropic() { return false; }
@@ -448,10 +472,10 @@ public:
   static bool            GetDefaultCorrectSurfaceIntersection() { return true; }
   static double          GetDefaultCorrectSurfaceIntersectionMaxCost() { return 15.; }
   static bool            GetDefaultBadElementRemoval() { return false; }
-  static double          GetDefaultBadElementAspectRatio() {return 1000.0; } 
+  static double          GetDefaultBadElementAspectRatio() {return 1000.0; }
   static bool            GetDefaultOptimizeMesh() { return true; }
   static bool            GetDefaultQuadraticMesh() { return false; }
-  
+
   static int             GetDefaultVerbosity() { return 3; }
   static Topology        GetDefaultTopology() { return FromCAD; }
   // PreCAD
@@ -459,7 +483,7 @@ public:
   static bool            GetDefaultPreCADRemoveDuplicateCADFaces() { return false; }
   static bool            GetDefaultPreCADProcess3DTopology() { return false; }
   static bool            GetDefaultPreCADDiscardInput() { return false; }
-  
+
   static TSizeMap        GetDefaultSizeMap() { return TSizeMap();}
   static TAttractorMap   GetDefaultAttractorMap() { return TAttractorMap(); }
 
@@ -591,13 +615,19 @@ private:
   bool            _quadraticMesh;
   int             _verb;
   Topology        _topology;
-  
+  bool            _useSurfaceProximity;
+  int             _nbSurfaceProximityLayers;
+  double          _surfaceProximityRatio;
+  bool            _useVolumeProximity;
+  int             _nbVolumeProximityLayers;
+  double          _volumeProximityRatio;
+
   bool            _preCADMergeEdges;
   bool            _preCADRemoveDuplicateCADFaces;
   bool            _preCADProcess3DTopology;
   bool            _preCADDiscardInput;
   double          _preCADEpsNano;
-  
+
   TOptionValues   _option2value, _preCADoption2value, _customOption2value; // user defined values
   TOptionValues   _defaultOptionValues;               // default values
   TOptionNames    _doubleOptions, _charOptions, _boolOptions; // to find a type of option

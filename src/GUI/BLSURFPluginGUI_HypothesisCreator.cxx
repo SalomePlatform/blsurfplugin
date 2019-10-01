@@ -1793,7 +1793,7 @@ void BLSURFPluginGUI_HypothesisCreator::onPeriodicityContentModified()
 
 
 /** BLSURFPluginGUI_HypothesisCreator::retrieveParams()
-This method updates the GUI widgets with the hypothesis data
+    This method updates the GUI widgets with the hypothesis data
 */
 void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
 {
@@ -1834,12 +1834,29 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
     myStdWidget->myVolumeGradation->setText("");
   else
     myStdWidget->myVolumeGradation->SetValue( data.myVolumeGradation );
-  
+
   foreach (QAbstractButton* button, myStdWidget->myButtonGroupElementType->buttons()) {
     if (myStdWidget->myButtonGroupElementType->id(button) == data.myElementType) {
       button->setChecked(true);
       break;
     }
+  }
+
+  myStdWidget->myUseSurfaceProximity->setChecked( data.myUseSurfaceProximity );
+  myStdWidget->myNbSurfaceProximityLayers->setValue( data.myNbSurfaceProximityLayers );
+  myStdWidget->mySurfaceProximityRatio->SetValue( data.mySurfaceProximityRatio );
+  myStdWidget->myUseVolumeProximity->setChecked( data.myUseVolumeProximity );
+  myStdWidget->myNbVolumeProximityLayers->setValue( data.myNbVolumeProximityLayers );
+  myStdWidget->myVolumeProximityRatio->SetValue( data.myVolumeProximityRatio );
+  if ( !data.myUseSurfaceProximity )
+  {
+    //myStdWidget->myNbSurfaceProximityLayers->setText("");
+    myStdWidget->mySurfaceProximityRatio->setText("");
+  }
+  if ( !data.myUseVolumeProximity )
+  {
+    //myStdWidget->myNbVolumeProximityLayers->setText("");
+    myStdWidget->myVolumeProximityRatio->setText("");
   }
 
   if (data.myAngleMesh < 0)
@@ -2056,7 +2073,7 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   h_data.myTinyEdgeOptimisLength  = myTinyEdgeOptimisLength > 0 ? myTinyEdgeOptimisLength : -1.0;
   h_data.myCorrectSurfaceIntersection = h->GetCorrectSurfaceIntersection();
   double corrSurfaceIntersMaxCost = h->GetCorrectSurfaceIntersectionMaxCost();
-  h_data.myCorrectSurfaceIntersectionMaxCost  = corrSurfaceIntersMaxCost > 0 ? corrSurfaceIntersMaxCost : -1.0;
+  h_data.myCorrectSurfaceIntersectionMaxCost = corrSurfaceIntersMaxCost > 0 ? corrSurfaceIntersMaxCost : -1.0;
   h_data.myForceBadElementRemoval = h->GetBadElementRemoval();
   double myBadElementAspectRatio  = h->GetBadElementAspectRatio();
   h_data.myBadElementAspectRatio  = myBadElementAspectRatio > 0 ? myBadElementAspectRatio : -1.0;
@@ -2067,7 +2084,12 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   //h_data.myPreCADMergeEdges       = h->GetPreCADMergeEdges();
   // h_data.myPreCADProcess3DTopology  = h->GetPreCADProcess3DTopology();
   // h_data.myPreCADDiscardInput     = h->GetPreCADDiscardInput();
-
+  h_data.myUseSurfaceProximity      = h->GetUseSurfaceProximity     ();
+  h_data.myNbSurfaceProximityLayers = h->GetNbSurfaceProximityLayers();
+  h_data.mySurfaceProximityRatio    = h->GetSurfaceProximityRatio   ();
+  h_data.myUseVolumeProximity       = h->GetUseVolumeProximity      ();
+  h_data.myNbVolumeProximityLayers  = h->GetNbVolumeProximityLayers ();
+  h_data.myVolumeProximityRatio     = h->GetVolumeProximityRatio    ();
 
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
   that->myOptions       = h->GetOptionValues();
@@ -2301,26 +2323,33 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
     if ( h->GetVolumeGradation() !=  h_data.myVolumeGradation )
       h->SetVolumeGradation( h_data.myVolumeGradation <= 0 ? -1 : h_data.myVolumeGradation );
 
+    h->SetUseSurfaceProximity     ( h_data.myUseSurfaceProximity      );
+    h->SetNbSurfaceProximityLayers( h_data.myNbSurfaceProximityLayers );
+    h->SetSurfaceProximityRatio   ( h_data.mySurfaceProximityRatio    );
+    h->SetUseVolumeProximity      ( h_data.myUseVolumeProximity       );
+    h->SetNbVolumeProximityLayers ( h_data.myNbVolumeProximityLayers  );
+    h->SetVolumeProximityRatio    ( h_data.myVolumeProximityRatio     );
+
     if ( h->GetElementType() != h_data.myElementType )
       h->SetElementType( h_data.myElementType );
-    
+
     if ( (int) h_data.myGeometricMesh != DefaultGeom ) {
       if ( h->GetAngleMesh() != h_data.myAngleMesh )
         h->SetAngleMesh( h_data.myAngleMesh <= 0 ? -1 :h_data.myAngleMesh );
       if ( h->GetChordalError() != h_data.myChordalError )
         h->SetChordalError( h_data.myChordalError <= 0 ? -1 :h_data.myChordalError );
     }
-    
+
     if ( h->GetAnisotropic() != h_data.myAnisotropic )
       h->SetAnisotropic( h_data.myAnisotropic );
     if ( h_data.myAnisotropic && ( h->GetAnisotropicRatio() != h_data.myAnisotropicRatio ) )
       h->SetAnisotropicRatio( h_data.myAnisotropicRatio <= 0 ? -1 :h_data.myAnisotropicRatio );
-    
+
     if ( h->GetRemoveTinyEdges() != h_data.myRemoveTinyEdges )
       h->SetRemoveTinyEdges( h_data.myRemoveTinyEdges );
     if ( h_data.myRemoveTinyEdges && ( h->GetTinyEdgeLength() != h_data.myTinyEdgeLength ) )
       h->SetTinyEdgeLength( h_data.myTinyEdgeLength <= 0 ? -1 :h_data.myTinyEdgeLength );
-    
+
     if ( h->GetOptimiseTinyEdges() != h_data.myOptimiseTinyEdges )
       h->SetOptimiseTinyEdges( h_data.myOptimiseTinyEdges );
     if ( h_data.myOptimiseTinyEdges && ( h->GetTinyEdgeOptimisationLength() != h_data.myTinyEdgeOptimisLength ) )
@@ -2553,6 +2582,12 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
   //h_data.myPreCADMergeEdges      = myAdvWidget->myPreCADMergeEdges->isChecked();
   //h_data.myPreCADProcess3DTopology = myAdvWidget->myPreCADProcess3DTopology->isChecked();
   //h_data.myPreCADDiscardInput    = myAdvWidget->myPreCADDiscardInput->isChecked();
+  h_data.myUseSurfaceProximity      = myStdWidget->myUseSurfaceProximity     ->isChecked();
+  h_data.myNbSurfaceProximityLayers = myStdWidget->myNbSurfaceProximityLayers->value();
+  h_data.mySurfaceProximityRatio    = myStdWidget->mySurfaceProximityRatio   ->value();
+  h_data.myUseVolumeProximity       = myStdWidget->myUseVolumeProximity      ->isChecked();
+  h_data.myNbVolumeProximityLayers  = myStdWidget->myNbVolumeProximityLayers ->value();
+  h_data.myVolumeProximityRatio     = myStdWidget->myVolumeProximityRatio    ->value();
 
   QString guiHyp;
   guiHyp += tr("BLSURF_PHY_MESH") + " = " + QString::number( h_data.myPhysicalMesh ) + "; ";

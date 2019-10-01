@@ -171,6 +171,12 @@ typedef struct
   bool    myOptimizeMesh, myQuadraticMesh;
   bool    mySmpsurface,mySmpedge,mySmppoint,myEnforcedVertex,myInternalEnforcedVerticesAllFaces;
   long    myElementType;
+  bool    myUseSurfaceProximity;
+  int     myNbSurfaceProximityLayers;
+  double  mySurfaceProximityRatio;
+  bool    myUseVolumeProximity;
+  int     myNbVolumeProximityLayers;
+  double  myVolumeProximityRatio;
   // bool    myPreCADMergeEdges, myPreCADProcess3DTopology, myPreCADDiscardInput;
 //   bool    myGMFFileMode;
   std::string myGMFFileName, myInternalEnforcedVerticesAllFacesGroup;

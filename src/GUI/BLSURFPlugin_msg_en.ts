@@ -100,6 +100,58 @@ The default computed value is &lt;em&gt;diag&lt;/em&gt;/5.</translation>
         <translation>Maximum ratio between the lengths of two adjacent edges in 3D mesh.</translation>
     </message>
     <message>
+        <source>BLSURF_PROXIMITY</source>
+        <translation>Proximity</translation>
+    </message>
+    <message>
+        <source>BLSURF_SURFACE_PROXIMITY</source>
+        <translation>Surface proximity</translation>
+    </message>
+    <message>
+        <source>BLSURF_SURFACE_PROXIMITY_TOOLTIP</source>
+        <translation>Detection of proximities onto the surface.</translation>
+    </message>
+    <message>
+        <source>BLSURF_SURF_NB_LAYRES</source>
+        <translation>Number of layers</translation>
+    </message>
+    <message>
+        <source>BLSURF_SURF_NB_LAYRES_TOOLTIP</source>
+        <translation>Number of surface element layers.</translation>
+    </message>
+    <message>
+        <source>BLSURF_VOLUME_PROXIMITY</source>
+        <translation>Volume proximity</translation>
+    </message>
+    <message>
+        <source>BLSURF_VOLUME_PROXIMITY_TOOLTIP</source>
+        <translation>Detection of proximities into the volume.</translation>
+    </message>
+    <message>
+        <source>BLSURF_SURF_RATIO</source>
+        <translation>Ratio</translation>
+    </message>
+    <message>
+        <source>BLSURF_SURF_RATIO_TOOLTIP</source>
+        <translation>Ratio between layers.</translation>
+    </message>
+    <message>
+        <source>BLSURF_VOL_NB_LAYERS</source>
+        <translation>Number of layers</translation>
+    </message>
+    <message>
+        <source>BLSURF_VOL_NB_LAYERS_TOOLTIP</source>
+        <translation>Number of surface element layers.</translation>
+    </message>
+    <message>
+        <source>BLSURF_VOL_RATIO</source>
+        <translation>Ratio</translation>
+    </message>
+    <message>
+        <source>BLSURF_VOL_RATIO_TOOLTIP</source>
+        <translation>Ratio between layers.</translation>
+    </message>
+    <message>
         <source>BLSURF_ELEMENT_TYPE</source>
         <translation>Elements type</translation>
     </message>
@@ -676,6 +728,14 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
     <message>
         <source>tiny_edge_avoid_surface_intersections</source>
         <translation>Tiny edges avoid surface intersections</translation>
+    </message>
+    <message>
+        <source>allow_patch_independent</source>
+        <translation>Independent patches</translation>
+    </message>
+    <message>
+        <source>compute_ridges</source>
+        <translation>Compute ridges</translation>
     </message>
     <message>
         <source>closed_geometry</source>

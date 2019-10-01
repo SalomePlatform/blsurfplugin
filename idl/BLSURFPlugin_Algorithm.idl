@@ -138,7 +138,7 @@ module BLSURFPlugin
   {
 
     /*!
-     * Sets a way to define size of mesh elements to generate
+     *Set a way to define size of mesh elements to generate
      * 0 - size is defined automatically
      * 1 - size is set by SetPhySize() method
      * 2 - size is set by SetPhySize() method. A sizemap is defined.
@@ -147,7 +147,7 @@ module BLSURFPlugin
     long GetPhysicalMesh();
 
     /*!
-     * Sets a way to define maximum angular deflection of mesh from CAD model
+     *Set a way to define maximum angular deflection of mesh from CAD model
      * 0 - deflection is defined automatically
      * 1 - deflection is set by SetAngleMesh() method
      * 2 - deflection is set by SetAngleMesh() method. A sizemap is defined (TODO).
@@ -156,7 +156,7 @@ module BLSURFPlugin
     long GetGeometricMesh();
 
     /*!
-     * Sets size of mesh elements to generate
+     *Set size of mesh elements to generate
      */
     void SetPhySize(in double size);
     void SetPhySizeRel(in double size);
@@ -164,7 +164,7 @@ module BLSURFPlugin
     boolean IsPhySizeRel();
 
     /*!
-     * Sets lower boundary of mesh element size
+     *Set lower boundary of mesh element size
      */
     void SetMinSize(in double theMinSize);
     void SetMinSizeRel(in double theMinSize);
@@ -172,7 +172,7 @@ module BLSURFPlugin
     boolean IsMinSizeRel();
 
     /*!
-     * Sets upper boundary of mesh element size
+     *Set upper boundary of mesh element size
      */
     void SetMaxSize(in double theMaxSize);
     void SetMaxSizeRel(in double theMaxSize);
@@ -180,7 +180,7 @@ module BLSURFPlugin
     boolean IsMaxSizeRel();
 
     /*!
-     * Sets maximal allowed ratio between the lengths of two adjacent edges
+     *Set maximal allowed ratio between the lengths of two adjacent edges
      */
     void SetUseGradation(in boolean toUse);
     boolean GetUseGradation();
@@ -188,7 +188,7 @@ module BLSURFPlugin
     double GetGradation();
 
     /*!
-     * Sets maximal allowed ratio between the lengths of two adjacent edges in 3D mesh
+     *Set maximal allowed ratio between the lengths of two adjacent edges in 3D mesh
      */
     void SetUseVolumeGradation(in boolean toUse);
     boolean GetUseVolumeGradation();
@@ -196,20 +196,20 @@ module BLSURFPlugin
     double GetVolumeGradation();
 
     /*!
-     * Sets to create quadrilateral elements or not
+     *Set to create quadrilateral elements or not
      */
     void SetQuadAllowed(in boolean allowed);
     void SetElementType(in long elementType);
     long GetElementType();
 
     /*!
-     * Sets angular deflection (in degrees) of a mesh face and edge from CAD surface
+     *Set angular deflection (in degrees) of a mesh face and edge from CAD surface
      */
     void SetAngleMesh(in double angle);
     double GetAngleMesh();
 
     /*!
-     * Sets the maximum desired distance between a triangle and its supporting CAD surface
+     *Set the maximum desired distance between a triangle and its supporting CAD surface
      */
     void SetChordalError(in double distance);
     double GetChordalError();
@@ -274,7 +274,7 @@ module BLSURFPlugin
     double GetCorrectSurfaceIntersectionMaxCost();
 
     /*!
-     * This patch independent correction option can be activated to remove the bad 
+     * This patch independent correction option can be activated to remove the bad
      * elements (often called slivers) from the generated mesh, without taking into account
      * the tags (attributes) specification.
      */
@@ -283,7 +283,7 @@ module BLSURFPlugin
 
     /*!
      * This parameter defines the aspect ratio triggering the "bad element"
-     * classification for the force bad surface element removal option. 
+     * classification for the force bad surface element removal option.
      */
     void SetBadElementAspectRatio(in double ratio);
     double GetBadElementAspectRatio();
@@ -303,7 +303,7 @@ module BLSURFPlugin
     boolean GetQuadraticMesh();
 
     /*!
-     * Sets topology usage way defining how mesh conformity is assured
+     *Set topology usage way defining how mesh conformity is assured
      * value=0 - mesh conformity is assured by conformity of a shape
      * value=1,2 - mesh conformity is assured by pre-processing a CAD model (OBSOLETE)
      * value=3 - mesh conformity is assured by pre-processing a CAD model with Pre-CAD
@@ -311,8 +311,45 @@ module BLSURFPlugin
     void SetTopology(in long way);
     long GetTopology();
 
+    
     /*!
-     * Sets verbosity level in the range 0 to 100.
+     *  Activate/deactivate surface proximity computation
+     */
+    void SetUseSurfaceProximity( in boolean toUse );
+    boolean GetUseSurfaceProximity();
+
+    /*!
+     * Set number of surface element layers to be generated due to surface proximity
+     */
+    void SetNbSurfaceProximityLayers( in short nbLayers );
+    short GetNbSurfaceProximityLayers();
+
+    /*!
+     * Set coefficient by which size of element refined due to surface proximity is increased
+     */
+    void SetSurfaceProximityRatio( in double ratio );
+    double GetSurfaceProximityRatio();
+
+    /*!
+     *  Activate/deactivate volume proximity computation
+     */
+    void SetUseVolumeProximity( in boolean toUse );
+    boolean GetUseVolumeProximity();
+
+    /*!
+     * Set number of surface element layers to be generated due to volume proximity
+     */
+    void SetNbVolumeProximityLayers( in short nbLayers );
+    short GetNbVolumeProximityLayers();
+
+    /*!
+     * Set coefficient by which size of element refined due to volume proximity is increased
+     */
+    void SetVolumeProximityRatio( in double ratio );
+    double GetVolumeProximityRatio();
+
+    /*!
+     *Set verbosity level in the range 0 to 100.
      */
     void SetVerbosity(in short theVal) raises (SALOME::SALOME_Exception);
     short GetVerbosity();
@@ -485,7 +522,7 @@ module BLSURFPlugin
     boolean GetPreCADDiscardInput();
 
     /*!
-     * Sets advanced option value
+     *Set advanced option value
      */
     void SetOptionValue(in string optionName,
                         in string optionValue) raises (SALOME::SALOME_Exception);
@@ -672,7 +709,7 @@ module BLSURFPlugin
     ///////////////////////
 
     /*!
-     * Sets the file for export resulting mesh in GMF format
+     *Set the file for export resulting mesh in GMF format
      */
     void SetGMFFile(in string theFileName);
     string GetGMFFile();

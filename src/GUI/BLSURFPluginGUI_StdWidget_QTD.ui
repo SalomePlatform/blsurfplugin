@@ -7,11 +7,11 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>723</width>
-    <height>399</height>
+    <width>899</width>
+    <height>532</height>
    </rect>
   </property>
-  <layout class="QGridLayout" name="gridLayout_5">
+  <layout class="QGridLayout" name="gridLayout_8">
    <item row="0" column="0">
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
@@ -232,6 +232,70 @@
     </widget>
    </item>
    <item row="1" column="0">
+    <widget class="QGroupBox" name="groupBox_4">
+     <property name="title">
+      <string>BLSURF_ELEMENT_TYPE</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="QRadioButton" name="myRadioButtonTriangles">
+        <property name="toolTip">
+         <string>BLSURF_TRIANGLES_TOOLTIP</string>
+        </property>
+        <property name="text">
+         <string>BLSURF_TRIANGLES</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">myButtonGroupElementType</string>
+        </attribute>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="myRadioButtonQuadrangleDominant">
+        <property name="toolTip">
+         <string>BLSURF_ALLOW_QUADRANGLES_TOOLTIP</string>
+        </property>
+        <property name="text">
+         <string>BLSURF_QUADRANGLE_DOMINANT</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">myButtonGroupElementType</string>
+        </attribute>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="myRadioButtonQuadrangles">
+        <property name="toolTip">
+         <string>BLSURF_QUADRANGLES_TOOLTIP</string>
+        </property>
+        <property name="text">
+         <string>BLSURF_QUADRANGLES</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">myButtonGroupElementType</string>
+        </attribute>
+       </widget>
+      </item>
+      <item>
+       <spacer name="verticalSpacer_6">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>3</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="1">
     <widget class="QGroupBox" name="groupBox_2">
      <property name="title">
       <string>BLSURF_MAIN_PARAMETERS</string>
@@ -293,7 +357,164 @@
      </layout>
     </widget>
    </item>
-   <item row="1" column="1" rowspan="2">
+   <item row="2" column="0">
+    <widget class="QGroupBox" name="groupBox_5">
+     <property name="toolTip">
+      <string/>
+     </property>
+     <property name="title">
+      <string>BLSURF_PROXIMITY</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_7">
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="myUseVolumeGradation">
+        <property name="toolTip">
+         <string>BLSURF_VOLUME_GRADATION_TOOLTIP</string>
+        </property>
+        <property name="text">
+         <string>BLSURF_VOLUME_GRADATION</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="SMESHGUI_SpinBox" name="myVolumeGradation">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <widget class="QGroupBox" name="myUseSurfaceProximity">
+        <property name="toolTip">
+         <string>BLSURF_SURFACE_PROXIMITY_TOOLTIP</string>
+        </property>
+        <property name="title">
+         <string>BLSURF_SURFACE_PROXIMITY</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_6">
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_9">
+           <property name="toolTip">
+            <string>BLSURF_SURF_RATIO_TOOLTIP</string>
+           </property>
+           <property name="text">
+            <string>BLSURF_SURF_RATIO</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="SMESHGUI_SpinBox" name="mySurfaceProximityRatio">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="toolTip">
+            <string>BLSURF_SURF_RATIO_TOOLTIP</string>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QSpinBox" name="myNbSurfaceProximityLayers">
+           <property name="toolTip">
+            <string>BLSURF_SURF_NB_LAYRES_TOOLTIP</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_7">
+           <property name="toolTip">
+            <string>BLSURF_SURF_NB_LAYRES_TOOLTIP</string>
+           </property>
+           <property name="text">
+            <string>BLSURF_SURF_NB_LAYRES</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+        <zorder>label_7</zorder>
+        <zorder>myVolumeGradation_2</zorder>
+        <zorder>myNbSurfaceProximityLayers</zorder>
+        <zorder>label_9</zorder>
+        <zorder>mySurfaceProximityRatio</zorder>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="2">
+       <widget class="QGroupBox" name="myUseVolumeProximity">
+        <property name="toolTip">
+         <string>BLSURF_VOLUME_PROXIMITY_TOOLTIP</string>
+        </property>
+        <property name="title">
+         <string>BLSURF_VOLUME_PROXIMITY</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_5">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_10">
+           <property name="toolTip">
+            <string>BLSURF_VOL_NB_LAYERS_TOOLTIP</string>
+           </property>
+           <property name="text">
+            <string>BLSURF_VOL_NB_LAYERS</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QSpinBox" name="myNbVolumeProximityLayers">
+           <property name="toolTip">
+            <string>BLSURF_VOL_NB_LAYERS_TOOLTIP</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_11">
+           <property name="toolTip">
+            <string>BLSURF_VOL_RATIO_TOOLTIP</string>
+           </property>
+           <property name="text">
+            <string>BLSURF_VOL_RATIO</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="SMESHGUI_SpinBox" name="myVolumeProximityRatio">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="toolTip">
+            <string>BLSURF_VOL_RATIO_TOOLTIP</string>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <spacer name="verticalSpacer_7">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>15</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="2" column="1">
     <widget class="QGroupBox" name="groupBox_3">
      <property name="title">
       <string>BLSURF_OTHER_PARAMETERS</string>
@@ -385,88 +606,7 @@
        </widget>
       </item>
       <item row="5" column="0">
-       <widget class="QCheckBox" name="myUseVolumeGradation">
-        <property name="toolTip">
-         <string>BLSURF_VOLUME_GRADATION_TOOLTIP</string>
-        </property>
-        <property name="text">
-         <string>BLSURF_VOLUME_GRADATION</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="1">
-       <widget class="SMESHGUI_SpinBox" name="myVolumeGradation">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="0">
        <spacer name="verticalSpacer_5">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>3</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="2" column="0">
-    <widget class="QGroupBox" name="groupBox_4">
-     <property name="title">
-      <string>BLSURF_ELEMENT_TYPE</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout">
-      <item>
-       <widget class="QRadioButton" name="myRadioButtonTriangles">
-        <property name="toolTip">
-         <string>BLSURF_TRIANGLES_TOOLTIP</string>
-        </property>
-        <property name="text">
-         <string>BLSURF_TRIANGLES</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-        <attribute name="buttonGroup">
-         <string notr="true">myButtonGroupElementType</string>
-        </attribute>
-       </widget>
-      </item>
-      <item>
-       <widget class="QRadioButton" name="myRadioButtonQuadrangleDominant">
-        <property name="toolTip">
-         <string>BLSURF_ALLOW_QUADRANGLES_TOOLTIP</string>
-        </property>
-        <property name="text">
-         <string>BLSURF_QUADRANGLE_DOMINANT</string>
-        </property>
-        <attribute name="buttonGroup">
-         <string notr="true">myButtonGroupElementType</string>
-        </attribute>
-       </widget>
-      </item>
-      <item>
-       <widget class="QRadioButton" name="myRadioButtonQuadrangles">
-        <property name="toolTip">
-         <string>BLSURF_QUADRANGLES_TOOLTIP</string>
-        </property>
-        <property name="text">
-         <string>BLSURF_QUADRANGLES</string>
-        </property>
-        <attribute name="buttonGroup">
-         <string notr="true">myButtonGroupElementType</string>
-        </attribute>
-       </widget>
-      </item>
-      <item>
-       <spacer name="verticalSpacer_6">
         <property name="orientation">
          <enum>Qt::Vertical</enum>
         </property>
@@ -515,8 +655,6 @@
   <tabstop>myBadElementAspectRatio</tabstop>
   <tabstop>myCorrectSurfaceIntersection</tabstop>
   <tabstop>myCorrectSurfaceIntersectionMaxCost</tabstop>
-  <tabstop>myUseVolumeGradation</tabstop>
-  <tabstop>myVolumeGradation</tabstop>
  </tabstops>
  <resources/>
  <connections>
@@ -527,8 +665,8 @@
    <slot>onGeometricMeshChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>495</x>
-     <y>48</y>
+     <x>775</x>
+     <y>57</y>
     </hint>
     <hint type="destinationlabel">
      <x>281</x>
@@ -559,12 +697,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>488</x>
-     <y>176</y>
+     <x>641</x>
+     <y>466</y>
     </hint>
     <hint type="destinationlabel">
-     <x>655</x>
-     <y>175</y>
+     <x>787</x>
+     <y>467</y>
     </hint>
    </hints>
   </connection>
@@ -575,12 +713,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>488</x>
-     <y>228</y>
+     <x>641</x>
+     <y>518</y>
     </hint>
     <hint type="destinationlabel">
-     <x>655</x>
-     <y>227</y>
+     <x>787</x>
+     <y>519</y>
     </hint>
    </hints>
   </connection>
@@ -591,12 +729,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>488</x>
-     <y>254</y>
+     <x>641</x>
+     <y>544</y>
     </hint>
     <hint type="destinationlabel">
-     <x>655</x>
-     <y>253</y>
+     <x>787</x>
+     <y>545</y>
     </hint>
    </hints>
   </connection>
@@ -607,12 +745,12 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>488</x>
-     <y>176</y>
+     <x>641</x>
+     <y>466</y>
     </hint>
     <hint type="destinationlabel">
-     <x>495</x>
-     <y>100</y>
+     <x>775</x>
+     <y>109</y>
     </hint>
    </hints>
   </connection>
@@ -623,11 +761,11 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>488</x>
-     <y>176</y>
+     <x>641</x>
+     <y>466</y>
     </hint>
     <hint type="destinationlabel">
-     <x>446</x>
+     <x>576</x>
      <y>100</y>
     </hint>
    </hints>
@@ -639,7 +777,7 @@
    <slot>onEditingFinished()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>159</x>
+     <x>197</x>
      <y>74</y>
     </hint>
     <hint type="destinationlabel">
@@ -655,7 +793,7 @@
    <slot>onEditingFinished()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>159</x>
+     <x>197</x>
      <y>100</y>
     </hint>
     <hint type="destinationlabel">
@@ -671,7 +809,7 @@
    <slot>onEditingFinished()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>159</x>
+     <x>197</x>
      <y>126</y>
     </hint>
     <hint type="destinationlabel">
@@ -687,8 +825,8 @@
    <slot>onEditingFinished()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>316</x>
-     <y>199</y>
+     <x>780</x>
+     <y>287</y>
     </hint>
     <hint type="destinationlabel">
      <x>315</x>
@@ -703,8 +841,8 @@
    <slot>onEditingFinished()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>495</x>
-     <y>74</y>
+     <x>775</x>
+     <y>83</y>
     </hint>
     <hint type="destinationlabel">
      <x>566</x>
@@ -719,8 +857,8 @@
    <slot>onEditingFinished()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>495</x>
-     <y>100</y>
+     <x>775</x>
+     <y>109</y>
     </hint>
     <hint type="destinationlabel">
      <x>537</x>
@@ -735,12 +873,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>438</x>
-     <y>202</y>
+     <x>641</x>
+     <y>492</y>
     </hint>
     <hint type="destinationlabel">
-     <x>655</x>
-     <y>201</y>
+     <x>787</x>
+     <y>493</y>
     </hint>
    </hints>
   </connection>
@@ -751,12 +889,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>450</x>
-     <y>280</y>
+     <x>641</x>
+     <y>570</y>
     </hint>
     <hint type="destinationlabel">
-     <x>655</x>
-     <y>279</y>
+     <x>787</x>
+     <y>571</y>
     </hint>
    </hints>
   </connection>
@@ -767,12 +905,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>449</x>
-     <y>306</y>
+     <x>210</x>
+     <y>466</y>
     </hint>
     <hint type="destinationlabel">
-     <x>655</x>
-     <y>305</y>
+     <x>383</x>
+     <y>467</y>
     </hint>
    </hints>
   </connection>
@@ -783,12 +921,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>115</x>
-     <y>206</y>
+     <x>593</x>
+     <y>286</y>
     </hint>
     <hint type="destinationlabel">
-     <x>249</x>
-     <y>211</y>
+     <x>780</x>
+     <y>287</y>
     </hint>
    </hints>
   </connection>

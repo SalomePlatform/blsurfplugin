@@ -110,37 +110,30 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, SMESH_Gen * gen, boo
 
   // Advanced options with their defaults according to MG User Manual
 
-  const char* boolOptionNames[] = {         "enforce_cad_edge_sizes",                   // default = 0
-                                            // "correct_surface_intersections",            // default = 1
-                                            // "create_tag_on_collision",                  // default = 1
-                                            "jacobian_rectification_respect_geometry",  // default = 1
-                                            "rectify_jacobian",                         // default = 1
-                                            "respect_geometry",                         // default = 1
-                                            // "optimise_tiny_edges",                      // default = 0
-                                            // "remove_duplicate_cad_faces",               // default = 1
-                                            "tiny_edge_avoid_surface_intersections",    // default = 1
-                                            "debug",                                    // default = 0
-                                            "allow_patch_independent",                   // false
-
-                                            //"use_deprecated_patch_mesher",              // default 0
-                                            // "tiny_edge_respect_geometry",               // default = 0
-                                            "" // mark of end
-      };
+  const char* boolOptionNames[] = { "enforce_cad_edge_sizes",                   // default = 0
+                                    "jacobian_rectification_respect_geometry",  // default = 1
+                                    "rectify_jacobian",                         // default = 1
+                                    "respect_geometry",                         // default = 1
+                                    "tiny_edge_avoid_surface_intersections",    // default = 1
+                                    "debug",                                    // default = 0
+                                    "allow_patch_independent",                   // false
+                                    "" // mark of end
+  };
 
   const char* intOptionNames[] = {          "max_number_of_points_per_patch",           // default = 100000
                                             "max_number_of_threads",                    // default = 4
                                             "" // mark of end
-      };
+  };
   const char* doubleOptionNames[] = {       // "surface_intersections_processing_max_cost",// default = 15
                                             // "periodic_tolerance",                       // default = diag/100
                                             // "volume_gradation",
                                             // "tiny_edge_optimisation_length",            // default = diag * 1e-6
-                                            "" // mark of end
-      };
+    "" // mark of end
+  };
   const char* charOptionNames[] = {         // "required_entities",                        // default = "respect"
                                             // "tags",                                     // default = "respect"
-                                            "" // mark of end
-      };
+    "" // mark of end
+  };
 
   // PreCAD advanced options
   const char* preCADboolOptionNames[] = {   "closed_geometry",                          // default = 0

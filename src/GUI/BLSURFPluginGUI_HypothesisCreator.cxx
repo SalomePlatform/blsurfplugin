@@ -2084,10 +2084,10 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
   //h_data.myPreCADMergeEdges       = h->GetPreCADMergeEdges();
   // h_data.myPreCADProcess3DTopology  = h->GetPreCADProcess3DTopology();
   // h_data.myPreCADDiscardInput     = h->GetPreCADDiscardInput();
-  h_data.myUseSurfaceProximity      = h->GetUseSurfaceProximity     ();
+  h_data.myUseSurfaceProximity      = h->GetSurfaceProximity        ();
   h_data.myNbSurfaceProximityLayers = h->GetNbSurfaceProximityLayers();
   h_data.mySurfaceProximityRatio    = h->GetSurfaceProximityRatio   ();
-  h_data.myUseVolumeProximity       = h->GetUseVolumeProximity      ();
+  h_data.myUseVolumeProximity       = h->GetVolumeProximity         ();
   h_data.myNbVolumeProximityLayers  = h->GetNbVolumeProximityLayers ();
   h_data.myVolumeProximityRatio     = h->GetVolumeProximityRatio    ();
 
@@ -2323,10 +2323,10 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
     if ( h->GetVolumeGradation() !=  h_data.myVolumeGradation )
       h->SetVolumeGradation( h_data.myVolumeGradation <= 0 ? -1 : h_data.myVolumeGradation );
 
-    h->SetUseSurfaceProximity     ( h_data.myUseSurfaceProximity      );
+    h->SetSurfaceProximity        ( h_data.myUseSurfaceProximity      );
     h->SetNbSurfaceProximityLayers( h_data.myNbSurfaceProximityLayers );
     h->SetSurfaceProximityRatio   ( h_data.mySurfaceProximityRatio    );
-    h->SetUseVolumeProximity      ( h_data.myUseVolumeProximity       );
+    h->SetVolumeProximity         ( h_data.myUseVolumeProximity       );
     h->SetNbVolumeProximityLayers ( h_data.myNbVolumeProximityLayers  );
     h->SetVolumeProximityRatio    ( h_data.myVolumeProximityRatio     );
 

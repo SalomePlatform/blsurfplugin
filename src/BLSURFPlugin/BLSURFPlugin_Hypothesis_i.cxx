@@ -1414,6 +1414,15 @@ void BLSURFPlugin_Hypothesis_i::SetOptionValue(const char* optionName, const cha
     else if ( name == "tiny_edge_optimisation_length" )
       SetTinyEdgeOptimisationLength( GetImpl()->ToDbl( optionValue ));
 
+    else if ( name == "proximity" )
+      SetVolumeProximity( GetImpl()->ToBool( optionValue ));
+
+    else if ( name == "prox_ratio" )
+      SetVolumeProximityRatio( GetImpl()->ToDbl( optionValue ));
+
+    else if ( name == "prox_nb_layer" )
+      SetNbVolumeProximityLayers( GetImpl()->ToInt( optionValue ));
+
     // advanced options (for backward compatibility)
 
     else if ( name == "create_tag_on_collision" ||
@@ -1761,7 +1770,18 @@ void BLSURFPlugin_Hypothesis_i::SetAdvancedOption(const char* optionsAndValues)
 
 void BLSURFPlugin_Hypothesis_i::AddOption(const char* optionName, const char* optionValue)
 {
-  ASSERT(myBaseImpl);
+  // backward compatibility
+  {
+    std::string name( optionName );
+    if ( name == "proximity" )
+      SetVolumeProximity( GetImpl()->ToBool( optionValue ));
+
+    else if ( name == "prox_ratio" )
+      SetVolumeProximityRatio( GetImpl()->ToDbl( optionValue ));
+
+    else if ( name == "prox_nb_layer" )
+      SetNbVolumeProximityLayers( GetImpl()->ToInt( optionValue ));
+  }
   bool valueChanged = (this->GetImpl()->GetOption(optionName) != optionValue);
   if (valueChanged) {
     this->GetImpl()->AddOption(optionName, optionValue);

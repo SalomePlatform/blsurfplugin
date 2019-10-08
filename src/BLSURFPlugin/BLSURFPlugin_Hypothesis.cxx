@@ -39,6 +39,8 @@
 #include CORBA_CLIENT_HEADER(SALOMEDS)
 #include CORBA_CLIENT_HEADER(GEOM_Gen)
 
+#include <meshgems/meshgems.h>
+
 namespace
 {
   struct GET_DEFAULT // struct used to get default value from GetOptionValue()
@@ -228,6 +230,14 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, SMESH_Gen * gen, boo
     _defaultOptionValues["sewing_tolerance"                       ] = "5e-4*D";
     _defaultOptionValues["tags"                                   ] = "respect";
     _defaultOptionValues["compute_ridges"                         ] = "yes";
+  }
+
+  if ( strcmp( MESHGEMS_VERSION_LONG, "2.9.6" ) < 0 )
+  {
+    std::string missingOption = "allow_patch_independent";
+    _defaultOptionValues.erase( missingOption );
+    _boolOptions.erase( missingOption );
+    _option2value.erase( missingOption );
   }
 
 #ifdef _DEBUG_

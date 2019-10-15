@@ -232,7 +232,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, SMESH_Gen * gen, boo
     _defaultOptionValues["compute_ridges"                         ] = "yes";
   }
 
-  if ( strcmp( MESHGEMS_VERSION_LONG, "2.9.6" ) < 0 )
+  if ( strcmp( MESHGEMS_VERSION_LONG, "2.9-6" ) < 0 )
   {
     std::string missingOption = "allow_patch_independent";
     _defaultOptionValues.erase( missingOption );

@@ -4,10 +4,6 @@
 <context>
     <name>@default</name>
     <message>
-        <source>ZERO_VALUE_OF</source>
-        <translation>Valeur invalide (zéro) de &quot;%1&quot;</translation>
-    </message>
-    <message>
         <source>BLSURF_MESH_TYPE</source>
         <translation>Type de maillage</translation>
     </message>
@@ -102,6 +98,58 @@ La valeur par défaut est calculée par &lt;em&gt;diag&lt;/em&gt;/5.</translatio
     <message>
         <source>BLSURF_VOLUME_GRADATION_TOOLTIP</source>
         <translation>Ratio maximum entre les longueurs de deux segments adjacents.</translation>
+    </message>
+    <message>
+        <source>BLSURF_PROXIMITY</source>
+        <translation>Proximités</translation>
+    </message>
+    <message>
+        <source>BLSURF_SURFACE_PROXIMITY</source>
+        <translation>Proximité surfacique</translation>
+    </message>
+    <message>
+        <source>BLSURF_SURFACE_PROXIMITY_TOOLTIP</source>
+        <translation>Détection des proximités sur la surface.</translation>
+    </message>
+    <message>
+        <source>BLSURF_SURF_NB_LAYRES</source>
+        <translation>Nombre de couches</translation>
+    </message>
+    <message>
+        <source>BLSURF_SURF_NB_LAYRES_TOOLTIP</source>
+        <translation>Nombre de couches d'éléments à insérer entre deux limites de la surface.</translation>
+    </message>
+    <message>
+        <source>BLSURF_VOLUME_PROXIMITY</source>
+        <translation>Proximité volumique</translation>
+    </message>
+    <message>
+        <source>BLSURF_VOLUME_PROXIMITY_TOOLTIP</source>
+        <translation>Détection des proximités dans le volume.</translation>
+    </message>
+    <message>
+        <source>BLSURF_SURF_RATIO</source>
+        <translation>Ratio entre couches</translation>
+    </message>
+    <message>
+        <source>BLSURF_SURF_RATIO_TOOLTIP</source>
+        <translation>Ratio entre les tailles des mailles d'une couche à sa voisine.</translation>
+    </message>
+    <message>
+        <source>BLSURF_VOL_NB_LAYERS</source>
+        <translation>Nombre de couches</translation>
+    </message>
+    <message>
+        <source>BLSURF_VOL_NB_LAYERS_TOOLTIP</source>
+        <translation>Nombre de couches d'éléments à insérer entre deux limites du volume limité par les surfaces.</translation>
+    </message>
+    <message>
+        <source>BLSURF_VOL_RATIO</source>
+        <translation>Ratio entre couches</translation>
+    </message>
+    <message>
+        <source>BLSURF_VOL_RATIO_TOOLTIP</source>
+        <translation>Ratio entre les tailles des mailles d'une couche à sa voisine.</translation>
     </message>
     <message>
         <source>BLSURF_ELEMENT_TYPE</source>
@@ -363,18 +411,6 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
         <translation>Avancé</translation>
     </message>
     <message>
-        <source>BLSURF_SM_REMOVE</source>
-        <translation>Supprimer</translation>
-    </message>
-    <message>
-        <source>BLSURF_SM_ADD</source>
-        <translation>Ajouter</translation>
-    </message>
-    <message>
-        <source>BLSURF_SM_MODIFY</source>
-        <translation>Modifier</translation>
-    </message>
-    <message>
         <source>BLSURF_SM_PARAMS</source>
         <translation>Paramètres</translation>
     </message>
@@ -421,6 +457,18 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
     <message>
         <source>BLS_SEL_ATTRACTOR</source>
         <translation>Sélectionnez l&apos;attracteur</translation>
+    </message>
+    <message>
+        <source>BLSURF_SM_ADD</source>
+        <translation>Ajouter</translation>
+    </message>
+    <message>
+        <source>BLSURF_SM_MODIFY</source>
+        <translation>Modifier</translation>
+    </message>
+    <message>
+        <source>BLSURF_SM_REMOVE</source>
+        <translation>Supprimer</translation>
     </message>
     <message>
         <source>BLSURF_SM_SURF_VALUE</source>
@@ -501,6 +549,18 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
     <message>
         <source>BLSURF_ENF_VER_INTERNAL_VERTICES</source>
         <translation>Utiliser les points internes de toutes les faces</translation>
+    </message>
+    <message>
+        <source>ZERO_VALUE_OF</source>
+        <translation>Valeur invalide (zéro) de &quot;%1&quot;</translation>
+    </message>
+    <message>
+        <source>TOO_SMALL_LOCAL_SIZE</source>
+        <translation>La taille locale doit être supérieure à la taille minimale.</translation>
+    </message>
+    <message>
+        <source>TOO_LARGE_LOCAL_SIZE</source>
+        <translation>La taille locale doit être inférieure à la taille maximale.</translation>
     </message>
     <message>
         <source>BLSURF_PERIODICITY</source>
@@ -668,6 +728,14 @@ Plus la distance est petite, plus le maillage sera proche de la surface (disponi
     <message>
         <source>tiny_edge_avoid_surface_intersections</source>
         <translation>Priorité de l'intersection des surfaces sur le retrait des petites arêtes</translation>
+    </message>
+    <message>
+        <source>allow_patch_independent</source>
+        <translation>Patches indépendents</translation>
+    </message>
+    <message>
+        <source>compute_ridges</source>
+        <translation>Calcul des rives</translation>
     </message>
     <message>
         <source>closed_geometry</source>

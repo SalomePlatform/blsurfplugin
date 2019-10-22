@@ -3568,14 +3568,27 @@ double BLSURFPlugin_Hypothesis::GetDefaultTinyEdgeOptimisationLength(double diag
  */
 //=============================================================================
 
-bool BLSURFPlugin_Hypothesis::SetParametersByDefaults(const TDefaults& dflts, const SMESH_Mesh* theMesh) {
-  double diagonal = dflts._elemLength*_gen->GetBoundaryBoxSegmentation();
-  _phySize = GetDefaultPhySize(diagonal, _gen->GetBoundaryBoxSegmentation());
-  _minSize = GetDefaultMinSize(diagonal);
-  _maxSize = GetDefaultMaxSize(diagonal);
+bool BLSURFPlugin_Hypothesis::SetParametersByDefaults(const TDefaults&  dflts,
+                                                      const SMESH_Mesh* theMesh)
+{
+  _phySize = GetDefaultPhySize(dflts._diagonal, _gen->GetBoundaryBoxSegmentation());
+  _minSize = GetDefaultMinSize(dflts._diagonal);
+  _maxSize = GetDefaultMaxSize(dflts._diagonal);
   _chordalError = 0.5 * _phySize; //GetDefaultChordalError(diagonal); IMP 0023307
-  _tinyEdgeLength = GetDefaultTinyEdgeLength(diagonal);
-  _tinyEdgeOptimisationLength = GetDefaultTinyEdgeOptimisationLength(diagonal);
+
+  if ( dflts._way == SMESH_Hypothesis::BY_AVERAGE_LENGTH )
+  {
+    _phySize      = dflts._elemLength;
+    _minSize      = dflts._elemLength / 100.;
+    _maxSize      = dflts._elemLength * 2.;
+    _chordalError = dflts._elemLength / 2.;
+    _elementType  = dflts._quadDominated ? QuadrangleDominant : Triangles;
+  }
+  else
+  {
+    _tinyEdgeLength = GetDefaultTinyEdgeLength(dflts._diagonal);
+    _tinyEdgeOptimisationLength = GetDefaultTinyEdgeOptimisationLength(dflts._diagonal);
+  }
 
   return true;
 }

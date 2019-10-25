@@ -108,7 +108,7 @@
       <python-wrap>
         <algo>MG-CADSurf=Triangle(algo=smeshBuilder.MG_CADSurf)</algo>
         <hypo>MG-CADSurf Parameters=Parameters()</hypo>
-        <hypo>ViscousLayers2D=ViscousLayers2D(SetTotalThickness(),SetNumberLayers(),SetStretchFactor(),SetIgnoreEdges())</hypo>
+        <hypo>ViscousLayers2D=ViscousLayers2D(SetTotalThickness(),SetNumberLayers(),SetStretchFactor(),SetEdges(1),SetEdges(2),SetGroupName())</hypo>
       </python-wrap>
     </algorithm>
 

@@ -3582,7 +3582,7 @@ bool BLSURFPlugin_Hypothesis::SetParametersByDefaults(const TDefaults&  dflts,
     _minSize      = dflts._elemLength / 100.;
     _maxSize      = dflts._elemLength * 2.;
     _chordalError = dflts._elemLength / 2.;
-    _elementType  = dflts._quadDominated ? QuadrangleDominant : Triangles;
+    _elementType  = dflts._quadDominated ? Quadrangles : Triangles;
   }
   else
   {

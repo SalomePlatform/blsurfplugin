@@ -3045,7 +3045,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh & aMesh, SMESH_MesherHelper* aHelpe
   // add triangles
   meshgems_integer nbtri = 0;
   meshgems_mesh_get_triangle_count( omsh, &nbtri );
-  const SMDS_MeshNode* nodes[3];
+  const SMDS_MeshNode* nodes[4];
   for ( i = 1; i <= nbtri; ++i )
   {
     meshgems_mesh_get_triangle_vertices( omsh, i, nodeIDs );
@@ -3055,6 +3055,33 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh & aMesh, SMESH_MesherHelper* aHelpe
       nodes[j] = meshDS->FindNode( nodeID );
     }
     meshDS->AddFace( nodes[0], nodes[1], nodes[2] );
+  }
+
+  // add quadrangles
+  meshgems_integer nbquad = 0;
+  meshgems_mesh_get_quadrangle_count( omsh, &nbquad );
+  for ( i = 1; i <= nbquad; ++i )
+  {
+    meshgems_mesh_get_quadrangle_vertices( omsh, i, nodeIDs );
+    for ( int j = 0; j < 4; ++j )
+    {
+      meshgems_mesh_get_vertex_tag( omsh, nodeIDs[j], &nodeID );
+      nodes[j] = meshDS->FindNode( nodeID );
+    }
+    meshDS->AddFace( nodes[0], nodes[1], nodes[2], nodes[3] );
+  }
+
+  if ( _hypothesis )
+  {
+    std::string GMFFileName = _hypothesis->GetGMFFile();
+    if ( !GMFFileName.empty() )
+    {
+      bool asciiFound  = (GMFFileName.find(".mesh", GMFFileName.size()-5) != std::string::npos);
+      bool binaryFound = (GMFFileName.find(".meshb",GMFFileName.size()-6) != std::string::npos);
+      if ( !asciiFound && !binaryFound )
+        GMFFileName.append(".mesh");
+      mesh_write_mesh(msh, GMFFileName.c_str());
+    }
   }
 
   cadsurf_regain_mesh(css, omsh);

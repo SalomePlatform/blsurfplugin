@@ -112,7 +112,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, SMESH_Gen * gen, boo
 
   // Advanced options with their defaults according to MG User Manual
 
-  const char* boolOptionNames[] = { "enforce_cad_edge_sizes",                   // default = 0
+  const char* boolOptionNames[] = { //"enforce_cad_edge_sizes",                   // default = 0
                                     "jacobian_rectification_respect_geometry",  // default = 1
                                     "rectify_jacobian",                         // default = 1
                                     "respect_geometry",                         // default = 1
@@ -122,7 +122,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, SMESH_Gen * gen, boo
                                     "" // mark of end
   };
 
-  const char* intOptionNames[] = {          "max_number_of_points_per_patch",           // default = 100000
+  const char* intOptionNames[] = {          //"max_number_of_points_per_patch",           // default = 100000
                                             "max_number_of_threads",                    // default = 4
                                             "" // mark of end
   };
@@ -2649,7 +2649,9 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
         break;
       isOK = static_cast<bool>(load >> optValue);
     }
-    if (isOK) {
+    // read the value of the advanced option
+    // unless this option is no more used
+    if (isOK && optName != "enforce_cad_edge_sizes" && optName != "max_number_of_points_per_patch") {
       std::string & value = _option2value[optName];
       value = optValue;
       int len = value.size();

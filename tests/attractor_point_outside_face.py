@@ -125,4 +125,4 @@ assert min_area_with_attractor < min_area_without_attractor
 assert min_area_with_attractor < 1
 
 if salome.sg.hasDesktop():
-  salome.sg.updateObjBrowser(True)
+  salome.sg.updateObjBrowser()

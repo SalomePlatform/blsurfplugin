@@ -101,4 +101,4 @@ assert Mesh_1.NbTriangles() > 0
 assert Mesh_1.NbQuadrangles() > Mesh_1.NbTriangles()
 
 if salome.sg.hasDesktop():
-  salome.sg.updateObjBrowser(True)
+  salome.sg.updateObjBrowser()

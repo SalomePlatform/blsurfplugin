@@ -2154,7 +2154,7 @@ void BLSURFPlugin_Hypothesis_i::SetAttractorGeom(GEOM::GEOM_Object_ptr theFace, 
   theFaceEntry = theFace->GetStudyEntry();
   theAttEntry  = theAttractor->GetStudyEntry();
   
-  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine( theFace );
   string aName;
   
   if (theFaceEntry.empty()) {
@@ -2196,7 +2196,7 @@ void BLSURFPlugin_Hypothesis_i::UnsetAttractorGeom(GEOM::GEOM_Object_ptr theFace
   CORBA::String_var theFaceEntry = theFace->GetStudyEntry();
   CORBA::String_var theAttrEntry = theAttractor->GetStudyEntry();
   
-  // GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+  // GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine( theFace );
   // string aName;
   
   // if (theFaceEntry.empty()) {
@@ -2593,7 +2593,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertex(GEOM::GEOM_Object_ptr theFace,
   string theFaceEntry = theFace->GetStudyEntry();
   
   if (theFaceEntry.empty()) {
-    GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+    GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine( theFace );
     string aName;
     if (theFace->GetShapeType() == GEOM::FACE)
       aName = "Face_";
@@ -2627,7 +2627,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexNamed(GEOM::GEOM_Object_ptr the
   string theFaceEntry = theFace->GetStudyEntry();
   
   if (theFaceEntry.empty()) {
-    GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+    GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine( theFace );
     string aName;
     if (theFace->GetShapeType() == GEOM::FACE)
       aName = "Face_";
@@ -2663,7 +2663,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeom(GEOM::GEOM_Object_ptr theF
     THROW_SALOME_CORBA_EXCEPTION("theVertex shape type is not VERTEX or COMPOUND", SALOME::BAD_PARAM);
   }
 
-  //  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+  //  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine( theFace );
   //  GEOM::GEOM_IMeasureOperations_var measureOp = geomGen->GetIMeasureOperations();
   //  if (CORBA::is_nil(measureOp))
   //    return false;
@@ -2675,7 +2675,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeom(GEOM::GEOM_Object_ptr theF
   string theFaceEntry = theFace->GetStudyEntry();
   string theVertexEntry = theVertex->GetStudyEntry();
   
-  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine( theFace );
   string aName;
   
   if (theFaceEntry.empty()) {
@@ -2727,7 +2727,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexWithGroup(GEOM::GEOM_Object_ptr
   string theFaceEntry = theFace->GetStudyEntry();
   
   if (theFaceEntry.empty()) {
-    GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+    GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine( theFace );
     string aName;
     if (theFace->GetShapeType() == GEOM::FACE)
       aName = "Face_";
@@ -2763,7 +2763,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexNamedWithGroup(GEOM::GEOM_Objec
   string theFaceEntry = theFace->GetStudyEntry();
   
   if (theFaceEntry.empty()) {
-    GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+    GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine( theFace );
     string aName;
     if (theFace->GetShapeType() == GEOM::FACE)
       aName = "Face_";
@@ -2802,7 +2802,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeomWithGroup(GEOM::GEOM_Object
   string theFaceEntry = theFace->GetStudyEntry();
   string theVertexEntry = theVertex->GetStudyEntry();
   
-  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine( theFace );
   string aName;
   
   if (theFaceEntry.empty()) {
@@ -2854,7 +2854,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeomWithGroup(GEOM::GEOM_Object
 //  string theFaceEntry = theFace->GetStudyEntry();
   
 //  if (theFaceEntry.empty()) {
-//    GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+//    GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine( theFace );
 //    string aName;
 //    if (theFace->GetShapeType() == GEOM::FACE)
 //      aName = "Face_";
@@ -2889,7 +2889,7 @@ BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVertices(GEO
   string theFaceEntry = theFace->GetStudyEntry();
   
   if (theFaceEntry.empty()) {
-    GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+    GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine( theFace );
     string aName;
     if (theFace->GetShapeType() == GEOM::FACE)
       aName = "Face_";
@@ -2921,7 +2921,7 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertex(GEOM::GEOM_Object_ptr theFac
   string theFaceEntry = theFace->GetStudyEntry();
   
   if (theFaceEntry.empty()) {
-    GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+    GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine( theFace );
     string aName;
     if (theFace->GetShapeType() == GEOM::FACE)
       aName = "Face_";
@@ -2953,7 +2953,7 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexGeom(GEOM::GEOM_Object_ptr th
     THROW_SALOME_CORBA_EXCEPTION("theVertex shape type is not VERTEX or COMPOUND", SALOME::BAD_PARAM);
   }
 
-  //  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+  //  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine( theFace );
   //  GEOM::GEOM_IMeasureOperations_var measureOp = geomGen->GetIMeasureOperations();
   //  if (CORBA::is_nil(measureOp))
   //    return false;
@@ -2965,7 +2965,7 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexGeom(GEOM::GEOM_Object_ptr th
   std::string theFaceEntry = theFace->GetStudyEntry();
   std::string theVertexEntry = theVertex->GetStudyEntry();
   
-  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine( theFace );
   string aName;
   
   if (theFaceEntry.empty()) {
@@ -3012,7 +3012,7 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertices(GEOM::GEOM_Object_ptr theF
   string theFaceEntry = theFace->GetStudyEntry();
   
   if (theFaceEntry.empty()) {
-    GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+    GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine( theFace );
     string aName;
     if (theFace->GetShapeType() == GEOM::FACE)
       aName = "Face_";
@@ -3071,7 +3071,7 @@ bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexGeom(GEOM::GEOM_Object_ptr theV
   }
   string theVertexEntry = theVertex->GetStudyEntry();
   
-  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine( theVertex );
   string aName;
   
   if (theVertexEntry.empty()) {
@@ -3138,7 +3138,7 @@ bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexGeomWithGroup(GEOM::GEOM_Object
 
   string theVertexEntry = theVertex->GetStudyEntry();
   
-  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine( theVertex );
   string aName;
   
   if (theVertexEntry.empty()) {
@@ -3179,7 +3179,7 @@ bool BLSURFPlugin_Hypothesis_i::RemoveEnforcedVertexGeom(GEOM::GEOM_Object_ptr t
   }
   std::string theVertexEntry = theVertex->GetStudyEntry();
   
-  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine( theVertex );
   string aName;
   
   if (theVertexEntry.empty()) {
@@ -3457,7 +3457,7 @@ char* BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertexAllFacesGroup()
  string theFaceEntry = theFace->GetStudyEntry();
 
  if (theFaceEntry.empty()) {
- GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+ GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine( theFace );
  SMESH_Gen_i *smeshGen = SMESH_Gen_i::GetSMESHGen();
  string aName;
  if (theFace->GetShapeType() == GEOM::FACE)
@@ -3604,7 +3604,7 @@ std::string BLSURFPlugin_Hypothesis_i::PublishIfNeeded(GEOM::GEOM_Object_ptr sha
   // Check shape is published in the object browser
   string shapeEntry = shape->GetStudyEntry();
 
-  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine();
+  GEOM::GEOM_Gen_ptr geomGen = SMESH_Gen_i::GetGeomEngine( shape );
   string aName;
 
   // Publish shape if needed

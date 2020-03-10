@@ -1055,10 +1055,10 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
      // - if maxsize is not explicitly specified, we pass default value computed automatically, in this case "relative" flag is ignored
      set_param(css, "max_size", _maxSizeRel ? val_to_string_rel(_maxSize).c_str() : val_to_string(_maxSize).c_str());
    }
-   // anisotropic and quadrangle mesh requires disabling gradation
-   // if ( _anisotropic && _elementType != BLSURFPlugin_Hypothesis::Triangles )
-   //   useGradation = false; // limitation of V1.3
    useGradation = true; // bos #18758
+   // anisotropic and quadrangle mesh requires disabling gradation
+   if ( _anisotropic && _elementType != BLSURFPlugin_Hypothesis::Triangles )
+     useGradation = false; // limitation of V1.3
    if ( useGradation && _use_gradation )
      set_param(css, "gradation",                       val_to_string(_gradation).c_str());
    if ( useGradation && _use_volume_gradation )

@@ -1001,11 +1001,12 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
      case BLSURFPlugin_Hypothesis::PhysicalGlobalSize:
        set_param(css, "physical_size_mode", "global");
        set_param(css, "global_physical_size", _phySizeRel ? val_to_string_rel(_phySize).c_str() : val_to_string(_phySize).c_str());
+       //useGradation = true;
        break;
      case BLSURFPlugin_Hypothesis::PhysicalLocalSize:
        set_param(css, "physical_size_mode", "local");
        set_param(css, "global_physical_size", _phySizeRel ? val_to_string_rel(_phySize).c_str() : val_to_string(_phySize).c_str());
-       useGradation = true;
+       //useGradation = true;
        break;
      default:
        set_param(css, "physical_size_mode", "none");
@@ -1017,13 +1018,13 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
        set_param(css, "geometric_size_mode", "global");
        set_param(css, "geometric_approximation", val_to_string(_angleMesh).c_str());
        set_param(css, "chordal_error", val_to_string(_chordalError).c_str());
-       useGradation = true;
+       //useGradation = true;
        break;
      case BLSURFPlugin_Hypothesis::GeometricalLocalSize:
        set_param(css, "geometric_size_mode", "local");
        set_param(css, "geometric_approximation", val_to_string(_angleMesh).c_str());
        set_param(css, "chordal_error", val_to_string(_chordalError).c_str());
-       useGradation = true;
+       //useGradation = true;
        break;
      default:
        set_param(css, "geometric_size_mode", "none");
@@ -1055,8 +1056,9 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
      set_param(css, "max_size", _maxSizeRel ? val_to_string_rel(_maxSize).c_str() : val_to_string(_maxSize).c_str());
    }
    // anisotropic and quadrangle mesh requires disabling gradation
-   if ( _anisotropic && _elementType != BLSURFPlugin_Hypothesis::Triangles )
-     useGradation = false; // limitation of V1.3
+   // if ( _anisotropic && _elementType != BLSURFPlugin_Hypothesis::Triangles )
+   //   useGradation = false; // limitation of V1.3
+   useGradation = true; // bos #18758
    if ( useGradation && _use_gradation )
      set_param(css, "gradation",                       val_to_string(_gradation).c_str());
    if ( useGradation && _use_volume_gradation )

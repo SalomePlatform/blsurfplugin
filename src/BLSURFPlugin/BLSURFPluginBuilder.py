@@ -294,6 +294,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   #  can set this parameter to 0
   #  
   def SetMaxNumberOfPointsPerPatch( self, nb ):
+    print("Warning: method SetMaxNumberOfPointsPerPatch() is deprecated")
     self.Parameters().SetMaxNumberOfPointsPerPatch( nb )
 
   ## Set max_number_of_threads parameter

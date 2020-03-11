@@ -40,6 +40,7 @@
 #include CORBA_CLIENT_HEADER(GEOM_Gen)
 
 #include <meshgems/meshgems.h>
+#define MESHGEMS_VERSION_HEX (MESHGEMS_VERSION_MAJOR << 16 | MESHGEMS_VERSION_MINOR << 8 | MESHGEMS_VERSION_PATCH)
 
 namespace
 {
@@ -234,7 +235,7 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, SMESH_Gen * gen, boo
     _defaultOptionValues["compute_ridges"                         ] = "yes";
   }
 
-  if ( strcmp( MESHGEMS_VERSION_LONG, "2.9-6" ) < 0 )
+  if ( MESHGEMS_VERSION_HEX < 0x020906 )
   {
     std::string missingOption = "allow_patch_independent";
     _defaultOptionValues.erase( missingOption );
@@ -266,6 +267,12 @@ TopoDS_Shape BLSURFPlugin_Hypothesis::entryToShape(std::string entry)
   if ( !aGeomObj->_is_nil() )
     S = SMESH_Gen_i::GetSMESHGen()->GeomObjectToShape( aGeomObj.in() );
   return S;
+}
+
+//=============================================================================
+std::string BLSURFPlugin_Hypothesis::GetMeshGemsVersion()
+{
+  return MESHGEMS_VERSION_LONG;
 }
 
 //=============================================================================

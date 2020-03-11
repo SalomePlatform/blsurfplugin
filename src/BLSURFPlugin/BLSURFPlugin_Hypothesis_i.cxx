@@ -69,6 +69,16 @@ BLSURFPlugin_Hypothesis_i::~BLSURFPlugin_Hypothesis_i()
 }
 
 //=============================================================================
+/*!
+ *  BLSURFPlugin_Hypothesis_i::GetMeshGemsVersion
+ *
+ *  Get version of MeshGems suite.
+ */
+//=============================================================================
+char* BLSURFPlugin_Hypothesis_i::GetMeshGemsVersion()
+{
+  return CORBA::string_dup( this->GetImpl()->GetMeshGemsVersion().c_str() );
+}
 
 //=============================================================================
 /*!
@@ -76,7 +86,6 @@ BLSURFPlugin_Hypothesis_i::~BLSURFPlugin_Hypothesis_i()
  *
  *  Set PhysicalMesh
  */
-
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetPhysicalMesh(CORBA::Long theValue)
 {

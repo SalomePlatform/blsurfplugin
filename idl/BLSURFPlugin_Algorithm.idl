@@ -138,6 +138,12 @@ module BLSURFPlugin
   {
 
     /*!
+     * Get version of MeshGems suite.
+     * The version is a string in form <major>.<minor>-<patch>. Example: "2.9-6".
+     */
+    string GetMeshGemsVersion();
+
+    /*!
      *Set a way to define size of mesh elements to generate
      * 0 - size is defined automatically
      * 1 - size is set by SetPhySize() method

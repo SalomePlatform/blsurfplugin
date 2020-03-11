@@ -49,6 +49,8 @@ public:
   // Destructor
   virtual ~BLSURFPlugin_Hypothesis_i();
 
+  char* GetMeshGemsVersion();
+
   void SetPhysicalMesh(CORBA::Long theValue);
   CORBA::Long GetPhysicalMesh();
 

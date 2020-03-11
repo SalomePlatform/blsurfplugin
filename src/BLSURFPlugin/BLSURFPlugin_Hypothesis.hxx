@@ -75,6 +75,8 @@ public:
 
   TopoDS_Shape entryToShape(std::string entry);
 
+  static std::string GetMeshGemsVersion();
+
   void SetPhysicalMesh(PhysicalMesh thePhysicalMesh);
   PhysicalMesh GetPhysicalMesh() const { return _physicalMesh; }
 

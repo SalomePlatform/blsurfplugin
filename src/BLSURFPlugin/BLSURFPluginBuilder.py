@@ -254,6 +254,8 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   #  combination with the gradation option.
   #  
   def SetEnforceCadEdgesSize( self, toEnforce ):
+    if not version_less(self.Parameters().GetMeshGemsVersion(), '2.10'):
+      print("Warning: method SetEnforceCadEdgesSize() is deprecated")
     self.Parameters().SetEnforceCadEdgesSize( toEnforce )
 
   ## Set jacobian_rectification_respect_geometry parameter

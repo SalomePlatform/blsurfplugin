@@ -114,7 +114,9 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, SMESH_Gen * gen, boo
   // Advanced options with their defaults according to MG User Manual
 
   const char* boolOptionNames[] = {
-    //"enforce_cad_edge_sizes",                 // default = 0 // Deprecated since MeshGems 2.10
+#if MESHGEMS_VERSION_HEX < 0x020A00
+    "enforce_cad_edge_sizes",                   // default = 0 // Deprecated since MeshGems 2.10
+#endif
     "jacobian_rectification_respect_geometry",  // default = 1
     "rectify_jacobian",                         // default = 1
     "respect_geometry",                         // default = 1
@@ -125,7 +127,9 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, SMESH_Gen * gen, boo
   };
 
   const char* intOptionNames[] = {
-    //"max_number_of_points_per_patch",         // default = 100000 // Deprecated since MeshGems 2.10
+#if MESHGEMS_VERSION_HEX < 0x020A00
+    "max_number_of_points_per_patch",           // default = 100000 // Deprecated since MeshGems 2.10
+#endif
     "max_number_of_threads",                    // default = 4
     "" // mark of end
   };
@@ -210,9 +214,13 @@ BLSURFPlugin_Hypothesis::BLSURFPlugin_Hypothesis(int hypId, SMESH_Gen * gen, boo
 
   // default values to be used while MG meshing
 
-  // _defaultOptionValues["enforce_cad_edge_sizes"                 ] = "no";  // Deprecated since MeshGems 2.10
+#if MESHGEMS_VERSION_HEX < 0x020A00
+  _defaultOptionValues["enforce_cad_edge_sizes"                 ] = "no";  // Deprecated since MeshGems 2.10
+#endif
   _defaultOptionValues["jacobian_rectification_respect_geometry"] = "yes";
-  // _defaultOptionValues["max_number_of_points_per_patch"         ] = "0";   // Deprecated since MeshGems 2.10
+#if MESHGEMS_VERSION_HEX < 0x020A00
+  _defaultOptionValues["max_number_of_points_per_patch"         ] = "0";   // Deprecated since MeshGems 2.10
+#endif
   _defaultOptionValues["max_number_of_threads"                  ] = "4";
   _defaultOptionValues["rectify_jacobian"                       ] = "yes";
   _defaultOptionValues["respect_geometry"                       ] = "yes";
@@ -562,21 +570,24 @@ void BLSURFPlugin_Hypothesis::SetVerbosity(int theVal) {
 //=============================================================================
 void BLSURFPlugin_Hypothesis::SetEnforceCadEdgesSize( bool toEnforce )
 {
-  /* Deprecated since MeshGems 2.10
+#if MESHGEMS_VERSION_HEX < 0x020A00
+  // Deprecated since MeshGems 2.10
   if ( GetEnforceCadEdgesSize() != toEnforce )
   {
     SetOptionValue( "enforce_cad_edge_sizes", toEnforce ? "yes" : "no" );
     NotifySubMeshesHypothesisModification();
   }
-  */
+#endif
 }
 //=============================================================================
 bool BLSURFPlugin_Hypothesis::GetEnforceCadEdgesSize()
 {
-  /* Deprecated since MeshGems 2.10
+#if MESHGEMS_VERSION_HEX < 0x020A00
+  // Deprecated since MeshGems 2.10
   return ToBool( GetOptionValue( "enforce_cad_edge_sizes" ), GET_DEFAULT() );
- */
+#else
   return false;
+#endif
 }
 //=============================================================================
 
@@ -628,7 +639,8 @@ bool BLSURFPlugin_Hypothesis::GetUseDeprecatedPatchMesher()
 void BLSURFPlugin_Hypothesis::SetMaxNumberOfPointsPerPatch( int nb )
   throw (std::invalid_argument)
 {
-  /* Deprecated since MeshGems 2.10
+#if MESHGEMS_VERSION_HEX < 0x020A00
+  // Deprecated since MeshGems 2.10
   if ( nb < 0 )
     throw std::invalid_argument( SMESH_Comment("Invalid number of points: ") << nb );
 
@@ -637,15 +649,17 @@ void BLSURFPlugin_Hypothesis::SetMaxNumberOfPointsPerPatch( int nb )
     SetOptionValue("max_number_of_points_per_patch", SMESH_Comment( nb ));
     NotifySubMeshesHypothesisModification();
   }
-  */
+#endif
 }
 //=============================================================================
 int BLSURFPlugin_Hypothesis::GetMaxNumberOfPointsPerPatch()
 {
-  /* Deprecated since MeshGems 2.10
+#if MESHGEMS_VERSION_HEX < 0x020A00
+  // Deprecated since MeshGems 2.10
   return ToInt( GetOptionValue("max_number_of_points_per_patch", GET_DEFAULT()));
-  */
+#else
   return 0;
+#endif
 }
 //=============================================================================
 
@@ -2670,7 +2684,11 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
     }
     // read the value of the advanced option
     // unless this option is no more used
-    if (isOK && optName != "enforce_cad_edge_sizes" && optName != "max_number_of_points_per_patch") {
+    if (isOK
+#if MESHGEMS_VERSION_HEX >= 0x020A00
+        && optName != "enforce_cad_edge_sizes" && optName != "max_number_of_points_per_patch"
+#endif
+        ) {
       std::string & value = _option2value[optName];
       value = optValue;
       int len = value.size();

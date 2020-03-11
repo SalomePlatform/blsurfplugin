@@ -294,7 +294,8 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   #  can set this parameter to 0
   #  
   def SetMaxNumberOfPointsPerPatch( self, nb ):
-    print("Warning: method SetMaxNumberOfPointsPerPatch() is deprecated")
+    if not version_less(self.Parameters().GetMeshGemsVersion(), '2.10'):
+      print("Warning: method SetMaxNumberOfPointsPerPatch() is deprecated")
     self.Parameters().SetMaxNumberOfPointsPerPatch( nb )
 
   ## Set max_number_of_threads parameter
@@ -812,3 +813,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
     return
 
   pass # end of BLSURF_Algorithm class
+
+def version_less(version: str, ref_version: str):
+  from re import split
+  return [int(i) for i in split('[.-]', version)] < [int(i) for i in re.split('[.-]', ref_version)]

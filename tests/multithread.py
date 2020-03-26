@@ -27,7 +27,7 @@ import multiprocessing
 salome.salome_init()
 
 cpu_count = multiprocessing.cpu_count()
-divider = min(4, cpu_count)/2.
+divider = min(4, cpu_count)/2.3
 
 print ("Running test on workstation with %d available cores" % cpu_count)
 
@@ -80,7 +80,7 @@ time1 = time.time()
 
 time_multithread = time1-time0
 
-print ("Time in multi thread (%d cores): %.3s"%(cpu_count, time_multithread))
+print ("Time in multi thread (4 procs): %.3f s"%(time_multithread))
 
 Mesh_2 = smesh.Mesh(flight_solid_brep_1)
 MG_CADSurf = Mesh_2.Triangle(algo=smeshBuilder.MG_CADSurf)
@@ -98,7 +98,7 @@ isDone = Mesh_2.Compute()
 time3 = time.time()
 
 time_singlethread = time3-time2
-print ("Time in single thread (1 proc): %.3s"%(time_singlethread))
+print ("Time in single thread (1 proc): %.3f s"%(time_singlethread))
 
 if cpu_count == 1:
     print ("Warning: cannot validate test - only 1 cpu core is available")

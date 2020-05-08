@@ -645,8 +645,9 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams(QString& msg) const
       double size = i.value().toDouble( &isValue );
       ok = ( !isValue || size >= minSize );
     }
-    for ( QMapIterator<QString, TAttractorVec > i( myATTMap ); i.hasNext() &&  ok ; i.next() )
+    for ( QMapIterator<QString, TAttractorVec > i( myATTMap ); i.hasNext() &&  ok ; )
     {
+      i.next();
       const TAttractorVec& attVec = i.value();
       for ( size_t i = 0; i < attVec.size(); ++i )
         ok = ( attVec[i].IsToDelete()  || attVec[i].startSize >= minSize );
@@ -667,8 +668,9 @@ bool BLSURFPluginGUI_HypothesisCreator::checkParams(QString& msg) const
       double size = i.value().toDouble( &isValue );
       ok = ( !isValue || size <= userSize );
     }
-    for ( QMapIterator<QString, TAttractorVec > i( myATTMap ); i.hasNext() &&  ok ; i.next() )
+    for ( QMapIterator<QString, TAttractorVec > i( myATTMap ); i.hasNext() &&  ok ; )
     {
+      i.next();
       const TAttractorVec& attVec = i.value();
       for ( size_t i = 0; i < attVec.size(); ++i )
         ok = ( attVec[i].IsToDelete()  || attVec[i].startSize <= userSize );

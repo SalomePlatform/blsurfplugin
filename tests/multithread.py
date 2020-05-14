@@ -27,9 +27,8 @@ import multiprocessing
 salome.salome_init()
 
 cpu_count = multiprocessing.cpu_count()
-divider = 1 + (min(cpu_count, 4)-1)*0.4
 
-if cpu_count > 2:
+if cpu_count > 1:
     print ("Running test on workstation with %d available cores" % cpu_count)
 
     ###
@@ -100,7 +99,7 @@ if cpu_count > 2:
     time_singlethread = time3-time2
     print ("Time in single thread (1 proc): %.3f s"%(time_singlethread))
 
-    assert time_multithread < time_singlethread/divider
+    assert time_multithread < time_singlethread
 
     if salome.sg.hasDesktop():
       salome.sg.updateObjBrowser()

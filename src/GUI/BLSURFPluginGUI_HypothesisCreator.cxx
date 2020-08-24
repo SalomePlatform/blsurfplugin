@@ -213,13 +213,13 @@ namespace {
   static PyMethodDef PyStdOut_methods[] = {
     {"write",  (PyCFunction)PyStdOut_write,  METH_VARARGS,
     PyDoc_STR("write(string) -> None")},
-    {NULL,    NULL}   /* sentinel */
+    {0, 0, 0, 0}   /* sentinel */
   };
 
   static PyMemberDef PyStdOut_memberlist[] = {
     {(char*)"softspace", T_INT,  offsetof(PyStdOut, softspace), 0,
      (char*)"flag indicating that a space needs to be printed; used by print"},
-    {NULL} /* Sentinel */
+    {0, 0, 0, 0, 0} /* Sentinel */
   };
 
   static PyTypeObject PyStdOut_Type = {
@@ -267,6 +267,14 @@ namespace {
     0,                            /*tp_new*/
     0,                            /*tp_free*/
     0,                            /*tp_is_gc*/
+    0,                            /*tp_bases*/
+    0,                            /*tp_mro*/
+    0,                            /*tp_cache*/
+    0,                            /*tp_subclasses*/
+    0,                            /*tp_weaklist*/
+    0,                            /*tp_del*/
+    0,                            /*tp_version_tag*/
+    0,                            /*tp_finalize*/
   };
 
   PyObject * newPyStdOut( std::string& out )
@@ -295,7 +303,7 @@ EnforcedTreeWidgetDelegate::EnforcedTreeWidgetDelegate(QObject *parent)
 }
 
 QWidget *EnforcedTreeWidgetDelegate::createEditor(QWidget *parent,
-                                              const QStyleOptionViewItem & option ,
+                                              const QStyleOptionViewItem & /*option*/ ,
                                               const QModelIndex & index ) const
 {
   QModelIndex father = index.parent();
@@ -1291,7 +1299,7 @@ void BLSURFPluginGUI_HypothesisCreator::clearEnforcedVertexWidgets()
     This method updates the tooltip of a modified item. The QLineEdit widgets content
     is synchronized with the coordinates of the enforced vertex clicked in the tree widget.
 */
-void BLSURFPluginGUI_HypothesisCreator::updateEnforcedVertexValues(QTreeWidgetItem* item, int column) {
+void BLSURFPluginGUI_HypothesisCreator::updateEnforcedVertexValues(QTreeWidgetItem* item, int /*column*/) {
   QVariant vertexName = item->data(ENF_VER_NAME_COLUMN, Qt::EditRole);
   QVariant x = item->data(ENF_VER_X_COLUMN, Qt::EditRole);
   QVariant y = item->data(ENF_VER_Y_COLUMN, Qt::EditRole);
@@ -1733,7 +1741,7 @@ This method enable the proper shape selection widget to Face or Edge shapes
 //    }
 //}
 
-void BLSURFPluginGUI_HypothesisCreator::onPeriodicityTreeClicked(QTreeWidgetItem* item, int row)
+void BLSURFPluginGUI_HypothesisCreator::onPeriodicityTreeClicked(QTreeWidgetItem* item, int /*row*/)
 {
   QString shapeName, shapeEntry;
   CORBA::Object_var shape;
@@ -2711,7 +2719,7 @@ void BLSURFPluginGUI_HypothesisCreator::onAddOption()
   myAdvWidget->AddOption( TBL_CUSTOM, NULL );
 }
 
-void BLSURFPluginGUI_HypothesisCreator::onChangeOptionName( int row, int column )
+void BLSURFPluginGUI_HypothesisCreator::onChangeOptionName( int /*row*/, int /*column*/ )
 {
   // if ( column != OPTION_NAME_COLUMN )
   //   return;

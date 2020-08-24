@@ -134,13 +134,13 @@ namespace
   static PyMethodDef PyStdOut_methods[] = {
     {"write",  (PyCFunction)PyStdOut_write,  METH_VARARGS,
       PyDoc_STR("write(string) -> None")},
-    {NULL,    NULL}   /* sentinel */
+    {0, 0, 0, 0}   /* sentinel */
   };
 
   static PyMemberDef PyStdOut_memberlist[] = {
     {(char*)"softspace", T_INT,  offsetof(PyStdOut, softspace), 0,
      (char*)"flag indicating that a space needs to be printed; used by print"},
-    {NULL} /* Sentinel */
+    {0, 0, 0, 0, 0} /* Sentinel */
   };
 
   static PyTypeObject PyStdOut_Type = {
@@ -188,6 +188,14 @@ namespace
     0,                            /*tp_new*/
     0,                            /*tp_free*/
     0,                            /*tp_is_gc*/
+    0,                            /*tp_bases*/
+    0,                            /*tp_mro*/
+    0,                            /*tp_cache*/
+    0,                            /*tp_subclasses*/
+    0,                            /*tp_weaklist*/
+    0,                            /*tp_del*/
+    0,                            /*tp_version_tag*/
+    0,                            /*tp_finalize*/
   };
 
   PyObject * newPyStdOut( std::string& out )
@@ -613,7 +621,7 @@ void BLSURFPlugin_BLSURF::createEnforcedVertexOnFace(TopoDS_Shape faceShape, BLS
 /////////////////////////////////////////////////////////
 void createAttractorOnFace(TopoDS_Shape GeomShape, std::string AttractorFunction, double defaultSize)
 {
-  double xa, ya, za; // Coordinates of attractor point
+  double xa=0., ya=0., za=0.; // Coordinates of attractor point     // todo: xa, ya, za must be explicitly initialized to avoid warning (see below)
   double a, b;       // Attractor parameter
   double d = 0.;
   bool createNode=false; // To create a node on attractor projection
@@ -670,7 +678,7 @@ void createAttractorOnFace(TopoDS_Shape GeomShape, std::string AttractorFunction
   }
 
   // Get the (u,v) values of the attractor on the face
-  projectionPoint myPoint = getProjectionPoint(TopoDS::Face(GeomShape),gp_Pnt(xa,ya,za));
+  projectionPoint myPoint = getProjectionPoint(TopoDS::Face(GeomShape),gp_Pnt(xa,ya,za)); // todo: xa, ya, za must be explicitly initialized to avoid warning (see above)
   gp_XY uvPoint = myPoint.uv;
   gp_XYZ xyzPoint = myPoint.xyz;
   Standard_Real u0 = uvPoint.X();

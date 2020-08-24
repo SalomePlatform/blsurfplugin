@@ -905,7 +905,7 @@ CORBA::Double BLSURFPlugin_Hypothesis_i::GetVolumeProximityRatio()
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis_i::SetVerbosity(CORBA::Short theVal) throw (SALOME::SALOME_Exception) {
+void BLSURFPlugin_Hypothesis_i::SetVerbosity(CORBA::Short theVal) {
   ASSERT(myBaseImpl);
   if (theVal < 0 || theVal > 100)
     THROW_SALOME_CORBA_EXCEPTION( "Invalid verbosity level",SALOME::BAD_PARAM );
@@ -981,7 +981,7 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetUseDeprecatedPatchMesher()
 }
 //=============================================================================
 
-void BLSURFPlugin_Hypothesis_i::SetMaxNumberOfPointsPerPatch( CORBA::Long nb ) throw (SALOME::SALOME_Exception)
+void BLSURFPlugin_Hypothesis_i::SetMaxNumberOfPointsPerPatch( CORBA::Long nb )
 {
   if ( GetMaxNumberOfPointsPerPatch() != nb )
   {
@@ -1003,7 +1003,7 @@ CORBA::Long BLSURFPlugin_Hypothesis_i::GetMaxNumberOfPointsPerPatch()
 }
 //=============================================================================
 
-void BLSURFPlugin_Hypothesis_i::SetMaxNumberOfThreads( CORBA::Long nb ) throw (SALOME::SALOME_Exception)
+void BLSURFPlugin_Hypothesis_i::SetMaxNumberOfThreads( CORBA::Long nb )
 {
   if ( GetMaxNumberOfThreads() != nb )
   {
@@ -1085,7 +1085,7 @@ bool BLSURFPlugin_Hypothesis_i::GetDebug()
 }
 //=============================================================================
 
-void BLSURFPlugin_Hypothesis_i::SetPeriodicTolerance( CORBA::Double tol ) throw (SALOME::SALOME_Exception)
+void BLSURFPlugin_Hypothesis_i::SetPeriodicTolerance( CORBA::Double tol )
 {
   bool isDefault;
   if ( GetImpl()->GetPreCADOptionValue("periodic_tolerance",&isDefault) != SMESH_Comment( tol ))
@@ -1103,7 +1103,7 @@ void BLSURFPlugin_Hypothesis_i::SetPeriodicTolerance( CORBA::Double tol ) throw 
   }
 }
 //=============================================================================
-double BLSURFPlugin_Hypothesis_i::GetPeriodicTolerance() throw (SALOME::SALOME_Exception)
+double BLSURFPlugin_Hypothesis_i::GetPeriodicTolerance()
 {
   try{
     return this->GetImpl()->GetPeriodicTolerance();
@@ -1117,7 +1117,7 @@ double BLSURFPlugin_Hypothesis_i::GetPeriodicTolerance() throw (SALOME::SALOME_E
 }
 //=============================================================================
 
-void BLSURFPlugin_Hypothesis_i::SetRequiredEntities( const char* howToTreat ) throw (SALOME::SALOME_Exception)
+void BLSURFPlugin_Hypothesis_i::SetRequiredEntities( const char* howToTreat )
 {
   if ( GetImpl()->GetRequiredEntities() != howToTreat )
   {
@@ -1139,7 +1139,7 @@ char* BLSURFPlugin_Hypothesis_i::GetRequiredEntities()
 }
 //=============================================================================
 
-void BLSURFPlugin_Hypothesis_i::SetSewingTolerance( CORBA::Double tol ) throw (SALOME::SALOME_Exception)
+void BLSURFPlugin_Hypothesis_i::SetSewingTolerance( CORBA::Double tol )
 {
   bool isDefault;
   if ( GetImpl()->GetPreCADOptionValue("sewing_tolerance",&isDefault) != SMESH_Comment( tol ))
@@ -1157,7 +1157,7 @@ void BLSURFPlugin_Hypothesis_i::SetSewingTolerance( CORBA::Double tol ) throw (S
   }
 }
 //=============================================================================
-CORBA::Double BLSURFPlugin_Hypothesis_i::GetSewingTolerance() throw (SALOME::SALOME_Exception)
+CORBA::Double BLSURFPlugin_Hypothesis_i::GetSewingTolerance()
 {
   try
   {
@@ -1172,7 +1172,7 @@ CORBA::Double BLSURFPlugin_Hypothesis_i::GetSewingTolerance() throw (SALOME::SAL
 }
 //=============================================================================
 
-void BLSURFPlugin_Hypothesis_i::SetTags( const char* howToTreat ) throw (SALOME::SALOME_Exception)
+void BLSURFPlugin_Hypothesis_i::SetTags( const char* howToTreat )
 {
   if ( GetImpl()->GetTags() != howToTreat )
   {
@@ -1346,7 +1346,7 @@ CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetPreCADDiscardInput() {
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis_i::SetOptionValue(const char* optionName, const char* optionValue)
-  throw (SALOME::SALOME_Exception) {
+{
   ASSERT(myBaseImpl);
   try {
     std::string name( optionName );
@@ -1458,7 +1458,7 @@ void BLSURFPlugin_Hypothesis_i::SetOptionValue(const char* optionName, const cha
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis_i::SetPreCADOptionValue(const char* optionName, const char* optionValue)
-  throw (SALOME::SALOME_Exception) {
+{
   ASSERT(myBaseImpl);
   bool valueChanged = false;
   try {
@@ -1537,7 +1537,7 @@ void BLSURFPlugin_Hypothesis_i::SetPreCADOptionValue(const char* optionName, con
 
 //=============================================================================
 
-char* BLSURFPlugin_Hypothesis_i::GetOptionValue(const char* optionName) throw (SALOME::SALOME_Exception) {
+char* BLSURFPlugin_Hypothesis_i::GetOptionValue(const char* optionName) {
   ASSERT(myBaseImpl);
   try {
     bool isDefault;
@@ -1552,7 +1552,7 @@ char* BLSURFPlugin_Hypothesis_i::GetOptionValue(const char* optionName) throw (S
 
 //=============================================================================
 
-char* BLSURFPlugin_Hypothesis_i::GetPreCADOptionValue(const char* optionName) throw (SALOME::SALOME_Exception) {
+char* BLSURFPlugin_Hypothesis_i::GetPreCADOptionValue(const char* optionName) {
   ASSERT(myBaseImpl);
   try {
     bool isDefault;
@@ -1662,7 +1662,7 @@ BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetAdvancedOptionValues()
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis_i::SetOptionValues(const BLSURFPlugin::string_array& options)
-  throw (SALOME::SALOME_Exception) {
+{
   ASSERT(myBaseImpl);
   for (CORBA::ULong i = 0; i < options.length(); ++i) {
     string name_value_type = options[i].in();
@@ -1690,7 +1690,7 @@ void BLSURFPlugin_Hypothesis_i::SetOptionValues(const BLSURFPlugin::string_array
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis_i::SetPreCADOptionValues(const BLSURFPlugin::string_array& options)
-  throw (SALOME::SALOME_Exception) {
+{
   ASSERT(myBaseImpl);
   for ( CORBA::ULong i = 0; i < options.length(); ++i) {
     string name_value_type = options[i].in();
@@ -1750,7 +1750,6 @@ void BLSURFPlugin_Hypothesis_i::SetAdvancedOptionValues(const BLSURFPlugin::stri
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis_i::SetAdvancedOption(const char* optionsAndValues)
-  throw (SALOME::SALOME_Exception)
 {
   if ( !optionsAndValues ) return;
 
@@ -1829,7 +1828,7 @@ char* BLSURFPlugin_Hypothesis_i::GetPreCADOption(const char* optionName)
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis_i::SetSizeMapEntry(const char* entry, const char* sizeMap)
-  throw (SALOME::SALOME_Exception) {
+{
   ASSERT(myBaseImpl);
   if ( !entry || !entry[0] )
     THROW_SALOME_CORBA_EXCEPTION( "SetSizeMapEntry(): empty geom entry", SALOME::BAD_PARAM );
@@ -1855,7 +1854,7 @@ void BLSURFPlugin_Hypothesis_i::SetSizeMapEntry(const char* entry, const char* s
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis_i::SetConstantSizeMapEntry(const char* entry, GEOM::shape_type shapeType, CORBA::Double sizeMap)
-  throw (SALOME::SALOME_Exception) {
+{
   ASSERT(myBaseImpl);
   bool valueChanged = false;
   std::ostringstream sizeMapFunction;
@@ -1886,7 +1885,7 @@ void BLSURFPlugin_Hypothesis_i::SetConstantSizeMapEntry(const char* entry, GEOM:
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis_i::SetAttractorEntry(const char* entry, const char* attractor)
-  throw (SALOME::SALOME_Exception) {
+{
   ASSERT(myBaseImpl);
   bool valueChanged = false;
   try {
@@ -1914,7 +1913,6 @@ void BLSURFPlugin_Hypothesis_i::SetAttractorEntry(const char* entry, const char*
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis_i::SetClassAttractorEntry(const char* entry, const char* att_entry, CORBA::Double StartSize, CORBA::Double EndSize, CORBA::Double ActionRadius, CORBA::Double ConstantRadius) //TODO ?? finir
-  throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
   //bool valueChanged = false;
@@ -1938,7 +1936,7 @@ void BLSURFPlugin_Hypothesis_i::SetClassAttractorEntry(const char* entry, const 
 
 //=============================================================================
 
-char* BLSURFPlugin_Hypothesis_i::GetSizeMapEntry(const char* entry) throw (SALOME::SALOME_Exception) {
+char* BLSURFPlugin_Hypothesis_i::GetSizeMapEntry(const char* entry) {
   ASSERT(myBaseImpl);
   try {
     return CORBA::string_dup(this->GetImpl()->GetSizeMapEntry(entry).c_str());
@@ -1957,7 +1955,7 @@ char* BLSURFPlugin_Hypothesis_i::GetSizeMapEntry(const char* entry) throw (SALOM
 
 //=============================================================================
 
-char* BLSURFPlugin_Hypothesis_i::GetAttractorEntry(const char* entry) throw (SALOME::SALOME_Exception) {
+char* BLSURFPlugin_Hypothesis_i::GetAttractorEntry(const char* entry) {
   ASSERT(myBaseImpl);
   try {
     return CORBA::string_dup(this->GetImpl()->GetAttractorEntry(entry).c_str());
@@ -1979,7 +1977,7 @@ char* BLSURFPlugin_Hypothesis_i::GetAttractorEntry(const char* entry) throw (SAL
 // // TODO coder cette fonction (utilis??e pour savoir si la valeur a chang??
 // // A finir pour le dump
 // char* BLSURFPlugin_Hypothesis_i::GetClassAttractorEntry(const char* entry)
-//   throw (SALOME::SALOME_Exception)
+// 
 // {
 //   ASSERT(myBaseImpl);
 //   try {
@@ -2063,7 +2061,7 @@ BLSURFPlugin::TAttParamsMap* BLSURFPlugin_Hypothesis_i::GetAttractorParams()
   for ( int i = 0 ; atIt != attractors.end(); ++atIt, ++i ) {
     string faceEntry = atIt->first;
     string attEntry;
-    double startSize, endSize, infDist, constDist;
+    double startSize=0., endSize=0., infDist=0., constDist=0.; // todo: startSize, endSize, infDist, constDist must be explicitly initialized to avoid warning (see below)
     if ( !atIt->second->Empty() ) {
       attEntry = atIt->second->GetAttractorEntry();
       std::vector<double> params = atIt->second->GetParameters();
@@ -2077,7 +2075,7 @@ BLSURFPlugin::TAttParamsMap* BLSURFPlugin_Hypothesis_i::GetAttractorParams()
     result[i].startSize = startSize;
     result[i].endSize = endSize;
     result[i].infDist = infDist;
-    result[i].constDist = constDist;
+    result[i].constDist = constDist; // todo: startSize, endSize, infDist, constDist must be explicitly initialized to avoid warning (see above)
   }
   return result._retn();
 }
@@ -2085,7 +2083,7 @@ BLSURFPlugin::TAttParamsMap* BLSURFPlugin_Hypothesis_i::GetAttractorParams()
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis_i::SetSizeMapEntries(const BLSURFPlugin::string_array& sizeMaps)
-  throw (SALOME::SALOME_Exception) {
+{
   ASSERT(myBaseImpl);
   for ( CORBA::ULong i = 0; i < sizeMaps.length(); ++i) {
     string entry_sizemap = sizeMaps[i].in();
@@ -2112,7 +2110,6 @@ void BLSURFPlugin_Hypothesis_i::ClearSizeMaps() {
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis_i::SetSizeMap(const GEOM::GEOM_Object_ptr GeomObj, const char* sizeMap)
-  throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
   string entry;
@@ -2240,10 +2237,10 @@ void BLSURFPlugin_Hypothesis_i::UnsetAttractorEntry(const char* faceEntry,
   void BLSURFPlugin_Hypothesis_i::UnsetCustomSizeMap(GEOM::GEOM_Object_ptr GeomObj)
   {}
 
-  void BLSURFPlugin_Hypothesis_i::SetCustomSizeMapEntry(const char* entry,const char* sizeMap )  throw (SALOME::SALOME_Exception)
+  void BLSURFPlugin_Hypothesis_i::SetCustomSizeMapEntry(const char* entry,const char* sizeMap )
   {}
 
-  char* BLSURFPlugin_Hypothesis_i::GetCustomSizeMapEntry(const char* entry)  throw (SALOME::SALOME_Exception)
+  char* BLSURFPlugin_Hypothesis_i::GetCustomSizeMapEntry(const char* entry)
   {}
 
   void BLSURFPlugin_Hypothesis_i::UnsetCustomSizeMapEntry(const char* entry)
@@ -2592,7 +2589,7 @@ void BLSURFPlugin_Hypothesis_i::ClearAllEnforcedVertices() {
  * Set/get/unset an enforced vertex on face - OBSOLETE
  */
 bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertex(GEOM::GEOM_Object_ptr theFace, CORBA::Double x, CORBA::Double y,
-                                                  CORBA::Double z) throw (SALOME::SALOME_Exception) {
+                                                  CORBA::Double z) {
   ASSERT(myBaseImpl);
 
   if ((theFace->GetShapeType() != GEOM::FACE) && (theFace->GetShapeType() != GEOM::COMPOUND)) {
@@ -2626,7 +2623,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertex(GEOM::GEOM_Object_ptr theFace,
  * Set/get/unset an enforced vertex with name on face
  */
 bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexNamed(GEOM::GEOM_Object_ptr theFace, CORBA::Double x, CORBA::Double y,
-                                                       CORBA::Double z, const char* theVertexName) throw (SALOME::SALOME_Exception) {
+                                                       CORBA::Double z, const char* theVertexName) {
   ASSERT(myBaseImpl);
 
   if ((theFace->GetShapeType() != GEOM::FACE) && (theFace->GetShapeType() != GEOM::COMPOUND)) {
@@ -2661,7 +2658,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexNamed(GEOM::GEOM_Object_ptr the
  * Set/get/unset an enforced vertex with geom object on face
  */
 bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeom(GEOM::GEOM_Object_ptr theFace, GEOM::GEOM_Object_ptr theVertex)
-  throw (SALOME::SALOME_Exception) {
+{
   ASSERT(myBaseImpl);
 
   if ((theFace->GetShapeType() != GEOM::FACE) && (theFace->GetShapeType() != GEOM::COMPOUND)) {
@@ -2725,7 +2722,6 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeom(GEOM::GEOM_Object_ptr theF
  * Set an enforced vertex with group name on face
  */
 bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexWithGroup(GEOM::GEOM_Object_ptr theFace, CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* theGroupName)
-  throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
 
@@ -2761,7 +2757,6 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexWithGroup(GEOM::GEOM_Object_ptr
  */
 bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexNamedWithGroup(GEOM::GEOM_Object_ptr theFace, CORBA::Double x, CORBA::Double y, CORBA::Double z, 
                                                                 const char* theVertexName, const char* theGroupName)
-  throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
 
@@ -2796,7 +2791,6 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexNamedWithGroup(GEOM::GEOM_Objec
  * Set an enforced vertex with geom entry and group name on face
  */
 bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeomWithGroup(GEOM::GEOM_Object_ptr theFace, GEOM::GEOM_Object_ptr theVertex, const char* theGroupName)
-  throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
 
@@ -2853,7 +2847,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeomWithGroup(GEOM::GEOM_Object
 // * Are internal enforced vertices used for a face ?
 // */
 //CORBA::Boolean BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertex(GEOM::GEOM_Object_ptr theFace)
-//    throw (SALOME::SALOME_Exception) {
+//{
 //  ASSERT(myBaseImpl);
 
 //  if ((theFace->GetShapeType() != GEOM::FACE) && (theFace->GetShapeType() != GEOM::COMPOUND)) {
@@ -2888,7 +2882,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGeomWithGroup(GEOM::GEOM_Object
  * Get the list of all enforced vertices
  */
 BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVertices(GEOM::GEOM_Object_ptr theFace)
-  throw (SALOME::SALOME_Exception) {
+{
   ASSERT(myBaseImpl);
 
   if ((theFace->GetShapeType() != GEOM::FACE) && (theFace->GetShapeType() != GEOM::COMPOUND)) {
@@ -2920,7 +2914,7 @@ BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVertices(GEO
 }
 
 bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertex(GEOM::GEOM_Object_ptr theFace, CORBA::Double x, CORBA::Double y,
-                                                    CORBA::Double z) throw (SALOME::SALOME_Exception) {
+                                                    CORBA::Double z) {
   ASSERT(myBaseImpl);
 
   if ((theFace->GetShapeType() != GEOM::FACE) && (theFace->GetShapeType() != GEOM::COMPOUND)) {
@@ -2952,7 +2946,7 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertex(GEOM::GEOM_Object_ptr theFac
 }
 
 bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexGeom(GEOM::GEOM_Object_ptr theFace, GEOM::GEOM_Object_ptr theVertex)
-  throw (SALOME::SALOME_Exception) {
+{
   ASSERT(myBaseImpl);
 
   if ((theFace->GetShapeType() != GEOM::FACE) && (theFace->GetShapeType() != GEOM::COMPOUND)) {
@@ -3011,7 +3005,7 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexGeom(GEOM::GEOM_Object_ptr th
   }
 }
 
-bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertices(GEOM::GEOM_Object_ptr theFace) throw (SALOME::SALOME_Exception) {
+bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertices(GEOM::GEOM_Object_ptr theFace) {
   ASSERT(myBaseImpl);
 
   if ((theFace->GetShapeType() != GEOM::FACE) && (theFace->GetShapeType() != GEOM::COMPOUND)) {
@@ -3046,7 +3040,7 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertices(GEOM::GEOM_Object_ptr theF
 /*!
  * Set/get/unset an enforced vertex on face - NEW (no face)
  */
-bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertex(CORBA::Double x, CORBA::Double y, CORBA::Double z) throw (SALOME::SALOME_Exception)
+bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertex(CORBA::Double x, CORBA::Double y, CORBA::Double z)
 {
   ASSERT(myBaseImpl);
 
@@ -3060,7 +3054,7 @@ bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertex(CORBA::Double x, CORBA::Double
 /*!
  * Set/get/unset an enforced vertex with name on face
  */
-bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexNamed(CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* theVertexName) throw (SALOME::SALOME_Exception)
+bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexNamed(CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* theVertexName)
 {
   try {
     return SetEnforcedVertexEntry("", x, y, z, theVertexName);
@@ -3073,7 +3067,6 @@ bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexNamed(CORBA::Double x, CORBA::D
  * Set/get/unset an enforced vertex with geom object on face
  */
 bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexGeom(GEOM::GEOM_Object_ptr theVertex)
-  throw (SALOME::SALOME_Exception)
 {
   if ((theVertex->GetShapeType() != GEOM::VERTEX) && (theVertex->GetShapeType() != GEOM::COMPOUND)) {
     THROW_SALOME_CORBA_EXCEPTION("theVertex shape type is not VERTEX or COMPOUND", SALOME::BAD_PARAM);
@@ -3108,7 +3101,6 @@ bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexGeom(GEOM::GEOM_Object_ptr theV
  * Set an enforced vertex with group name on face
  */
 bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexWithGroup(CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* theGroupName)
-  throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
 
@@ -3124,7 +3116,6 @@ bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexWithGroup(CORBA::Double x, CORB
  */
 bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexNamedWithGroup(CORBA::Double x, CORBA::Double y, CORBA::Double z, 
                                                                 const char* theVertexName, const char* theGroupName)
-  throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
 
@@ -3139,7 +3130,6 @@ bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexNamedWithGroup(CORBA::Double x,
  * Set an enforced vertex with geom entry and group name on face
  */
 bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexGeomWithGroup(GEOM::GEOM_Object_ptr theVertex, const char* theGroupName)
-  throw (SALOME::SALOME_Exception)
 {
   if ((theVertex->GetShapeType() != GEOM::VERTEX) && (theVertex->GetShapeType() != GEOM::COMPOUND)) {
     THROW_SALOME_CORBA_EXCEPTION("theVertex shape type is not VERTEX or COMPOUND", SALOME::BAD_PARAM);
@@ -3171,7 +3161,7 @@ bool BLSURFPlugin_Hypothesis_i::AddEnforcedVertexGeomWithGroup(GEOM::GEOM_Object
   }
 }
 
-bool BLSURFPlugin_Hypothesis_i::RemoveEnforcedVertex(CORBA::Double x, CORBA::Double y, CORBA::Double z) throw (SALOME::SALOME_Exception)
+bool BLSURFPlugin_Hypothesis_i::RemoveEnforcedVertex(CORBA::Double x, CORBA::Double y, CORBA::Double z)
 {
   try {
     return UnsetEnforcedVertexEntry("", x, y, z);
@@ -3181,7 +3171,6 @@ bool BLSURFPlugin_Hypothesis_i::RemoveEnforcedVertex(CORBA::Double x, CORBA::Dou
 }
 
 bool BLSURFPlugin_Hypothesis_i::RemoveEnforcedVertexGeom(GEOM::GEOM_Object_ptr theVertex)
-  throw (SALOME::SALOME_Exception)
 {
   if ((theVertex->GetShapeType() != GEOM::VERTEX) && (theVertex->GetShapeType() != GEOM::COMPOUND)) {
     THROW_SALOME_CORBA_EXCEPTION("theVertex shape type is not VERTEX or COMPOUND", SALOME::BAD_PARAM);
@@ -3211,7 +3200,7 @@ bool BLSURFPlugin_Hypothesis_i::RemoveEnforcedVertexGeom(GEOM::GEOM_Object_ptr t
   }
 }
 
-bool BLSURFPlugin_Hypothesis_i::RemoveEnforcedVertices() throw (SALOME::SALOME_Exception)
+bool BLSURFPlugin_Hypothesis_i::RemoveEnforcedVertices()
 {
   try {
     return UnsetEnforcedVerticesEntry("");
@@ -3230,7 +3219,6 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexEntry(const char* theFaceEntry,
                                                        const char* theVertexName,
                                                        const char* theVertexEntry,
                                                        const char* theGroupName)
-  throw (SALOME::SALOME_Exception)
 {
   bool newValue = false;
   if (string(theVertexEntry).empty()) {
@@ -3300,7 +3288,6 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexEntry(const char* theFaceEntry,
 }
 
 BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVerticesEntry(const char* entry)
-  throw (SALOME::SALOME_Exception)
 {
   try {
     BLSURFPlugin::TEnfVertexList_var vertexList = new BLSURFPlugin::TEnfVertexList();
@@ -3348,7 +3335,7 @@ BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVerticesEntr
   }
 }
 
-bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexEntry(const char* theFaceEntry, CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* theVertexEntry) throw (SALOME::SALOME_Exception)
+bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexEntry(const char* theFaceEntry, CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* theVertexEntry)
 {
   ASSERT(myBaseImpl);
 
@@ -3371,7 +3358,7 @@ bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVertexEntry(const char* theFaceEntr
 
   return res;
 }
-bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVerticesEntry(const char* theFaceEntry) throw (SALOME::SALOME_Exception)
+bool BLSURFPlugin_Hypothesis_i::UnsetEnforcedVerticesEntry(const char* theFaceEntry)
 {
   ASSERT(myBaseImpl);
 
@@ -3446,7 +3433,6 @@ char* BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertexAllFacesGroup()
  * Enable internal enforced vertices on specific face if requested by user
  *
  void BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertex(GEOM::GEOM_Object_ptr theFace, CORBA::Boolean toEnforceInternalVertices)
- throw (SALOME::SALOME_Exception)
  {
  try {
  SetInternalEnforcedVertexWithGroup(theFace, toEnforceInternalVertices);
@@ -3456,9 +3442,7 @@ char* BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertexAllFacesGroup()
  }
 
  void BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexWithGroup(GEOM::GEOM_Object_ptr theFace, CORBA::Boolean toEnforceInternalVertices, const char* theGroupName)
- throw (SALOME::SALOME_Exception)
  {
-
  if ((theFace->GetShapeType() != GEOM::FACE) && (theFace->GetShapeType() != GEOM::COMPOUND)) {
  THROW_SALOME_CORBA_EXCEPTION("theFace shape type is not FACE or COMPOUND", SALOME::BAD_PARAM);
  }
@@ -3489,7 +3473,6 @@ char* BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertexAllFacesGroup()
  }
 
  void BLSURFPlugin_Hypothesis_i::SetInternalEnforcedVertexEntry(const char* theFaceEntry, CORBA::Boolean toEnforceInternalVertices, const char* theGroupName)
- throw (SALOME::SALOME_Exception)
  {
  ASSERT(myBaseImpl);
  try {
@@ -3509,7 +3492,7 @@ char* BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertexAllFacesGroup()
 
 /* TODO GROUPS
    char* BLSURFPlugin_Hypothesis_i::GetEnforcedVertexGroupName(CORBA::Double x, CORBA::Double y, CORBA::Double z)
-   throw (SALOME::SALOME_Exception)
+   
    {
    ASSERT(myBaseImpl);
    try {
@@ -3531,7 +3514,6 @@ char* BLSURFPlugin_Hypothesis_i::GetInternalEnforcedVertexAllFacesGroup()
 
 
    void BLSURFPlugin_Hypothesis_i::SetEnforcedVertexGroupName(CORBA::Double x, CORBA::Double y, CORBA::Double z, const char* groupName)
-   throw (SALOME::SALOME_Exception)
    {
    ASSERT(myBaseImpl);
    try {
@@ -3732,7 +3714,6 @@ BLSURFPlugin::TPeriodicityList* BLSURFPlugin_Hypothesis_i::PreCadVectorToSequenc
 
 
 void BLSURFPlugin_Hypothesis_i::AddPreCadFacesPeriodicity(GEOM::GEOM_Object_ptr theFace1, GEOM::GEOM_Object_ptr theFace2)
-  throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
   const GEOM::ListOfGO theSourceVertices;
@@ -3743,7 +3724,6 @@ void BLSURFPlugin_Hypothesis_i::AddPreCadFacesPeriodicity(GEOM::GEOM_Object_ptr 
 
 void BLSURFPlugin_Hypothesis_i::AddPreCadFacesPeriodicityWithVertices(GEOM::GEOM_Object_ptr theFace1, GEOM::GEOM_Object_ptr theFace2,
                                                                       const GEOM::ListOfGO& theSourceVertices, const GEOM::ListOfGO& theTargetVertices)
-  throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
 
@@ -3795,9 +3775,7 @@ void BLSURFPlugin_Hypothesis_i::AddPreCadFacesPeriodicityWithVertices(GEOM::GEOM
 
 void BLSURFPlugin_Hypothesis_i::AddPreCadFacesPeriodicityEntry(const char* theFace1Entry, const char* theFace2Entry,
                                                                const BLSURFPlugin::TEntryList& theSourceVerticesEntriesCorba, const BLSURFPlugin::TEntryList& theTargetVerticesEntriesCorba)
-  throw (SALOME::SALOME_Exception)
 {
-
   ASSERT(myBaseImpl);
 
   // Convert BLSURFPlugin::TEntryList to vector<string>
@@ -3825,7 +3803,6 @@ void BLSURFPlugin_Hypothesis_i::AddPreCadFacesPeriodicityEntry(const char* theFa
 }
 
 void BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicity(GEOM::GEOM_Object_ptr theEdge1, GEOM::GEOM_Object_ptr theEdge2)
-  throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
   const GEOM::ListOfGO theSourceVertices;
@@ -3835,7 +3812,6 @@ void BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicity(GEOM::GEOM_Object_ptr 
 
 void BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicityWithVertices(GEOM::GEOM_Object_ptr theEdge1, GEOM::GEOM_Object_ptr theEdge2,
                                                                       const GEOM::ListOfGO& theSourceVertices, const GEOM::ListOfGO& theTargetVertices)
-  throw (SALOME::SALOME_Exception)
 {
   ASSERT(myBaseImpl);
 
@@ -3887,7 +3863,6 @@ void BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicityWithVertices(GEOM::GEOM
 
 void BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicityEntry(const char* theEdge1Entry, const char* theEdge2Entry,
                                                                const BLSURFPlugin::TEntryList& theSourceVerticesEntriesCorba, const BLSURFPlugin::TEntryList& theTargetVerticesEntriesCorba)
-  throw (SALOME::SALOME_Exception)
 {
 
   ASSERT(myBaseImpl);

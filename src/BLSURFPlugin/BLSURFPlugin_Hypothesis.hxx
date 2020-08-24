@@ -189,10 +189,10 @@ public:
   void SetJacobianRectification( bool allowRectification );
   bool GetJacobianRectification();
 
-  void SetMaxNumberOfPointsPerPatch( int nb ) throw (std::invalid_argument);
+  void SetMaxNumberOfPointsPerPatch( int nb );
   int  GetMaxNumberOfPointsPerPatch();
 
-  void SetMaxNumberOfThreads( int nb ) throw (std::invalid_argument);
+  void SetMaxNumberOfThreads( int nb );
   int  GetMaxNumberOfThreads();
 
   void SetRespectGeometry( bool toRespect );
@@ -207,16 +207,16 @@ public:
   void SetDebug( bool isDebug );
   bool GetDebug();
 
-  void SetPeriodicTolerance( double tol ) throw (std::invalid_argument);
+  void SetPeriodicTolerance( double tol );
   double GetPeriodicTolerance();
 
-  void SetRequiredEntities( const std::string& howToTreat ) throw (std::invalid_argument);
+  void SetRequiredEntities( const std::string& howToTreat );
   std::string GetRequiredEntities();
 
-  void SetSewingTolerance( double tol ) throw (std::invalid_argument);
+  void SetSewingTolerance( double tol );
   double GetSewingTolerance();
 
-  void SetTags( const std::string& howToTreat ) throw (std::invalid_argument);
+  void SetTags( const std::string& howToTreat );
   std::string GetTags();
 
   // Hyper-patches
@@ -380,17 +380,17 @@ public:
 
   bool                  SetEnforcedVertex(TEntry theFaceEntry, TEnfName theVertexName, TEntry theVertexEntry, TEnfGroupName theGroupName,
                                           double x = 0.0, double y = 0.0, double z = 0.0);
-  TEnfVertexList        GetEnfVertexList(const TEntry& theFaceEntry) throw (std::invalid_argument);
-  TEnfVertexCoordsList  GetEnfVertexCoordsList(const TEntry& theFaceEntry) throw (std::invalid_argument);
-  TEntryList            GetEnfVertexEntryList (const TEntry& theFaceEntry) throw (std::invalid_argument);
-  TEnfVertex*           GetEnfVertex(TEnfVertexCoords coords) throw (std::invalid_argument);
-  TEnfVertex*           GetEnfVertex(const TEntry& theEnfVertexEntry) throw (std::invalid_argument);
+  TEnfVertexList        GetEnfVertexList(const TEntry& theFaceEntry);
+  TEnfVertexCoordsList  GetEnfVertexCoordsList(const TEntry& theFaceEntry);
+  TEntryList            GetEnfVertexEntryList (const TEntry& theFaceEntry);
+  TEnfVertex*           GetEnfVertex(TEnfVertexCoords coords);
+  TEnfVertex*           GetEnfVertex(const TEntry& theEnfVertexEntry);
   void                  AddEnfVertexNodeID(TEnfGroupName theGroupName,int theNodeID);
-  std::set<int>         GetEnfVertexNodeIDs(TEnfGroupName theGroupName) throw (std::invalid_argument);
-  void                  RemoveEnfVertexNodeID(TEnfGroupName theGroupName,int theNodeID) throw (std::invalid_argument);
+  std::set<int>         GetEnfVertexNodeIDs(TEnfGroupName theGroupName);
+  void                  RemoveEnfVertexNodeID(TEnfGroupName theGroupName,int theNodeID);
   
-  bool ClearEnforcedVertex(const TEntry& theFaceEntry, double x = 0.0, double y = 0.0, double z = 0.0, const TEntry& theVertexEntry="") throw (std::invalid_argument);
-  bool ClearEnforcedVertices(const TEntry& theFaceEntry) throw (std::invalid_argument);
+  bool ClearEnforcedVertex(const TEntry& theFaceEntry, double x = 0.0, double y = 0.0, double z = 0.0, const TEntry& theVertexEntry="");
+  bool ClearEnforcedVertices(const TEntry& theFaceEntry);
 
   void ClearAllEnforcedVertices();
   void AddEnforcedVertex( const TEntry& theFaceEntry, TEnfVertex * theEnfVertex );
@@ -424,7 +424,7 @@ public:
    * \brief Internal enforced vertices
    */
   void SetInternalEnforcedVertexAllFaces(bool toEnforceInternalVertices);
-  const bool _GetInternalEnforcedVertexAllFaces() const { return _enforcedInternalVerticesAllFaces; }
+  bool _GetInternalEnforcedVertexAllFaces() const { return _enforcedInternalVerticesAllFaces; }
   static bool GetInternalEnforcedVertexAllFaces( const BLSURFPlugin_Hypothesis* hyp );
   void SetInternalEnforcedVertexAllFacesGroup(TEnfGroupName theGroupName);
   const TEnfGroupName _GetInternalEnforcedVertexAllFacesGroup() const { return _enforcedInternalVerticesAllFacesGroup; }
@@ -539,11 +539,11 @@ public:
   typedef std::set< std::string >              TOptionNames;
 
   void SetOptionValue(const std::string& optionName,
-                      const std::string& optionValue) throw (std::invalid_argument);
+                      const std::string& optionValue);
   void SetPreCADOptionValue(const std::string& optionName,
-                            const std::string& optionValue) throw (std::invalid_argument);
-  std::string GetOptionValue(const std::string& optionName, bool* isDefault=0) const throw (std::invalid_argument);
-  std::string GetPreCADOptionValue(const std::string& optionName, bool* isDefault=0) const throw (std::invalid_argument);
+                            const std::string& optionValue);
+  std::string GetOptionValue(const std::string& optionName, bool* isDefault=0) const;
+  std::string GetPreCADOptionValue(const std::string& optionName, bool* isDefault=0) const;
   void ClearOption(const std::string& optionName);
   void ClearPreCADOption(const std::string& optionName);
   TOptionValues        GetOptionValues()       const;
@@ -555,9 +555,9 @@ public:
   std::string GetOption(const std::string& optionName) const;
   std::string GetPreCADOption(const std::string& optionName) const;
 
-  static bool  ToBool(const std::string& str, bool* isOk=0) throw (std::invalid_argument);
-  static double ToDbl(const std::string& str, bool* isOk=0) throw (std::invalid_argument);
-  static int    ToInt(const std::string& str, bool* isOk=0) throw (std::invalid_argument);
+  static bool  ToBool(const std::string& str, bool* isOk=0);
+  static double ToDbl(const std::string& str, bool* isOk=0);
+  static int    ToInt(const std::string& str, bool* isOk=0);
 
   /*!
     * Sets the file for export resulting mesh in GMF format

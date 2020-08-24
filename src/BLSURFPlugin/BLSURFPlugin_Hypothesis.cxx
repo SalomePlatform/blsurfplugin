@@ -577,6 +577,8 @@ void BLSURFPlugin_Hypothesis::SetEnforceCadEdgesSize( bool toEnforce )
     SetOptionValue( "enforce_cad_edge_sizes", toEnforce ? "yes" : "no" );
     NotifySubMeshesHypothesisModification();
   }
+#else
+  (void)toEnforce; // maybe unused
 #endif
 }
 //=============================================================================
@@ -621,7 +623,7 @@ bool BLSURFPlugin_Hypothesis::GetJacobianRectification()
 }
 //=============================================================================
 
-void BLSURFPlugin_Hypothesis::SetUseDeprecatedPatchMesher( bool useDeprecatedPatchMesher )
+void BLSURFPlugin_Hypothesis::SetUseDeprecatedPatchMesher( bool /*useDeprecatedPatchMesher*/ )
 {
   // if ( GetUseDeprecatedPatchMesher() != useDeprecatedPatchMesher )
   // {
@@ -637,7 +639,6 @@ bool BLSURFPlugin_Hypothesis::GetUseDeprecatedPatchMesher()
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis::SetMaxNumberOfPointsPerPatch( int nb )
-  throw (std::invalid_argument)
 {
 #if MESHGEMS_VERSION_HEX < 0x020A00
   // Deprecated since MeshGems 2.10
@@ -649,6 +650,8 @@ void BLSURFPlugin_Hypothesis::SetMaxNumberOfPointsPerPatch( int nb )
     SetOptionValue("max_number_of_points_per_patch", SMESH_Comment( nb ));
     NotifySubMeshesHypothesisModification();
   }
+#else
+  (void)nb; // maybe unused
 #endif
 }
 //=============================================================================
@@ -664,7 +667,6 @@ int BLSURFPlugin_Hypothesis::GetMaxNumberOfPointsPerPatch()
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis::SetMaxNumberOfThreads( int nb )
-  throw (std::invalid_argument)
 {
   if ( nb < 0 )
     throw std::invalid_argument( SMESH_Comment("Invalid number of threads: ") << nb );
@@ -743,7 +745,6 @@ bool BLSURFPlugin_Hypothesis::GetDebug()
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis::SetPeriodicTolerance( CORBA::Double tol )
-  throw (std::invalid_argument)
 {
   if ( tol <= 0 )
     throw std::invalid_argument( SMESH_Comment("Invalid tolerance: ") << tol );
@@ -761,7 +762,6 @@ double BLSURFPlugin_Hypothesis::GetPeriodicTolerance()
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis::SetRequiredEntities( const std::string& howToTreat )
-  throw (std::invalid_argument)
 {
   if ( howToTreat != "respect" && howToTreat != "ignore" && howToTreat != "clear"  )
     throw std::invalid_argument
@@ -781,7 +781,6 @@ std::string BLSURFPlugin_Hypothesis::GetRequiredEntities()
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis::SetSewingTolerance( CORBA::Double tol )
-  throw (std::invalid_argument)
 {
   if ( tol <= 0 )
     throw std::invalid_argument( SMESH_Comment("Invalid tolerance: ") << tol );
@@ -799,7 +798,6 @@ CORBA::Double BLSURFPlugin_Hypothesis::GetSewingTolerance()
 //=============================================================================
 
 void BLSURFPlugin_Hypothesis::SetTags( const std::string& howToTreat )
-  throw (std::invalid_argument)
 {
   if ( howToTreat != "respect" && howToTreat != "ignore" && howToTreat != "clear"  )
     throw std::invalid_argument
@@ -964,8 +962,7 @@ void BLSURFPlugin_Hypothesis::SetGMFFile(const std::string& theFileName)
 
 //=============================================================================
 void BLSURFPlugin_Hypothesis::SetOptionValue(const std::string& optionName, const std::string& optionValue)
-  throw (std::invalid_argument) {
-
+{
   TOptionValues::iterator op_val = _option2value.find(optionName);
   if (op_val == _option2value.end())
   {
@@ -1021,8 +1018,7 @@ void BLSURFPlugin_Hypothesis::SetOptionValue(const std::string& optionName, cons
 
 //=============================================================================
 void BLSURFPlugin_Hypothesis::SetPreCADOptionValue(const std::string& optionName, const std::string& optionValue)
-  throw (std::invalid_argument) {
-
+{
   TOptionValues::iterator op_val = _preCADoption2value.find(optionName);
   if (op_val == _preCADoption2value.end()) {
     op_val = _option2value.find(optionName);
@@ -1081,7 +1077,6 @@ void BLSURFPlugin_Hypothesis::SetPreCADOptionValue(const std::string& optionName
 //=============================================================================
 std::string BLSURFPlugin_Hypothesis::GetOptionValue(const std::string& optionName,
                                                     bool*              isDefault) const
-  throw (std::invalid_argument)
 {
   TOptionValues::const_iterator op_val = _option2value.find(optionName);
   if (op_val == _option2value.end())
@@ -1112,7 +1107,6 @@ std::string BLSURFPlugin_Hypothesis::GetOptionValue(const std::string& optionNam
 //=============================================================================
 std::string BLSURFPlugin_Hypothesis::GetPreCADOptionValue(const std::string& optionName,
                                                           bool*              isDefault) const
-  throw (std::invalid_argument)
 {
   TOptionValues::const_iterator op_val = _preCADoption2value.find(optionName);
   if (op_val == _preCADoption2value.end())
@@ -1573,8 +1567,7 @@ void BLSURFPlugin_Hypothesis::AddEnforcedVertex( const TEntry& faceEntry,
 //=======================================================================
 
 BLSURFPlugin_Hypothesis::TEnfVertexList BLSURFPlugin_Hypothesis::GetEnfVertexList(const TEntry& theFaceEntry)
-    throw (std::invalid_argument) {
-
+{
   if (_faceEntryEnfVertexListMap.count(theFaceEntry) > 0)
     return _faceEntryEnfVertexListMap[theFaceEntry];
   else
@@ -1589,9 +1582,8 @@ BLSURFPlugin_Hypothesis::TEnfVertexList BLSURFPlugin_Hypothesis::GetEnfVertexLis
 //function : GetEnfVertexCoordsList
 //=======================================================================
 
-BLSURFPlugin_Hypothesis::TEnfVertexCoordsList BLSURFPlugin_Hypothesis::GetEnfVertexCoordsList(
-    const TEntry& theFaceEntry) throw (std::invalid_argument) {
-
+BLSURFPlugin_Hypothesis::TEnfVertexCoordsList BLSURFPlugin_Hypothesis::GetEnfVertexCoordsList(const TEntry& theFaceEntry)
+{
   if (_faceEntryCoordsListMap.count(theFaceEntry) > 0)
     return _faceEntryCoordsListMap[theFaceEntry];
 
@@ -1605,8 +1597,7 @@ BLSURFPlugin_Hypothesis::TEnfVertexCoordsList BLSURFPlugin_Hypothesis::GetEnfVer
 //=======================================================================
 
 BLSURFPlugin_Hypothesis::TEntryList BLSURFPlugin_Hypothesis::GetEnfVertexEntryList(const TEntry& theFaceEntry)
-    throw (std::invalid_argument) {
-
+{
   if (_faceEntryEnfVertexEntryListMap.count(theFaceEntry) > 0)
     return _faceEntryEnfVertexEntryListMap[theFaceEntry];
 
@@ -1620,8 +1611,7 @@ BLSURFPlugin_Hypothesis::TEntryList BLSURFPlugin_Hypothesis::GetEnfVertexEntryLi
 //=======================================================================
 
 BLSURFPlugin_Hypothesis::TEnfVertex* BLSURFPlugin_Hypothesis::GetEnfVertex(TEnfVertexCoords coords)
-    throw (std::invalid_argument) {
-
+{
   if (_coordsEnfVertexMap.count(coords) > 0)
     return _coordsEnfVertexMap[coords];
 
@@ -1635,8 +1625,7 @@ BLSURFPlugin_Hypothesis::TEnfVertex* BLSURFPlugin_Hypothesis::GetEnfVertex(TEnfV
 //=======================================================================
 
 BLSURFPlugin_Hypothesis::TEnfVertex* BLSURFPlugin_Hypothesis::GetEnfVertex(const TEntry& theEnfVertexEntry)
-    throw (std::invalid_argument) {
-
+{
   if (_enfVertexEntryEnfVertexMap.count(theEnfVertexEntry) > 0)
     return _enfVertexEntryEnfVertexMap[theEnfVertexEntry];
 
@@ -1662,8 +1651,8 @@ BLSURFPlugin_Hypothesis::TEnfVertex* BLSURFPlugin_Hypothesis::GetEnfVertex(const
 //=======================================================================
 
 bool BLSURFPlugin_Hypothesis::ClearEnforcedVertex(const TEntry& theFaceEntry, double x, double y, double z,
-    const TEntry& theVertexEntry) throw (std::invalid_argument) {
-
+						  const TEntry& theVertexEntry)
+{
   bool toNotify = false;
   std::ostringstream msg;
   TEnfVertex *oldEnfVertex;
@@ -1748,8 +1737,8 @@ bool BLSURFPlugin_Hypothesis::ClearEnforcedVertex(const TEntry& theFaceEntry, do
 //function : ClearEnforcedVertices
 //=======================================================================
 
-bool BLSURFPlugin_Hypothesis::ClearEnforcedVertices(const TEntry& theFaceEntry) throw (std::invalid_argument) {
-
+bool BLSURFPlugin_Hypothesis::ClearEnforcedVertices(const TEntry& theFaceEntry)
+{
   bool toNotify = false;
   TEnfVertex *oldEnfVertex;
 
@@ -1883,7 +1872,7 @@ BLSURFPlugin_Hypothesis::TEnfVertexEntryEnfVertexMap BLSURFPlugin_Hypothesis::Ge
   return hyp ? hyp->_GetAllEnforcedVerticesByEnfVertexEntry() : GetDefaultEnfVertexEntryEnfVertexMap();
 }
 
-std::set<int> BLSURFPlugin_Hypothesis::GetEnfVertexNodeIDs(TEnfGroupName theGroupName) throw (std::invalid_argument)
+std::set<int> BLSURFPlugin_Hypothesis::GetEnfVertexNodeIDs(TEnfGroupName theGroupName)
 {
   TGroupNameNodeIDMap::const_iterator it = _groupNameNodeIDMap.find(theGroupName);
   if (it != _groupNameNodeIDMap.end()) {
@@ -1899,7 +1888,7 @@ void BLSURFPlugin_Hypothesis::AddEnfVertexNodeID(TEnfGroupName theGroupName,int 
   _groupNameNodeIDMap[theGroupName].insert(theNodeID);
 }
 
-void BLSURFPlugin_Hypothesis::RemoveEnfVertexNodeID(TEnfGroupName theGroupName,int theNodeID) throw (std::invalid_argument)
+void BLSURFPlugin_Hypothesis::RemoveEnfVertexNodeID(TEnfGroupName theGroupName,int theNodeID)
 {
   TGroupNameNodeIDMap::iterator it = _groupNameNodeIDMap.find(theGroupName);
   if (it != _groupNameNodeIDMap.end()) {
@@ -2487,13 +2476,13 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
   bool hasVerticesPeriodicity = false;
 
   isOK = static_cast<bool>(load >> option_or_sm);
-  if (isOK)
+  if (isOK) {
     if ( (option_or_sm == "1")||(option_or_sm == "0") ) {
       i = atoi(option_or_sm.c_str());
       hasCADSurfOptions = true;
       _phySizeRel = (bool) i;
     }
-    if (option_or_sm == "__OPTIONS_BEGIN__")
+    else if (option_or_sm == "__OPTIONS_BEGIN__")
       hasOptions = true;
     else if (option_or_sm == "__CUSTOM_OPTIONS_BEGIN__")
       hasCustomOptions = true;
@@ -2517,6 +2506,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
       hasEdgesPeriodicity = true;
     else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
       hasVerticesPeriodicity = true;
+  }
 
   if (isOK && hasCADSurfOptions) {
     isOK = static_cast<bool>(load >> i);
@@ -2869,10 +2859,10 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
 
   if (hasSizeMap) {
     isOK = static_cast<bool>(load >> option_or_sm);
-    if (isOK)
+    if (isOK) {
       if (option_or_sm == "__ATTRACTORS_BEGIN__")
         hasAttractor = true;
-      if (option_or_sm == "__NEW_ATTRACTORS_BEGIN__")
+      else if (option_or_sm == "__NEW_ATTRACTORS_BEGIN__")
         hasNewAttractor = true;
       else if (option_or_sm == "__ENFORCED_VERTICES_BEGIN__")
         hasEnforcedVertex = true;
@@ -2886,6 +2876,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
         hasEdgesPeriodicity = true;
       else if (option_or_sm == "__VERTICES_PERIODICITY_BEGIN__")
         hasVerticesPeriodicity = true;
+    }
   }
 
   std::string atEntry, atValue;
@@ -3215,7 +3206,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
   }
 
   // New options in 2.9.6 (issue #17784)
-  if ( static_cast<bool>( load >> _useSurfaceProximity ));
+  if ( static_cast<bool>( load >> _useSurfaceProximity ))
   {
     load >> _nbSurfaceProximityLayers;
     load >> _surfaceProximityRatio;
@@ -3524,7 +3515,7 @@ std::istream & operator >>(std::istream & load, BLSURFPlugin_Hypothesis & hyp) {
  */
 //================================================================================
 
-bool BLSURFPlugin_Hypothesis::SetParametersByMesh(const SMESH_Mesh* theMesh, const TopoDS_Shape& theShape) {
+bool BLSURFPlugin_Hypothesis::SetParametersByMesh(const SMESH_Mesh* /*theMesh*/, const TopoDS_Shape& /*theShape*/) {
   return false;
 }
 
@@ -3608,7 +3599,7 @@ double BLSURFPlugin_Hypothesis::GetDefaultTinyEdgeOptimisationLength(double diag
 //=============================================================================
 
 bool BLSURFPlugin_Hypothesis::SetParametersByDefaults(const TDefaults&  dflts,
-                                                      const SMESH_Mesh* theMesh)
+                                                      const SMESH_Mesh* /*theMesh*/)
 {
   _phySize = GetDefaultPhySize(dflts._diagonal, _gen->GetBoundaryBoxSegmentation());
   _minSize = GetDefaultMinSize(dflts._diagonal);
@@ -3641,7 +3632,6 @@ bool BLSURFPlugin_Hypothesis::SetParametersByDefaults(const TDefaults&  dflts,
 //================================================================================
 
 bool BLSURFPlugin_Hypothesis::ToBool(const std::string& str, bool* isOk )
-  throw (std::invalid_argument)
 {
   std::string s = str;
   if ( isOk ) *isOk = true;
@@ -3671,7 +3661,6 @@ bool BLSURFPlugin_Hypothesis::ToBool(const std::string& str, bool* isOk )
 //================================================================================
 
 double BLSURFPlugin_Hypothesis::ToDbl(const std::string& str, bool* isOk )
-  throw (std::invalid_argument)
 {
   if ( str.empty() ) throw std::invalid_argument("Empty value provided");
 
@@ -3696,7 +3685,6 @@ double BLSURFPlugin_Hypothesis::ToDbl(const std::string& str, bool* isOk )
 //================================================================================
 
 int BLSURFPlugin_Hypothesis::ToInt(const std::string& str, bool* isOk )
-  throw (std::invalid_argument)
 {
   if ( str.empty() ) throw std::invalid_argument("Empty value provided");
 

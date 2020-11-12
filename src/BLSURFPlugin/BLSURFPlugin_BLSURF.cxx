@@ -58,6 +58,7 @@ extern "C"{
 #include <cstdlib>
 
 // OPENCASCADE includes
+#include <BRepBndLib.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_MakePolygon.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
@@ -1923,6 +1924,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   typedef set< SMESHDS_SubMesh*, ShapeTypeCompare > TSubMeshSet;
   TSubMeshSet edgeSubmeshes;
   TSubMeshSet& mergeSubmeshes = edgeSubmeshes;
+  double existingPhySize = 0;
 
   TopTools_IndexedMapOfShape pmap, emap, fmap;
 
@@ -2221,6 +2223,8 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
           // tmin and tmax can change in case of viscous layer on an adjacent edge
           tmin = nodeDataVec.front().param;
           tmax = nodeDataVec.back().param;
+
+          existingPhySize += nodeData->Length() / ( nodeDataVec.size() - 1 );
         }
         else
         {
@@ -2370,44 +2374,6 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     } // for edge
   } //for face
 
-  // Clear mesh from already meshed edges if possible else
-  // remember that merge is needed
-  TSubMeshSet::iterator smIt = edgeSubmeshes.begin();
-  for ( ; smIt != edgeSubmeshes.end(); ++smIt ) // loop on already meshed EDGEs
-  {
-    SMESHDS_SubMesh* smDS = *smIt;
-    if ( !smDS ) continue;
-    SMDS_NodeIteratorPtr nIt = smDS->GetNodes();
-    if ( nIt->more() )
-    {
-      const SMDS_MeshNode* n = nIt->next();
-      if ( n->NbInverseElements( SMDSAbs_Face ) > 0 )
-      {
-        needMerge = true; // to correctly sew with viscous mesh
-        // add existing medium nodes to helper
-        if ( aMesh.NbEdges( ORDER_QUADRATIC ) > 0 )
-        {
-          SMDS_ElemIteratorPtr edgeIt = smDS->GetElements();
-          while ( edgeIt->more() )
-            helper.AddTLinks( static_cast<const SMDS_MeshEdge*>(edgeIt->next()));
-        }
-        continue;
-      }
-    }
-    if ( allowSubMeshClearing )
-    {
-      SMDS_ElemIteratorPtr eIt = smDS->GetElements();
-      while ( eIt->more() ) meshDS->RemoveFreeElement( eIt->next(), 0 );
-      SMDS_NodeIteratorPtr nIt = smDS->GetNodes();
-      while ( nIt->more() ) meshDS->RemoveFreeNode( nIt->next(), 0 );
-      smDS->Clear();
-    }
-    else
-    {
-      needMerge = true;
-    }
-  }
-
   ///////////////////////
   // PERIODICITY       //
   ///////////////////////
@@ -2499,6 +2465,22 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     }
   }
 
+  if ( !_hypothesis && !edgeSubmeshes.empty() && existingPhySize != 0 )
+  {
+    // prevent failure due to the default PhySize incompatible with size of existing 1D mesh
+    // and with face size
+    // double minFaceSize = existingPhySize / edgeSubmeshes.size();
+    // for ( int iF = 1; iF <= fmap.Extent(); ++iF )
+    // {
+    //   Bnd_Box box;
+    //   BRepBndLib::Add( fmap( iF ), box );
+    //   gp_XYZ delta = box.CornerMax().XYZ() - box.CornerMin().XYZ();
+    //   std::sort( delta.ChangeData(), delta.ChangeData() + 3 );
+    //   minFaceSize = Min( minFaceSize, delta.Coord(2) );
+    // }
+    // set_param(css, "global_physical_size", val_to_string( minFaceSize * 0.5 ).c_str());
+    // set_param(css, "max_size",             val_to_string( minFaceSize * 5 ).c_str());
+  }
   
   // TODO: be able to use a mesh in input.
   // See imsh usage in Products/templates/mg-cadsurf_template_common.cpp
@@ -2541,10 +2523,49 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
 
   mesh_t *msh = NULL;
   cadsurf_get_mesh(css, &msh);
-  if(!msh){
+  if ( !msh || STATUS_IS_ERROR( status ))
+  {
     /* release the mesh object */
     cadsurf_regain_mesh(css, msh);
     return error(_comment);
+  }
+
+  // Clear mesh from already meshed edges if possible else
+  // remember that merge is needed
+  TSubMeshSet::iterator smIt = edgeSubmeshes.begin();
+  for ( ; smIt != edgeSubmeshes.end(); ++smIt ) // loop on already meshed EDGEs
+  {
+    SMESHDS_SubMesh* smDS = *smIt;
+    if ( !smDS ) continue;
+    SMDS_NodeIteratorPtr nIt = smDS->GetNodes();
+    if ( nIt->more() )
+    {
+      const SMDS_MeshNode* n = nIt->next();
+      if ( n->NbInverseElements( SMDSAbs_Face ) > 0 )
+      {
+        needMerge = true; // to correctly sew with viscous mesh
+        // add existing medium nodes to helper
+        if ( aMesh.NbEdges( ORDER_QUADRATIC ) > 0 )
+        {
+          SMDS_ElemIteratorPtr edgeIt = smDS->GetElements();
+          while ( edgeIt->more() )
+            helper.AddTLinks( static_cast<const SMDS_MeshEdge*>(edgeIt->next()));
+        }
+        continue;
+      }
+    }
+    if ( allowSubMeshClearing )
+    {
+      SMDS_ElemIteratorPtr eIt = smDS->GetElements();
+      while ( eIt->more() ) meshDS->RemoveFreeElement( eIt->next(), 0 );
+      SMDS_NodeIteratorPtr nIt = smDS->GetNodes();
+      while ( nIt->more() ) meshDS->RemoveFreeNode( nIt->next(), 0 );
+      smDS->Clear();
+    }
+    else
+    {
+      needMerge = true;
+    }
   }
 
   std::string GMFFileName = BLSURFPlugin_Hypothesis::GetDefaultGMFFile();

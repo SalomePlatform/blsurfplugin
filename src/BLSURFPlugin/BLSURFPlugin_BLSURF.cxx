@@ -621,7 +621,7 @@ void BLSURFPlugin_BLSURF::createEnforcedVertexOnFace(TopoDS_Shape faceShape, BLS
 /////////////////////////////////////////////////////////
 void createAttractorOnFace(TopoDS_Shape GeomShape, std::string AttractorFunction, double defaultSize)
 {
-  double xa=0., ya=0., za=0.; // Coordinates of attractor point     // todo: xa, ya, za must be explicitly initialized to avoid warning (see below)
+  double xa=0., ya=0., za=0.; // Coordinates of attractor point
   double a, b;       // Attractor parameter
   double d = 0.;
   bool createNode=false; // To create a node on attractor projection
@@ -678,7 +678,7 @@ void createAttractorOnFace(TopoDS_Shape GeomShape, std::string AttractorFunction
   }
 
   // Get the (u,v) values of the attractor on the face
-  projectionPoint myPoint = getProjectionPoint(TopoDS::Face(GeomShape),gp_Pnt(xa,ya,za)); // todo: xa, ya, za must be explicitly initialized to avoid warning (see above)
+  projectionPoint myPoint = getProjectionPoint(TopoDS::Face(GeomShape),gp_Pnt(xa,ya,za));
   gp_XY uvPoint = myPoint.uv;
   gp_XYZ xyzPoint = myPoint.xyz;
   Standard_Real u0 = uvPoint.X();

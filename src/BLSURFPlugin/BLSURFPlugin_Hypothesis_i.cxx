@@ -1977,7 +1977,6 @@ char* BLSURFPlugin_Hypothesis_i::GetAttractorEntry(const char* entry) {
 // // TODO coder cette fonction (utilis??e pour savoir si la valeur a chang??
 // // A finir pour le dump
 // char* BLSURFPlugin_Hypothesis_i::GetClassAttractorEntry(const char* entry)
-// 
 // {
 //   ASSERT(myBaseImpl);
 //   try {
@@ -2061,7 +2060,7 @@ BLSURFPlugin::TAttParamsMap* BLSURFPlugin_Hypothesis_i::GetAttractorParams()
   for ( int i = 0 ; atIt != attractors.end(); ++atIt, ++i ) {
     string faceEntry = atIt->first;
     string attEntry;
-    double startSize=0., endSize=0., infDist=0., constDist=0.; // todo: startSize, endSize, infDist, constDist must be explicitly initialized to avoid warning (see below)
+    double startSize=0., endSize=0., infDist=0., constDist=0.;
     if ( !atIt->second->Empty() ) {
       attEntry = atIt->second->GetAttractorEntry();
       std::vector<double> params = atIt->second->GetParameters();
@@ -2075,7 +2074,7 @@ BLSURFPlugin::TAttParamsMap* BLSURFPlugin_Hypothesis_i::GetAttractorParams()
     result[i].startSize = startSize;
     result[i].endSize = endSize;
     result[i].infDist = infDist;
-    result[i].constDist = constDist; // todo: startSize, endSize, infDist, constDist must be explicitly initialized to avoid warning (see above)
+    result[i].constDist = constDist;
   }
   return result._retn();
 }

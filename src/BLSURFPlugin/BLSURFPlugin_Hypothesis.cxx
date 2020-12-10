@@ -1650,8 +1650,9 @@ BLSURFPlugin_Hypothesis::TEnfVertex* BLSURFPlugin_Hypothesis::GetEnfVertex(const
 //function : ClearEnforcedVertex
 //=======================================================================
 
-bool BLSURFPlugin_Hypothesis::ClearEnforcedVertex(const TEntry& theFaceEntry, double x, double y, double z,
-						  const TEntry& theVertexEntry)
+bool BLSURFPlugin_Hypothesis::ClearEnforcedVertex(const TEntry& theFaceEntry,
+                                                  double x, double y, double z,
+                                                  const TEntry& theVertexEntry)
 {
   bool toNotify = false;
   std::ostringstream msg;
@@ -2477,7 +2478,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
 
   isOK = static_cast<bool>(load >> option_or_sm);
   if (isOK) {
-    if ( (option_or_sm == "1")||(option_or_sm == "0") ) {
+    if (( option_or_sm == "1" ) || ( option_or_sm == "0" )) {
       i = atoi(option_or_sm.c_str());
       hasCADSurfOptions = true;
       _phySizeRel = (bool) i;

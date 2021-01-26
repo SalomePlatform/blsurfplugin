@@ -32,6 +32,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <Basics_Utils.hxx>
+
 // cascade include
 #include "ShapeAnalysis.hxx"
 
@@ -3664,6 +3666,9 @@ bool BLSURFPlugin_Hypothesis::ToBool(const std::string& str, bool* isOk )
 double BLSURFPlugin_Hypothesis::ToDbl(const std::string& str, bool* isOk )
 {
   if ( str.empty() ) throw std::invalid_argument("Empty value provided");
+
+  // Forces "C" locale to be set as LC_NUMERIC
+  Kernel_Utils::Localizer loc;
 
   char * endPtr;
   double val = strtod(&str[0], &endPtr);

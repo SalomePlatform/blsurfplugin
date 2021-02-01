@@ -216,7 +216,10 @@ public:
   char* GetTags();
 
   void SetHyperPatches(const BLSURFPlugin::THyperPatchList& hpl);
-  BLSURFPlugin::THyperPatchList* GetHyperPatches();
+  BLSURFPlugin::THyperPatchList* GetHyperPatches( GEOM::GEOM_Object_ptr mainShape );
+  void SetHyperPatchShapes(const BLSURFPlugin::THyperPatchShapesList& hpsl);
+  BLSURFPlugin::THyperPatchEntriesList* GetHyperPatchShapes();
+  void SetHyperPatchEntries(const BLSURFPlugin::THyperPatchEntriesList& hpel);
 
   void SetPreCADMergeEdges(CORBA::Boolean theValue);
   CORBA::Boolean GetPreCADMergeEdges();

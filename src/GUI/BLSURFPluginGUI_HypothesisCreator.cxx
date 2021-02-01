@@ -2019,9 +2019,13 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
   }
 
   // Hyper patches
+  QString patchEntries;
   for ( int i = 0; i < data.hyperpatches.size(); ++i )
-    that->addHyPatchToTable( data.hyperpatches[i] );
-
+  {
+    if ( i < data.hyperEntries.size() )
+      patchEntries = data.hyperEntries[i];
+    that->addHyPatchToTable( data.hyperpatches[i], patchEntries );
+  }
   // update widgets
   that->myStdWidget->onPhysicalMeshChanged();
   that->myStdWidget->onGeometricMeshChanged();
@@ -2229,8 +2233,14 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
 
   // Hyper Patches
 
+  GEOM::GEOM_Object_var geom = myHyPatchFaceSelector->GetGeomObjectByEntry( getMainShapeEntry() );
+  if ( geom->_is_nil() )
+    geom = myHyPatchFaceSelector->GetGeomObjectByEntry( getShapeEntry() );
+
   h_data.hyperpatches.clear();
-  BLSURFPlugin::THyperPatchList_var patchList = h->GetHyperPatches();
+  h_data.hyperEntries.clear();
+  BLSURFPlugin::THyperPatchList_var               patchList = h->GetHyperPatches( geom );
+  BLSURFPlugin::THyperPatchEntriesList_var patchEntriesList = h->GetHyperPatchShapes();
   for ( CORBA::ULong i = 0; i < patchList->length(); ++i )
   {
     QString tags;
@@ -2239,7 +2249,19 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
       tags += QString::number( patch[j] ) + " ";
     if ( !tags.isEmpty() )
       h_data.hyperpatches.append( tags );
+
+    if ( patchEntriesList->length() == patchList->length() )
+    {
+      QString entries;
+      BLSURFPlugin::THyperPatchEntries& patchEntries = patchEntriesList[i];
+      for ( CORBA::ULong j = 0; j < patchEntries.length(); ++j )
+        entries += patchEntries[j].in() + QString(" ");
+      if ( !entries.isEmpty() )
+        h_data.hyperEntries.append( entries );
+    }
   }
+  if ( h_data.hyperpatches.size() != h_data.hyperEntries.size() )
+    h_data.hyperEntries.clear();
 
   return true;
 }
@@ -2531,8 +2553,10 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
     }
 
     // Hyper-patches
-    BLSURFPlugin::THyperPatchList_var hpl = new BLSURFPlugin::THyperPatchList();
-    hpl->length( h_data.hyperpatches.size() );
+    BLSURFPlugin::THyperPatchList_var         hpl = new BLSURFPlugin::THyperPatchList();
+    BLSURFPlugin::THyperPatchEntriesList_var hpel = new BLSURFPlugin::THyperPatchEntriesList();
+    hpl ->length( h_data.hyperpatches.size() );
+    hpel->length( h_data.hyperEntries.size() );
 
     for ( int i = 0; i < h_data.hyperpatches.size(); ++i )
     {
@@ -2541,9 +2565,22 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
       patch.length( tags.size() );
 
       for ( int j = 0; j < tags.size(); ++j )
-        patch[ j ] = tags[ j ].toDouble();
+        patch[ j ] = tags[ j ].toInt();
+
+      if ( i < h_data.hyperEntries.size() )
+      {
+        QStringList entries = h_data.hyperEntries[i].split(" ",  QString::SkipEmptyParts);
+        BLSURFPlugin::THyperPatchEntries& pe = hpel[ i ];
+        pe.length( entries.size() );
+
+        for ( int j = 0; j < entries.size(); ++j )
+          pe[ j ] = CORBA::string_dup( entries[ j ].toStdString().c_str() );
+      }
     }
-    h->SetHyperPatches( hpl );
+    if ( h_data.hyperEntries.size() == h_data.hyperpatches.size() )
+      h->SetHyperPatchEntries( hpel );
+    else
+      h->SetHyperPatches( hpl );
 
 
   } // try
@@ -2708,8 +2745,16 @@ QString BLSURFPluginGUI_HypothesisCreator::readParamsFromWidgets( BlsurfHypothes
 
   // Hyper-patches
   h_data.hyperpatches.clear();
+  h_data.hyperEntries.clear();
   for ( int row = 0; row < myHyPatchTable->rowCount(); ++row )
-    h_data.hyperpatches.append( myHyPatchTable->item( row, 0 )->text() );
+  {
+    QTableWidgetItem* cell = myHyPatchTable->item( row, 0 );
+    h_data.hyperpatches.append( cell->text() );
+    if ( cell->data( Qt::UserRole ).isValid() )
+      h_data.hyperEntries.append( cell->data( Qt::UserRole ).toString() );
+  }
+  if ( h_data.hyperpatches.size() != h_data.hyperEntries.size() )
+    h_data.hyperEntries.clear();
 
   return guiHyp;
 }
@@ -3462,7 +3507,23 @@ void BLSURFPluginGUI_HypothesisCreator::onHyPatchAdd()
   QStringList tagList = myHyPatchTagsLE->text().split(" ",  QString::SkipEmptyParts);
   if ( tagList.size() > 1 )
   {
-    addHyPatchToTable( myHyPatchTagsLE->text() );
+    LightApp_SelectionMgr* selMrg = SMESHGUI::GetSMESHGUI()->selectionMgr();
+    SALOME_ListIO aList;
+    selMrg->selectedObjects( aList );
+    QString entries;
+    for ( SALOME_ListIteratorOfListIO anIt( aList ); anIt.More(); anIt.Next() )
+    {
+      Handle(SALOME_InteractiveObject) io = anIt.Value();
+      GEOM::GEOM_Object_var go = myHyPatchFaceSelector->GetGeomObjectByEntry( io->getEntry() );
+      if ( !CORBA::is_nil( go ))
+        entries += io->getEntry() + QString(" ");
+      else
+      {
+        entries.clear();
+        break;
+      }
+    }
+    addHyPatchToTable( myHyPatchTagsLE->text(), entries );
     myHyPatchTagsLE->setText("");
   }
 }
@@ -3473,12 +3534,17 @@ void BLSURFPluginGUI_HypothesisCreator::onHyPatchAdd()
  */
 //================================================================================
 
-void BLSURFPluginGUI_HypothesisCreator::addHyPatchToTable(const QString& tags)
+void BLSURFPluginGUI_HypothesisCreator::addHyPatchToTable(const QString& tags,
+                                                          const QString& entries)
 {
   if ( tags.isEmpty() ) return;
 
   QTableWidgetItem* cell = new QTableWidgetItem( tags );
   cell->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled );
+  if ( entries.isEmpty() )
+    cell->setData( Qt::UserRole, QVariant() );
+  else
+    cell->setData( Qt::UserRole, entries );
 
   int row = myHyPatchTable->rowCount();
   myHyPatchTable->insertRow( row );

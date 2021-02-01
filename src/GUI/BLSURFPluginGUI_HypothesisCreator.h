@@ -186,7 +186,7 @@ typedef struct
   TGroupNameEnfVertexListMap groupNameEnfVertexListMap;
   */
   TPreCadPeriodicityVector preCadPeriodicityVector;
-  QStringList hyperpatches;
+  QStringList hyperpatches, hyperEntries;
   QString myName;
 } BlsurfHypothesisData;
 
@@ -271,7 +271,7 @@ private:
   static LightApp_SelectionMgr* selectionMgr();
   void                avoidSimultaneousSelection(ListOfWidgets &myCustomWidgets) const;
   void                AddPreCadSequenceToVector(BlsurfHypothesisData& h_data, BLSURFPlugin::TPeriodicityList_var preCadFacePeriodicityVector, bool onFace) const;
-  void                addHyPatchToTable(const QString& tags);
+  void                addHyPatchToTable(const QString& tags, const QString& entries);
   bool                hasGeom() const;
 
 private:

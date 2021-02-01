@@ -44,6 +44,12 @@
 #include <meshgems/meshgems.h>
 #define MESHGEMS_VERSION_HEX (MESHGEMS_VERSION_MAJOR << 16 | MESHGEMS_VERSION_MINOR << 8 | MESHGEMS_VERSION_PATCH)
 
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/serialization/set.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/string.hpp>
+
 namespace
 {
   struct GET_DEFAULT // struct used to get default value from GetOptionValue()
@@ -816,8 +822,9 @@ std::string BLSURFPlugin_Hypothesis::GetTags()
 {
   return GetPreCADOptionValue("tags", GET_DEFAULT());
 }
+
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetHyperPatches(const THyperPatchList& hpl)
+void BLSURFPlugin_Hypothesis::SetHyperPatches(const THyperPatchList& hpl, bool notifyMesh)
 {
   if ( hpl != _hyperPatchList )
   {
@@ -862,9 +869,63 @@ void BLSURFPlugin_Hypothesis::SetHyperPatches(const THyperPatchList& hpl)
               _hyperPatchList.erase( _hyperPatchList.begin() + j );
       }
     }
+    if ( notifyMesh )
+      NotifySubMeshesHypothesisModification();
+  }
+}
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetHyperPatches(const THyperPatchEntriesList& hpel)
+{
+  if ( hpel != _hyperPatchEntriesList )
+  {
+    _hyperPatchEntriesList = hpel;
+    _hyperPatchList.clear();
+
     NotifySubMeshesHypothesisModification();
   }
 }
+//================================================================================
+/*!
+ * \brief Set _hyperPatchList by _hyperPatchEntriesList
+ */
+//================================================================================
+
+void BLSURFPlugin_Hypothesis::
+SetHyperPatchIDsByEntry( const TopoDS_Shape&                          mainShape,
+                         const std::map< std::string, TopoDS_Shape >& entryToShape)
+{
+  _hyperPatchList.clear();
+  if ( _hyperPatchEntriesList.empty() || mainShape.IsNull() )
+    return;
+
+  _hyperPatchList.resize( _hyperPatchEntriesList.size() );
+
+  TopTools_IndexedMapOfShape shapeMap;
+  TopExp::MapShapes( mainShape, shapeMap );
+
+  for ( size_t i = 0; i < _hyperPatchEntriesList.size(); ++i )
+  {
+    THyperPatchTags &            idsList = _hyperPatchList       [ i ];
+    const THyperPatchEntries & entryList = _hyperPatchEntriesList[ i ];
+    for ( const std::string & entry : entryList )
+    {
+      auto e2sIt = entryToShape.find( entry );
+      if ( e2sIt != entryToShape.end() )
+      {
+        for ( TopExp_Explorer fExp( e2sIt->second, TopAbs_FACE ); fExp.More(); fExp.Next() )
+        {
+          int id = shapeMap.FindIndex( fExp.Current() );
+          if ( id > 0 )
+            idsList.insert( id );
+        }
+      }
+    }
+  }
+  THyperPatchList hpl;
+  hpl.swap( _hyperPatchList );
+  SetHyperPatches( hpl, /*notifyMesh=*/false );
+}
+
 //=============================================================================
 /*!
  * \brief Return a tag of a face taking into account the hyper-patches. Optionally
@@ -2187,6 +2248,13 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save)
   save << " " << _nbVolumeProximityLayers;
   save << " " << _volumeProximityRatio;
 
+  // hyper-patches as entries
+  std::ostringstream hpStream;
+  boost::archive::text_oarchive( hpStream ) << _hyperPatchEntriesList;
+  std::string hpString = hpStream.str();
+  save << " " << hpString.size() <<  " " << hpString;
+
+
   return save;
 }
 
@@ -3216,6 +3284,21 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
     load >> _useVolumeProximity;
     load >> _nbVolumeProximityLayers;
     isOK = static_cast<bool>( load >> _volumeProximityRatio );
+  }
+
+  // hyper-patches as entries (issue bos #20543)
+  if ( static_cast<bool>( load >> i ) && i > 0 )
+  {
+    std::string buffer( i, '\0' );
+    load.get( buffer[0] ); // remove a white-space
+    load.get( & buffer[0], i + 1 );
+
+    std::istringstream istream( buffer.data() );
+    boost::archive::text_iarchive archive( istream );
+    try {
+      archive >> _hyperPatchEntriesList;
+    }
+    catch (...) {}
   }
 
   return load;

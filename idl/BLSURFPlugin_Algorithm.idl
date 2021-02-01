@@ -121,8 +121,11 @@ module BLSURFPlugin
   typedef sequence<TPreCadPeriodicity> TPeriodicityList;
 
   // Hyper-patches
-  typedef sequence<long> THyperPatch;
-  typedef sequence<THyperPatch> THyperPatchList;
+  typedef sequence< long               > THyperPatch;
+  typedef sequence< THyperPatch        > THyperPatchList;
+  typedef sequence< string             > THyperPatchEntries;
+  typedef sequence< THyperPatchEntries > THyperPatchEntriesList;
+  typedef sequence< GEOM::ListOfGO     > THyperPatchShapesList;
   
   /*!
    * BLSURFPlugin_BLSURF: interface of BLSURF algorithm
@@ -500,7 +503,10 @@ module BLSURFPlugin
      * Set hyper-patches
      */
     void SetHyperPatches(in THyperPatchList hpl);
-    THyperPatchList GetHyperPatches();
+    THyperPatchList GetHyperPatches( in GEOM::GEOM_Object mainShape );
+    void SetHyperPatchShapes(in THyperPatchShapesList hpsl);
+    THyperPatchEntriesList GetHyperPatchShapes();
+    void SetHyperPatchEntries(in THyperPatchEntriesList hpel);
 
     /*!
      * To merges edges.

@@ -24,6 +24,7 @@
 // ---
 //
 #include "BLSURFPlugin_Hypothesis_i.hxx"
+#include "BLSURFPlugin_BLSURF.hxx"
 
 #include <SMESH_Gen.hxx>
 #include <SMESH_Gen_i.hxx>
@@ -1212,16 +1213,80 @@ void BLSURFPlugin_Hypothesis_i::SetHyperPatches(const BLSURFPlugin::THyperPatchL
   }
   if ( GetImpl()->GetHyperPatches() != patchList )
   {
+    GetImpl()->SetHyperPatches( ::BLSURFPlugin_Hypothesis::THyperPatchEntriesList() ); // erase entries
     GetImpl()->SetHyperPatches( patchList );
     SMESH::TPythonDump() << _this() << ".SetHyperPatches( " << hplDump << " )";
   }
 }
 
 //=============================================================================
-BLSURFPlugin::THyperPatchList* BLSURFPlugin_Hypothesis_i::GetHyperPatches()
+void BLSURFPlugin_Hypothesis_i::SetHyperPatchEntries(const BLSURFPlugin::THyperPatchEntriesList& hpe)
+{
+  ::BLSURFPlugin_Hypothesis::THyperPatchEntriesList patchList( hpe.length() );
+  SMESH_Comment hpeDump;
+  hpeDump << "[";
+  for ( size_t i = 0; i < patchList.size(); ++i )
+  {
+    hpeDump << "[ ";
+    const BLSURFPlugin::THyperPatchEntries& entryList = hpe[ i ];
+    for ( CORBA::ULong j = 0; j < entryList.length(); ++j )
+    {
+      patchList[ i ].insert( entryList[ j ].in() );
+      hpeDump << entryList[ j ].in() << ( j+1 < entryList.length() ? ", " : " ]" );
+    }
+    hpeDump << ( i+1 < patchList.size() ? "," : "]");
+  }
+  if ( GetImpl()->GetHyperPatchEntries() != patchList )
+  {
+    GetImpl()->SetHyperPatches( ::BLSURFPlugin_Hypothesis::THyperPatchList(), /*notify=*/false );
+    GetImpl()->SetHyperPatches( patchList );
+    // TPythonDump converts entries to objects
+    SMESH::TPythonDump() << _this() << ".SetHyperPatchShapes( " << hpeDump << " )";
+  }
+}
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetHyperPatchShapes(const BLSURFPlugin::THyperPatchShapesList& hpsl)
+{
+  BLSURFPlugin::THyperPatchEntriesList patchList;
+  patchList.length( hpsl.length() );
+  for ( size_t i = 0; i < hpsl.length(); ++i )
+  {
+    const GEOM::ListOfGO&             shapeList = hpsl[ i ];
+    BLSURFPlugin::THyperPatchEntries& entryList = patchList[ i ];
+    entryList.length( shapeList.length() );
+    for ( CORBA::ULong j = 0; j < shapeList.length(); ++j )
+    {
+      CORBA::String_var entry = shapeList[ j ]->GetStudyEntry();
+      if ( !entry.in() || !entry.in()[0] )
+        THROW_SALOME_CORBA_EXCEPTION( "BLSURFPlugin_Hypothesis::SetHyperPatchShapes(), "
+                                      "Not published hyper-patch shape", SALOME::BAD_PARAM );
+      entryList[ j ] = CORBA::string_dup( entry );
+    }
+  }
+  this->SetHyperPatchEntries( patchList );
+}
+
+//=============================================================================
+BLSURFPlugin::THyperPatchList*
+BLSURFPlugin_Hypothesis_i::GetHyperPatches( GEOM::GEOM_Object_ptr mainShape )
 {
   const ::BLSURFPlugin_Hypothesis::THyperPatchList& hpl = GetImpl()->GetHyperPatches();
-  BLSURFPlugin::THyperPatchList* resHpl = new BLSURFPlugin::THyperPatchList();
+  BLSURFPlugin::THyperPatchList*                 resHpl = new BLSURFPlugin::THyperPatchList();
+  if ( hpl.empty() &&
+       !CORBA::is_nil( mainShape ) &&
+       !GetImpl()->GetHyperPatchEntries().empty() )
+  {
+    // set IDs by entries
+    SMESH_Gen_i* smeshGen = SMESH_Gen_i::GetSMESHGen();
+    TopoDS_Shape S = smeshGen->GeomObjectToShape( mainShape );
+    if ( !S.IsNull() )
+    {
+      std::map< std::string, TopoDS_Shape > entryToShape;
+      BLSURFPlugin_BLSURF::FillEntryToShape( GetImpl(), entryToShape );
+      GetImpl()->SetHyperPatchIDsByEntry( S, entryToShape );
+    }
+  }
   resHpl->length( hpl.size() );
 
   ::BLSURFPlugin_Hypothesis::THyperPatchList::const_iterator hpIt = hpl.begin();
@@ -1234,6 +1299,27 @@ BLSURFPlugin::THyperPatchList* BLSURFPlugin_Hypothesis_i::GetHyperPatches()
     ::BLSURFPlugin_Hypothesis::THyperPatchTags::const_iterator tag = hp.begin();
     for ( int j = 0; tag != hp.end(); ++tag, ++j )
       resHp[ j ] = *tag;
+  }
+  return resHpl;
+}
+
+//=============================================================================
+BLSURFPlugin::THyperPatchEntriesList* BLSURFPlugin_Hypothesis_i::GetHyperPatchShapes()
+{
+  const ::BLSURFPlugin_Hypothesis::THyperPatchEntriesList& hpel = GetImpl()->GetHyperPatchEntries();
+  BLSURFPlugin::THyperPatchEntriesList* resHpl = new BLSURFPlugin::THyperPatchEntriesList();
+  resHpl->length( hpel.size() );
+
+  ::BLSURFPlugin_Hypothesis::THyperPatchEntriesList::const_iterator hpIt = hpel.begin();
+  for ( int i = 0; hpIt != hpel.end(); ++hpIt, ++i )
+  {
+    const ::BLSURFPlugin_Hypothesis::THyperPatchEntries& hp = *hpIt;
+    BLSURFPlugin::THyperPatchEntries& resHp = (*resHpl)[ i ];
+    resHp.length( hp.size() );
+
+    ::BLSURFPlugin_Hypothesis::THyperPatchEntries::const_iterator entry = hp.begin();
+    for ( int j = 0; entry != hp.end(); ++entry, ++j )
+      resHp[ j ] = CORBA::string_dup( entry->c_str() );
   }
   return resHpl;
 }

@@ -991,6 +991,14 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
       if ( !opIt->second.empty() ) {
         set_param(css, opIt->first.c_str(), opIt->second.c_str());
       }
+
+    if ( hyp->GetHyperPatches().size() < hyp->GetHyperPatchEntries().size() )
+    {
+      std::map< std::string, TopoDS_Shape > entryToShape;
+      FillEntryToShape( hyp, entryToShape );
+      const_cast<BLSURFPlugin_Hypothesis*>( hyp )->SetHyperPatchIDsByEntry( theGeomShape,
+                                                                            entryToShape );
+    }
   }
 
   if ( BLSURFPlugin_Hypothesis::HasPreCADOptions( hyp ))
@@ -3601,4 +3609,24 @@ bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh&         aMesh,
   aResMap.insert(std::make_pair(sm,aVec));
 
   return true;
+}
+
+//================================================================================
+/*!
+ * \brief Find TopoDS_Shape for each hyper-patch study entry in a hypothesis
+ */
+//================================================================================
+
+void BLSURFPlugin_BLSURF::FillEntryToShape( const BLSURFPlugin_Hypothesis*          hyp,
+                                            std::map< std::string, TopoDS_Shape > & entryToShape )
+{
+  SMESH_Gen_i* smeshGen = SMESH_Gen_i::GetSMESHGen();
+  for ( const ::BLSURFPlugin_Hypothesis::THyperPatchEntries& entries : hyp->GetHyperPatchEntries() )
+    for ( const std::string& entry : entries )
+    {
+      GEOM::GEOM_Object_var go = smeshGen->GetGeomObjectByEntry( entry );
+      TopoDS_Shape       shape = smeshGen->GeomObjectToShape( go );
+      if ( !shape.IsNull() )
+        entryToShape.insert({ entry, shape });
+    }
 }

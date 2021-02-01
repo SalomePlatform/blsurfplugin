@@ -222,10 +222,17 @@ public:
   // Hyper-patches
   typedef std::set< int > THyperPatchTags;
   typedef std::vector< THyperPatchTags > THyperPatchList;
+  typedef std::set< std::string > THyperPatchEntries;
+  typedef std::vector< THyperPatchEntries > THyperPatchEntriesList;
 
-  void SetHyperPatches(const THyperPatchList& hpl);
-  const THyperPatchList& GetHyperPatches() const { return _hyperPatchList; }
+  void SetHyperPatches(const THyperPatchList& hpl, bool notifyMesh=true);
+  void SetHyperPatches(const THyperPatchEntriesList& hpl);
+  void SetHyperPatchIDsByEntry( const TopoDS_Shape&                          mainShape,
+                                const std::map< std::string, TopoDS_Shape >& entryToShape);
+  const THyperPatchList&        GetHyperPatches() const { return _hyperPatchList; }
+  const THyperPatchEntriesList& GetHyperPatchEntries() const { return _hyperPatchEntriesList; }
   static int GetHyperPatchTag( int faceTag, const BLSURFPlugin_Hypothesis* hyp, int* iPatch=0 );
+
 
   void SetPreCADMergeEdges(bool theVal);
   bool GetPreCADMergeEdges() const { return _preCADMergeEdges; }
@@ -657,11 +664,12 @@ private:
   TPreCadPeriodicityVector _preCadFacesPeriodicityVector;
   TPreCadPeriodicityVector _preCadEdgesPeriodicityVector;
 
-  TFacesPeriodicityVector _facesPeriodicityVector;
-  TEdgesPeriodicityVector _edgesPeriodicityVector;
+  TFacesPeriodicityVector    _facesPeriodicityVector;
+  TEdgesPeriodicityVector    _edgesPeriodicityVector;
   TVerticesPeriodicityVector _verticesPeriodicityVector;
 
-  THyperPatchList _hyperPatchList;
+  THyperPatchList        _hyperPatchList;
+  THyperPatchEntriesList _hyperPatchEntriesList;
 
   // Called by SaveTo to store content of _preCadFacesPeriodicityVector and _preCadEdgesPeriodicityVector
   void SavePreCADPeriodicity(std::ostream & save, const char* shapeType);

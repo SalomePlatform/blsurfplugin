@@ -3605,7 +3605,7 @@ LightApp_SelectionMgr* BLSURFPluginGUI_HypothesisCreator::selectionMgr()
 CORBA::Object_var BLSURFPluginGUI_HypothesisCreator::entryToObject(QString entry)
 {
   CORBA::Object_var obj;
-  SALOMEDS::SObject_var aSObj = SMESH_Gen_i::getStudyServant()->FindObjectID( entry.toStdString().c_str() );
+  SALOMEDS::SObject_var aSObj = SMESH_Gen_i::GetSMESHGen()->getStudyServant()->FindObjectID( entry.toStdString().c_str() );
   if (!aSObj->_is_nil()) {
     obj = aSObj->GetObject();
     aSObj->UnRegister();

@@ -292,7 +292,8 @@ std::string BLSURFPlugin_Hypothesis::GetMeshGemsVersion()
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetPhysicalMesh(PhysicalMesh thePhysicalMesh) {
+void BLSURFPlugin_Hypothesis::SetPhysicalMesh(PhysicalMesh thePhysicalMesh)
+{
   if (thePhysicalMesh != _physicalMesh) {
     _physicalMesh = thePhysicalMesh;
     NotifySubMeshesHypothesisModification();
@@ -300,7 +301,8 @@ void BLSURFPlugin_Hypothesis::SetPhysicalMesh(PhysicalMesh thePhysicalMesh) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetGeometricMesh(GeometricMesh theGeometricMesh) {
+void BLSURFPlugin_Hypothesis::SetGeometricMesh(GeometricMesh theGeometricMesh)
+{
   if (theGeometricMesh != _geometricMesh) {
     _geometricMesh = theGeometricMesh;
 //     switch (_geometricMesh) {
@@ -315,7 +317,8 @@ void BLSURFPlugin_Hypothesis::SetGeometricMesh(GeometricMesh theGeometricMesh) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetPhySize(double theVal, bool isRelative) {
+void BLSURFPlugin_Hypothesis::SetPhySize(double theVal, bool isRelative)
+{
   if ((theVal != _phySize) || (isRelative != _phySizeRel)) {
     _phySizeRel = isRelative;
     if (theVal == 0) {
@@ -328,7 +331,8 @@ void BLSURFPlugin_Hypothesis::SetPhySize(double theVal, bool isRelative) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetMinSize(double theMinSize, bool isRelative) {
+void BLSURFPlugin_Hypothesis::SetMinSize(double theMinSize, bool isRelative)
+{
   if ((theMinSize != _minSize) || (isRelative != _minSizeRel)) {
     _minSizeRel = isRelative;
     _minSize = theMinSize;
@@ -337,7 +341,8 @@ void BLSURFPlugin_Hypothesis::SetMinSize(double theMinSize, bool isRelative) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetMaxSize(double theMaxSize, bool isRelative) {
+void BLSURFPlugin_Hypothesis::SetMaxSize(double theMaxSize, bool isRelative)
+{
   if ((theMaxSize != _maxSize) || (isRelative != _maxSizeRel)) {
     _maxSizeRel = isRelative;
     _maxSize = theMaxSize;
@@ -346,7 +351,8 @@ void BLSURFPlugin_Hypothesis::SetMaxSize(double theMaxSize, bool isRelative) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetUseGradation(bool theVal) {
+void BLSURFPlugin_Hypothesis::SetUseGradation(bool theVal)
+{
   if (theVal != _useGradation) {
     _useGradation = theVal;
     NotifySubMeshesHypothesisModification();
@@ -354,7 +360,8 @@ void BLSURFPlugin_Hypothesis::SetUseGradation(bool theVal) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetGradation(double theVal) {
+void BLSURFPlugin_Hypothesis::SetGradation(double theVal)
+{
   _useGradation = ( theVal > 0 );
   if (theVal != _gradation) {
     _gradation = theVal;
@@ -363,7 +370,8 @@ void BLSURFPlugin_Hypothesis::SetGradation(double theVal) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetUseVolumeGradation(bool theVal) {
+void BLSURFPlugin_Hypothesis::SetUseVolumeGradation(bool theVal)
+{
   if (theVal != _useVolumeGradation) {
     _useVolumeGradation = theVal;
     NotifySubMeshesHypothesisModification();
@@ -371,7 +379,8 @@ void BLSURFPlugin_Hypothesis::SetUseVolumeGradation(bool theVal) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetVolumeGradation(double theVal) {
+void BLSURFPlugin_Hypothesis::SetVolumeGradation(double theVal)
+{
   _useVolumeGradation = ( theVal > 0 );
   if (theVal != _volumeGradation) {
     _volumeGradation = theVal;
@@ -380,7 +389,8 @@ void BLSURFPlugin_Hypothesis::SetVolumeGradation(double theVal) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetElementType(ElementType theElementType) {
+void BLSURFPlugin_Hypothesis::SetElementType(ElementType theElementType)
+{
   if (theElementType != _elementType) {
     _elementType = theElementType;
     NotifySubMeshesHypothesisModification();
@@ -388,7 +398,8 @@ void BLSURFPlugin_Hypothesis::SetElementType(ElementType theElementType) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetAngleMesh(double theVal) {
+void BLSURFPlugin_Hypothesis::SetAngleMesh(double theVal)
+{
   if (theVal != _angleMesh) {
     _angleMesh = theVal;
     NotifySubMeshesHypothesisModification();
@@ -396,7 +407,8 @@ void BLSURFPlugin_Hypothesis::SetAngleMesh(double theVal) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetChordalError(double theDistance) {
+void BLSURFPlugin_Hypothesis::SetChordalError(double theDistance)
+{
   if (theDistance != _chordalError) {
     _chordalError = theDistance;
     NotifySubMeshesHypothesisModification();
@@ -404,7 +416,8 @@ void BLSURFPlugin_Hypothesis::SetChordalError(double theDistance) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetAnisotropic(bool theVal) {
+void BLSURFPlugin_Hypothesis::SetAnisotropic(bool theVal)
+{
   if (theVal != _anisotropic) {
     _anisotropic = theVal;
     NotifySubMeshesHypothesisModification();
@@ -412,7 +425,8 @@ void BLSURFPlugin_Hypothesis::SetAnisotropic(bool theVal) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetAnisotropicRatio(double theVal) {
+void BLSURFPlugin_Hypothesis::SetAnisotropicRatio(double theVal)
+{
   if (theVal != _anisotropicRatio) {
     _anisotropicRatio = theVal;
     NotifySubMeshesHypothesisModification();
@@ -420,7 +434,8 @@ void BLSURFPlugin_Hypothesis::SetAnisotropicRatio(double theVal) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetRemoveTinyEdges(bool theVal) {
+void BLSURFPlugin_Hypothesis::SetRemoveTinyEdges(bool theVal)
+{
   if (theVal != _removeTinyEdges) {
     _removeTinyEdges = theVal;
     NotifySubMeshesHypothesisModification();
@@ -428,7 +443,8 @@ void BLSURFPlugin_Hypothesis::SetRemoveTinyEdges(bool theVal) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetTinyEdgeLength(double theVal) {
+void BLSURFPlugin_Hypothesis::SetTinyEdgeLength(double theVal)
+{
   if (theVal != _tinyEdgeLength) {
     _tinyEdgeLength = theVal;
     NotifySubMeshesHypothesisModification();
@@ -436,7 +452,8 @@ void BLSURFPlugin_Hypothesis::SetTinyEdgeLength(double theVal) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetOptimiseTinyEdges(bool theVal) {
+void BLSURFPlugin_Hypothesis::SetOptimiseTinyEdges(bool theVal)
+{
   if (theVal != _optimiseTinyEdges) {
     _optimiseTinyEdges = theVal;
     NotifySubMeshesHypothesisModification();
@@ -444,7 +461,8 @@ void BLSURFPlugin_Hypothesis::SetOptimiseTinyEdges(bool theVal) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetTinyEdgeOptimisationLength(double theVal) {
+void BLSURFPlugin_Hypothesis::SetTinyEdgeOptimisationLength(double theVal)
+{
   if (theVal != _tinyEdgeOptimisationLength) {
     _tinyEdgeOptimisationLength = theVal;
     NotifySubMeshesHypothesisModification();
@@ -452,7 +470,8 @@ void BLSURFPlugin_Hypothesis::SetTinyEdgeOptimisationLength(double theVal) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetCorrectSurfaceIntersection(bool theVal) {
+void BLSURFPlugin_Hypothesis::SetCorrectSurfaceIntersection(bool theVal)
+{
   if (theVal != _correctSurfaceIntersec) {
     _correctSurfaceIntersec = theVal;
     NotifySubMeshesHypothesisModification();
@@ -460,7 +479,8 @@ void BLSURFPlugin_Hypothesis::SetCorrectSurfaceIntersection(bool theVal) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetCorrectSurfaceIntersectionMaxCost(double theVal) {
+void BLSURFPlugin_Hypothesis::SetCorrectSurfaceIntersectionMaxCost(double theVal)
+{
   if (theVal != _corrSurfaceIntersCost) {
     _corrSurfaceIntersCost = theVal;
     NotifySubMeshesHypothesisModification();
@@ -468,7 +488,8 @@ void BLSURFPlugin_Hypothesis::SetCorrectSurfaceIntersectionMaxCost(double theVal
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetBadElementRemoval(bool theVal) {
+void BLSURFPlugin_Hypothesis::SetBadElementRemoval(bool theVal)
+{
   if (theVal != _badElementRemoval) {
     _badElementRemoval = theVal;
     NotifySubMeshesHypothesisModification();
@@ -476,7 +497,8 @@ void BLSURFPlugin_Hypothesis::SetBadElementRemoval(bool theVal) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetBadElementAspectRatio(double theVal) {
+void BLSURFPlugin_Hypothesis::SetBadElementAspectRatio(double theVal)
+{
   if (theVal != _badElementAspectRatio) {
     _badElementAspectRatio = theVal;
     NotifySubMeshesHypothesisModification();
@@ -484,7 +506,8 @@ void BLSURFPlugin_Hypothesis::SetBadElementAspectRatio(double theVal) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetOptimizeMesh(bool theVal) {
+void BLSURFPlugin_Hypothesis::SetOptimizeMesh(bool theVal)
+{
   if (theVal != _optimizeMesh) {
     _optimizeMesh = theVal;
     NotifySubMeshesHypothesisModification();
@@ -492,7 +515,8 @@ void BLSURFPlugin_Hypothesis::SetOptimizeMesh(bool theVal) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetQuadraticMesh(bool theVal) {
+void BLSURFPlugin_Hypothesis::SetQuadraticMesh(bool theVal)
+{
   if (theVal != _quadraticMesh) {
     _quadraticMesh = theVal;
     NotifySubMeshesHypothesisModification();
@@ -500,7 +524,8 @@ void BLSURFPlugin_Hypothesis::SetQuadraticMesh(bool theVal) {
 }
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetTopology(Topology theTopology) {
+void BLSURFPlugin_Hypothesis::SetTopology(Topology theTopology)
+{
   if (theTopology != _topology) {
     _topology = theTopology;
     NotifySubMeshesHypothesisModification();
@@ -864,7 +889,7 @@ void BLSURFPlugin_Hypothesis::SetHyperPatches(const THyperPatchList& hpl, bool n
           _hyperPatchList[ *iPatch ].clear();
         }
         if ( iPatches.size() > 1 )
-          for ( int j = _hyperPatchList.size()-1; j > 0; --j )
+          for ( int j = (int) _hyperPatchList.size()-1; j > 0; --j )
             if ( _hyperPatchList[j].empty() )
               _hyperPatchList.erase( _hyperPatchList.begin() + j );
       }
@@ -943,7 +968,7 @@ int BLSURFPlugin_Hypothesis::GetHyperPatchTag( const int                      fa
     for ( size_t i = 0; i < hpl.size(); ++i )
       if ( hpl[i].count( faceTag ))
       {
-        if ( iPatch ) *iPatch = i;
+        if ( iPatch ) *iPatch = (int) i;
         return *( hpl[i].begin() );
       }
   }
@@ -1042,7 +1067,7 @@ void BLSURFPlugin_Hypothesis::SetOptionValue(const std::string& optionName, cons
     // strip white spaces
     while (ptr[0] == ' ')
       ptr++;
-    int i = strlen(ptr);
+    size_t i = strlen(ptr);
     while (i != 0 && ptr[i - 1] == ' ')
       i--;
     // check value type
@@ -1096,7 +1121,7 @@ void BLSURFPlugin_Hypothesis::SetPreCADOptionValue(const std::string& optionName
     // strip white spaces
     while (ptr[0] == ' ')
       ptr++;
-    int i = strlen(ptr);
+    size_t i = strlen(ptr);
     while (i != 0 && ptr[i - 1] == ' ')
       i--;
     // check value type
@@ -1891,7 +1916,8 @@ void BLSURFPlugin_Hypothesis::ClearAllEnforcedVertices()
 
 
 BLSURFPlugin_Hypothesis::TFaceEntryEnfVertexListMap BLSURFPlugin_Hypothesis::GetAllEnforcedVerticesByFace(
-    const BLSURFPlugin_Hypothesis* hyp) {
+    const BLSURFPlugin_Hypothesis* hyp)
+{
   return hyp ? hyp->_GetAllEnforcedVerticesByFace() : GetDefaultFaceEntryEnfVertexListMap();
 }
 
@@ -1912,31 +1938,36 @@ BLSURFPlugin_Hypothesis::TEnfGroupName BLSURFPlugin_Hypothesis::GetInternalEnfor
 }
 
 BLSURFPlugin_Hypothesis::TEnfVertexList BLSURFPlugin_Hypothesis::GetAllEnforcedVertices(
-    const BLSURFPlugin_Hypothesis* hyp) {
+    const BLSURFPlugin_Hypothesis* hyp)
+{
   return hyp ? hyp->_GetAllEnforcedVertices() : GetDefaultEnfVertexList();
 }
 
 BLSURFPlugin_Hypothesis::TFaceEntryCoordsListMap BLSURFPlugin_Hypothesis::GetAllCoordsByFace(
-    const BLSURFPlugin_Hypothesis* hyp) {
+    const BLSURFPlugin_Hypothesis* hyp)
+{
   return hyp ? hyp->_GetAllCoordsByFace() : GetDefaultFaceEntryCoordsListMap();
 }
 
 BLSURFPlugin_Hypothesis::TCoordsEnfVertexMap BLSURFPlugin_Hypothesis::GetAllEnforcedVerticesByCoords(
-    const BLSURFPlugin_Hypothesis* hyp) {
+    const BLSURFPlugin_Hypothesis* hyp)
+{
   return hyp ? hyp->_GetAllEnforcedVerticesByCoords() : GetDefaultCoordsEnfVertexMap();
 }
 
 BLSURFPlugin_Hypothesis::TFaceEntryEnfVertexEntryListMap BLSURFPlugin_Hypothesis::GetAllEnfVertexEntriesByFace(
-    const BLSURFPlugin_Hypothesis* hyp) {
+    const BLSURFPlugin_Hypothesis* hyp)
+{
   return hyp ? hyp->_GetAllEnfVertexEntriesByFace() : GetDefaultFaceEntryEnfVertexEntryListMap();
 }
 
 BLSURFPlugin_Hypothesis::TEnfVertexEntryEnfVertexMap BLSURFPlugin_Hypothesis::GetAllEnforcedVerticesByEnfVertexEntry(
-    const BLSURFPlugin_Hypothesis* hyp) {
+    const BLSURFPlugin_Hypothesis* hyp)
+{
   return hyp ? hyp->_GetAllEnforcedVerticesByEnfVertexEntry() : GetDefaultEnfVertexEntryEnfVertexMap();
 }
 
-std::set<int> BLSURFPlugin_Hypothesis::GetEnfVertexNodeIDs(TEnfGroupName theGroupName)
+std::set<smIdType> BLSURFPlugin_Hypothesis::GetEnfVertexNodeIDs(TEnfGroupName theGroupName)
 {
   TGroupNameNodeIDMap::const_iterator it = _groupNameNodeIDMap.find(theGroupName);
   if (it != _groupNameNodeIDMap.end()) {
@@ -1947,16 +1978,16 @@ std::set<int> BLSURFPlugin_Hypothesis::GetEnfVertexNodeIDs(TEnfGroupName theGrou
   throw std::invalid_argument(msg.str());
 }
 
-void BLSURFPlugin_Hypothesis::AddEnfVertexNodeID(TEnfGroupName theGroupName,int theNodeID)
+void BLSURFPlugin_Hypothesis::AddEnfVertexNodeID(TEnfGroupName theGroupName,smIdType theNodeID)
 {
   _groupNameNodeIDMap[theGroupName].insert(theNodeID);
 }
 
-void BLSURFPlugin_Hypothesis::RemoveEnfVertexNodeID(TEnfGroupName theGroupName,int theNodeID)
+void BLSURFPlugin_Hypothesis::RemoveEnfVertexNodeID(TEnfGroupName theGroupName,smIdType theNodeID)
 {
   TGroupNameNodeIDMap::iterator it = _groupNameNodeIDMap.find(theGroupName);
   if (it != _groupNameNodeIDMap.end()) {
-    std::set<int>::iterator IDit = it->second.find(theNodeID);
+    std::set<smIdType>::iterator IDit = it->second.find(theNodeID);
     if (IDit != it->second.end())
       it->second.erase(IDit);
     std::ostringstream msg;
@@ -1970,7 +2001,8 @@ void BLSURFPlugin_Hypothesis::RemoveEnfVertexNodeID(TEnfGroupName theGroupName,i
 
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetInternalEnforcedVertexAllFaces(bool toEnforceInternalVertices) {
+void BLSURFPlugin_Hypothesis::SetInternalEnforcedVertexAllFaces(bool toEnforceInternalVertices)
+{
   if (toEnforceInternalVertices != _enforcedInternalVerticesAllFaces) {
     _enforcedInternalVerticesAllFaces = toEnforceInternalVertices;
     if (toEnforceInternalVertices)
@@ -1981,7 +2013,8 @@ void BLSURFPlugin_Hypothesis::SetInternalEnforcedVertexAllFaces(bool toEnforceIn
 
 
 //=============================================================================
-void BLSURFPlugin_Hypothesis::SetInternalEnforcedVertexAllFacesGroup(BLSURFPlugin_Hypothesis::TEnfGroupName theGroupName) {
+void BLSURFPlugin_Hypothesis::SetInternalEnforcedVertexAllFacesGroup(BLSURFPlugin_Hypothesis::TEnfGroupName theGroupName)
+{
   if (std::string(theGroupName) != std::string(_enforcedInternalVerticesAllFacesGroup)) {
     _enforcedInternalVerticesAllFacesGroup = theGroupName;
     NotifySubMeshesHypothesisModification();
@@ -1990,38 +2023,44 @@ void BLSURFPlugin_Hypothesis::SetInternalEnforcedVertexAllFacesGroup(BLSURFPlugi
 
 //=============================================================================
 BLSURFPlugin_Hypothesis::TPreCadPeriodicityVector BLSURFPlugin_Hypothesis::GetPreCadFacesPeriodicityVector(
-    const BLSURFPlugin_Hypothesis* hyp) {
+    const BLSURFPlugin_Hypothesis* hyp)
+{
   return hyp ? hyp->_GetPreCadFacesPeriodicityVector() : GetDefaultPreCadFacesPeriodicityVector();
 }
 
 //=============================================================================
 BLSURFPlugin_Hypothesis::TPreCadPeriodicityVector BLSURFPlugin_Hypothesis::GetPreCadEdgesPeriodicityVector(
-    const BLSURFPlugin_Hypothesis* hyp) {
+    const BLSURFPlugin_Hypothesis* hyp)
+{
   return hyp ? hyp->_GetPreCadEdgesPeriodicityVector() : GetDefaultPreCadEdgesPeriodicityVector();
 }
 
 //=============================================================================
 BLSURFPlugin_Hypothesis::TFacesPeriodicityVector BLSURFPlugin_Hypothesis::GetFacesPeriodicityVector(
-    const BLSURFPlugin_Hypothesis* hyp) {
+    const BLSURFPlugin_Hypothesis* hyp)
+{
   return hyp ? hyp->_GetFacesPeriodicityVector() : GetDefaultFacesPeriodicityVector();
 }
 
 //=============================================================================
 BLSURFPlugin_Hypothesis::TEdgesPeriodicityVector BLSURFPlugin_Hypothesis::GetEdgesPeriodicityVector(
-    const BLSURFPlugin_Hypothesis* hyp){
+    const BLSURFPlugin_Hypothesis* hyp)
+{
   return hyp ? hyp->_GetEdgesPeriodicityVector() : GetDefaultEdgesPeriodicityVector();
 }
 
 //=============================================================================
 BLSURFPlugin_Hypothesis::TVerticesPeriodicityVector BLSURFPlugin_Hypothesis::GetVerticesPeriodicityVector(
-    const BLSURFPlugin_Hypothesis* hyp){
+    const BLSURFPlugin_Hypothesis* hyp)
+{
   return hyp ? hyp->_GetVerticesPeriodicityVector() : GetDefaultVerticesPeriodicityVector();
 }
 
 //=======================================================================
 //function : ClearAllEnforcedVertices
 //=======================================================================
-void BLSURFPlugin_Hypothesis::ClearPreCadPeriodicityVectors() {
+void BLSURFPlugin_Hypothesis::ClearPreCadPeriodicityVectors()
+{
   _preCadFacesPeriodicityVector.clear();
   _preCadEdgesPeriodicityVector.clear();
   NotifySubMeshesHypothesisModification();
@@ -2031,7 +2070,8 @@ void BLSURFPlugin_Hypothesis::ClearPreCadPeriodicityVectors() {
 //function : AddPreCadFacesPeriodicity
 //=======================================================================
 void BLSURFPlugin_Hypothesis::AddPreCadFacesPeriodicity(TEntry theFace1Entry, TEntry theFace2Entry,
-                                                        std::vector<std::string> &theSourceVerticesEntries, std::vector<std::string> &theTargetVerticesEntries) {
+                                                        std::vector<std::string> &theSourceVerticesEntries, std::vector<std::string> &theTargetVerticesEntries)
+{
 
   TPreCadPeriodicity preCadFacesPeriodicity;
   preCadFacesPeriodicity.shape1Entry = theFace1Entry;
@@ -2048,8 +2088,8 @@ void BLSURFPlugin_Hypothesis::AddPreCadFacesPeriodicity(TEntry theFace1Entry, TE
 //function : AddPreCadEdgesPeriodicity
 //=======================================================================
 void BLSURFPlugin_Hypothesis::AddPreCadEdgesPeriodicity(TEntry theEdge1Entry, TEntry theEdge2Entry,
-    std::vector<std::string> &theSourceVerticesEntries, std::vector<std::string> &theTargetVerticesEntries) {
-
+    std::vector<std::string> &theSourceVerticesEntries, std::vector<std::string> &theTargetVerticesEntries)
+{
   TPreCadPeriodicity preCadEdgesPeriodicity;
   preCadEdgesPeriodicity.shape1Entry = theEdge1Entry;
   preCadEdgesPeriodicity.shape2Entry = theEdge2Entry;
@@ -2258,8 +2298,8 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save)
   return save;
 }
 
-void BLSURFPlugin_Hypothesis::SaveFacesPeriodicity(std::ostream & save){
-
+void BLSURFPlugin_Hypothesis::SaveFacesPeriodicity(std::ostream & save)
+{
   TFacesPeriodicityVector::const_iterator it_faces_periodicity = _facesPeriodicityVector.begin();
   if (it_faces_periodicity != _facesPeriodicityVector.end()) {
     save << " " << "__FACES_PERIODICITY_BEGIN__";
@@ -2278,8 +2318,8 @@ void BLSURFPlugin_Hypothesis::SaveFacesPeriodicity(std::ostream & save){
   }
 }
 
-void BLSURFPlugin_Hypothesis::SaveEdgesPeriodicity(std::ostream & save){
-
+void BLSURFPlugin_Hypothesis::SaveEdgesPeriodicity(std::ostream & save)
+{
   TEdgesPeriodicityVector::const_iterator it_edges_periodicity = _edgesPeriodicityVector.begin();
   if (it_edges_periodicity != _edgesPeriodicityVector.end()) {
     save << " " << "__EDGES_PERIODICITY_BEGIN__";
@@ -2311,8 +2351,8 @@ void BLSURFPlugin_Hypothesis::SaveEdgesPeriodicity(std::ostream & save){
   }
 }
 
-void BLSURFPlugin_Hypothesis::SaveVerticesPeriodicity(std::ostream & save){
-
+void BLSURFPlugin_Hypothesis::SaveVerticesPeriodicity(std::ostream & save)
+{
   TVerticesPeriodicityVector::const_iterator it_vertices_periodicity = _verticesPeriodicityVector.begin();
   if (it_vertices_periodicity != _verticesPeriodicityVector.end()) {
     save << " " << "__VERTICES_PERIODICITY_BEGIN__";
@@ -2337,7 +2377,8 @@ void BLSURFPlugin_Hypothesis::SaveVerticesPeriodicity(std::ostream & save){
   }
 }
 
-void BLSURFPlugin_Hypothesis::SavePreCADPeriodicity(std::ostream & save, const char* shapeType) {
+void BLSURFPlugin_Hypothesis::SavePreCADPeriodicity(std::ostream & save, const char* shapeType)
+{
   TPreCadPeriodicityVector precad_periodicity;
   if ( shapeType  &&  strcmp( shapeType, "FACES" ) == 0 )
     precad_periodicity = _preCadFacesPeriodicityVector;
@@ -2752,14 +2793,14 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
         ) {
       std::string & value = _option2value[optName];
       value = optValue;
-      int len = value.size();
+      int len = (int) value.size();
       // continue reading until "%#" encountered
       while (value[len - 1] != '#' || value[len - 2] != '%') {
         isOK = static_cast<bool>(load >> optValue);
         if (isOK) {
           value += " ";
           value += optValue;
-          len = value.size();
+          len = (int) value.size();
         } else {
           break;
         }
@@ -2806,14 +2847,14 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
     }
     if (isOK) {
       std::string& value = optValue;
-      int len = value.size();
+      int len = (int) value.size();
       // continue reading until "%#" encountered
       while (value[len - 1] != '#' || value[len - 2] != '%') {
         isOK = static_cast<bool>(load >> optValue);
         if (isOK) {
           value += " ";
           value += optValue;
-          len = value.size();
+          len = (int) value.size();
         } else {
           break;
         }
@@ -2860,14 +2901,14 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
     if (isOK) {
       std::string & value = _preCADoption2value[optName];
       value = optValue;
-      int len = value.size();
+      int len = (int) value.size();
       // continue reading until "%#" encountered
       while (value[len - 1] != '#' || value[len - 2] != '%') {
         isOK = static_cast<bool>(load >> optValue);
         if (isOK) {
           value += " ";
           value += optValue;
-          len = value.size();
+          len = (int) value.size();
         } else {
           break;
         }
@@ -2912,14 +2953,14 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
     if (isOK) {
       std::string & value2 = _sizeMap[smEntry];
       value2 = smValue;
-      int len2 = value2.size();
+      int len2 = (int) value2.size();
       // continue reading until "%#" encountered
       while (value2[len2 - 1] != '#' || value2[len2 - 2] != '%') {
         isOK = static_cast<bool>(load >> smValue);
         if (isOK) {
           value2 += " ";
           value2 += smValue;
-          len2 = value2.size();
+          len2 = (int) value2.size();
         } else {
           break;
         }
@@ -2961,14 +3002,14 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
     if (isOK) {
       std::string & value3 = _attractors[atEntry];
       value3 = atValue;
-      int len3 = value3.size();
+      int len3 = (int) value3.size();
       // continue reading until "%#" encountered
       while (value3[len3 - 1] != '#' || value3[len3 - 2] != '%') {
         isOK = static_cast<bool>(load >> atValue);
         if (isOK) {
           value3 += " ";
           value3 += atValue;
-          len3 = value3.size();
+          len3 = (int) value3.size();
         } else {
           break;
         }
@@ -3304,8 +3345,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
   return load;
 }
 
-void BLSURFPlugin_Hypothesis::LoadFacesPeriodicity(std::istream & load){
-
+void BLSURFPlugin_Hypothesis::LoadFacesPeriodicity(std::istream & load)
+{
   bool isOK = true;
 
   std::string periodicitySeparator;
@@ -3353,8 +3394,8 @@ void BLSURFPlugin_Hypothesis::LoadFacesPeriodicity(std::istream & load){
 }
 
 
-void BLSURFPlugin_Hypothesis::LoadEdgesPeriodicity(std::istream & load){
-
+void BLSURFPlugin_Hypothesis::LoadEdgesPeriodicity(std::istream & load)
+{
   bool isOK = true;
 
   std::string periodicitySeparator;
@@ -3495,8 +3536,8 @@ void BLSURFPlugin_Hypothesis::LoadVerticesPeriodicity(std::istream & load)
   }
 }
 
-void BLSURFPlugin_Hypothesis::LoadPreCADPeriodicity(std::istream & load, const char* shapeType) {
-
+void BLSURFPlugin_Hypothesis::LoadPreCADPeriodicity(std::istream & load, const char* shapeType)
+{
   bool isOK = true;
 
   std::string periodicitySeparator;
@@ -3601,7 +3642,8 @@ std::istream & operator >>(std::istream & load, BLSURFPlugin_Hypothesis & hyp) {
  */
 //================================================================================
 
-bool BLSURFPlugin_Hypothesis::SetParametersByMesh(const SMESH_Mesh* /*theMesh*/, const TopoDS_Shape& /*theShape*/) {
+bool BLSURFPlugin_Hypothesis::SetParametersByMesh(const SMESH_Mesh* /*theMesh*/, const TopoDS_Shape& /*theShape*/)
+{
   return false;
 }
 
@@ -3611,7 +3653,8 @@ bool BLSURFPlugin_Hypothesis::SetParametersByMesh(const SMESH_Mesh* /*theMesh*/,
  */
 //================================================================================
 
-double BLSURFPlugin_Hypothesis::GetDefaultPhySize(double diagonal, double bbSegmentation) {
+double BLSURFPlugin_Hypothesis::GetDefaultPhySize(double diagonal, double bbSegmentation)
+{
   if (bbSegmentation != 0 && diagonal != 0)
     return diagonal / bbSegmentation ;
   return 10;
@@ -3623,7 +3666,8 @@ double BLSURFPlugin_Hypothesis::GetDefaultPhySize(double diagonal, double bbSegm
  */
 //================================================================================
 
-double BLSURFPlugin_Hypothesis::GetDefaultMinSize(double diagonal) {
+double BLSURFPlugin_Hypothesis::GetDefaultMinSize(double diagonal)
+{
   if (diagonal != 0)
     return diagonal / 1000.0 ;
   return undefinedDouble();
@@ -3635,7 +3679,8 @@ double BLSURFPlugin_Hypothesis::GetDefaultMinSize(double diagonal) {
  */
 //================================================================================
 
-double BLSURFPlugin_Hypothesis::GetDefaultMaxSize(double diagonal) {
+double BLSURFPlugin_Hypothesis::GetDefaultMaxSize(double diagonal)
+{
   if (diagonal != 0)
     return diagonal / 5.0 ;
   return undefinedDouble();
@@ -3647,7 +3692,8 @@ double BLSURFPlugin_Hypothesis::GetDefaultMaxSize(double diagonal) {
  */
 //================================================================================
 
-double BLSURFPlugin_Hypothesis::GetDefaultChordalError(double diagonal) {
+double BLSURFPlugin_Hypothesis::GetDefaultChordalError(double diagonal)
+{
   if (diagonal != 0)
     return diagonal;
   return undefinedDouble();
@@ -3659,7 +3705,8 @@ double BLSURFPlugin_Hypothesis::GetDefaultChordalError(double diagonal) {
  */
 //================================================================================
 
-double BLSURFPlugin_Hypothesis::GetDefaultTinyEdgeLength(double diagonal) {
+double BLSURFPlugin_Hypothesis::GetDefaultTinyEdgeLength(double diagonal)
+{
   if (diagonal != 0)
     return diagonal * 1e-6 ;
   return undefinedDouble();
@@ -3671,7 +3718,8 @@ double BLSURFPlugin_Hypothesis::GetDefaultTinyEdgeLength(double diagonal) {
  */
 //================================================================================
 
-double BLSURFPlugin_Hypothesis::GetDefaultTinyEdgeOptimisationLength(double diagonal) {
+double BLSURFPlugin_Hypothesis::GetDefaultTinyEdgeOptimisationLength(double diagonal)
+{
   if (diagonal != 0)
     return diagonal * 1e-6 ;
   return undefinedDouble();
@@ -3723,7 +3771,7 @@ bool BLSURFPlugin_Hypothesis::ToBool(const std::string& str, bool* isOk )
   if ( isOk ) *isOk = true;
 
   for ( size_t i = 0; i <= s.size(); ++i )
-    s[i] = tolower( s[i] );
+    s[i] = (char) tolower( s[i] );
 
   if ( s == "1" || s == "true" || s == "active" || s == "yes" )
     return true;

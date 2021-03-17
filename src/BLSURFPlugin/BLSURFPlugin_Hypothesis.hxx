@@ -36,6 +36,7 @@
 #include <cstring>
 #include <sstream>
 #include <utilities.h>
+#include <smIdType.hxx>
 #include "BLSURFPlugin_Attractor.hxx"
 
 //  Parameters for work of MG-CADSurf
@@ -372,7 +373,7 @@ public:
   // Map Vertex entry / Enforced vertex
   typedef std::map< TEntry, TEnfVertex* > TEnfVertexEntryEnfVertexMap;
 
-  typedef std::map< TEnfGroupName, std::set<int> > TGroupNameNodeIDMap;
+  typedef std::map< TEnfGroupName, std::set<smIdType> > TGroupNameNodeIDMap;
   /* TODO GROUPS
   // Map Group Name / List of enforced vertices
   typedef std::map< TEnfGroupName , TEnfVertexList > TGroupNameEnfVertexListMap;
@@ -392,9 +393,9 @@ public:
   TEntryList            GetEnfVertexEntryList (const TEntry& theFaceEntry);
   TEnfVertex*           GetEnfVertex(TEnfVertexCoords coords);
   TEnfVertex*           GetEnfVertex(const TEntry& theEnfVertexEntry);
-  void                  AddEnfVertexNodeID(TEnfGroupName theGroupName,int theNodeID);
-  std::set<int>         GetEnfVertexNodeIDs(TEnfGroupName theGroupName);
-  void                  RemoveEnfVertexNodeID(TEnfGroupName theGroupName,int theNodeID);
+  void                  AddEnfVertexNodeID(TEnfGroupName theGroupName,smIdType theNodeID);
+  std::set<smIdType>    GetEnfVertexNodeIDs(TEnfGroupName theGroupName);
+  void                  RemoveEnfVertexNodeID(TEnfGroupName theGroupName,smIdType theNodeID);
   
   bool ClearEnforcedVertex(const TEntry& theFaceEntry, double x = 0.0, double y = 0.0, double z = 0.0, const TEntry& theVertexEntry="");
   bool ClearEnforcedVertices(const TEntry& theFaceEntry);

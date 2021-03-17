@@ -170,7 +170,7 @@ typedef struct
   double  myAnisotropicRatio, myTinyEdgeLength, myTinyEdgeOptimisLength, myBadElementAspectRatio, myCorrectSurfaceIntersectionMaxCost;
   bool    myOptimizeMesh, myQuadraticMesh;
   bool    mySmpsurface,mySmpedge,mySmppoint,myEnforcedVertex,myInternalEnforcedVerticesAllFaces;
-  long    myElementType;
+  int     myElementType;
   bool    myUseSurfaceProximity;
   int     myNbSurfaceProximityLayers;
   double  mySurfaceProximityRatio;

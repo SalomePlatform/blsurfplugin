@@ -1010,8 +1010,8 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   myPeriodicityTreeWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
   myPeriodicityTreeWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
   
-  size_t periodicityVisibleColumns = 2;
-  for (size_t column = 0; column < periodicityVisibleColumns; ++column) {
+  int periodicityVisibleColumns = 2;
+  for (int column = 0; column < periodicityVisibleColumns; ++column) {
       myPeriodicityTreeWidget->header()->setSectionResizeMode(column,QHeaderView::Interactive);
       myPeriodicityTreeWidget->resizeColumnToContents(column);
   }
@@ -1299,7 +1299,8 @@ void BLSURFPluginGUI_HypothesisCreator::clearEnforcedVertexWidgets()
     This method updates the tooltip of a modified item. The QLineEdit widgets content
     is synchronized with the coordinates of the enforced vertex clicked in the tree widget.
 */
-void BLSURFPluginGUI_HypothesisCreator::updateEnforcedVertexValues(QTreeWidgetItem* item, int /*column*/) {
+void BLSURFPluginGUI_HypothesisCreator::updateEnforcedVertexValues(QTreeWidgetItem* item, int /*column*/)
+{
   QVariant vertexName = item->data(ENF_VER_NAME_COLUMN, Qt::EditRole);
   QVariant x = item->data(ENF_VER_X_COLUMN, Qt::EditRole);
   QVariant y = item->data(ENF_VER_Y_COLUMN, Qt::EditRole);
@@ -1336,8 +1337,9 @@ void BLSURFPluginGUI_HypothesisCreator::updateEnforcedVertexValues(QTreeWidgetIt
   }
 }
 
-void BLSURFPluginGUI_HypothesisCreator::onSelectEnforcedVertex() {
-  int nbSelEnfVertex = myEnfVertexWdg->NbObjects();
+void BLSURFPluginGUI_HypothesisCreator::onSelectEnforcedVertex()
+{
+  size_t nbSelEnfVertex = myEnfVertexWdg->NbObjects();
   clearEnforcedVertexWidgets();
   if (nbSelEnfVertex == 1)
   {
@@ -1366,7 +1368,8 @@ void BLSURFPluginGUI_HypothesisCreator::onSelectEnforcedVertex() {
 This method synchronizes the QLineEdit/SMESHGUI_SpinBox widgets content with the coordinates
 of the enforced vertex clicked in the tree widget.
 */
-void BLSURFPluginGUI_HypothesisCreator::synchronizeCoords() {
+void BLSURFPluginGUI_HypothesisCreator::synchronizeCoords()
+{
   clearEnforcedVertexWidgets();
   QList<QTreeWidgetItem *> items = myEnforcedTreeWidget->selectedItems();
   if (! items.isEmpty() && items.size() == 1) {
@@ -1393,7 +1396,8 @@ void BLSURFPluginGUI_HypothesisCreator::synchronizeCoords() {
 /** BLSURFPluginGUI_HypothesisCreator::addEnforcedFace(entry, shapeName, useInternalVertices)
 This method adds a face containing enforced vertices in the tree widget.
 */
-QTreeWidgetItem* BLSURFPluginGUI_HypothesisCreator::addEnforcedFace(std::string theFaceEntry, std::string theFaceName) {
+QTreeWidgetItem* BLSURFPluginGUI_HypothesisCreator::addEnforcedFace(std::string theFaceEntry, std::string theFaceName)
+{
   // Find theFaceEntry item
   QList<QTreeWidgetItem* > theItemList = myEnforcedTreeWidget->findItems(QString(theFaceEntry.c_str()),Qt::MatchExactly,ENF_VER_FACE_ENTRY_COLUMN);
   QTreeWidgetItem* theItem;
@@ -1503,7 +1507,7 @@ void BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices()
     myEnforcedTreeWidget->resizeColumnToContents(column);
 
   // Vertex selection
-  int selEnfVertex = myEnfVertexWdg->NbObjects();
+  size_t selEnfVertex = myEnfVertexWdg->NbObjects();
   bool coordsEmpty = (myXCoord->text().isEmpty()) || (myYCoord->text().isEmpty()) || (myZCoord->text().isEmpty());
 
   if ((selEnfVertex == 0) && coordsEmpty)
@@ -1537,7 +1541,7 @@ void BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices()
 
       CORBA::Double x,y,z;
       x = y = z = 0.;
-      for (int j = 0 ; j < selEnfVertex ; j++)
+      for (size_t j = 0 ; j < selEnfVertex ; j++)
       {
         myEnfVertex = myEnfVertexWdg->GetObject< GEOM::GEOM_Object >(j);
         if (myEnfVertex->GetShapeType() == GEOM::VERTEX) {
@@ -1565,7 +1569,8 @@ void BLSURFPluginGUI_HypothesisCreator::onAddEnforcedVertices()
 /** BLSURFPluginGUI_HypothesisCreator::onRemoveEnforcedVertex()
 This method is called when a item is removed from the enforced vertices tree widget
 */
-void BLSURFPluginGUI_HypothesisCreator::onRemoveEnforcedVertex() {
+void BLSURFPluginGUI_HypothesisCreator::onRemoveEnforcedVertex()
+{
   QList<QTreeWidgetItem *> selectedItems = myEnforcedTreeWidget->selectedItems();
   QList<QTreeWidgetItem *> selectedVertices;
   QSet<QTreeWidgetItem *> selectedEntries;
@@ -1612,8 +1617,8 @@ void BLSURFPluginGUI_HypothesisCreator::onInternalVerticesClicked(int state)
 /** BLSURFPluginGUI_HypothesisCreator::onAddPeriodicity()
 This method is called when a item is added into the periodicity table widget
 */
-void BLSURFPluginGUI_HypothesisCreator::onAddPeriodicity() {
-
+void BLSURFPluginGUI_HypothesisCreator::onAddPeriodicity()
+{
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
 
   that->getGeomSelectionTool()->selectionMgr()->clearFilters();
@@ -1626,8 +1631,8 @@ void BLSURFPluginGUI_HypothesisCreator::onAddPeriodicity() {
 
 
   // Source-Target selection
-  int selSource = myPeriodicitySourceFaceWdg->NbObjects();
-  int selTarget = myPeriodicityTargetFaceWdg->NbObjects();
+  size_t selSource = myPeriodicitySourceFaceWdg->NbObjects();
+  size_t selTarget = myPeriodicityTargetFaceWdg->NbObjects();
 
   if (selSource == 0 || selTarget == 0)
     return;
@@ -1635,12 +1640,12 @@ void BLSURFPluginGUI_HypothesisCreator::onAddPeriodicity() {
   // Vertices selection
   if (myPeriodicityGroupBox2->isChecked())
     {
-      int P1Ssel = myPeriodicityP1SourceWdg->NbObjects();
-      int P2Ssel = myPeriodicityP2SourceWdg->NbObjects();
-      int P3Ssel = myPeriodicityP3SourceWdg->NbObjects();
-      int P1Tsel = myPeriodicityP1TargetWdg->NbObjects();
-      //int P2Tsel = myPeriodicityP2TargetWdg->NbObjects();
-      int P3Tsel = myPeriodicityP3TargetWdg->NbObjects();
+      size_t P1Ssel = myPeriodicityP1SourceWdg->NbObjects();
+      size_t P2Ssel = myPeriodicityP2SourceWdg->NbObjects();
+      size_t P3Ssel = myPeriodicityP3SourceWdg->NbObjects();
+      size_t P1Tsel = myPeriodicityP1TargetWdg->NbObjects();
+      //size_t P2Tsel = myPeriodicityP2TargetWdg->NbObjects();
+      size_t P3Tsel = myPeriodicityP3TargetWdg->NbObjects();
 
       if (P1Ssel!=1 || P2Ssel!=1 || P3Ssel!=1 || P1Tsel!=1 || P3Tsel!=1 || P3Tsel!=1)
         {
@@ -1661,7 +1666,7 @@ void BLSURFPluginGUI_HypothesisCreator::onAddPeriodicity() {
   item->setFlags( Qt::ItemIsSelectable   |Qt::ItemIsEnabled );
 
 
-  size_t k=0;
+  int k=0;
   for (anIt = myPeriodicitySelectionWidgets.begin(); anIt != myPeriodicitySelectionWidgets.end(); anIt++, k++)
     {
       StdMeshersGUI_ObjectReferenceParamWdg * w1 = ( StdMeshersGUI_ObjectReferenceParamWdg* ) ( *anIt );
@@ -1693,7 +1698,8 @@ void BLSURFPluginGUI_HypothesisCreator::onAddPeriodicity() {
 /** BLSURFPluginGUI_HypothesisCreator::onRemovePeriodicity()
 This method is called when a item is removed from the periodicity tree widget
 */
-void BLSURFPluginGUI_HypothesisCreator::onRemovePeriodicity() {
+void BLSURFPluginGUI_HypothesisCreator::onRemovePeriodicity()
+{
   QList<QTreeWidgetItem *> selectedItems = myPeriodicityTreeWidget->selectedItems();
   QTreeWidgetItem* item;
 
@@ -1745,7 +1751,7 @@ void BLSURFPluginGUI_HypothesisCreator::onPeriodicityTreeClicked(QTreeWidgetItem
 {
   QString shapeName, shapeEntry;
   CORBA::Object_var shape;
-  size_t k=0;
+  int k=0;
   ListOfWidgets::const_iterator anIt = myPeriodicitySelectionWidgets.begin();
   for (; anIt != myPeriodicitySelectionWidgets.end(); anIt++, k++)
     {
@@ -2013,8 +2019,8 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
     {
       string shapeEntry = periodicity_i[k];
       string shapeName = myGeomToolSelected->getNameFromEntry(shapeEntry);
-      item->setData(k, Qt::EditRole, shapeName.c_str() );
-      item->setData(k, Qt::UserRole, shapeEntry.c_str() );
+      item->setData((int) k, Qt::EditRole, shapeName.c_str() );
+      item->setData((int) k, Qt::UserRole, shapeEntry.c_str() );
     }
   }
 
@@ -2128,7 +2134,7 @@ bool BLSURFPluginGUI_HypothesisCreator::readParamsFromHypo( BlsurfHypothesisData
     fullSizeMapList = fullSizeMaps.split( "|", QString::KeepEmptyParts );
     if ( fullSizeMapList.count() > 1 ) {
       string fullSizeMap = fullSizeMapList[1].toStdString();
-      int pos = fullSizeMap.find("return")+7;
+      size_t pos = fullSizeMap.find("return")+7;
       QString sizeMap;
       try {
         sizeMap = QString::fromStdString(fullSizeMap.substr(pos, fullSizeMap.size()-pos));
@@ -2270,7 +2276,7 @@ void BLSURFPluginGUI_HypothesisCreator::AddPreCadSequenceToVector(BlsurfHypothes
     BLSURFPlugin::TPeriodicityList_var preCadFacePeriodicityVector, bool onFace) const
 {
 
-  for (size_t i=0; i<preCadFacePeriodicityVector->length(); i++ )
+  for (CORBA::ULong i=0; i<preCadFacePeriodicityVector->length(); i++ )
     {
       TPreCadPeriodicity periodicity_i(PERIODICITY_NB_COLUMN);
       periodicity_i[PERIODICITY_OBJ_SOURCE_COLUMN] = preCadFacePeriodicityVector[i].shape1Entry.in();
@@ -2355,11 +2361,11 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
     if ( h->GetVolumeGradation() !=  h_data.myVolumeGradation )
       h->SetVolumeGradation( h_data.myVolumeGradation <= 0 ? -1 : h_data.myVolumeGradation );
 
-    h->SetSurfaceProximity        ( h_data.myUseSurfaceProximity      );
-    h->SetNbSurfaceProximityLayers( h_data.myNbSurfaceProximityLayers );
+    h->SetSurfaceProximity        ((CORBA::Short) h_data.myUseSurfaceProximity      );
+    h->SetNbSurfaceProximityLayers((CORBA::Short) h_data.myNbSurfaceProximityLayers );
     h->SetSurfaceProximityRatio   ( h_data.mySurfaceProximityRatio    );
-    h->SetVolumeProximity         ( h_data.myUseVolumeProximity       );
-    h->SetNbVolumeProximityLayers ( h_data.myNbVolumeProximityLayers  );
+    h->SetVolumeProximity         ((CORBA::Short) h_data.myUseVolumeProximity       );
+    h->SetNbVolumeProximityLayers ((CORBA::Short) h_data.myNbVolumeProximityLayers  );
     h->SetVolumeProximityRatio    ( h_data.myVolumeProximityRatio     );
 
     if ( h->GetElementType() != h_data.myElementType )
@@ -2403,7 +2409,7 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
       h->SetQuadraticMesh( h_data.myQuadraticMesh );
 
     if ( h->GetVerbosity() != h_data.myVerbosity )
-      h->SetVerbosity( h_data.myVerbosity );
+      h->SetVerbosity((CORBA::Short) h_data.myVerbosity );
     // if ( h->GetTopology() != h_data.myTopology )
     //   h->SetTopology( (int) h_data.myTopology );
     // if ( h->GetPreCADMergeEdges() != h_data.myPreCADMergeEdges )
@@ -2809,7 +2815,7 @@ void BLSURFPluginGUI_HypothesisCreator::onMapGeomContentModified()
 }
 
 void BLSURFPluginGUI_HypothesisCreator::onSmpItemClicked(QTreeWidgetItem * item, int col)
-{ 
+{
   BLSURFPluginGUI_HypothesisCreator* that = (BLSURFPluginGUI_HypothesisCreator*)this;
   if (col == SMP_SIZEMAP_COLUMN) {
     QString entry   = item->data( SMP_ENTRY_COLUMN, Qt::EditRole ).toString();
@@ -2833,7 +2839,7 @@ void BLSURFPluginGUI_HypothesisCreator::onSmpItemClicked(QTreeWidgetItem * item,
       const TAttractorVec& attVec = myATTMap[entry];
       if ( !attVec.empty() )
       {
-        int iAtt = 0;
+        size_t iAtt = 0;
         if ( !childEntry.isEmpty() )
           for ( size_t i = 0; i < attVec.size(); ++i )
             if ( childEntry == attVec[i].attEntry.c_str() )

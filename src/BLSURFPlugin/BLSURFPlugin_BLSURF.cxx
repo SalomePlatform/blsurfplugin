@@ -1565,7 +1565,7 @@ namespace
       //double tol = (( u2node.rbegin()->first - u2node.begin()->first ) / 20.) / u2node.size();
       Standard_Real f,l;
       BRep_Tool::Range( TopoDS::Edge( shape ), f,l );
-      double tol = (( l - f ) / 10.) / u2node.size(); // 10. - adjusted for #17262
+      double tol = (( l - f ) / 10.) / double( u2node.size() ); // 10. - adjusted for #17262
 
       std::multimap< double, const SMDS_MeshNode* >::iterator un2, un1;
       for ( un2 = u2node.begin(), un1 = un2++; un2 != u2node.end(); un1 = un2++ )
@@ -1818,7 +1818,7 @@ namespace
           if ( !n2nIt->second ) {
             n->GetXYZ( xyz );
             gp_XY uv = tmpHelper.GetNodeUV( _proxyFace, n );
-            n2nIt->second = helper.AddNode( xyz[0], xyz[1], xyz[2], uv.X(), uv.Y() );
+            n2nIt->second = helper.AddNode( xyz[0], xyz[1], xyz[2], /*id=*/0, uv.X(), uv.Y() );
           }
           nodes[ nbN ] = n2nIt->second;
         }
@@ -2240,7 +2240,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
           tmin = nodeDataVec.front().param;
           tmax = nodeDataVec.back().param;
 
-          existingPhySize += nodeData->Length() / ( nodeDataVec.size() - 1 );
+          existingPhySize += nodeData->Length() / double( nodeDataVec.size() - 1 );
         }
         else
         {
@@ -2288,7 +2288,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
       if ( nodeData )
       {
         const std::vector<UVPtStruct>& nodeDataVec = nodeData->GetUVPtStruct();
-        const int                      nbNodes     = nodeDataVec.size();
+        const int                      nbNodes     = (int) nodeDataVec.size();
 
         dcad_edge_discretization_t *dedge;
         dcad_get_edge_discretization(dcad, edg, &dedge);
@@ -2415,8 +2415,9 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
       {
         // If no source points, call periodicity without transformation function
         meshgems_cad_periodicity_transformation_t periodicity_transformation = NULL;
-        status = cad_add_face_multiple_periodicity_with_transformation_function(c, theFace1_ids_c, theFace1_ids.size(),
-                                                                                theFace2_ids_c, theFace2_ids.size(), periodicity_transformation, NULL);
+        status = cad_add_face_multiple_periodicity_with_transformation_function
+          (c, theFace1_ids_c, (meshgems_integer) theFace1_ids.size(), theFace2_ids_c,
+           (meshgems_integer) theFace2_ids.size(), periodicity_transformation, NULL);
         if(status != STATUS_OK)
           cout << "cad_add_face_multiple_periodicity_with_transformation_function failed with error code " << status << "\n";
       }
@@ -2425,11 +2426,12 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
         // get the transformation vertices
         double* theSourceVerticesCoords_c = &_preCadFacesIDsPeriodicityVector[i].theSourceVerticesCoords[0];
         double* theTargetVerticesCoords_c = &_preCadFacesIDsPeriodicityVector[i].theTargetVerticesCoords[0];
-        int nbSourceVertices = _preCadFacesIDsPeriodicityVector[i].theSourceVerticesCoords.size()/3;
-        int nbTargetVertices = _preCadFacesIDsPeriodicityVector[i].theTargetVerticesCoords.size()/3;
+        int nbSourceVertices = (int)_preCadFacesIDsPeriodicityVector[i].theSourceVerticesCoords.size()/3;
+        int nbTargetVertices = (int)_preCadFacesIDsPeriodicityVector[i].theTargetVerticesCoords.size()/3;
 
-        status = cad_add_face_multiple_periodicity_with_transformation_function_by_points(c, theFace1_ids_c, theFace1_ids.size(),
-                                                                                          theFace2_ids_c, theFace2_ids.size(), theSourceVerticesCoords_c, nbSourceVertices, theTargetVerticesCoords_c, nbTargetVertices);
+        status = cad_add_face_multiple_periodicity_with_transformation_function_by_points
+          (c, theFace1_ids_c, (meshgems_integer) theFace1_ids.size(), theFace2_ids_c,
+           (meshgems_integer) theFace2_ids.size(), theSourceVerticesCoords_c, nbSourceVertices, theTargetVerticesCoords_c, nbTargetVertices);
         if(status != STATUS_OK)
           cout << "cad_add_face_multiple_periodicity_with_transformation_function_by_points failed with error code " << status << "\n";
       }
@@ -2460,8 +2462,9 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
       {
         // If no source points, call periodicity without transformation function
         meshgems_cad_periodicity_transformation_t periodicity_transformation = NULL;
-        status = cad_add_edge_multiple_periodicity_with_transformation_function(c, theEdge1_ids_c, theEdge1_ids.size(),
-                                                                                theEdge2_ids_c, theEdge2_ids.size(), periodicity_transformation, NULL);
+        status = cad_add_edge_multiple_periodicity_with_transformation_function
+          (c, theEdge1_ids_c, (meshgems_integer) theEdge1_ids.size(), theEdge2_ids_c,
+           (meshgems_integer) theEdge2_ids.size(), periodicity_transformation, NULL);
         if(status != STATUS_OK)
           cout << "cad_add_edge_multiple_periodicity_with_transformation_function failed with error code " << status << "\n";
       }
@@ -2470,11 +2473,12 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
         // get the transformation vertices
         double* theSourceVerticesCoords_c = &_preCadEdgesIDsPeriodicityVector[i].theSourceVerticesCoords[0];
         double* theTargetVerticesCoords_c = &_preCadEdgesIDsPeriodicityVector[i].theTargetVerticesCoords[0];
-        int nbSourceVertices = _preCadEdgesIDsPeriodicityVector[i].theSourceVerticesCoords.size()/3;
-        int nbTargetVertices = _preCadEdgesIDsPeriodicityVector[i].theTargetVerticesCoords.size()/3;
+        int nbSourceVertices = (int) _preCadEdgesIDsPeriodicityVector[i].theSourceVerticesCoords.size()/3;
+        int nbTargetVertices = (int) _preCadEdgesIDsPeriodicityVector[i].theTargetVerticesCoords.size()/3;
 
-        status = cad_add_edge_multiple_periodicity_with_transformation_function_by_points(c, theEdge1_ids_c, theEdge1_ids.size(),
-                                                                                          theEdge2_ids_c, theEdge2_ids.size(), theSourceVerticesCoords_c, nbSourceVertices, theTargetVerticesCoords_c, nbTargetVertices);
+        status = cad_add_edge_multiple_periodicity_with_transformation_function_by_points
+          (c, theEdge1_ids_c, (meshgems_integer) theEdge1_ids.size(), theEdge2_ids_c,
+           (meshgems_integer) theEdge2_ids.size(), theSourceVerticesCoords_c, nbSourceVertices, theTargetVerticesCoords_c, nbTargetVertices);
         if(status != STATUS_OK)
           cout << "cad_add_edge_multiple_periodicity_with_transformation_function_by_points failed with error code " << status << "\n";
       }
@@ -2960,6 +2964,10 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh & aMesh, SMESH_MesherHelper* aHelpe
   context_t *ctx = context_new();
   if (!ctx) return error("Pb in context_new()");
 
+  if ( aMesh.NbNodes() > std::numeric_limits< meshgems_integer >::max() ||
+       aMesh.NbFaces() > std::numeric_limits< meshgems_integer >::max() )
+    return error("Too large input mesh");
+
   BLSURF_Cleaner cleaner( ctx );
 
   message_cb_user_data mcud;
@@ -2978,7 +2986,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh & aMesh, SMESH_MesherHelper* aHelpe
   // Fill an input mesh
 
   mesh_t * msh = meshgems_mesh_new_in_memory( ctx );
-  if ( !msh ) return error("Pb. in meshgems_mesh_new_in_memory()"); 
+  if ( !msh ) return error("Pb. in meshgems_mesh_new_in_memory()");
 
   // mark nodes used by 2D elements
   SMESHDS_Mesh* meshDS = aMesh.GetMeshDS();
@@ -2988,7 +2996,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh & aMesh, SMESH_MesherHelper* aHelpe
     const SMDS_MeshNode* n = nodeIt->next();
     n->setIsMarked( n->NbInverseElements( SMDSAbs_Face ));
   }
-  meshgems_mesh_set_vertex_count( msh, meshDS->NbNodes() );
+  meshgems_mesh_set_vertex_count( msh, (meshgems_integer) meshDS->NbNodes() );
 
   // set node coordinates
   if ( meshDS->NbNodes() != meshDS->MaxNodeID() )
@@ -3005,8 +3013,8 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh & aMesh, SMESH_MesherHelper* aHelpe
   }
 
   // set nodes of faces
-  meshgems_mesh_set_triangle_count  ( msh, meshDS->GetMeshInfo().NbTriangles() );
-  meshgems_mesh_set_quadrangle_count( msh, meshDS->GetMeshInfo().NbQuadrangles() );
+  meshgems_mesh_set_triangle_count  ( msh, (meshgems_integer) meshDS->GetMeshInfo().NbTriangles() );
+  meshgems_mesh_set_quadrangle_count( msh, (meshgems_integer) meshDS->GetMeshInfo().NbQuadrangles() );
   meshgems_integer nodeIDs[4];
   meshgems_integer iT = 1, iQ = 1;
   SMDS_FaceIteratorPtr faceIt = meshDS->facesIterator();
@@ -3017,7 +3025,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh & aMesh, SMESH_MesherHelper* aHelpe
     if ( nbNodes > 4 || face->IsPoly() ) continue;
 
     for ( i = 0; i < nbNodes; ++i )
-      nodeIDs[i] = face->GetNode( i )->GetID();
+      nodeIDs[i] = (meshgems_integer) face->GetNode( i )->GetID();
     if ( nbNodes == 3 )
       meshgems_mesh_set_triangle_vertices  ( msh, iT++, nodeIDs );
     else
@@ -3077,7 +3085,7 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh & aMesh, SMESH_MesherHelper* aHelpe
   {
     meshgems_mesh_get_vertex_coordinates( omsh, i, xyz );
     SMDS_MeshNode* n = meshDS->AddNode( xyz[0], xyz[1], xyz[2] );
-    nodeID = n->GetID();
+    nodeID = (meshgems_integer) n->GetID();
     meshgems_mesh_set_vertex_tag( omsh, i, &nodeID ); // save mapping of IDs in MG and SALOME meshes
   }
 
@@ -3417,7 +3425,7 @@ status_t message_cb(message_t *msg, void *user_data)
        err.find("periodicity") != string::npos )
   {
     // remove ^A from the tail
-    int len = strlen( desc );
+    size_t len = strlen( desc );
     while (len > 0 && desc[len-1] != '\n')
       len--;
     mcud->_error->append( desc, len );
@@ -3523,8 +3531,8 @@ bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh&         aMesh,
       nb1d = (int)( fullAng/_angleMesh + 1 );
     }
     fullNbSeg += nb1d;
-    std::vector<int> aVec(SMDSEntity_Last);
-    for(int i=SMDSEntity_Node; i<SMDSEntity_Last; i++) aVec[i]=0;
+    std::vector<smIdType> aVec(SMDSEntity_Last);
+    for(smIdType i=SMDSEntity_Node; i<SMDSEntity_Last; i++) aVec[i]=0;
     if( IsQuadratic > 0 ) {
       aVec[SMDSEntity_Node] = 2*nb1d - 1;
       aVec[SMDSEntity_Quad_Edge] = nb1d;
@@ -3571,7 +3579,7 @@ bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh&         aMesh,
         nbTria = nbQuad = nbTria / 3 + 1;
       }
     }
-    std::vector<int> aVec(SMDSEntity_Last,0);
+    std::vector<smIdType> aVec(SMDSEntity_Last,0);
     if( IsQuadratic ) {
       int nb1d_in = (nbTria*3 - nb1d) / 2;
       aVec[SMDSEntity_Node] = nbNodes + nb1d_in;
@@ -3595,8 +3603,8 @@ bool BLSURFPlugin_BLSURF::Evaluate(SMESH_Mesh&         aMesh,
   double tetrVol = 0.1179*ELen*ELen*ELen;
   int nbVols  = int(aVolume/tetrVol);
   int nb1d_in = int(( nbVols*6 - fullNbSeg ) / 6 );
-  std::vector<int> aVec(SMDSEntity_Last);
-  for(int i=SMDSEntity_Node; i<SMDSEntity_Last; i++) aVec[i]=0;
+  std::vector<smIdType> aVec(SMDSEntity_Last);
+  for(smIdType i=SMDSEntity_Node; i<SMDSEntity_Last; i++) aVec[i]=0;
   if( IsQuadratic ) {
     aVec[SMDSEntity_Node] = nb1d_in/3 + 1 + nb1d_in;
     aVec[SMDSEntity_Quad_Tetra] = nbVols;

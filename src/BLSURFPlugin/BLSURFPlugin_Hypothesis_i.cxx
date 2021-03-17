@@ -829,7 +829,7 @@ void BLSURFPlugin_Hypothesis_i::SetNbSurfaceProximityLayers( CORBA::Short nbLaye
 
 CORBA::Short BLSURFPlugin_Hypothesis_i::GetNbSurfaceProximityLayers()
 {
-  return this->GetImpl()->GetNbSurfaceProximityLayers();
+  return (CORBA::Short) this->GetImpl()->GetNbSurfaceProximityLayers();
 }
 
 //=============================================================================
@@ -884,7 +884,7 @@ void BLSURFPlugin_Hypothesis_i::SetNbVolumeProximityLayers( CORBA::Short nbLayer
 
 CORBA::Short BLSURFPlugin_Hypothesis_i::GetNbVolumeProximityLayers()
 {
-  return this->GetImpl()->GetNbVolumeProximityLayers();
+  return (CORBA::Short) this->GetImpl()->GetNbVolumeProximityLayers();
 }
 
 //=============================================================================
@@ -1200,7 +1200,7 @@ void BLSURFPlugin_Hypothesis_i::SetHyperPatches(const BLSURFPlugin::THyperPatchL
   ::BLSURFPlugin_Hypothesis::THyperPatchList patchList( hpl.length() );
   SMESH_Comment hplDump;
   hplDump << "[";
-  for ( size_t i = 0; i < patchList.size(); ++i )
+  for ( CORBA::ULong i = 0; i < patchList.size(); ++i )
   {
     hplDump << "[ ";
     BLSURFPlugin::THyperPatch tags = hpl[ i ];
@@ -1225,7 +1225,7 @@ void BLSURFPlugin_Hypothesis_i::SetHyperPatchEntries(const BLSURFPlugin::THyperP
   ::BLSURFPlugin_Hypothesis::THyperPatchEntriesList patchList( hpe.length() );
   SMESH_Comment hpeDump;
   hpeDump << "[";
-  for ( size_t i = 0; i < patchList.size(); ++i )
+  for ( CORBA::ULong i = 0; i < patchList.size(); ++i )
   {
     hpeDump << "[ ";
     const BLSURFPlugin::THyperPatchEntries& entryList = hpe[ i ];
@@ -1250,7 +1250,7 @@ void BLSURFPlugin_Hypothesis_i::SetHyperPatchShapes(const BLSURFPlugin::THyperPa
 {
   BLSURFPlugin::THyperPatchEntriesList patchList;
   patchList.length( hpsl.length() );
-  for ( size_t i = 0; i < hpsl.length(); ++i )
+  for ( CORBA::ULong i = 0; i < hpsl.length(); ++i )
   {
     const GEOM::ListOfGO&             shapeList = hpsl[ i ];
     BLSURFPlugin::THyperPatchEntries& entryList = patchList[ i ];
@@ -1287,14 +1287,14 @@ BLSURFPlugin_Hypothesis_i::GetHyperPatches( GEOM::GEOM_Object_ptr mainShape )
       GetImpl()->SetHyperPatchIDsByEntry( S, entryToShape );
     }
   }
-  resHpl->length( hpl.size() );
+  resHpl->length((CORBA::ULong) hpl.size() );
 
   ::BLSURFPlugin_Hypothesis::THyperPatchList::const_iterator hpIt = hpl.begin();
   for ( int i = 0; hpIt != hpl.end(); ++hpIt, ++i )
   {
     const ::BLSURFPlugin_Hypothesis::THyperPatchTags& hp = *hpIt;
     BLSURFPlugin::THyperPatch& resHp = (*resHpl)[ i ];
-    resHp.length( hp.size() );
+    resHp.length((CORBA::ULong) hp.size() );
 
     ::BLSURFPlugin_Hypothesis::THyperPatchTags::const_iterator tag = hp.begin();
     for ( int j = 0; tag != hp.end(); ++tag, ++j )
@@ -1308,14 +1308,14 @@ BLSURFPlugin::THyperPatchEntriesList* BLSURFPlugin_Hypothesis_i::GetHyperPatchSh
 {
   const ::BLSURFPlugin_Hypothesis::THyperPatchEntriesList& hpel = GetImpl()->GetHyperPatchEntries();
   BLSURFPlugin::THyperPatchEntriesList* resHpl = new BLSURFPlugin::THyperPatchEntriesList();
-  resHpl->length( hpel.size() );
+  resHpl->length((CORBA::ULong) hpel.size() );
 
   ::BLSURFPlugin_Hypothesis::THyperPatchEntriesList::const_iterator hpIt = hpel.begin();
   for ( int i = 0; hpIt != hpel.end(); ++hpIt, ++i )
   {
     const ::BLSURFPlugin_Hypothesis::THyperPatchEntries& hp = *hpIt;
     BLSURFPlugin::THyperPatchEntries& resHp = (*resHpl)[ i ];
-    resHp.length( hp.size() );
+    resHp.length((CORBA::ULong) hp.size() );
 
     ::BLSURFPlugin_Hypothesis::THyperPatchEntries::const_iterator entry = hp.begin();
     for ( int j = 0; entry != hp.end(); ++entry, ++j )
@@ -1516,7 +1516,7 @@ void BLSURFPlugin_Hypothesis_i::SetOptionValue(const char* optionName, const cha
       SetVolumeProximityRatio( GetImpl()->ToDbl( optionValue ));
 
     else if ( name == "prox_nb_layer" )
-      SetNbVolumeProximityLayers( GetImpl()->ToInt( optionValue ));
+      SetNbVolumeProximityLayers((CORBA::Short) GetImpl()->ToInt( optionValue ));
 
     // advanced options (for backward compatibility)
 
@@ -1680,7 +1680,7 @@ BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetOptionValues() {
   BLSURFPlugin::string_array_var result = new BLSURFPlugin::string_array();
 
   const ::BLSURFPlugin_Hypothesis::TOptionValues & opts = this->GetImpl()->GetOptionValues();
-  result->length(opts.size());
+  result->length((CORBA::ULong) opts.size());
   int i=0;
 
   bool isDefault;
@@ -1705,7 +1705,7 @@ BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetPreCADOptionValues() {
   BLSURFPlugin::string_array_var result = new BLSURFPlugin::string_array();
 
   const ::BLSURFPlugin_Hypothesis::TOptionValues & opts = this->GetImpl()->GetPreCADOptionValues();
-  result->length(opts.size());
+  result->length((CORBA::ULong) opts.size());
   int i=0;
 
   bool isDefault;
@@ -1729,7 +1729,7 @@ BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetAdvancedOptionValues()
   BLSURFPlugin::string_array_var result = new BLSURFPlugin::string_array();
 
   const ::BLSURFPlugin_Hypothesis::TOptionValues & custom_opts = this->GetImpl()->GetCustomOptionValues();
-  result->length(custom_opts.size());
+  result->length((CORBA::ULong) custom_opts.size());
   int i=0;
 
   ::BLSURFPlugin_Hypothesis::TOptionValues::const_iterator opIt = custom_opts.begin();
@@ -1874,7 +1874,7 @@ void BLSURFPlugin_Hypothesis_i::AddOption(const char* optionName, const char* op
       SetVolumeProximityRatio( GetImpl()->ToDbl( optionValue ));
 
     else if ( name == "prox_nb_layer" )
-      SetNbVolumeProximityLayers( GetImpl()->ToInt( optionValue ));
+      SetNbVolumeProximityLayers( (CORBA::Short) GetImpl()->ToInt( optionValue ));
   }
   bool valueChanged = (this->GetImpl()->GetOption(optionName) != optionValue);
   if (valueChanged) {
@@ -2097,7 +2097,7 @@ BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetSizeMapEntries() {
   BLSURFPlugin::string_array_var result = new BLSURFPlugin::string_array();
 
   const ::BLSURFPlugin_Hypothesis::TSizeMap sizeMaps = this->GetImpl()->_GetSizeMapEntries();
-  result->length(sizeMaps.size());
+  result->length((CORBA::ULong) sizeMaps.size());
 
   ::BLSURFPlugin_Hypothesis::TSizeMap::const_iterator smIt = sizeMaps.begin();
   for (int i = 0; smIt != sizeMaps.end(); ++smIt, ++i) {
@@ -2118,7 +2118,7 @@ BLSURFPlugin::string_array* BLSURFPlugin_Hypothesis_i::GetAttractorEntries() {
   BLSURFPlugin::string_array_var result = new BLSURFPlugin::string_array();
 
   const ::BLSURFPlugin_Hypothesis::TSizeMap attractors = this->GetImpl()->_GetAttractorEntries();
-  result->length(attractors.size());
+  result->length((CORBA::ULong) attractors.size());
 
   ::BLSURFPlugin_Hypothesis::TSizeMap::const_iterator atIt = attractors.begin();
   for (int i = 0; atIt != attractors.end(); ++atIt, ++i) {
@@ -2140,7 +2140,7 @@ BLSURFPlugin::TAttParamsMap* BLSURFPlugin_Hypothesis_i::GetAttractorParams()
   BLSURFPlugin::TAttParamsMap_var result = new BLSURFPlugin::TAttParamsMap();
 
   const ::BLSURFPlugin_Hypothesis::TAttractorMap attractors= this->GetImpl()->_GetClassAttractorEntries();
-  result->length( attractors.size() );
+  result->length((CORBA::ULong) attractors.size() );
 
   ::BLSURFPlugin_Hypothesis::TAttractorMap::const_iterator atIt = attractors.begin();
   for ( int i = 0 ; atIt != attractors.end(); ++atIt, ++i ) {
@@ -2358,7 +2358,7 @@ BLSURFPlugin::TFaceEntryEnfVertexListMap* BLSURFPlugin_Hypothesis_i::GetAllEnfor
 
   const ::BLSURFPlugin_Hypothesis::TFaceEntryEnfVertexListMap faceEntryEnfVertexListMap =
     this->GetImpl()->_GetAllEnforcedVerticesByFace();
-  resultMap->length(faceEntryEnfVertexListMap.size());
+  resultMap->length((CORBA::ULong) faceEntryEnfVertexListMap.size());
 
   ::BLSURFPlugin_Hypothesis::TEnfVertexList _enfVertexList;
   ::BLSURFPlugin_Hypothesis::TFaceEntryEnfVertexListMap::const_iterator it_entry = faceEntryEnfVertexListMap.begin();
@@ -2369,7 +2369,7 @@ BLSURFPlugin::TFaceEntryEnfVertexListMap* BLSURFPlugin_Hypothesis_i::GetAllEnfor
 
     _enfVertexList = it_entry->second;
     BLSURFPlugin::TEnfVertexList_var enfVertexList = new BLSURFPlugin::TEnfVertexList();
-    enfVertexList->length(_enfVertexList.size());
+    enfVertexList->length((CORBA::ULong) _enfVertexList.size());
 
     ::BLSURFPlugin_Hypothesis::TEnfVertexList::const_iterator it_enfVertex = _enfVertexList.begin();
     ::BLSURFPlugin_Hypothesis::TEnfVertex *currentEnfVertex;
@@ -2386,7 +2386,7 @@ BLSURFPlugin::TFaceEntryEnfVertexListMap* BLSURFPlugin_Hypothesis_i::GetAllEnfor
 
       // Coords
       BLSURFPlugin::TEnfVertexCoords_var coords = new BLSURFPlugin::TEnfVertexCoords();
-      coords->length(currentEnfVertex->coords.size());
+      coords->length((CORBA::ULong) currentEnfVertex->coords.size());
       for (CORBA::ULong i=0;i<coords->length();i++)
         coords[i] = currentEnfVertex->coords[i];
       enfVertex->coords = coords;
@@ -2396,7 +2396,7 @@ BLSURFPlugin::TFaceEntryEnfVertexListMap* BLSURFPlugin_Hypothesis_i::GetAllEnfor
       
       // Face entry list
       BLSURFPlugin::TEntryList_var faceEntryList = new BLSURFPlugin::TEntryList();
-      faceEntryList->length(currentEnfVertex->faceEntries.size());
+      faceEntryList->length((CORBA::ULong) currentEnfVertex->faceEntries.size());
       ::BLSURFPlugin_Hypothesis::TEntryList::const_iterator it_entry = currentEnfVertex->faceEntries.begin();
       for (int ind = 0; it_entry != currentEnfVertex->faceEntries.end();++it_entry, ++ind)
         faceEntryList[ind] = CORBA::string_dup((*it_entry).c_str());
@@ -2429,7 +2429,7 @@ BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetAllEnforcedVertices(
   ASSERT(myBaseImpl);
   BLSURFPlugin::TEnfVertexList_var resultMap = new BLSURFPlugin::TEnfVertexList();
   const ::BLSURFPlugin_Hypothesis::TEnfVertexList enfVertexList = this->GetImpl()->_GetAllEnforcedVertices();
-  resultMap->length(enfVertexList.size());
+  resultMap->length((CORBA::ULong) enfVertexList.size());
 
   ::BLSURFPlugin_Hypothesis::TEnfVertexList::const_iterator evlIt = enfVertexList.begin();
   ::BLSURFPlugin_Hypothesis::TEnfVertex *currentEnfVertex;
@@ -2442,7 +2442,7 @@ BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetAllEnforcedVertices(
     enfVertex->geomEntry = CORBA::string_dup(currentEnfVertex->geomEntry.c_str());
     // Coords
     BLSURFPlugin::TEnfVertexCoords_var coords = new BLSURFPlugin::TEnfVertexCoords();
-    coords->length(currentEnfVertex->coords.size());
+    coords->length((CORBA::ULong) currentEnfVertex->coords.size());
     for (CORBA::ULong ind = 0; ind < coords->length(); ind++)
       coords[ind] = currentEnfVertex->coords[ind];
     enfVertex->coords = coords;
@@ -2450,7 +2450,7 @@ BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetAllEnforcedVertices(
     enfVertex->grpName = CORBA::string_dup(currentEnfVertex->grpName.c_str());  
     // Face entry list
     BLSURFPlugin::TEntryList_var faceEntryList = new BLSURFPlugin::TEntryList();
-    faceEntryList->length(currentEnfVertex->faceEntries.size());
+    faceEntryList->length((CORBA::ULong) currentEnfVertex->faceEntries.size());
     ::BLSURFPlugin_Hypothesis::TEntryList::const_iterator it_entry = currentEnfVertex->faceEntries.begin();
     for (int ind = 0; it_entry != currentEnfVertex->faceEntries.end();++it_entry, ++ind)
       faceEntryList[ind] = CORBA::string_dup((*it_entry).c_str());
@@ -2482,7 +2482,7 @@ BLSURFPlugin::TFaceEntryCoordsListMap* BLSURFPlugin_Hypothesis_i::GetAllCoordsBy
   BLSURFPlugin::TFaceEntryCoordsListMap_var resultMap = new BLSURFPlugin::TFaceEntryCoordsListMap();
 
   const ::BLSURFPlugin_Hypothesis::TFaceEntryCoordsListMap entryCoordsListMap = this->GetImpl()->_GetAllCoordsByFace();
-  resultMap->length(entryCoordsListMap.size());
+  resultMap->length((CORBA::ULong) entryCoordsListMap.size());
 
   ::BLSURFPlugin_Hypothesis::TEnfVertexCoordsList _coordsList;
   ::BLSURFPlugin_Hypothesis::TFaceEntryCoordsListMap::const_iterator it_entry = entryCoordsListMap.begin();
@@ -2492,12 +2492,12 @@ BLSURFPlugin::TFaceEntryCoordsListMap* BLSURFPlugin_Hypothesis_i::GetAllCoordsBy
 
     _coordsList = it_entry->second;
     BLSURFPlugin::TEnfVertexCoordsList_var coordsList = new BLSURFPlugin::TEnfVertexCoordsList();
-    coordsList->length(_coordsList.size());
+    coordsList->length((CORBA::ULong) _coordsList.size());
 
     ::BLSURFPlugin_Hypothesis::TEnfVertexCoordsList::const_iterator it_coords = _coordsList.begin();
     for (int j = 0; it_coords != _coordsList.end(); ++it_coords, ++j) {
       BLSURFPlugin::TEnfVertexCoords_var coords = new BLSURFPlugin::TEnfVertexCoords();
-      coords->length((*it_coords).size());
+      coords->length((CORBA::ULong) (*it_coords).size());
       for (CORBA::ULong i=0;i<coords->length();i++)
         coords[i] = (*it_coords)[i];
       coordsList[j] = coords;
@@ -2520,7 +2520,7 @@ BLSURFPlugin::TCoordsEnfVertexMap* BLSURFPlugin_Hypothesis_i::GetAllEnforcedVert
   BLSURFPlugin::TCoordsEnfVertexMap_var resultMap = new BLSURFPlugin::TCoordsEnfVertexMap();
   const ::BLSURFPlugin_Hypothesis::TCoordsEnfVertexMap coordsEnfVertexMap =
     this->GetImpl()->_GetAllEnforcedVerticesByCoords();
-  resultMap->length(coordsEnfVertexMap.size());
+  resultMap->length((CORBA::ULong) coordsEnfVertexMap.size());
 
   ::BLSURFPlugin_Hypothesis::TCoordsEnfVertexMap::const_iterator it_coords = coordsEnfVertexMap.begin();
   ::BLSURFPlugin_Hypothesis::TEnfVertex *currentEnfVertex;
@@ -2528,7 +2528,7 @@ BLSURFPlugin::TCoordsEnfVertexMap* BLSURFPlugin_Hypothesis_i::GetAllEnforcedVert
     currentEnfVertex = (it_coords->second);
     BLSURFPlugin::TCoordsEnfVertexElement_var mapElement = new BLSURFPlugin::TCoordsEnfVertexElement();
     BLSURFPlugin::TEnfVertexCoords_var coords = new BLSURFPlugin::TEnfVertexCoords();
-    coords->length(it_coords->first.size());
+    coords->length((CORBA::ULong) it_coords->first.size());
     for (CORBA::ULong ind=0;ind<coords->length();ind++)
       coords[ind] = it_coords->first[ind];
     mapElement->coords = coords;
@@ -2540,7 +2540,7 @@ BLSURFPlugin::TCoordsEnfVertexMap* BLSURFPlugin_Hypothesis_i::GetAllEnforcedVert
     enfVertex->geomEntry = CORBA::string_dup(currentEnfVertex->geomEntry.c_str());
     // Coords
     BLSURFPlugin::TEnfVertexCoords_var coords2 = new BLSURFPlugin::TEnfVertexCoords();
-    coords2->length(currentEnfVertex->coords.size());
+    coords2->length((CORBA::ULong) currentEnfVertex->coords.size());
     for (CORBA::ULong ind=0;ind<coords2->length();ind++)
       coords2[ind] = currentEnfVertex->coords[ind];
     enfVertex->coords = coords2;
@@ -2548,7 +2548,7 @@ BLSURFPlugin::TCoordsEnfVertexMap* BLSURFPlugin_Hypothesis_i::GetAllEnforcedVert
     enfVertex->grpName = CORBA::string_dup(currentEnfVertex->grpName.c_str());  
     // Face entry list
     BLSURFPlugin::TEntryList_var faceEntryList = new BLSURFPlugin::TEntryList();
-    faceEntryList->length(currentEnfVertex->faceEntries.size());
+    faceEntryList->length((CORBA::ULong) currentEnfVertex->faceEntries.size());
     ::BLSURFPlugin_Hypothesis::TEntryList::const_iterator it_entry = currentEnfVertex->faceEntries.begin();
     for (int ind = 0; it_entry != currentEnfVertex->faceEntries.end();++it_entry, ++ind)
       faceEntryList[ind] = CORBA::string_dup((*it_entry).c_str());
@@ -2581,7 +2581,7 @@ BLSURFPlugin::TFaceEntryEnfVertexEntryListMap* BLSURFPlugin_Hypothesis_i::GetAll
 
   const ::BLSURFPlugin_Hypothesis::TFaceEntryEnfVertexEntryListMap entryEnfVertexEntryListMap =
     this->GetImpl()->_GetAllEnfVertexEntriesByFace();
-  resultMap->length(entryEnfVertexEntryListMap.size());
+  resultMap->length((CORBA::ULong) entryEnfVertexEntryListMap.size());
 
   ::BLSURFPlugin_Hypothesis::TEntryList _enfVertexEntryList;
   ::BLSURFPlugin_Hypothesis::TFaceEntryEnfVertexEntryListMap::const_iterator it_entry =
@@ -2593,7 +2593,7 @@ BLSURFPlugin::TFaceEntryEnfVertexEntryListMap* BLSURFPlugin_Hypothesis_i::GetAll
 
     _enfVertexEntryList = it_entry->second;
     BLSURFPlugin::TEntryList_var enfVertexEntryList = new BLSURFPlugin::TEntryList();
-    enfVertexEntryList->length(_enfVertexEntryList.size());
+    enfVertexEntryList->length((CORBA::ULong) _enfVertexEntryList.size());
 
     ::BLSURFPlugin_Hypothesis::TEntryList::const_iterator it_enfVertexEntry = _enfVertexEntryList.begin();
     for (int j = 0; it_enfVertexEntry != _enfVertexEntryList.end(); ++it_enfVertexEntry, ++j) {
@@ -2617,7 +2617,7 @@ BLSURFPlugin::TEnfVertexEntryEnfVertexMap* BLSURFPlugin_Hypothesis_i::GetAllEnfo
   BLSURFPlugin::TEnfVertexEntryEnfVertexMap_var resultMap = new BLSURFPlugin::TEnfVertexEntryEnfVertexMap();
   const ::BLSURFPlugin_Hypothesis::TEnfVertexEntryEnfVertexMap enfVertexEntryEnfVertexMap =
     this->GetImpl()->_GetAllEnforcedVerticesByEnfVertexEntry();
-  resultMap->length(enfVertexEntryEnfVertexMap.size());
+  resultMap->length((CORBA::ULong) enfVertexEntryEnfVertexMap.size());
 
   ::BLSURFPlugin_Hypothesis::TEnfVertexEntryEnfVertexMap::const_iterator it_enfVertexEntry = enfVertexEntryEnfVertexMap.begin();
   ::BLSURFPlugin_Hypothesis::TEnfVertex *currentEnfVertex;
@@ -2633,7 +2633,7 @@ BLSURFPlugin::TEnfVertexEntryEnfVertexMap* BLSURFPlugin_Hypothesis_i::GetAllEnfo
     enfVertex->geomEntry = CORBA::string_dup(currentEnfVertex->geomEntry.c_str());
     // Coords
     BLSURFPlugin::TEnfVertexCoords_var coords = new BLSURFPlugin::TEnfVertexCoords();
-    coords->length(currentEnfVertex->coords.size());
+    coords->length((CORBA::ULong) currentEnfVertex->coords.size());
     for (CORBA::ULong ind=0;ind<coords->length();ind++)
       coords[ind] = currentEnfVertex->coords[ind];
     enfVertex->coords = coords;
@@ -2641,7 +2641,7 @@ BLSURFPlugin::TEnfVertexEntryEnfVertexMap* BLSURFPlugin_Hypothesis_i::GetAllEnfo
     enfVertex->grpName = CORBA::string_dup(currentEnfVertex->grpName.c_str());  
     // Face entry list
     BLSURFPlugin::TEntryList_var faceEntryList = new BLSURFPlugin::TEntryList();
-    faceEntryList->length(currentEnfVertex->faceEntries.size());
+    faceEntryList->length((CORBA::ULong) currentEnfVertex->faceEntries.size());
     ::BLSURFPlugin_Hypothesis::TEntryList::const_iterator it_entry = currentEnfVertex->faceEntries.begin();
     for (int ind = 0; it_entry != currentEnfVertex->faceEntries.end();++it_entry, ++ind)
       faceEntryList[ind] = CORBA::string_dup((*it_entry).c_str());
@@ -3377,7 +3377,7 @@ BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVerticesEntr
   try {
     BLSURFPlugin::TEnfVertexList_var vertexList = new BLSURFPlugin::TEnfVertexList();
     ::BLSURFPlugin_Hypothesis::TEnfVertexList _vList = this->GetImpl()->GetEnfVertexList(entry);
-    vertexList->length(_vList.size());
+    vertexList->length((CORBA::ULong) _vList.size());
     ::BLSURFPlugin_Hypothesis::TEnfVertexList::const_iterator evlIt = _vList.begin();
     for (int i = 0; evlIt != _vList.end(); ++evlIt, ++i) {
       ::BLSURFPlugin_Hypothesis::TEnfVertex *_enfVertex = (*evlIt);
@@ -3390,7 +3390,7 @@ BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVerticesEntr
       enfVertex->geomEntry = CORBA::string_dup(_enfVertex->geomEntry.c_str());
       // Coords
       BLSURFPlugin::TEnfVertexCoords_var coords = new BLSURFPlugin::TEnfVertexCoords();
-      coords->length(_enfVertex->coords.size());
+      coords->length((CORBA::ULong) _enfVertex->coords.size());
       for ( CORBA::ULong ind = 0; ind < coords->length(); ind++ )
         coords[ind] = _enfVertex->coords[ind];
       enfVertex->coords = coords;
@@ -3398,7 +3398,7 @@ BLSURFPlugin::TEnfVertexList* BLSURFPlugin_Hypothesis_i::GetEnforcedVerticesEntr
       enfVertex->grpName = CORBA::string_dup(_enfVertex->grpName.c_str());
       // Face entry list
       BLSURFPlugin::TEntryList_var faceEntryList = new BLSURFPlugin::TEntryList();
-      faceEntryList->length(_enfVertex->faceEntries.size());
+      faceEntryList->length((CORBA::ULong) _enfVertex->faceEntries.size());
       ::BLSURFPlugin_Hypothesis::TEntryList::const_iterator it_entry = _enfVertex->faceEntries.begin();
       for (int ind = 0; it_entry != _enfVertex->faceEntries.end();++it_entry, ++ind)
         faceEntryList[ind] = CORBA::string_dup((*it_entry).c_str());
@@ -3658,7 +3658,8 @@ void BLSURFPlugin_Hypothesis_i::CheckShapeTypes(GEOM::GEOM_Object_ptr shape, std
     if (i < theShapeTypes.size()-1 )
       typesTxt << ", ";
   }
-  if (!ok){
+  if (!ok)
+  {
     std::stringstream msg;
     msg << "shape type is not in" << typesTxt.str();
     THROW_SALOME_CORBA_EXCEPTION(msg.str().c_str(), SALOME::BAD_PARAM);
@@ -3760,9 +3761,9 @@ BLSURFPlugin::TPeriodicityList* BLSURFPlugin_Hypothesis_i::PreCadVectorToSequenc
 {
   BLSURFPlugin::TPeriodicityList_var periodicityList = new BLSURFPlugin::TPeriodicityList();
 
-  periodicityList->length(preCadPeriodicityVector.size());
+  periodicityList->length((CORBA::ULong) preCadPeriodicityVector.size());
 
-  for (size_t i = 0; i<preCadPeriodicityVector.size(); i++)
+  for ( CORBA::ULong i = 0; i<preCadPeriodicityVector.size(); i++)
   {
     ::BLSURFPlugin_Hypothesis::TPreCadPeriodicity preCadPeriodicityVector_i = preCadPeriodicityVector[i];
 
@@ -3773,8 +3774,8 @@ BLSURFPlugin::TPeriodicityList* BLSURFPlugin_Hypothesis_i::PreCadVectorToSequenc
     BLSURFPlugin::TEntryList_var sourceVertices = new BLSURFPlugin::TEntryList();
     if (! preCadPeriodicityVector_i.theSourceVerticesEntries.empty())
     {
-      sourceVertices->length(preCadPeriodicityVector_i.theSourceVerticesEntries.size());
-      for (size_t j=0; j<preCadPeriodicityVector_i.theSourceVerticesEntries.size(); j++)
+      sourceVertices->length((CORBA::ULong) preCadPeriodicityVector_i.theSourceVerticesEntries.size());
+      for (CORBA::ULong j=0; j<preCadPeriodicityVector_i.theSourceVerticesEntries.size(); j++)
         sourceVertices[j]=CORBA::string_dup(preCadPeriodicityVector_i.theSourceVerticesEntries[j].c_str());
     }
 
@@ -3783,8 +3784,8 @@ BLSURFPlugin::TPeriodicityList* BLSURFPlugin_Hypothesis_i::PreCadVectorToSequenc
     BLSURFPlugin::TEntryList_var targetVertices = new BLSURFPlugin::TEntryList();
     if (! preCadPeriodicityVector_i.theTargetVerticesEntries.empty())
     {
-      targetVertices->length(preCadPeriodicityVector_i.theTargetVerticesEntries.size());
-      for (size_t j=0; j<preCadPeriodicityVector_i.theTargetVerticesEntries.size(); j++)
+      targetVertices->length((CORBA::ULong) preCadPeriodicityVector_i.theTargetVerticesEntries.size());
+      for (CORBA::ULong j=0; j<preCadPeriodicityVector_i.theTargetVerticesEntries.size(); j++)
         targetVertices[j]=CORBA::string_dup(preCadPeriodicityVector_i.theTargetVerticesEntries[j].c_str());
     }
 
@@ -3830,10 +3831,10 @@ void BLSURFPlugin_Hypothesis_i::AddPreCadFacesPeriodicityWithVertices(GEOM::GEOM
 
   string prefix3 = "Source_vertex_";
   BLSURFPlugin::TEntryList_var theSourceVerticesEntries = new BLSURFPlugin::TEntryList();
-  theSourceVerticesEntries->length(theLength);
+  theSourceVerticesEntries->length((CORBA::ULong) theLength);
   GEOM::GEOM_Object_ptr theVtx_i;
   string theEntry_i;
-  for (size_t ind = 0; ind < theLength; ind++) {
+  for (CORBA::ULong ind = 0; ind < theLength; ind++) {
     theVtx_i = theSourceVertices[ind];
     theEntry_i = PublishIfNeeded(theVtx_i, GEOM::VERTEX, prefix3);
     theSourceVerticesEntries[ind] = CORBA::string_dup(theEntry_i.c_str());
@@ -3841,8 +3842,8 @@ void BLSURFPlugin_Hypothesis_i::AddPreCadFacesPeriodicityWithVertices(GEOM::GEOM
 
   string prefix4 = "Target_vertex_";
   BLSURFPlugin::TEntryList_var theTargetVerticesEntries = new BLSURFPlugin::TEntryList();
-  theTargetVerticesEntries->length(theLength);
-  for (size_t ind = 0; ind < theLength; ind++) {
+  theTargetVerticesEntries->length((CORBA::ULong) theLength);
+  for ( CORBA::ULong  ind = 0; ind < theLength; ind++) {
     theVtx_i = theTargetVertices[ind];
     theEntry_i = PublishIfNeeded(theVtx_i, GEOM::VERTEX, prefix4);
     theTargetVerticesEntries[ind] = CORBA::string_dup(theEntry_i.c_str());
@@ -3865,7 +3866,7 @@ void BLSURFPlugin_Hypothesis_i::AddPreCadFacesPeriodicityEntry(const char* theFa
 
   // Convert BLSURFPlugin::TEntryList to vector<string>
   vector<string> theSourceVerticesEntries, theTargetVerticesEntries;
-  for (size_t ind = 0; ind < theSourceVerticesEntriesCorba.length(); ind++) {
+  for ( CORBA::ULong  ind = 0; ind < theSourceVerticesEntriesCorba.length(); ind++) {
     theSourceVerticesEntries.push_back(theSourceVerticesEntriesCorba[ind].in());
     theTargetVerticesEntries.push_back(theTargetVerticesEntriesCorba[ind].in());
   }
@@ -3918,10 +3919,10 @@ void BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicityWithVertices(GEOM::GEOM
 
   string prefix3 = "Source_vertex_";
   BLSURFPlugin::TEntryList_var theSourceVerticesEntries = new BLSURFPlugin::TEntryList();
-  theSourceVerticesEntries->length(theLength);
+  theSourceVerticesEntries->length((CORBA::ULong) theLength);
   GEOM::GEOM_Object_ptr theVtx_i;
   string theEntry_i;
-  for (size_t ind = 0; ind < theLength; ind++) {
+  for (CORBA::ULong ind = 0; ind < theLength; ind++) {
     theVtx_i = theSourceVertices[ind];
     theEntry_i = PublishIfNeeded(theVtx_i, GEOM::VERTEX, prefix3);
     theSourceVerticesEntries[ind] = CORBA::string_dup(theEntry_i.c_str());
@@ -3929,8 +3930,8 @@ void BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicityWithVertices(GEOM::GEOM
 
   string prefix4 = "Target_vertex_";
   BLSURFPlugin::TEntryList_var theTargetVerticesEntries = new BLSURFPlugin::TEntryList();
-  theTargetVerticesEntries->length(theLength);
-  for (size_t ind = 0; ind < theLength; ind++) {
+  theTargetVerticesEntries->length((CORBA::ULong) theLength);
+  for (CORBA::ULong ind = 0; ind < theLength; ind++) {
     theVtx_i = theTargetVertices[ind];
     theEntry_i = PublishIfNeeded(theVtx_i, GEOM::VERTEX, prefix4);
     theTargetVerticesEntries[ind] = CORBA::string_dup(theEntry_i.c_str());
@@ -3954,7 +3955,7 @@ void BLSURFPlugin_Hypothesis_i::AddPreCadEdgesPeriodicityEntry(const char* theEd
 
   // Convert BLSURFPlugin::TEntryList to vector<string>
   vector<string> theSourceVerticesEntries, theTargetVerticesEntries;
-  for (size_t ind = 0; ind < theSourceVerticesEntriesCorba.length(); ind++) {
+  for (CORBA::ULong  ind = 0; ind < theSourceVerticesEntriesCorba.length(); ind++) {
     theSourceVerticesEntries.push_back(theSourceVerticesEntriesCorba[ind].in());
     theTargetVerticesEntries.push_back(theTargetVerticesEntriesCorba[ind].in());
   }

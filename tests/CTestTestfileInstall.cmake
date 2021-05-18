@@ -18,7 +18,6 @@
 #
 
 INCLUDE(tests.set)
-INCLUDE(examples.set)
 
 SET(COMPONENT_NAME BLSURFPLUGIN)
 SET(SALOME_TEST_DRIVER "$ENV{KERNEL_ROOT_DIR}/bin/salome/appliskel/salome_test_driver.py")

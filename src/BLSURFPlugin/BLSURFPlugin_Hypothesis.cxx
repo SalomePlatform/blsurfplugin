@@ -1216,7 +1216,7 @@ std::string BLSURFPlugin_Hypothesis::GetPreCADOptionValue(const std::string& opt
   if ( val.empty() && isDefault )
   {
     op_val = _defaultOptionValues.find( optionName );
-    if (op_val != _option2value.end())
+    if (op_val != _defaultOptionValues.end())
       val = op_val->second;
   }
   return val;

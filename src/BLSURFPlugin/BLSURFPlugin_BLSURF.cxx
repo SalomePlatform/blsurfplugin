@@ -576,7 +576,7 @@ void _createEnforcedVertexOnFace(TopoDS_Face faceShape, gp_Pnt aPnt, BLSURFPlugi
     }
   }
 }
-  
+
 /////////////////////////////////////////////////////////
 void BLSURFPlugin_BLSURF::createEnforcedVertexOnFace(TopoDS_Shape faceShape, BLSURFPlugin_Hypothesis::TEnfVertexList enfVertexList)
 {
@@ -1011,7 +1011,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
   //set_param(css, "process_3d_topology",    _precadProcess3DTopology ? "1" : "0");
   //set_param(css, "discard_input_topology", _precadDiscardInput ? "1" : "0");
   //set_param(css, "max_number_of_points_per_patch", "1000000");
-  
+
    bool useGradation = false;
    switch (_physicalMesh)
    {
@@ -1485,7 +1485,7 @@ namespace
         //       distene_sizemap_delete(iso_sizemap_e);
         //     if(iso_sizemap_f)
         //       distene_sizemap_delete(iso_sizemap_f);
-        // 
+        //
         // //     if(clean_geo_sizemap_e)
         // //       distene_sizemap_delete(clean_geo_sizemap_e);
         // //     if(clean_geo_sizemap_f)
@@ -1619,7 +1619,7 @@ namespace
 
     TmpMesh()
     {
-      _myMeshDS = new SMESHDS_Mesh( _id, true );
+      _meshDS = new SMESHDS_Mesh( _id, true );
     }
     //--------------------------------------------------------------------------------
     /*!
@@ -2501,11 +2501,11 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     // set_param(css, "global_physical_size", val_to_string( minFaceSize * 0.5 ).c_str());
     // set_param(css, "max_size",             val_to_string( minFaceSize * 5 ).c_str());
   }
-  
+
   // TODO: be able to use a mesh in input.
   // See imsh usage in Products/templates/mg-cadsurf_template_common.cpp
   // => cadsurf_set_mesh
-    
+
   // Use the original dcad
   cadsurf_set_dcad(css, dcad);
 
@@ -2700,10 +2700,10 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
 
     // If PreCAD performed some cleaning operations (remove tiny edges,
     // merge edges ...) an output tag can indeed represent several original tags.
-    // Get the initial tags corresponding to the output tag and redefine the tag as 
+    // Get the initial tags corresponding to the output tag and redefine the tag as
     // the last of the two initial tags (else the output tag is out of emap and hasn't any meaning)
     mesh_get_composite_tag_definition(msh, tag, &nb_tag, tags_buff);
-    if(nb_tag > 1)  
+    if(nb_tag > 1)
       tag=tags_buff[nb_tag-1];
     if ( tag < 1 || tag > emap.Extent() )
     {

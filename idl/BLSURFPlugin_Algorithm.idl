@@ -26,9 +26,10 @@
 #ifndef _SMESH_BLSURFALGORITHM_IDL_
 #define _SMESH_BLSURFALGORITHM_IDL_
 
-#include "SMESH_Hypothesis.idl"
 #include "GEOM_Gen.idl"
 #include "SALOME_Exception.idl"
+#include "SMESH_Hypothesis.idl"
+#include "SMESH_Mesh.idl"
 
 /*!
  * BLSURFPlugin: interfaces to BLSURF related hypotheses and algorithms
@@ -37,6 +38,14 @@ module BLSURFPlugin
 {
   typedef sequence<string> string_array;
 
+  // Enforced 1D Mesh
+  struct MG_EnforcedMesh1D
+  {
+    SMESH::SMESH_IDSource mesh;      // mesh, group or sub-mesh
+    string                groupName; // optional name of a group to add mesh edges to
+  };
+  typedef sequence< MG_EnforcedMesh1D > EnforcedMeshesList;
+
   // Enforced vertex name
   typedef string TEnfName;
   // Entry
@@ -44,12 +53,12 @@ module BLSURFPlugin
   typedef sequence<TEntry> TEntryList;
   // Group name
   typedef string TEnfGroupName;
-  
+
   // Coordinates of enforced vertex
   typedef sequence<double,3> TEnfVertexCoords;
   // List of coords
   typedef sequence<TEnfVertexCoords> TEnfVertexCoordsList;
-  
+
   // Enforced vertex
   struct TEnfVertex {
     TEnfName name;
@@ -358,10 +367,16 @@ module BLSURFPlugin
     double GetVolumeProximityRatio();
 
     /*!
-     *Set verbosity level in the range 0 to 100.
+     * Set verbosity level in the range 0 to 100.
      */
     void SetVerbosity(in short theVal) raises (SALOME::SALOME_Exception);
     short GetVerbosity();
+
+    /*!
+     * Set/Get enforced 1D meshes
+     */
+    void SetEnforcedMeshes( in EnforcedMeshesList enforcedMeshes );
+    EnforcedMeshesList GetEnforcedMeshes();
 
     /*!
      * Set enforce_cad_edge_sizes parameter

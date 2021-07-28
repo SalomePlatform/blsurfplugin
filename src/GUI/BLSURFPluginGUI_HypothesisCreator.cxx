@@ -83,7 +83,8 @@ enum {
   STD_TAB = 0,
   ADV_TAB,
   SMP_TAB,
-  ENF_TAB,
+  ENF_V_TAB,
+  ENF_M_TAB,
   PERIODICITY_TAB,
   HYPERPATCH_TAB,
   SMP_NAME_COLUMN =0,
@@ -104,7 +105,11 @@ enum {
   ENF_VER_ENTRY_COLUMN,
   ENF_VER_GROUP_COLUMN,
   ENF_VER_NB_COLUMNS,
-// Periodicity
+
+  // Enforced 1D meshes
+  ENF_MESH_NB_COLUMNS = 2,
+
+  // Periodicity
   PERIODICITY_OBJ_SOURCE_COLUMN = 0,
   PERIODICITY_OBJ_TARGET_COLUMN,
   PERIODICITY_P1_SOURCE_COLUMN,
@@ -713,39 +718,39 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   lay->addWidget( myTabWidget );
 
   myName = 0;
-  
+
   // basic parameters
   myStdGroup = new QWidget();
   QGridLayout* aStdLayout = new QGridLayout( myStdGroup );
   aStdLayout->setSpacing( 6 );
   aStdLayout->setMargin( 11 );
-  
+
   if( isCreation() )
     myName = new QLineEdit( myStdGroup );
   myStdWidget = new BLSURFPluginGUI_StdWidget(myStdGroup);
   if ( !hasGeom() ) {
     myStdWidget->myPhysicalMesh->removeItem( PhysicalLocalSize );
   }
-  
+
   int row = 0;
   if( isCreation() ) {
     aStdLayout->addWidget( new QLabel( tr( "SMESH_NAME" ), myStdGroup ),    0, 0, 1, 1 );
     aStdLayout->addWidget( myName,                                      row++, 1, 1, 3 );
   }
   aStdLayout->addWidget( myStdWidget,                                   row++, 0, 1, 4 );
-  
+
   row = 0;
   if( isCreation() )
     row = 1;
   aStdLayout->setRowStretch(row,1);
   aStdLayout->setColumnStretch(1,1);
 
-  
+
   // advanced parameters
   myAdvGroup = new QWidget();
   QGridLayout* anAdvLayout = new QGridLayout( myAdvGroup );
   anAdvLayout->setSpacing( 6 );
-  anAdvLayout->setMargin( 11 );  
+  anAdvLayout->setMargin( 11 );
   myAdvWidget = new BLSURFPluginGUI_AdvWidget(myAdvGroup);
   anAdvLayout->addWidget( myAdvWidget );
 
@@ -756,7 +761,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 
   //Layout
   QGridLayout* anSmpLayout = new QGridLayout(mySmpGroup);
-  
+
   // Table
   mySizeMapTable = new QTreeWidget( mySmpGroup );
   mySizeMapTable ->setMinimumWidth(200);
@@ -951,7 +956,7 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
 
   anEnfLayout->addWidget(myEnforcedTreeWidget,     0, 0, ENF_VER_NB_LINES, 1);
   QGridLayout* anEnfLayout2 = new QGridLayout(myEnfGroup);
-//  FACE AND VERTEX SELECTION
+  //  FACE AND VERTEX SELECTION
   //anEnfLayout2->addWidget(myEnfFaceWdg,             ENF_VER_FACE, 0, 1, 2);
   anEnfLayout2->addWidget(myEnfVertexWdg,           ENF_VER_VERTEX, 0, 1, 2);
   anEnfLayout2->addWidget(myXCoordLabel,            ENF_VER_X_COORD, 0, 1, 1);
@@ -969,6 +974,56 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   anEnfLayout2->addWidget(myInternalEnforcedVerticesAllFacesGroup, ENF_VER_INTERNAL_ALL_FACES_GROUP, 1, 1, 1);
   anEnfLayout2->setRowStretch(ENF_VER_NB_LINES+1, 1);
   anEnfLayout->addLayout(anEnfLayout2, 0,1,ENF_VER_NB_LINES+1,2);
+
+  // ---------------------------
+  // Enforced meshes parameters
+  // ---------------------------
+
+  myEnfMeshGroup = new QWidget();
+  QGridLayout* anEnfMeshLayout = new QGridLayout(myEnfMeshGroup);
+
+  myEnfMeshTableWdg = new QTableWidget(myEnfGroup);
+  //myEnfMeshTableWdg->setRowCount( 0 );
+  myEnfMeshTableWdg->setColumnCount( ENF_MESH_NB_COLUMNS );
+  myEnfMeshTableWdg->setSortingEnabled(true);
+  myEnfMeshTableWdg->verticalHeader()->hide();
+  myEnfMeshTableWdg->setHorizontalHeaderLabels( QStringList()
+                                                << tr( "ENF_NAME_COLUMN" )
+                                                << tr( "ENF_GROUP_COLUMN" ));
+  myEnfMeshTableWdg->horizontalHeader()->setStretchLastSection(true);
+  myEnfMeshTableWdg->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+  myEnfMeshTableWdg->setAlternatingRowColors(true);
+  myEnfMeshTableWdg->setSelectionMode(QAbstractItemView::ExtendedSelection);
+  myEnfMeshTableWdg->setSelectionBehavior(QAbstractItemView::SelectItems);
+  myEnfMeshTableWdg->resizeColumnsToContents();
+  //myEnfMeshTableWdg->setItemDelegate(new EnforcedMeshTableWidgetDelegate());
+
+  myEnfMeshWdg = new StdMeshersGUI_ObjectReferenceParamWdg( SMESH::IDSOURCE_EDGE, myEnfMeshGroup, /*multiSel=*/false);
+  myEnfMeshWdg->SetDefaultText(tr("ENF_SELECT_MESH"), "QLineEdit { color: grey }");
+
+  myEnfMeshWdg->AvoidSimultaneousSelection(myEnfVertexWdg);
+  myEnfMeshWdg->AvoidSimultaneousSelection(myGeomSelWdg1);
+  myEnfMeshWdg->AvoidSimultaneousSelection(myGeomSelWdg2);
+  myEnfMeshWdg->AvoidSimultaneousSelection(myAttSelWdg);
+
+  QLabel* enforcedGroupNameLabel = new QLabel( tr( "ENF_GROUP_LABEL" ), myEnfMeshGroup );
+  myEnforcedGroupName = new QLineEdit(myEnfMeshGroup);
+
+  myAddEnfMeshButton    = new QPushButton(tr("ENF_ADD"),myEnfMeshGroup);
+  myRemoveEnfMeshButton = new QPushButton(tr("ENF_REMOVE"),myEnfMeshGroup);
+
+  QGridLayout* anEnfMeshLayout2 = new QGridLayout(myEnfMeshGroup);
+  anEnfMeshLayout2->addWidget(myEnfMeshWdg,             0, 0, 1, 2);
+  anEnfMeshLayout2->addWidget(enforcedGroupNameLabel,   1, 0, 1, 1);
+  anEnfMeshLayout2->addWidget(myEnforcedGroupName,      1, 1, 1, 1);
+  anEnfMeshLayout2->addWidget(myAddEnfMeshButton,       2, 0, 1, 2);
+  anEnfMeshLayout2->addWidget(myRemoveEnfMeshButton,    3, 0, 1, 2);
+  anEnfMeshLayout2->setRowStretch( 4, 1 );
+
+  anEnfMeshLayout->addWidget(myEnfMeshTableWdg, 0, 0, 5, 1);
+  anEnfMeshLayout->addLayout(anEnfMeshLayout2,  0, 1, 1, 1);
+  anEnfMeshLayout->setRowStretch( 2, 1 );
+
 
   // ---
   // Periodicity parameters
@@ -1200,7 +1255,8 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   myTabWidget->insertTab( ADV_TAB, myAdvGroup, tr( "BLSURF_ADV_ARGS" ) );
   if ( hasGeom() ) {
     myTabWidget->insertTab( SMP_TAB, mySmpGroup, tr( "LOCAL_SIZE" ) );
-    myTabWidget->insertTab( ENF_TAB, myEnfGroup, tr( "BLSURF_ENF_VER" ) );
+    myTabWidget->insertTab( ENF_V_TAB, myEnfGroup, tr( "BLSURF_ENF_VER" ) );
+    myTabWidget->insertTab( ENF_M_TAB, myEnfMeshGroup, tr( "ENF_MESH" ) );
     myTabWidget->insertTab( PERIODICITY_TAB, myPeriodicityGroup, tr( "BLSURF_PERIODICITY" ) );
     myTabWidget->insertTab( HYPERPATCH_TAB, hpGroup, tr( "BLSURF_HYPERPATCH_TAB" ));
   }
@@ -1208,47 +1264,55 @@ QFrame* BLSURFPluginGUI_HypothesisCreator::buildFrame()
   {
     mySmpGroup->hide();
     myEnfGroup->hide();
+    myEnfMeshGroup->hide();
     myPeriodicityGroup->hide();
     hpGroup->hide();
   }
   myTabWidget->setCurrentIndex( STD_TAB );
 
-  connect( myAdvWidget->addBtn, SIGNAL( clicked() ),           this, SLOT( onAddOption() ) );
+  connect( myAdvWidget->addBtn, SIGNAL( clicked() ),                           SLOT( onAddOption() ) );
 
   // Size Maps
-  connect( addMapButton,        SIGNAL( clicked()),                    this,         SLOT( onAddMap() ) );
-  connect( removeMapButton,     SIGNAL( clicked()),                    this,         SLOT( onRemoveMap() ) );
-  connect( modifyMapButton,     SIGNAL( clicked()),                    this,         SLOT( onModifyMap() ) );
-  connect( mySizeMapTable,      SIGNAL( itemClicked (QTreeWidgetItem *, int)),this,  SLOT( onSmpItemClicked(QTreeWidgetItem *, int) ) );
-  connect( myGeomSelWdg2,       SIGNAL( contentModified() ),           this,         SLOT( onMapGeomContentModified() ) );
-  connect( myGeomSelWdg1,       SIGNAL( contentModified() ),           this,         SLOT( onMapGeomContentModified() ) );
-  connect( myAttSelWdg,         SIGNAL( contentModified() ),           this,         SLOT( onMapGeomContentModified() ) );
-  connect( mySizeMapTable,      SIGNAL( itemChanged (QTreeWidgetItem *, int)),this,  SLOT( onSetSizeMap(QTreeWidgetItem *, int) ) );
-  connect( myAttractorCheck,    SIGNAL( stateChanged ( int )),         this,         SLOT( onAttractorClicked( int ) ) );
-  connect( myConstSizeCheck,    SIGNAL( stateChanged ( int )),         this,         SLOT( onConstSizeClicked( int ) ) );
-  connect( smpTab,              SIGNAL( currentChanged ( int )),       this,         SLOT( onTabChanged( int ) ) );
-  connect( myTabWidget,         SIGNAL( currentChanged ( int )),       this,         SLOT( onTabChanged( int ) ) );
+  connect( addMapButton,        SIGNAL( clicked()),                            SLOT( onAddMap() ) );
+  connect( removeMapButton,     SIGNAL( clicked()),                            SLOT( onRemoveMap() ) );
+  connect( modifyMapButton,     SIGNAL( clicked()),                            SLOT( onModifyMap() ) );
+  connect( mySizeMapTable,      SIGNAL( itemClicked (QTreeWidgetItem *, int)), SLOT( onSmpItemClicked(QTreeWidgetItem *, int) ) );
+  connect( myGeomSelWdg2,       SIGNAL( contentModified() ),                   SLOT( onMapGeomContentModified() ) );
+  connect( myGeomSelWdg1,       SIGNAL( contentModified() ),                   SLOT( onMapGeomContentModified() ) );
+  connect( myAttSelWdg,         SIGNAL( contentModified() ),                   SLOT( onMapGeomContentModified() ) );
+  connect( mySizeMapTable,      SIGNAL( itemChanged (QTreeWidgetItem *, int)), SLOT( onSetSizeMap(QTreeWidgetItem *, int) ) );
+  connect( myAttractorCheck,    SIGNAL( stateChanged ( int )),                 SLOT( onAttractorClicked( int ) ) );
+  connect( myConstSizeCheck,    SIGNAL( stateChanged ( int )),                 SLOT( onConstSizeClicked( int ) ) );
+  connect( smpTab,              SIGNAL( currentChanged ( int )),               SLOT( onTabChanged( int ) ) );
+  connect( myTabWidget,         SIGNAL( currentChanged ( int )),               SLOT( onTabChanged( int ) ) );
 
   // Enforced vertices
-  connect( myEnforcedTreeWidget,SIGNAL( itemClicked(QTreeWidgetItem *, int)), this,  SLOT( synchronizeCoords() ) );
-  connect( myEnforcedTreeWidget,SIGNAL( itemChanged(QTreeWidgetItem *, int)), this,  SLOT( updateEnforcedVertexValues(QTreeWidgetItem *, int) ) );
-  connect( myEnforcedTreeWidget,SIGNAL( itemSelectionChanged() ),      this,         SLOT( synchronizeCoords() ) );
-  connect( addVertexButton,     SIGNAL( clicked()),                    this,         SLOT( onAddEnforcedVertices() ) );
-  connect( removeVertexButton,  SIGNAL( clicked()),                    this,         SLOT( onRemoveEnforcedVertex() ) );
-  connect( myEnfVertexWdg,      SIGNAL( contentModified()),            this,         SLOT( onSelectEnforcedVertex() ) );
-  connect( myInternalEnforcedVerticesAllFaces, SIGNAL( stateChanged ( int )), this,  SLOT( onInternalVerticesClicked( int ) ) );
+  connect( myEnforcedTreeWidget,SIGNAL( itemClicked(QTreeWidgetItem *, int)),  SLOT( synchronizeCoords() ) );
+  connect( myEnforcedTreeWidget,SIGNAL( itemChanged(QTreeWidgetItem *, int)),  SLOT( updateEnforcedVertexValues(QTreeWidgetItem *, int) ) );
+  connect( myEnforcedTreeWidget,SIGNAL( itemSelectionChanged() ),              SLOT( synchronizeCoords() ) );
+  connect( addVertexButton,     SIGNAL( clicked()),                            SLOT( onAddEnforcedVertices() ) );
+  connect( removeVertexButton,  SIGNAL( clicked()),                            SLOT( onRemoveEnforcedVertex() ) );
+  connect( myEnfVertexWdg,      SIGNAL( contentModified()),                    SLOT( onSelectEnforcedVertex() ) );
+  connect( myInternalEnforcedVerticesAllFaces, SIGNAL( stateChanged ( int )),  SLOT( onInternalVerticesClicked( int ) ) );
+
+  // Enforced mesh
+  connect( myAddEnfMeshButton,    SIGNAL( clicked()),              SLOT( onAddEnforcedMesh()));
+  connect( myRemoveEnfMeshButton, SIGNAL( clicked()),              SLOT( onRemoveEnforcedMesh()));
+  connect( myEnfMeshWdg,          SIGNAL( contentModified()),      SLOT( onEnforcedMeshSelected()));
+  connect( myEnfMeshTableWdg,     SIGNAL( itemSelectionChanged()), SLOT( onEnfMeshTableSelected()));
+
 
   // Periodicity
-  connect( myPeriodicityAddButton,     SIGNAL( clicked()),                    this,   SLOT( onAddPeriodicity() ) );
-  connect( myPeriodicityRemoveButton,  SIGNAL( clicked()),                    this,   SLOT( onRemovePeriodicity() ) );
-  connect( myPeriodicityTreeWidget,    SIGNAL( itemClicked(QTreeWidgetItem*, int)), this, SLOT( onPeriodicityTreeClicked(QTreeWidgetItem *, int) ) );
-  connect( myPeriodicityGroupBox2,     SIGNAL(toggled(bool)),                 this,   SLOT(onPeriodicityByVerticesChecked(bool)));
+  connect( myPeriodicityAddButton,     SIGNAL( clicked()),                     SLOT( onAddPeriodicity() ) );
+  connect( myPeriodicityRemoveButton,  SIGNAL( clicked()),                     SLOT( onRemovePeriodicity() ) );
+  connect( myPeriodicityTreeWidget,    SIGNAL( itemClicked(QTreeWidgetItem*, int)), SLOT( onPeriodicityTreeClicked(QTreeWidgetItem *, int) ) );
+  connect( myPeriodicityGroupBox2,     SIGNAL(toggled(bool)),                  SLOT(onPeriodicityByVerticesChecked(bool)));
 
   ListOfWidgets::const_iterator anIt = myPeriodicitySelectionWidgets.begin();
   for (; anIt != myPeriodicitySelectionWidgets.end(); anIt++)
   {
     StdMeshersGUI_ObjectReferenceParamWdg * w1 = ( StdMeshersGUI_ObjectReferenceParamWdg* ) ( *anIt );
-    connect( w1,     SIGNAL(contentModified ()),                 this,   SLOT(onPeriodicityContentModified()));
+    connect( w1, SIGNAL( contentModified ()), SLOT( onPeriodicityContentModified() ));
 
   }
 
@@ -2025,6 +2089,7 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
   }
 
   // Hyper patches
+
   QString patchEntries;
   for ( int i = 0; i < data.hyperpatches.size(); ++i )
   {
@@ -2036,6 +2101,18 @@ void BLSURFPluginGUI_HypothesisCreator::retrieveParams() const
   that->myStdWidget->onPhysicalMeshChanged();
   that->myStdWidget->onGeometricMeshChanged();
   that->onStateChange();
+
+  // Enforced mesh
+
+  BLSURFPlugin::BLSURFPlugin_Hypothesis_var h =
+    BLSURFPlugin::BLSURFPlugin_Hypothesis::_narrow( initParamsHypothesis() );
+
+  BLSURFPlugin::EnforcedMeshesList_var enfMeshes = h->GetEnforcedMeshes();
+  for ( CORBA::ULong i = 0; i < enfMeshes->length(); ++i )
+  {
+    BLSURFPlugin::MG_EnforcedMesh1D & enfMesh = enfMeshes[i];
+    that->addEnforcedMesh( enfMesh.mesh.in(), enfMesh.groupName.in() );
+  }
 }
 
 /** BLSURFPluginGUI_HypothesisCreator::storeParams()
@@ -2589,6 +2666,31 @@ bool BLSURFPluginGUI_HypothesisCreator::storeParamsToHypo( const BlsurfHypothesi
       h->SetHyperPatches( hpl );
 
 
+    // Enforced meshes
+    BLSURFPlugin::EnforcedMeshesList_var enfMeshesList = new BLSURFPlugin::EnforcedMeshesList();
+    enfMeshesList->length( myEnfMeshTableWdg->rowCount() );
+
+    int nbMeshes = 0;
+    for ( int row = 0, nbRow = myEnfMeshTableWdg->rowCount(); row < nbRow; ++row )
+    {
+      QTableWidgetItem *  meshCell = myEnfMeshTableWdg->item( row, 0 );
+      QString                entry = meshCell->data( Qt::UserRole ).toString();
+      QTableWidgetItem * groupCell = myEnfMeshTableWdg->item( row, 1 );
+      QString            groupName = groupCell->text();
+
+      SMESH::SMESH_IDSource_var mesh = SMESH::EntryToInterface< SMESH::SMESH_IDSource >( entry );
+      if ( !mesh->_is_nil() )
+      {
+        enfMeshesList[ nbMeshes ].mesh = SMESH::SMESH_IDSource::_duplicate( mesh );
+        enfMeshesList[ nbMeshes ].groupName = CORBA::string_dup( groupName.toStdString().c_str() );
+        ++nbMeshes;
+      }
+    }
+    enfMeshesList->length( nbMeshes );
+
+    h->SetEnforcedMeshes( enfMeshesList );
+
+
   } // try
   catch(...) {
     ok = false;
@@ -2898,6 +3000,7 @@ void BLSURFPluginGUI_HypothesisCreator::onTabChanged(int tab)
     myPeriodicityP1TargetWdg  ->deactivateSelection();
     myPeriodicityP2TargetWdg  ->deactivateSelection();
     myPeriodicityP3TargetWdg  ->deactivateSelection();
+    myEnfMeshWdg              ->deactivateSelection();
     if ( myHyPatchFaceSelBtn->isChecked() )
       myHyPatchFaceSelBtn->toggle();
     if ( myHyPatchGroupSelBtn->isChecked() )
@@ -2933,6 +3036,15 @@ void BLSURFPluginGUI_HypothesisCreator::onTabChanged(int tab)
 
     mySmpSizeSpin->RangeStepAndValidator(minSize, maxSize, 1.0, "length_precision");
     myAttSizeSpin->RangeStepAndValidator(minSize, maxSize, 1.0, "length_precision");
+  }
+
+  if ( tab == ENF_M_TAB )
+  {
+    myEnfMeshWdg->activateSelection();
+    onEnforcedMeshSelected(); // update buttons
+    onEnfMeshTableSelected();
+    if ( myEnforcedGroupName->text().isEmpty() )
+      myEnforcedGroupName->setText("Group 1D");
   }
 }
 
@@ -3572,6 +3684,153 @@ void BLSURFPluginGUI_HypothesisCreator::onHyPatchRemove()
     items = myHyPatchTable->selectedItems();
   }
 }
+
+//================================================================================
+/*!
+ * \brief Add a new row in Enforced mesh table
+ */
+//================================================================================
+
+void BLSURFPluginGUI_HypothesisCreator::addEnforcedMesh( SMESH::SMESH_IDSource_ptr mesh,
+                                                         const QString&            groupName  )
+{
+  _PTR(SObject) sobj = SMESH::FindSObject( mesh );
+  if ( !sobj )
+    return;
+
+  QString meshEntry = sobj->GetID().c_str();
+  QString meshName  = sobj->GetName().c_str();
+
+  QTableWidgetItem* meshCell = new QTableWidgetItem( meshName );
+  meshCell->setData( Qt::UserRole, meshEntry );
+  meshCell->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled );
+
+  QTableWidgetItem* groupCell = new QTableWidgetItem( groupName );
+  groupCell->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable );
+
+  int row = myEnfMeshTableWdg->rowCount();
+  myEnfMeshTableWdg->insertRow( row );
+  myEnfMeshTableWdg->setItem( row, 0, meshCell );
+  myEnfMeshTableWdg->setItem( row, 1, groupCell );
+
+  myEnfMeshTableWdg->resizeColumnToContents( 0 );
+  myEnfMeshTableWdg->resizeColumnToContents( 1 );
+}
+
+//================================================================================
+/*!
+ * \brief SLOT called when [Add] is clicked in Enforced mesh tab.
+ *        Add an item to the enforced meshes table
+ */
+//================================================================================
+
+void BLSURFPluginGUI_HypothesisCreator::onAddEnforcedMesh()
+{
+  if ( myEnfMeshWdg->NbObjects() != 1 )
+    return;
+
+  SMESH::SMESH_IDSource_var mesh = myEnfMeshWdg->GetObject< SMESH::SMESH_IDSource >();
+  QString              groupName = myEnforcedGroupName->text().simplified();
+
+  addEnforcedMesh( mesh, groupName );
+
+  selectionMgr()->clearSelected();
+  myEnfMeshWdg->SetObject( SMESH::SMESH_IDSource::_nil() );
+}
+
+//================================================================================
+/*!
+ * \brief SLOT called when [Remove] is clicked in Enforced mesh tab.
+ *        Remove a selected mesh from the enforced meshes table
+ */
+//================================================================================
+
+void BLSURFPluginGUI_HypothesisCreator::onRemoveEnforcedMesh()
+{
+  QList<int> selectedRows;
+  QList<QTableWidgetItem *> selectedItems = myEnfMeshTableWdg->selectedItems();
+  QTableWidgetItem* item;
+  int row;
+  foreach( item, selectedItems )
+  {
+    row = item->row();
+    if (!selectedRows.contains( row ) )
+      selectedRows.append(row);
+  }
+
+  qSort( selectedRows );
+  QListIterator<int> it( selectedRows );
+  it.toBack();
+  while ( it.hasPrevious() ) {
+    row = it.previous();
+    myEnfMeshTableWdg->removeRow(row );
+  }
+
+  myEnfMeshTableWdg->selectionModel()->clearSelection();
+
+  onEnforcedMeshSelected(); // to activate [Add] if possible
+}
+
+//================================================================================
+/*!
+ * \brief SLOT called when mesh selection changes. Enable/disable [Add] button
+ */
+//================================================================================
+
+void BLSURFPluginGUI_HypothesisCreator::onEnforcedMeshSelected()
+{
+  bool enable = ( myEnfMeshWdg->NbObjects() == 1 );
+  if ( enable )
+  {
+    // check if a selected mesh contains segments
+    SMESH::SMESH_IDSource_var mesh = myEnfMeshWdg->GetObject< SMESH::SMESH_IDSource >();
+    if (( enable = !mesh->_is_nil() ))
+    {
+      SMESH::array_of_ElementType_var types = mesh->GetTypes();
+      if (( enable = ( types->length() > 0 )))
+      {
+        enable = false;
+        for ( CORBA::ULong i = 0; i < types->length() &&  !enable; ++i )
+          enable = ( types[ i ] = SMESH::EDGE );
+      }
+    }
+
+    // check if this mesh is already in the table
+    if ( enable )
+    {
+      _PTR(SObject) sobj = SMESH::FindSObject( mesh );
+      if (( enable = bool( sobj )))
+      {
+        QString meshEntry = sobj->GetID().c_str();
+        for ( int row = 0, nbRow = myEnfMeshTableWdg->rowCount(); row < nbRow &&  enable; ++row )
+        {
+          QTableWidgetItem * cell = myEnfMeshTableWdg->item( row, 0 );
+          enable = ( meshEntry != cell->data( Qt::UserRole ).toString() );
+        }
+      }
+    }
+  }
+  myAddEnfMeshButton->setEnabled( enable );
+}
+
+//================================================================================
+/*!
+ * \brief SLOT called when selection changes in the table. Enable/disable [Remove] button
+ */
+//================================================================================
+
+void BLSURFPluginGUI_HypothesisCreator::onEnfMeshTableSelected()
+{
+  bool enable = !myEnfMeshTableWdg->selectedItems().empty();
+
+  myRemoveEnfMeshButton->setEnabled( enable );
+}
+
+//================================================================================
+/*!
+ * \brief Return false if algorithm is a re-mesher
+ */
+//================================================================================
 
 bool BLSURFPluginGUI_HypothesisCreator::hasGeom() const
 {

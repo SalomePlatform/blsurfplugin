@@ -25,21 +25,19 @@
 // ---
 
 #include "BLSURFPlugin_BLSURF.hxx"
-#include "BLSURFPlugin_Hypothesis.hxx"
+
 #include "BLSURFPlugin_Attractor.hxx"
+#include "BLSURFPlugin_EnforcedMesh1D.hxx"
+#include "BLSURFPlugin_Hypothesis.hxx"
 
 extern "C"{
 #include <meshgems/meshgems.h>
 #include <meshgems/cadsurf.h>
 }
 
-#include <structmember.h>
-
-
-#include <Basics_Utils.hxx>
-
 #include <SMDS_EdgePosition.hxx>
 #include <SMESHDS_Group.hxx>
+#include <SMESH_File.hxx>
 #include <SMESH_Gen.hxx>
 #include <SMESH_Group.hxx>
 #include <SMESH_Mesh.hxx>
@@ -47,15 +45,17 @@ extern "C"{
 #include <SMESH_MesherHelper.hxx>
 #include <StdMeshers_FaceSide.hxx>
 #include <StdMeshers_ViscousLayers2D.hxx>
-#include <SMESH_File.hxx>
 
+#include <Basics_Utils.hxx>
 #include <utilities.h>
 
+#include <cstdlib>
 #include <limits>
 #include <list>
-#include <vector>
 #include <set>
-#include <cstdlib>
+#include <vector>
+
+#include <structmember.h> // python
 
 // OPENCASCADE includes
 #include <BRepBndLib.hxx>
@@ -405,14 +405,12 @@ status_t size_on_surface(integer face_id, real *uv, real *size, void *user_data)
 status_t size_on_edge(integer edge_id, real t, real *size, void *user_data);
 status_t size_on_vertex(integer vertex_id, real *size, void *user_data);
 
-typedef struct {
-        gp_XY uv;
-        gp_XYZ xyz;
-} projectionPoint;
-
 /////////////////////////////////////////////////////////
 
-projectionPoint getProjectionPoint(TopoDS_Face& theFace, const gp_Pnt& thePoint)
+BLSURFPlugin_BLSURF::projectionPoint
+BLSURFPlugin_BLSURF::getProjectionPoint(TopoDS_Face&  theFace,
+                                        const gp_Pnt& thePoint,
+                                        const bool    theAllowStateON)
 {
   projectionPoint myPoint;
 
@@ -444,12 +442,13 @@ projectionPoint getProjectionPoint(TopoDS_Face& theFace, const gp_Pnt& thePoint)
         {
           if ( !foundFace.IsNull() )
             return myPoint; // thePoint seems to be TopAbs_ON
-          foundFace   = face;
-          myPoint.uv  = uv.XY();
-          myPoint.xyz = surface->Value( uv ).XYZ();
+          foundFace     = face;
+          myPoint.uv    = uv.XY();
+          myPoint.xyz   = surface->Value( uv ).XYZ();
+          myPoint.state = FC.State();
           // break;
         }
-        if ( FC.State() == TopAbs_ON )
+        if ( FC.State() == TopAbs_ON && !theAllowStateON )
           return myPoint;
       }
     }
@@ -462,12 +461,15 @@ projectionPoint getProjectionPoint(TopoDS_Face& theFace, const gp_Pnt& thePoint)
         const TopoDS_Face& face = d2f->second.first;
         const gp_Pnt2d &     uv = d2f->second.second;
         BRepClass_FaceClassifier FC( face, uv, Precision::Confusion());
-        if ( FC.State() == TopAbs_IN )
+        if (( FC.State() == TopAbs_IN ) ||
+            ( FC.State() == TopAbs_ON && theAllowStateON ))
         {
-          foundFace   = face;
-          myPoint.uv  = uv.XY();
-          myPoint.xyz = theHelper->GetSurface( face )->Value( uv ).XYZ();
-          break;
+          foundFace     = face;
+          myPoint.uv    = uv.XY();
+          myPoint.xyz   = theHelper->GetSurface( face )->Value( uv ).XYZ();
+          myPoint.state = FC.State();
+          if ( FC.State() == TopAbs_IN )
+            break;
         }
       }
     }
@@ -477,7 +479,7 @@ projectionPoint getProjectionPoint(TopoDS_Face& theFace, const gp_Pnt& thePoint)
     //                            "getProjectionPoint: can't find a face by a vertex");
     theFace = TopoDS::Face( foundFace );
   }
-  else
+  else // !theFace.IsNull()
   {
     Handle(Geom_Surface) surface = BRep_Tool::Surface( theFace );
     GeomAPI_ProjectPointOnSurf projector( thePoint, surface );
@@ -487,12 +489,14 @@ projectionPoint getProjectionPoint(TopoDS_Face& theFace, const gp_Pnt& thePoint)
 
     Standard_Real u,v;
     projector.LowerDistanceParameters(u,v);
-    myPoint.uv = gp_XY(u,v);
-    gp_Pnt aPnt = projector.NearestPoint();
-    myPoint.xyz = gp_XYZ(aPnt.X(),aPnt.Y(),aPnt.Z());
+    myPoint.uv  = gp_XY(u,v);
+    myPoint.xyz = projector.NearestPoint().XYZ();
 
     BRepClass_FaceClassifier FC( theFace, myPoint.uv, Precision::Confusion());
-    if ( FC.State() != TopAbs_IN )
+    myPoint.state = FC.State();
+
+    if (( FC.State() != TopAbs_IN ) &&
+        ( FC.State() != TopAbs_ON || !theAllowStateON ))
       theFace.Nullify();
   }
 
@@ -502,16 +506,8 @@ projectionPoint getProjectionPoint(TopoDS_Face& theFace, const gp_Pnt& thePoint)
 /////////////////////////////////////////////////////////
 TopoDS_Shape BLSURFPlugin_BLSURF::entryToShape(std::string entry)
 {
-  GEOM::GEOM_Object_var aGeomObj;
-  TopoDS_Shape S = TopoDS_Shape();
-  SALOMEDS::SObject_var aSObj = SMESH_Gen_i::GetSMESHGen()->getStudyServant()->FindObjectID( entry.c_str() );
-  if (!aSObj->_is_nil()) {
-    CORBA::Object_var obj = aSObj->GetObject();
-    aGeomObj = GEOM::GEOM_Object::_narrow(obj);
-    aSObj->UnRegister();
-  }
-  if ( !aGeomObj->_is_nil() )
-    S = SMESH_Gen_i::GetSMESHGen()->GeomObjectToShape( aGeomObj.in() );
+  GEOM::GEOM_Object_var aGeomObj = SMESH_Gen_i::GetSMESHGen()->GetGeomObjectByEntry( entry );
+  TopoDS_Shape                 S = SMESH_Gen_i::GetSMESHGen()->GeomObjectToShape( aGeomObj );
   return S;
 }
 
@@ -520,7 +516,8 @@ void _createEnforcedVertexOnFace(TopoDS_Face faceShape, gp_Pnt aPnt, BLSURFPlugi
   BLSURFPlugin_Hypothesis::TEnfVertexCoords enf_coords, coords, s_coords;
 
   // Find the face and get the (u,v) values of the enforced vertex on the face
-  projectionPoint myPoint = getProjectionPoint(faceShape,aPnt);
+  BLSURFPlugin_BLSURF::projectionPoint myPoint =
+    BLSURFPlugin_BLSURF::getProjectionPoint(faceShape,aPnt);
   if ( faceShape.IsNull() )
     return;
 
@@ -639,30 +636,30 @@ void createAttractorOnFace(TopoDS_Shape GeomShape, std::string AttractorFunction
   // xa
   pos1 = AttractorFunction.find(sep);
   if (pos1!=string::npos)
-  xa = atof(AttractorFunction.substr(10, pos1-10).c_str());
+    xa = atof(AttractorFunction.substr(10, pos1-10).c_str());
   // ya
   pos2 = AttractorFunction.find(sep, pos1+1);
   if (pos2!=string::npos) {
-  ya = atof(AttractorFunction.substr(pos1+1, pos2-pos1-1).c_str());
-  pos1 = pos2;
+    ya = atof(AttractorFunction.substr(pos1+1, pos2-pos1-1).c_str());
+    pos1 = pos2;
   }
   // za
   pos2 = AttractorFunction.find(sep, pos1+1);
   if (pos2!=string::npos) {
-  za = atof(AttractorFunction.substr(pos1+1, pos2-pos1-1).c_str());
-  pos1 = pos2;
+    za = atof(AttractorFunction.substr(pos1+1, pos2-pos1-1).c_str());
+    pos1 = pos2;
   }
   // a
   pos2 = AttractorFunction.find(sep, pos1+1);
   if (pos2!=string::npos) {
-  a = atof(AttractorFunction.substr(pos1+1, pos2-pos1-1).c_str());
-  pos1 = pos2;
+    a = atof(AttractorFunction.substr(pos1+1, pos2-pos1-1).c_str());
+    pos1 = pos2;
   }
   // b
   pos2 = AttractorFunction.find(sep, pos1+1);
   if (pos2!=string::npos) {
-  b = atof(AttractorFunction.substr(pos1+1, pos2-pos1-1).c_str());
-  pos1 = pos2;
+    b = atof(AttractorFunction.substr(pos1+1, pos2-pos1-1).c_str());
+    pos1 = pos2;
   }
   // createNode
   pos2 = AttractorFunction.find(sep, pos1+1);
@@ -674,13 +671,14 @@ void createAttractorOnFace(TopoDS_Shape GeomShape, std::string AttractorFunction
   // d
   pos2 = AttractorFunction.find(")");
   if (pos2!=string::npos) {
-  d = atof(AttractorFunction.substr(pos1+1, pos2-pos1-1).c_str());
+    d = atof(AttractorFunction.substr(pos1+1, pos2-pos1-1).c_str());
   }
 
   // Get the (u,v) values of the attractor on the face
-  projectionPoint myPoint = getProjectionPoint(TopoDS::Face(GeomShape),gp_Pnt(xa,ya,za));
-  gp_XY uvPoint = myPoint.uv;
-  gp_XYZ xyzPoint = myPoint.xyz;
+  BLSURFPlugin_BLSURF::projectionPoint myPoint =
+    BLSURFPlugin_BLSURF::getProjectionPoint(TopoDS::Face(GeomShape),gp_Pnt(xa,ya,za));
+  gp_XY    uvPoint = myPoint.uv;
+  gp_XYZ  xyzPoint = myPoint.xyz;
   Standard_Real u0 = uvPoint.X();
   Standard_Real v0 = uvPoint.Y();
   Standard_Real x0 = xyzPoint.X();
@@ -1931,10 +1929,14 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
 
   SMESHDS_Mesh* meshDS = aMesh.GetMeshDS();
   SMESH_MesherHelper helper( aMesh ), helperWithShape( aMesh );
-  myHelper = theHelper = & helperWithShape;
+  theHelper = & helperWithShape;
   // do not call helper.IsQuadraticSubMesh() because sub-meshes
   // may be cleaned and helper.myTLinkNodeMap gets invalid in such a case
   bool haveQuadraticSubMesh = helperWithShape.IsQuadraticSubMesh( aShape );
+  haveQuadraticSubMesh = haveQuadraticSubMesh || (_hypothesis && _hypothesis->GetQuadraticMesh());
+  helper.SetIsQuadratic( haveQuadraticSubMesh );
+  helperWithShape.SetIsQuadratic( haveQuadraticSubMesh );
+
   bool quadraticSubMeshAndViscousLayer = false;
   bool needMerge = false;
   typedef set< SMESHDS_SubMesh*, ShapeTypeCompare > TSubMeshSet;
@@ -1946,6 +1948,8 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
 
   TopTools_IndexedDataMapOfShapeListOfShape e2ffmap;
   TopExp::MapShapesAndAncestors( aShape, TopAbs_EDGE, TopAbs_FACE, e2ffmap );
+
+  BLSURFPlugin_EnforcedMesh1D enforcedMesh( helperWithShape, _hypothesis );
 
   // Issue 0019864. On DebianSarge, FE signals do not obey to OSD::SetSignal(false)
 #ifndef WIN32
@@ -1988,9 +1992,6 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
 
   SetParameters(_hypothesis, css, aShape);
 
-  haveQuadraticSubMesh = haveQuadraticSubMesh || (_hypothesis != NULL && _hypothesis->GetQuadraticMesh());
-  helper.SetIsQuadratic( haveQuadraticSubMesh );
-
   // To remove as soon as quadratic mesh is allowed - BEGIN
   // GDD: Viscous layer is not allowed with quadratic mesh
   if (_haveViscousLayers && haveQuadraticSubMesh ) {
@@ -2030,8 +2031,8 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   {
     TopoDS_Face f = TopoDS::Face(face_iter.Current());
 
-    SMESH_subMesh* fSM = aMesh.GetSubMesh( f );
-    if ( !fSM->IsEmpty() ) continue; // skip already meshed FACE with viscous layers
+    //SMESH_subMesh* fSM = aMesh.GetSubMesh( f );
+    //if ( !fSM->IsEmpty() ) continue; // skip already meshed FACE with viscous layers
 
     // make INTERNAL face oriented FORWARD (issue 0020993)
     if (f.Orientation() != TopAbs_FORWARD && f.Orientation() != TopAbs_REVERSED )
@@ -2088,35 +2089,29 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
       }
 
       // Specific size map = Attractor
-      std::map<int,std::vector<double> >::iterator attractor_iter = FaceId2AttractorCoords.begin();
-
-      for (; attractor_iter != FaceId2AttractorCoords.end(); ++attractor_iter) {
-        if (attractor_iter->first == faceKey)
+      std::map<int,std::vector<double> >::iterator attractor_iter =
+        FaceId2AttractorCoords.find( faceKey );
+      if (attractor_iter != FaceId2AttractorCoords.end() )
+      {
+        double * xyzCoords = & attractor_iter->second[2];
+        gp_Pnt P(xyzCoords[0],xyzCoords[1],xyzCoords[2]);
+        BRepClass_FaceClassifier scl(f,P,1e-7);
+        TopAbs_State result = scl.State();
+        if ( result == TopAbs_OUT )
+          MESSAGE("Point is out of face: node is not created");
+        if ( result == TopAbs_UNKNOWN )
+          MESSAGE("Point position on face is unknown: node is not created");
+        if ( result == TopAbs_ON )
+          MESSAGE("Point is on border of face: node is not created");
+        if ( result == TopAbs_IN )
         {
-          double xyzCoords[3]  = {attractor_iter->second[2],
-                                  attractor_iter->second[3],
-                                  attractor_iter->second[4]};
-
-          gp_Pnt P(xyzCoords[0],xyzCoords[1],xyzCoords[2]);
-          BRepClass_FaceClassifier scl(f,P,1e-7);
-          scl.Perform(f, P, 1e-7);
-          TopAbs_State result = scl.State();
-          if ( result == TopAbs_OUT )
-            MESSAGE("Point is out of face: node is not created");
-          if ( result == TopAbs_UNKNOWN )
-            MESSAGE("Point position on face is unknown: node is not created");
-          if ( result == TopAbs_ON )
-            MESSAGE("Point is on border of face: node is not created");
-          if ( result == TopAbs_IN )
-          {
-            // Point is inside face and not on border
-            double uvCoords[2] = {attractor_iter->second[0],attractor_iter->second[1]};
-            ienf++;
-            cad_point_t* point_p = cad_point_new(fce, ienf, uvCoords);
-            cad_point_set_tag(point_p, ienf);
-          }
-          FaceId2AttractorCoords.erase(faceKey);
+          // Point is inside face and not on border
+          double * uvCoords = & attractor_iter->second[0];
+          ienf++;
+          cad_point_t* point_p = cad_point_new(fce, ienf, uvCoords);
+          cad_point_set_tag(point_p, ienf);
         }
+        FaceId2AttractorCoords.erase(faceKey);
       }
 
       // -----------------
@@ -2182,19 +2177,24 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
                                            EDGES
                         now create the edges associated to this face
     *****************************************************************************************/
-    int edgeKey = -1;
-    for (TopExp_Explorer edge_iter(f,TopAbs_EDGE);edge_iter.More();edge_iter.Next())
+
+    std::vector< TopoDS_Edge > edges;
+    for ( TopExp_Explorer edge_iter( f, TopAbs_EDGE ); edge_iter.More(); edge_iter.Next() )
     {
-      TopoDS_Edge e = TopoDS::Edge(edge_iter.Current());
-      int ic = emap.FindIndex(e);
-      if (ic <= 0)
-        ic = emap.Add(e);
+      const TopoDS_Edge& e = TopoDS::Edge( edge_iter.Current() );
+      if ( !enforcedMesh.GetSplitsOfEdge( e, edges, emap ))
+        edges.push_back( e );
+    }
+    for ( const TopoDS_Edge& e : edges )
+    {
+      int ic = emap.Add(e);
 
       double tmin,tmax;
       curves.push_back(BRep_Tool::CurveOnSurface(e, f, tmin, tmax));
 
-      if (HasSizeMapOnEdge){
-        edgeKey = EdgesWithSizeMap.FindIndex(e);
+      if ( HasSizeMapOnEdge )
+      {
+        int edgeKey = EdgesWithSizeMap.FindIndex(e);
         if (EdgeId2SizeMap.find(edgeKey)!=EdgeId2SizeMap.end())
         {
           theSizeMapStr = EdgeId2SizeMap[edgeKey];
@@ -2256,6 +2256,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
          The following call sets it to the same value as the edge_id : */
       // IMP23368. Do not set tag to an EDGE shared by FACEs of a hyper-patch
       bool isInHyperPatch = false;
+      if ( e2ffmap.Contains( e )) // not there for a part of EDGE divided by enforced segments
       {
         std::set< int > faceTags, faceIDs;
         TopTools_ListIteratorOfListOfShape fIt( e2ffmap.FindFromKey( e ));
@@ -2275,7 +2276,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
       if ( !isInHyperPatch )
         cad_edge_set_tag(edg, ic);
 
-      /* by default, an edge does not necessalry appear in the resulting mesh,
+      /* by default, an edge does not necessarily appear in the resulting mesh,
          unless the following property is set :
       */
       cad_edge_set_property(edg, EDGE_PROPERTY_SOFT_REQUIRED);
@@ -2299,9 +2300,9 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
         for ( int iN = 0; iN < nbNodes; ++iN )
         {
           const UVPtStruct& nData = nodeDataVec[ iN ];
-          double t                = nData.param;
-          real uv[2]              = { nData.u, nData.v };
-          SMESH_TNodeXYZ nXYZ( nData.node );
+          double                t = nData.param;
+          real              uv[2] = { nData.u, nData.v };
+          SMESH_TNodeXYZ     nXYZ = nData.node;
           // cout << "\tt = " << t
           //      << "\t uv = ( " << uv[0] << ","<< uv[1] << " ) "
           //      << "\t u = " << nData.param
@@ -2324,38 +2325,23 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
       *****************************************************************************************/
 
       int npts = 0;
-      int ip1, ip2, *ip;
-      gp_Pnt2d e0 = curves.back()->Value(tmin);
-      gp_Pnt ee0 = surfaces.back()->Value(e0.X(), e0.Y());
-      Standard_Real d1=0,d2=0;
+      int   ip[2];
+      double d[2];
+      gp_Pnt2d uv0 = curves.back()->Value(tmin);
+      gp_Pnt    p0 = surfaces.back()->Value( uv0.X(), uv0.Y() );
 
-      int vertexKey = -1;
-      for (TopExp_Explorer ex_edge(e ,TopAbs_VERTEX); ex_edge.More(); ex_edge.Next()) {
-        TopoDS_Vertex v = TopoDS::Vertex(ex_edge.Current());
+      for (TopExp_Explorer ex_edge(e ,TopAbs_VERTEX); ex_edge.More(); ex_edge.Next())
+      {
+        const TopoDS_Vertex& v = TopoDS::Vertex(ex_edge.Current());
+        ip[ npts ] = pmap.Add(v);
+        d [ npts ] = p0.SquareDistance(BRep_Tool::Pnt(v));
         ++npts;
-        if (npts == 1){
-          ip = &ip1;
-          d1 = ee0.SquareDistance(BRep_Tool::Pnt(v));
-        } else {
-          ip = &ip2;
-          d2 = ee0.SquareDistance(BRep_Tool::Pnt(v));
-        }
-        *ip = pmap.FindIndex(v);
-        if(*ip <= 0) {
-          *ip = pmap.Add(v);
-          // SMESH_subMesh* sm = aMesh.GetSubMesh(v);
-          // if ( sm->IsMeshComputed() )
-          //   edgeSubmeshes.insert( sm->GetSubMeshDS() );
-        }
 
-//        std::string aFileName = "fmap_vertex_";
-//        aFileName.append(val_to_string(*ip));
-//        aFileName.append(".brep");
-//        BRepTools::Write(v,aFileName.c_str());
-
-        if (HasSizeMapOnVertex){
-          vertexKey = VerticesWithSizeMap.FindIndex(v);
-          if (VertexId2SizeMap.find(vertexKey)!=VertexId2SizeMap.end()){
+        if (HasSizeMapOnVertex)
+        {
+          int vertexKey = VerticesWithSizeMap.FindIndex(v);
+          if (VertexId2SizeMap.find(vertexKey)!=VertexId2SizeMap.end())
+          {
             theSizeMapStr = VertexId2SizeMap[vertexKey];
             if (theSizeMapStr.find(bad_end) == (theSizeMapStr.size()-bad_end.size()-1))
               continue;
@@ -2371,23 +2357,65 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
             PyGILState_Release(gstate);
           }
         }
-      }
-      if (npts != 2) {
-        // should not happen
+      } // loop on vertices
+
+      if (npts != 2) { // should not happen
         MESSAGE("An edge does not have 2 extremities.");
-      } else {
-        if (d1 < d2) {
-          // This defines the curves extremity connectivity
-          cad_edge_set_extremities(edg, ip1, ip2);
-          /* set the tag (color) to the same value as the extremity id : */
-          cad_edge_set_extremities_tag(edg, ip1, ip2);
-        }
-        else {
-          cad_edge_set_extremities(edg, ip2, ip1);
-          cad_edge_set_extremities_tag(edg, ip2, ip1);
-        }
+        continue;
       }
+
+      if ( d[0] > d[1] )
+        std::swap( ip[0], ip[1] );
+
+      // This defines the curves extremity connectivity
+      cad_edge_set_extremities    (edg, ip[0], ip[1]);
+      /* set the tag (color) to the same value as the extremity id : */
+      cad_edge_set_extremities_tag(edg, ip[0], ip[1]);
+
     } // for edge
+
+    // ==============================
+    // Add segments of enforced mesh
+    // ==============================
+
+    if ( enforcedMesh.HasSegmentsOnFace( f ))
+    {
+      BLSURFPlugin_EnforcedMesh1D::Segmemnt seg;
+      while ( enforcedMesh.NextSegment( seg, pmap ))
+      {
+        curves.push_back( seg._pcurve );
+
+        cad_edge_t *edg = cad_edge_new( fce, seg._tag, seg._u[0], seg._u[1],
+                                        curv_fun,seg._pcurve.get());
+        cad_edge_set_tag( edg, seg._tag );
+
+        cad_edge_set_property( edg, EDGE_PROPERTY_SOFT_REQUIRED );
+        cad_edge_set_property( edg, EDGE_PROPERTY_INTERNAL );
+
+        cad_edge_set_extremities    ( edg, seg._vTag[0], seg._vTag[1]);
+        cad_edge_set_extremities_tag( edg, seg._vTag[0], seg._vTag[1]);
+
+        dcad_edge_discretization_t *dedge;
+        dcad_get_edge_discretization( dcad, edg, &dedge );
+        dcad_edge_discretization_set_vertex_count( dedge, 2 );
+
+        dcad_edge_discretization_set_vertex_coordinates( dedge, 1,
+                                                         seg._u  [0],
+                                                         &seg._uv[0].ChangeCoord(1),
+                                                         seg._xyz[0].ChangeData() );
+        dcad_edge_discretization_set_vertex_coordinates( dedge, 2,
+                                                         seg._u  [1],
+                                                         &seg._uv[1].ChangeCoord(1),
+                                                         seg._xyz[1].ChangeData() );
+
+        dcad_edge_discretization_set_vertex_tag( dedge, 1, seg._vTag[0] );
+        dcad_edge_discretization_set_vertex_tag( dedge, 2, seg._vTag[1] );
+
+        dcad_edge_discretization_set_property(dedge, DISTENE_DCAD_PROPERTY_REQUIRED);
+      }
+    }
+
+
   } //for face
 
   ///////////////////////
@@ -2502,10 +2530,6 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     // set_param(css, "max_size",             val_to_string( minFaceSize * 5 ).c_str());
   }
 
-  // TODO: be able to use a mesh in input.
-  // See imsh usage in Products/templates/mg-cadsurf_template_common.cpp
-  // => cadsurf_set_mesh
-
   // Use the original dcad
   cadsurf_set_dcad(css, dcad);
 
@@ -2591,7 +2615,8 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   std::string GMFFileName = BLSURFPlugin_Hypothesis::GetDefaultGMFFile();
   if (_hypothesis)
     GMFFileName = _hypothesis->GetGMFFile();
-  if (GMFFileName != "") {
+  if (GMFFileName != "")
+  {
     bool asciiFound  = (GMFFileName.find(".mesh", GMFFileName.length()-5) != std::string::npos);
     bool binaryFound = (GMFFileName.find(".meshb",GMFFileName.length()-6) != std::string::npos);
     if (!asciiFound && !binaryFound)
@@ -2604,9 +2629,9 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   integer *evedg, *evtri, *evquad, *tags_buff, type;
   real xyz[3];
 
-  mesh_get_vertex_count(msh, &nv);
-  mesh_get_edge_count(msh, &ne);
-  mesh_get_triangle_count(msh, &nt);
+  mesh_get_vertex_count    (msh, &nv);
+  mesh_get_edge_count      (msh, &ne);
+  mesh_get_triangle_count  (msh, &nt);
   mesh_get_quadrangle_count(msh, &nq);
 
   evedg  = (integer *)mesh_calloc_generic_buffer(msh);
@@ -2617,82 +2642,79 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   std::vector<const SMDS_MeshNode*> nodes(nv+1);
   std::vector<bool>                  tags(nv+1);
 
+  BLSURFPlugin_Hypothesis::TEnfVertexCoords projVertex;
+
   /* enumerated vertices */
-  for(int iv=1;iv<=nv;iv++) {
+  for ( int iv = 1; iv <= nv; iv++ )
+  {
     mesh_get_vertex_coordinates(msh, iv, xyz);
     mesh_get_vertex_tag(msh, iv, &tag);
     // Issue 0020656. Use vertex coordinates
     nodes[iv] = NULL;
-    if ( tag > 0 && tag <= pmap.Extent() ) {
-      TopoDS_Vertex v = TopoDS::Vertex(pmap(tag));
-      double      tol = BRep_Tool::Tolerance( v );
-      gp_Pnt        p = BRep_Tool::Pnt( v );
-      if ( p.IsEqual( gp_Pnt( xyz[0], xyz[1], xyz[2]), 1e3*tol))
-        xyz[0] = p.X(), xyz[1] = p.Y(), xyz[2] = p.Z();
-      else
-        tag = 0; // enforced or attracted vertex
-      nodes[iv] = SMESH_Algo::VertexNode( v, meshDS );
+    if ( tag > 0 )
+    {
+      if ( tag <= pmap.Extent() )
+      {
+        TopoDS_Vertex v = TopoDS::Vertex(pmap(tag));
+        double      tol = BRep_Tool::Tolerance( v );
+        gp_Pnt        p = BRep_Tool::Pnt( v );
+        if ( p.IsEqual( gp_Pnt( xyz[0], xyz[1], xyz[2]), 1e3*tol))
+          xyz[0] = p.X(), xyz[1] = p.Y(), xyz[2] = p.Z();
+        else
+          tag = 0; // enforced or attracted vertex
+        nodes[iv] = SMESH_Algo::VertexNode( v, meshDS );
+      }
+      if ( !nodes[iv] && ( nodes[iv] = enforcedMesh.GetNodeByTag( tag, pmap )))
+      {
+        continue;
+      }
     }
     if ( !nodes[iv] )
       nodes[iv] = meshDS->AddNode(xyz[0], xyz[1], xyz[2]);
 
     // Create group of enforced vertices if requested
-    BLSURFPlugin_Hypothesis::TEnfVertexCoords projVertex;
-    projVertex.clear();
-    projVertex.push_back((double)xyz[0]);
-    projVertex.push_back((double)xyz[1]);
-    projVertex.push_back((double)xyz[2]);
-    std::map< BLSURFPlugin_Hypothesis::TEnfVertexCoords, BLSURFPlugin_Hypothesis::TEnfVertexList >::const_iterator enfCoordsIt = EnfVertexCoords2EnfVertexList.find(projVertex);
+    projVertex.assign( xyz, xyz + 3 );
+    auto enfCoordsIt = EnfVertexCoords2EnfVertexList.find( projVertex );
     if (enfCoordsIt != EnfVertexCoords2EnfVertexList.end())
     {
-      BLSURFPlugin_Hypothesis::TEnfVertexList::const_iterator enfListIt = enfCoordsIt->second.begin();
-      BLSURFPlugin_Hypothesis::TEnfVertex *currentEnfVertex;
-      for (; enfListIt != enfCoordsIt->second.end(); ++enfListIt) {
-        currentEnfVertex = (*enfListIt);
-        if (currentEnfVertex->grpName != "") {
-          bool groupDone = false;
-          SMESH_Mesh::GroupIteratorPtr grIt = aMesh.GetGroups();
-          while (grIt->more()) {
-            SMESH_Group * group = grIt->next();
-            if ( !group ) continue;
-            SMESHDS_GroupBase* groupDS = group->GetGroupDS();
-            if ( !groupDS ) continue;
-            if ( groupDS->GetType()==SMDSAbs_Node && currentEnfVertex->grpName.compare(group->GetName())==0) {
-              SMESHDS_Group* aGroupDS = static_cast<SMESHDS_Group*>( groupDS );
-              aGroupDS->SMDSGroup().Add(nodes[iv]);
-              // How can I inform the hypothesis ?
-              //                 _hypothesis->AddEnfVertexNodeID(currentEnfVertex->grpName,nodes[iv]->GetID());
-              groupDone = true;
-              break;
-            }
-          }
-          if (!groupDone)
+      for ( BLSURFPlugin_Hypothesis::TEnfVertex *currentEnfVertex : enfCoordsIt->second )
+        if (currentEnfVertex->grpName != "")
+        {
+          SMDS_MeshGroup* groupDS = nullptr;
+          for ( SMESH_Mesh::GroupIteratorPtr grIt = aMesh.GetGroups(); grIt->more() && !groupDS; )
           {
-            SMESH_Group* aGroup = aMesh.AddGroup( SMDSAbs_Node, currentEnfVertex->grpName.c_str() );
-            aGroup->SetName( currentEnfVertex->grpName.c_str() );
-            SMESHDS_Group* aGroupDS = static_cast<SMESHDS_Group*>( aGroup->GetGroupDS() );
-            aGroupDS->SMDSGroup().Add(nodes[iv]);
-            groupDone = true;
+            SMESH_Group * group = grIt->next();
+            SMESHDS_Group * grp = dynamic_cast< SMESHDS_Group* >( group->GetGroupDS() );
+            if ( grp &&
+                 grp->GetType() == SMDSAbs_Node &&
+                 currentEnfVertex->grpName == group->GetName() )
+              groupDS = &grp->SMDSGroup();
           }
-          if (!groupDone)
-            throw SALOME_Exception(LOCALIZED("An enforced vertex node was not added to a group"));
+          if ( !groupDS )
+          {
+            SMESH_Group * group = aMesh.AddGroup( SMDSAbs_Node, currentEnfVertex->grpName.c_str() );
+            SMESHDS_Group * grp = static_cast< SMESHDS_Group* >( group->GetGroupDS() );
+            groupDS = &grp->SMDSGroup();
+          }
+          groupDS->Add( nodes[iv] );
         }
-        else
-          MESSAGE("Group name is empty: '"<<currentEnfVertex->grpName<<"' => group is not created");
-      }
     }
 
     // internal points are tagged to zero
-    if(tag > 0 && tag <= pmap.Extent() ){
+    if ( tag > 0 && tag <= pmap.Extent() )
+    {
       meshDS->SetNodeOnVertex(nodes[iv], TopoDS::Vertex(pmap(tag)));
       tags[iv] = false;
-    } else {
+    }
+    else
+    {
       tags[iv] = true;
     }
   }
 
   /* enumerate edges */
-  for(int it=1;it<=ne;it++) {
+  for ( int it = 1; it <= ne; it++ )
+  {
     SMDS_MeshEdge* edg;
     mesh_get_edge_vertices(msh, it, vtx);
     mesh_get_edge_extra_vertices(msh, it, &type, evedg);
@@ -2703,14 +2725,21 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     // Get the initial tags corresponding to the output tag and redefine the tag as
     // the last of the two initial tags (else the output tag is out of emap and hasn't any meaning)
     mesh_get_composite_tag_definition(msh, tag, &nb_tag, tags_buff);
-    if(nb_tag > 1)
-      tag=tags_buff[nb_tag-1];
+    if ( nb_tag > 1 )
+      tag = tags_buff[ nb_tag-1 ];
     if ( tag < 1 || tag > emap.Extent() )
     {
-      std::cerr << "MG-CADSurf BUG:::: Edge tag " << tag
-                << " does not point to a CAD edge (nb edges " << emap.Extent() << ")" << std::endl;
+      if ( !enforcedMesh.IsSegmentTag( tag )) // it's a false INTERNAL EDGE of enforced mesh
+      {
+        std::cerr << "MG-CADSurf BUG:::: Edge tag " << tag
+                  << " does not point to a CAD edge (nb edges " << emap.Extent() << ")"
+                  << std::endl;
+      }
       continue;
     }
+    if ( meshDS->ShapeToIndex( emap( tag )) == 0 )
+      tag = enforcedMesh.GetTagOfSplitEdge( tag );
+
     if (tags[vtx[0]]) {
       Set_NodeOnEdge(meshDS, nodes[vtx[0]], emap(tag));
       tags[vtx[0]] = false;
@@ -3207,31 +3236,27 @@ void BLSURFPlugin_BLSURF::Set_NodeOnEdge(SMESHDS_Mesh*        meshDS,
  */
 status_t curv_fun(real t, real *uv, real *dt, real *dtt, void *user_data)
 {
-  /* t is given. It contains the t (time) 1D parametric coordintaes
-     of the point PreCAD/MG-CADSurf is querying on the curve */
+  /* t is given. It contains the 1D parametric coordintaes
+     of the point MG-CADSurf is querying on the curve */
 
-  /* user_data identifies the edge PreCAD/MG-CADSurf is querying
-   * (see cad_edge_new later in this example) */
-  const Geom2d_Curve*pargeo = (const Geom2d_Curve*) user_data;
+  /* user_data identifies the edge MG-CADSurf is querying */
+  const Geom2d_Curve* pargeo = (const Geom2d_Curve*) user_data;
 
-  if (uv){
-   /* MG-CADSurf is querying the function evaluation */
-    gp_Pnt2d P;
-    P=pargeo->Value(t);
+  if (uv) {
+    /* MG-CADSurf is querying the function evaluation */
+    gp_Pnt2d P = pargeo->Value(t);
     uv[0]=P.X(); uv[1]=P.Y();
   }
 
-  if(dt) {
-   /* query for the first order derivatives */
-    gp_Vec2d V1;
-    V1=pargeo->DN(t,1);
+  if (dt) {
+    /* query for the first order derivatives */
+    gp_Vec2d V1 = pargeo->DN(t,1);
     dt[0]=V1.X(); dt[1]=V1.Y();
   }
 
-  if(dtt){
+  if (dtt) {
     /* query for the second order derivatives */
-    gp_Vec2d V2;
-    V2=pargeo->DN(t,2);
+    gp_Vec2d V2 = pargeo->DN(t,2);
     dtt[0]=V2.X(); dtt[1]=V2.Y();
   }
 

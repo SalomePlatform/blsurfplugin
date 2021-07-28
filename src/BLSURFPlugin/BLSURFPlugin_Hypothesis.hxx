@@ -27,19 +27,22 @@
 #ifndef _BLSURFPlugin_Hypothesis_HXX_
 #define _BLSURFPlugin_Hypothesis_HXX_
 
-#include "SMESH_Hypothesis.hxx"
+#include "BLSURFPlugin_Attractor.hxx"
+
+#include <SMDS_ElemIterator.hxx>
+#include <SMESH_Hypothesis.hxx>
+#include <smIdType.hxx>
+
 #include <vector>
 #include <map>
 #include <set>
-#include <stdexcept>
 #include <string>
-#include <cstring>
-#include <sstream>
-#include <utilities.h>
-#include <smIdType.hxx>
-#include "BLSURFPlugin_Attractor.hxx"
+
+class SMESH_Mesh;
 
 //  Parameters for work of MG-CADSurf
+
+enum EnforcedMeshType { ENFORCED_MESH, ENFORCED_GROUP, ENFORCED_SUBMESH };
 
 class BLSURFPlugin_Hypothesis: public SMESH_Hypothesis
 {
@@ -221,9 +224,9 @@ public:
   std::string GetTags();
 
   // Hyper-patches
-  typedef std::set< int > THyperPatchTags;
-  typedef std::vector< THyperPatchTags > THyperPatchList;
-  typedef std::set< std::string > THyperPatchEntries;
+  typedef std::set< int                   > THyperPatchTags;
+  typedef std::vector< THyperPatchTags    > THyperPatchList;
+  typedef std::set< std::string           > THyperPatchEntries;
   typedef std::vector< THyperPatchEntries > THyperPatchEntriesList;
 
   void SetHyperPatches(const THyperPatchList& hpl, bool notifyMesh=true);
@@ -234,6 +237,29 @@ public:
   const THyperPatchEntriesList& GetHyperPatchEntries() const { return _hyperPatchEntriesList; }
   static int GetHyperPatchTag( int faceTag, const BLSURFPlugin_Hypothesis* hyp, int* iPatch=0 );
 
+  // Enforced mesh
+  struct EnforcedMesh
+  {
+    int              _meshID;    // persistent mesh ID
+    int              _subID;     // either persistent group ID or sub-shape ID for sub-mesh
+    EnforcedMeshType _type;      /* specify what _subID means:
+                                    - nothing      for ENFORCED_MESH
+                                    - group ID     for ENFORCED_GROUP
+                                    - sub-shape ID for ENFORCED_SUBMESH */
+    std::string      _groupName; // name of a group to add mesh edges to
+
+    bool operator==(const EnforcedMesh& em ) const
+    {
+      return ( _meshID == em._meshID && _subID == em._subID &&
+               _type == em._type && _groupName == em._groupName );
+    }
+  };
+
+  void SetEnforcedMeshes( std::vector< EnforcedMesh > & enforcedMeshes );
+  const std::vector< EnforcedMesh > & GetEnforcedMeshes() const { return _enforcedMeshes; }
+  SMDS_ElemIteratorPtr GetEnforcedSegments( const EnforcedMesh& enfMesh,
+                                            SMESH_Mesh* &       mesh ) const;
+  
 
   void SetPreCADMergeEdges(bool theVal);
   bool GetPreCADMergeEdges() const { return _preCADMergeEdges; }
@@ -647,30 +673,32 @@ private:
   TSizeMap        _attractors;
   TAttractorMap   _classAttractors;
 
-  TFaceEntryEnfVertexListMap      _faceEntryEnfVertexListMap;
-  TEnfVertexList                  _enfVertexList;
+  TFaceEntryEnfVertexListMap        _faceEntryEnfVertexListMap;
+  TEnfVertexList                    _enfVertexList;
   // maps to get "manual" enf vertex (through their coordinates)
-  TFaceEntryCoordsListMap         _faceEntryCoordsListMap;
-  TCoordsEnfVertexMap             _coordsEnfVertexMap;
+  TFaceEntryCoordsListMap           _faceEntryCoordsListMap;
+  TCoordsEnfVertexMap               _coordsEnfVertexMap;
   // maps to get "geom" enf vertex (through their geom entries)
-  TFaceEntryEnfVertexEntryListMap _faceEntryEnfVertexEntryListMap;
-  TEnfVertexEntryEnfVertexMap     _enfVertexEntryEnfVertexMap;
-  TGroupNameNodeIDMap             _groupNameNodeIDMap;
+  TFaceEntryEnfVertexEntryListMap   _faceEntryEnfVertexEntryListMap;
+  TEnfVertexEntryEnfVertexMap       _enfVertexEntryEnfVertexMap;
+  TGroupNameNodeIDMap               _groupNameNodeIDMap;
   
 //  Enable internal enforced vertices on specific face if requested by user
 //  TFaceEntryInternalVerticesList  _faceEntryInternalVerticesList;
-  bool            _enforcedInternalVerticesAllFaces;
-  TEnfGroupName   _enforcedInternalVerticesAllFacesGroup;
+  bool                              _enforcedInternalVerticesAllFaces;
+  TEnfGroupName                     _enforcedInternalVerticesAllFacesGroup;
   
-  TPreCadPeriodicityVector _preCadFacesPeriodicityVector;
-  TPreCadPeriodicityVector _preCadEdgesPeriodicityVector;
+  TPreCadPeriodicityVector          _preCadFacesPeriodicityVector;
+  TPreCadPeriodicityVector          _preCadEdgesPeriodicityVector;
 
-  TFacesPeriodicityVector    _facesPeriodicityVector;
-  TEdgesPeriodicityVector    _edgesPeriodicityVector;
-  TVerticesPeriodicityVector _verticesPeriodicityVector;
+  TFacesPeriodicityVector           _facesPeriodicityVector;
+  TEdgesPeriodicityVector           _edgesPeriodicityVector;
+  TVerticesPeriodicityVector        _verticesPeriodicityVector;
 
-  THyperPatchList        _hyperPatchList;
-  THyperPatchEntriesList _hyperPatchEntriesList;
+  THyperPatchList                   _hyperPatchList;
+  THyperPatchEntriesList            _hyperPatchEntriesList;
+
+  std::vector< EnforcedMesh >       _enforcedMeshes; // enforced 1D meshes
 
   // Called by SaveTo to store content of _preCadFacesPeriodicityVector and _preCadEdgesPeriodicityVector
   void SavePreCADPeriodicity(std::ostream & save, const char* shapeType);

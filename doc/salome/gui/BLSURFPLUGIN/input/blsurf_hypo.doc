@@ -392,6 +392,21 @@ A group can optionnaly be defined on those enforced vertices.
 \ref blsurf_top "Back to top"
 
 
+\section blsurf_enforced_meshes Enforced Meshes
+
+\image html blsurf_enforced_meshes.png
+
+MG-CADSurf algorithm can be forced by other 1D meshes, sub-meshes or
+groups. 1D meshes are allowed to pass over face boundaries and to
+intersect other enforced meshes.
+If a group name is given, the enforced 1D elements will be added to the group.
+If the group does not exist, it is created.
+
+\sa Sample TUI Script of the \ref tui_blsurf "creation of a MG-CADSurf hypothesis", including enforced meshes.
+
+\ref blsurf_top "Back to top"
+
+
 \section blsurf_periodicity Periodicity
 
 \subsection periodicity_introduction Introduction

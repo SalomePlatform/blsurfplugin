@@ -26,16 +26,18 @@
 //
 #include "BLSURFPlugin_Hypothesis.hxx"
 #include "BLSURFPlugin_Attractor.hxx"
-#include "SMESH_Gen_i.hxx"
-#include <utilities.h>
-#include <cstring>
-#include <iostream>
-#include <sstream>
+
+#include <SMESHDS_Group.hxx>
+#include <SMESHDS_Mesh.hxx>
+#include <SMESH_Gen_i.hxx>
+#include <SMESH_Group.hxx>
+#include <SMESH_TryCatch.hxx>
 
 #include <Basics_Utils.hxx>
+#include <utilities.h>
 
 // cascade include
-#include "ShapeAnalysis.hxx"
+#include <ShapeAnalysis.hxx>
 
 // CORBA includes
 #include CORBA_CLIENT_HEADER(SALOMEDS)
@@ -974,6 +976,63 @@ int BLSURFPlugin_Hypothesis::GetHyperPatchTag( const int                      fa
   }
   return faceTag;
 }
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis::SetEnforcedMeshes( std::vector< EnforcedMesh > & enforcedMeshes )
+{
+  if ( _enforcedMeshes != enforcedMeshes )
+  {
+    _enforcedMeshes.swap( enforcedMeshes );
+    NotifySubMeshesHypothesisModification();
+  }
+}
+
+//================================================================================
+/*!
+ * \brief Return elements of 1D enforced mesh. Result can be NULL
+ */
+//================================================================================
+
+SMDS_ElemIteratorPtr
+BLSURFPlugin_Hypothesis::GetEnforcedSegments( const EnforcedMesh& enfMesh,
+                                              SMESH_Mesh* &       mesh ) const
+{
+  SMDS_ElemIteratorPtr it;
+  if (( mesh = SMESH_Hypothesis::GetMeshByPersistentID( enfMesh._meshID )))
+  {
+    mesh->Load();
+
+    switch( enfMesh._type )
+    {
+    case ENFORCED_MESH:
+      it = mesh->GetMeshDS()->elementsIterator( SMDSAbs_Edge );
+      break;
+
+    case ENFORCED_GROUP:
+      if ( SMESH_Group* grp = mesh->GetGroup( enfMesh._subID ))
+      {
+        if ( grp->GetGroupDS()->GetType() == SMDSAbs_Edge )
+          it = grp->GetGroupDS()->GetElements();
+      }
+      break;
+
+    case ENFORCED_SUBMESH:
+      if ( SMESH_subMesh* sm = mesh->GetSubMeshContaining( enfMesh._subID ))
+        if ( SMESHDS_SubMesh * smDS = sm->GetSubMeshDS() )
+        {
+          it = smDS->GetElements();
+          if ( it->more() && it->next()->GetType() != SMDSAbs_Edge )
+            it = SMDS_ElemIteratorPtr();
+          else
+            it = smDS->GetElements();
+        }
+      break;
+    }
+  }
+  return it;
+}
+
+
 //=============================================================================
 void BLSURFPlugin_Hypothesis::SetPreCADMergeEdges(bool theVal)
 {
@@ -2292,8 +2351,13 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save)
   std::ostringstream hpStream;
   boost::archive::text_oarchive( hpStream ) << _hyperPatchEntriesList;
   std::string hpString = hpStream.str();
-  save << " " << hpString.size() <<  " " << hpString;
+  SMESHDS_Hypothesis::SaveString( save, hpString );
 
+  // Enforced meshes
+  std::ostringstream enfMStream;
+  boost::archive::text_oarchive( enfMStream ) << _enforcedMeshes;
+  std::string enfMString = enfMStream.str();
+  SMESHDS_Hypothesis::SaveString( save, enfMString );
 
   return save;
 }
@@ -3328,22 +3392,51 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
   }
 
   // hyper-patches as entries (issue bos #20543)
-  if ( static_cast<bool>( load >> i ) && i > 0 )
+  std::string buffer;
+  if ( SMESHDS_Hypothesis::LoadString( load, buffer ))
   {
-    std::string buffer( i, '\0' );
-    load.get( buffer[0] ); // remove a white-space
-    load.get( & buffer[0], i + 1 );
-
     std::istringstream istream( buffer.data() );
     boost::archive::text_iarchive archive( istream );
-    try {
-      archive >> _hyperPatchEntriesList;
-    }
-    catch (...) {}
+    SMESH_TRY;
+    archive >> _hyperPatchEntriesList;
+    SMESH_CATCH( SMESH::printErrorInDebugMode );
+  }
+
+  // Enforced meshes (issue bos $16292)
+  buffer.clear();
+  if ( SMESHDS_Hypothesis::LoadString( load, buffer ))
+  {
+    std::istringstream istream( buffer.data() );
+    boost::archive::text_iarchive archive( istream );
+    SMESH_TRY;
+    archive >> _enforcedMeshes;
+    SMESH_CATCH( SMESH::printErrorInDebugMode );
   }
 
   return load;
 }
+
+namespace boost {
+  namespace serialization {
+
+    //=======================================================================
+    //function : serialize
+    //purpose  : serialize EnforcedMesh
+    //=======================================================================
+
+    template<class Archive>
+    void serialize(Archive & ar, BLSURFPlugin_Hypothesis::EnforcedMesh & enfM,
+                   const unsigned int /*version*/)
+    {
+      ar & enfM._meshID;
+      ar & enfM._subID;
+      ar & enfM._type;
+      ar & enfM._groupName;
+    }
+
+  } // namespace serialization
+} // namespace boost
+
 
 void BLSURFPlugin_Hypothesis::LoadFacesPeriodicity(std::istream & load)
 {

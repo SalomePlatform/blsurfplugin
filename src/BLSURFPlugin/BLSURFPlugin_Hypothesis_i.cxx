@@ -28,6 +28,7 @@
 
 #include <SMESH_Gen.hxx>
 #include <SMESH_Gen_i.hxx>
+#include <SMESH_Group_i.hxx>
 #include <SMESH_PythonDump.hxx>
 
 #include <SALOMEDS_wrap.hxx>
@@ -39,6 +40,142 @@
 #include <boost/regex.hpp>
 
 using namespace std;
+
+namespace
+{
+  //================================================================================
+  /*!
+   * \brief Return persistent ID of a mesh
+   *  \param [in] mesh - the mesh
+   *  \return int - -1 in case of failure
+   */
+  //================================================================================
+
+  int GetMeshPersistentId( SMESH::SMESH_Mesh_ptr mesh )
+  {
+    int id = -1;
+    if ( SMESH_Mesh_i* mesh_i = SMESH::DownCast<SMESH_Mesh_i*>( mesh ))
+      id = mesh_i->GetImpl().GetMeshDS()->GetPersistentId();
+    return id;
+  }
+
+  //================================================================================
+  /*!
+   * \brief Return persistent ID of a group or sub-mesh
+   *  \param [in] meshPart - the mesh part
+   *  \param [out] isGroup - return true if meshPart is a group
+   *  \return int - -1 in case if meshPart is neither a group nor a sub-mesh
+   */
+  //================================================================================
+
+  int GetMeshPartPersistentId( SMESH::SMESH_IDSource_ptr meshPart, bool & isGroup )
+  {
+    int id = -1;
+    isGroup = false;
+    SMESH_GroupBase_i* group_i = SMESH::DownCast<SMESH_GroupBase_i*>( meshPart );
+    if ( group_i )
+    {
+      id = group_i->GetLocalID();
+      isGroup = true;
+    }
+    else
+    {
+      SMESH::SMESH_subMesh_var subMesh = SMESH::SMESH_subMesh::_narrow( meshPart );
+      if ( !subMesh->_is_nil() )
+        id = subMesh->GetId();
+    }
+    return id;
+  }
+
+  //================================================================================
+  /*!
+   * \brief Find a mesh in the study by mesh persistent ID
+   */
+  //================================================================================
+
+  SMESH::SMESH_Mesh_ptr FindMeshByID( int theMeshID )
+  {
+    SMESH::SMESH_Mesh_var mesh;
+
+    SMESH_Gen_i*                gen = SMESH_Gen_i::GetSMESHGen();
+    CORBA::String_var  compDataType = gen->ComponentDataType();
+    SALOMEDS::Study_var      aStudy = gen->getStudyServant();
+    SALOMEDS::SComponent_wrap genSO = aStudy->FindComponent( compDataType.in() );
+    if ( !genSO->_is_nil() )
+    {
+      SALOMEDS::ChildIterator_wrap anIter = aStudy->NewChildIterator( genSO );
+      for ( ; anIter->More(); anIter->Next() )
+      {
+        SALOMEDS::SObject_wrap so = anIter->Value();
+        CORBA::Object_var      obj = gen->SObjectToObject( so );
+        mesh = SMESH::SMESH_Mesh::_narrow( obj );
+        if ( !mesh->_is_nil() && GetMeshPersistentId( mesh ) == theMeshID )
+          break;
+        mesh = SMESH::SMESH_Mesh::_nil();
+      }
+    }
+    return mesh._retn();
+  }
+
+  //================================================================================
+  /*!
+   * \brief Return a group by its ID
+   */
+  //================================================================================
+
+  SMESH::SMESH_GroupBase_ptr GetGroupByID( SMESH::SMESH_Mesh_ptr mesh, int ID )
+  {
+    SMESH::SMESH_GroupBase_var group;
+    if ( !CORBA::is_nil( mesh ))
+    {
+      SMESH::ListOfGroups_var groups = mesh->GetGroups();
+      for ( CORBA::ULong i = 0; i < groups->length(); ++i )
+        if ( SMESH_GroupBase_i* group_i = SMESH::DownCast<SMESH_GroupBase_i*>( groups[i] ))
+          if ( group_i->GetLocalID() == ID )
+          {
+            group = SMESH::SMESH_GroupBase::_narrow( groups[i] );
+            break;
+          }
+    }
+    return group._retn();
+  }
+
+  //================================================================================
+  /*!
+   * \brief Return a sub-mesh by sub-shape ID
+   */
+  //================================================================================
+
+  SMESH::SMESH_subMesh_ptr GetSubMeshByID( SMESH::SMESH_Mesh_ptr mesh,
+                                           const int             shapeID,
+                                           CORBA::Long           subMeshTag )
+  {
+    SMESH::SMESH_subMesh_var subMesh;
+    if ( !CORBA::is_nil( mesh ))
+    {
+      SMESH_Gen_i*              gen = SMESH_Gen_i::GetSMESHGen();
+      SALOMEDS::SObject_wrap meshSO = gen->ObjectToSObject( mesh );
+      SALOMEDS::Study_var    aStudy = gen->getStudyServant();
+      SALOMEDS::SObject_wrap subMeshRootSO;
+      if ( !meshSO->_is_nil() && meshSO->FindSubObject( subMeshTag, subMeshRootSO.inout() ))
+      {
+        SALOMEDS::ChildIterator_wrap anIter = aStudy->NewChildIterator( subMeshRootSO );
+        for ( ; anIter->More(); anIter->Next() )
+        {
+          SALOMEDS::SObject_wrap so = anIter->Value();
+          CORBA::Object_var      obj = gen->SObjectToObject( so );
+          subMesh = SMESH::SMESH_subMesh::_narrow( obj );
+          if ( !subMesh->_is_nil() && subMesh->GetId() == shapeID )
+            break;
+          subMesh = SMESH::SMESH_subMesh::_nil();
+        }
+      }
+      return subMesh._retn();
+    }
+    return subMesh._retn();
+  }
+
+} // namespace
 
 //=============================================================================
 /*!
@@ -919,6 +1056,104 @@ void BLSURFPlugin_Hypothesis_i::SetVerbosity(CORBA::Short theVal) {
 CORBA::Short BLSURFPlugin_Hypothesis_i::GetVerbosity() {
   ASSERT(myBaseImpl);
   return (CORBA::Short) this->GetImpl()->GetVerbosity();
+}
+
+
+//=============================================================================
+void BLSURFPlugin_Hypothesis_i::SetEnforcedMeshes(const BLSURFPlugin::EnforcedMeshesList& theMeshes )
+{
+  std::vector< ::BLSURFPlugin_Hypothesis::EnforcedMesh > enforcedMeshes;
+  for ( CORBA::ULong i = 0; i < theMeshes.length(); ++i )
+  {
+    const BLSURFPlugin::MG_EnforcedMesh1D & inEM = theMeshes[ i ];
+    if ( CORBA::is_nil( inEM.mesh ))
+      THROW_SALOME_CORBA_EXCEPTION( "NULL enforced mesh",SALOME::BAD_PARAM );
+
+    SMESH::SMESH_Mesh_var mesh = inEM.mesh->GetMesh();
+    if ( CORBA::is_nil( mesh ))
+      THROW_SALOME_CORBA_EXCEPTION( "BAD enforced mesh",SALOME::BAD_PARAM );
+
+    int meshID = GetMeshPersistentId( mesh );
+    if ( meshID < 0 )
+      THROW_SALOME_CORBA_EXCEPTION( "BAD enforced mesh",SALOME::BAD_PARAM );
+
+    bool isGroup = false;
+    int   partID = GetMeshPartPersistentId( inEM.mesh, isGroup );
+    ::EnforcedMeshType partType = ENFORCED_MESH;
+    if ( partID > -1 )
+      partType = isGroup ? ENFORCED_GROUP : ENFORCED_SUBMESH;
+
+    enforcedMeshes.push_back({ meshID, partID, partType, inEM.groupName.in() });
+  }
+
+  this->GetImpl()->SetEnforcedMeshes( enforcedMeshes );
+
+  // dump
+
+  SMESH::TPythonDump pyDump;
+  pyDump << BLSURFPlugin::BLSURFPlugin_Hypothesis_var( _this() )
+         << ".SetEnforcedMeshes([ ";
+
+  for ( CORBA::ULong i = 0; i < theMeshes.length(); ++i )
+  {
+    const BLSURFPlugin::MG_EnforcedMesh1D & inEM = theMeshes[ i ];
+    pyDump << "BLSURFPlugin.MG_EnforcedMesh1D( " << inEM.mesh.in() << ", ";
+    if ( inEM.groupName.in() && inEM.groupName.in()[0] )
+      pyDump << "'" << inEM.groupName.in() << "'";
+    else
+      pyDump << "''";
+    pyDump << ")" << ( i + 1 < theMeshes.length() ? ", " : "])");
+  }
+}
+
+//=============================================================================
+
+BLSURFPlugin::EnforcedMeshesList* BLSURFPlugin_Hypothesis_i::GetEnforcedMeshes()
+{
+  const std::vector< ::BLSURFPlugin_Hypothesis::EnforcedMesh > & hypEnfMeshes =
+    this->GetImpl()->GetEnforcedMeshes();
+
+  BLSURFPlugin::EnforcedMeshesList_var outEnfMeshes = new BLSURFPlugin::EnforcedMeshesList();
+  outEnfMeshes->length( hypEnfMeshes.size() );
+
+  int nbMeshes = 0;
+  for ( size_t i = 0; i < hypEnfMeshes.size(); ++i )
+  {
+    const ::BLSURFPlugin_Hypothesis::EnforcedMesh& enfMeshData = hypEnfMeshes[ i ];
+    BLSURFPlugin::MG_EnforcedMesh1D &               outEnfMesh = outEnfMeshes[ nbMeshes ];
+
+    SMESH::SMESH_Mesh_var mesh = FindMeshByID( enfMeshData._meshID );
+    switch ( enfMeshData._type ) {
+    case ENFORCED_MESH   :
+    {
+      outEnfMesh.mesh = SMESH::SMESH_IDSource::_narrow( mesh );
+      break;
+    }
+    case ENFORCED_GROUP  :
+    {
+      SMESH::SMESH_GroupBase_var group = GetGroupByID( mesh, enfMeshData._subID );
+      outEnfMesh.mesh = SMESH::SMESH_IDSource::_narrow( group );
+      break;
+    }
+    case ENFORCED_SUBMESH:
+    {
+      SMESH::SMESH_subMesh_var subMesh;
+      subMesh   = GetSubMeshByID( mesh, enfMeshData._subID, SMESH::Tag_SubMeshOnEdge );
+      if ( CORBA::is_nil( subMesh ))
+        subMesh = GetSubMeshByID( mesh, enfMeshData._subID, SMESH::Tag_SubMeshOnCompound );
+
+      outEnfMesh.mesh = SMESH::SMESH_IDSource::_narrow( subMesh );
+      break;
+    }
+    default: continue;
+    }
+    outEnfMesh.groupName = enfMeshData._groupName.c_str();
+
+    nbMeshes += ( !CORBA::is_nil( outEnfMesh.mesh ));
+  }
+  outEnfMeshes->length( nbMeshes );
+
+  return outEnfMeshes._retn();
 }
 
 //=============================================================================

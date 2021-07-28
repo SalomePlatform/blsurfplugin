@@ -132,6 +132,16 @@ public:
   typedef std::vector< TEdgePeriodicityIDs > TEdgesIDsPeriodicityVector;
   typedef std::vector< TVertexPeriodicityIDs > TVerticesIDsPeriodicityVector;
 
+  // Point projection on FACE
+  typedef struct {
+    gp_XY        uv;
+    gp_XYZ       xyz;
+    TopAbs_State state;
+  } projectionPoint;
+
+  static projectionPoint getProjectionPoint(TopoDS_Face&  theFace,
+                                            const gp_Pnt& thePoint,
+                                            const bool    theAllowStateON=false);
 
 
 protected:
@@ -162,7 +172,6 @@ private:
 private:
   PyObject *          main_mod;
   PyObject *          main_dict;
-  SMESH_MesherHelper* myHelper;
 
   volatile bool _compute_canceled;
 };

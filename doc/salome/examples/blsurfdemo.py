@@ -108,12 +108,33 @@ algo2d.SetAttractorGeom(Face_2, Wire_1, 1, 36.641, 20, 10)
 # the gradation to its maximum
 algo2d.SetGradation( 2.5 )
 
+# -----------------------
+# Adding enforced meshes
+# -----------------------
+
+# create 1D mesh
+OZ       = geompy.MakeVectorDXDYDZ(0, 0, 1)
+circle_1 = geompy.MakeCircle( geompy.MakeVertex( 100, 75,  200 ), OZ, 50 )
+circle_2 = geompy.MakeCircle( geompy.MakeVertex( 100, 150, 200 ), OZ, 70 )
+circles  = geompy.MakeCompound([ circle_1, circle_2 ], theName="circles")
+mesh_1D  = smesh.Mesh( circles, "enforced circles" )
+mesh_1D.Segment().LocalLength( 7 )
+mesh_1D.Compute()
+
+# Add enforced mesh
+algo2d.SetEnforcedMeshes([
+    smeshBuilder.MG_EnforcedMesh1D( mesh_1D, "Enforced edges")])
+
+# -----------------
 # compute the mesh
+# -----------------
+
 cadsurfMesh.Compute()
 
-# ---------------------------------------------------------------
+
+# ================================================================
 # blsurf_construct_mesh_internal_vertices Using internal vertices
-# ---------------------------------------------------------------
+# ================================================================
 
 # Creating a geometry containing internal vertices
 Face_3 = geompy.MakeFaceHW(1, 1, 1)

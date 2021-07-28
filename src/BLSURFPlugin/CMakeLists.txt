@@ -73,6 +73,7 @@ SET(BLSURFEngine_HEADERS
   BLSURFPlugin_Hypothesis.hxx
   BLSURFPlugin_Hypothesis_i.hxx
   BLSURFPlugin_Attractor.hxx
+  BLSURFPlugin_EnforcedMesh1D.hxx
 )
 
 # --- sources ---
@@ -85,6 +86,7 @@ SET(BLSURFEngine_SOURCES
   BLSURFPlugin_Hypothesis_i.cxx
   BLSURFPlugin_i.cxx
   BLSURFPlugin_Attractor.cxx
+  BLSURFPlugin_EnforcedMesh1D.cxx
 )
 
 # --- scripts ---

@@ -242,6 +242,11 @@ protected slots:
   void                onSelectEnforcedVertex();
   void                clearEnforcedVertexWidgets();
   void                onInternalVerticesClicked(int);
+  // Enforced mesh tab
+  void                onAddEnforcedMesh();
+  void                onRemoveEnforcedMesh();
+  void                onEnforcedMeshSelected();
+  void                onEnfMeshTableSelected();
   // Periodicity tab
   void                onPeriodicityByVerticesChecked(bool);
   void                onAddPeriodicity();
@@ -273,6 +278,8 @@ private:
   void                AddPreCadSequenceToVector(BlsurfHypothesisData& h_data, BLSURFPlugin::TPeriodicityList_var preCadFacePeriodicityVector, bool onFace) const;
   void                addHyPatchToTable(const QString& tags, const QString& entries);
   bool                hasGeom() const;
+
+  void                addEnforcedMesh( SMESH::SMESH_IDSource_ptr mesh, const QString& groupName );
 
 private:
   
@@ -336,6 +343,17 @@ private:
   QCheckBox           *myInternalEnforcedVerticesAllFaces;
   QLineEdit           *myInternalEnforcedVerticesAllFacesGroup;
 
+
+  // Enforced meshes
+  QWidget*             myEnfMeshGroup;
+  StdMeshersGUI_ObjectReferenceParamWdg *myEnfMeshWdg;
+  QTableWidget*        myEnfMeshTableWdg;
+  QLineEdit*           myEnforcedGroupName;
+  QPushButton*         myAddEnfMeshButton;
+  QPushButton*         myRemoveEnfMeshButton;
+
+
+
   // map =  entry , size map
   QMap<QString, QString>          mySMPMap;           // Map <face entry, size>
   QMap<QString, TAttractorVec >   myATTMap;           // Map <face entry, att. entry, etc>
@@ -396,7 +414,7 @@ private:
 
 class EnforcedTreeWidgetDelegate : public QItemDelegate
 {
-    Q_OBJECT
+  Q_OBJECT
 
 public:
   EnforcedTreeWidgetDelegate(QObject *parent = 0);
@@ -409,7 +427,7 @@ public:
                     const QModelIndex &index) const;
 
   void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option,
-                    const QModelIndex &index) const;
+                            const QModelIndex &index) const;
 
   bool vertexExists(QAbstractItemModel *model, const QModelIndex &index, QString value) const;
 };

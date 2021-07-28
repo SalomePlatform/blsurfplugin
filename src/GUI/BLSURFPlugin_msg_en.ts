@@ -696,6 +696,37 @@ The smaller this distance is, the closer the mesh is to the exact surface (only 
     </message>
 </context>
 <context>
+    <name>BLSURFPluginGUI_HypothesisCreator</name>
+    <message>
+        <source>ENF_NAME_COLUMN</source>
+        <translation>1D object</translation>
+    </message>
+    <message>
+        <source>ENF_GROUP_COLUMN</source>
+        <translation>Group name</translation>
+    </message>
+    <message>
+        <source>ENF_SELECT_MESH</source>
+        <translation>Select 1D object</translation>
+    </message>
+    <message>
+        <source>ENF_GROUP_LABEL</source>
+        <translation>Group name</translation>
+    </message>
+    <message>
+        <source>ENF_ADD</source>
+        <translation>Add</translation>
+    </message>
+    <message>
+        <source>ENF_REMOVE</source>
+        <translation>Remove</translation>
+    </message>
+    <message>
+        <source>ENF_MESH</source>
+        <translation>Enforced mesh</translation>
+    </message>
+</context>
+<context>
     <name>BLSURFPluginGUI_AdvWidget</name>
     <message>
         <source>enforce_cad_edge_sizes</source>

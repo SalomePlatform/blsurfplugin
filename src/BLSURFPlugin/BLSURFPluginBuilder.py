@@ -42,6 +42,8 @@ BLSURF_Custom, BLSURF_GlobalSize, BLSURF_LocalSize = MG_CADSURF_Custom, MG_CADSU
 noBLSURFPlugin = 0
 try:
   import BLSURFPlugin
+  from BLSURFPlugin import MG_EnforcedMesh1D
+
 except ImportError:
   noBLSURFPlugin = 1
   pass
@@ -651,6 +653,21 @@ class BLSURF_Algorithm(Mesh_Algorithm):
   ## To get the group name of the nodes of internal vertices
   def GetInternalEnforcedVertexAllFacesGroup(self):
     return self.Parameters().GetInternalEnforcedVertexAllFacesGroup()
+
+  #-----------------------------------------
+  #  Enforced mesh
+  #-----------------------------------------
+
+  ## Set enforced 1D meshes
+  #  @param enfMeshes : list of smeshBuilder.MG_EnforcedMesh1D structures
+  #
+  #  Example: cadsurf.SetEnforcedMeshes([ smeshBuilder.MG_EnforcedMesh1D( mesh1D, "Group 1D")]
+  def SetEnforcedMeshes( self, enfMeshes ):
+    from salome.smesh.smeshBuilder import Mesh
+    for em in enfMeshes:
+      if isinstance( em.mesh, Mesh ):
+        em.mesh = em.mesh.GetMesh()
+    return self.Parameters().SetEnforcedMeshes( enfMeshes )
 
   #-----------------------------------------
   #  Attractors

@@ -173,6 +173,12 @@ public:
   void SetVerbosity(CORBA::Short theVal);
   CORBA::Short GetVerbosity();
 
+  /*!
+   * Set/Get enforced 1D meshes
+   */
+  void SetEnforcedMeshes( const BLSURFPlugin::EnforcedMeshesList& enforcedMeshes );
+  BLSURFPlugin::EnforcedMeshesList* GetEnforcedMeshes();
+
   void SetEnforceCadEdgesSize( CORBA::Boolean toEnforce );
   CORBA::Boolean GetEnforceCadEdgesSize();
 

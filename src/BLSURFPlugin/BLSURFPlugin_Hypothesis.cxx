@@ -2351,13 +2351,13 @@ std::ostream & BLSURFPlugin_Hypothesis::SaveTo(std::ostream & save)
   std::ostringstream hpStream;
   boost::archive::text_oarchive( hpStream ) << _hyperPatchEntriesList;
   std::string hpString = hpStream.str();
-  SMESHDS_Hypothesis::SaveString( save, hpString );
+  SMESHDS_Hypothesis::SaveStringToStream( save, hpString );
 
   // Enforced meshes
   std::ostringstream enfMStream;
   boost::archive::text_oarchive( enfMStream ) << _enforcedMeshes;
   std::string enfMString = enfMStream.str();
-  SMESHDS_Hypothesis::SaveString( save, enfMString );
+  SMESHDS_Hypothesis::SaveStringToStream( save, enfMString );
 
   return save;
 }
@@ -3393,7 +3393,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
 
   // hyper-patches as entries (issue bos #20543)
   std::string buffer;
-  if ( SMESHDS_Hypothesis::LoadString( load, buffer ))
+  if ( SMESHDS_Hypothesis::LoadStringFromStream( load, buffer ))
   {
     std::istringstream istream( buffer.data() );
     boost::archive::text_iarchive archive( istream );
@@ -3404,7 +3404,7 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
 
   // Enforced meshes (issue bos $16292)
   buffer.clear();
-  if ( SMESHDS_Hypothesis::LoadString( load, buffer ))
+  if ( SMESHDS_Hypothesis::LoadStringFromStream( load, buffer ))
   {
     std::istringstream istream( buffer.data() );
     boost::archive::text_iarchive archive( istream );

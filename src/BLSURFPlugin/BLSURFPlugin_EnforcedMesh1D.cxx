@@ -170,10 +170,10 @@ BLSURFPlugin_EnforcedMesh1D::BLSURFPlugin_EnforcedMesh1D( SMESH_MesherHelper&   
     splitSelfIntersectingSegments( face );
   }
 
-  for ( TEdge2Nodes::Iterator e2nn( _nodesOnEdge ); e2nn.More(); e2nn.Next() )
-  {
-    splitEdgeByNodes( e2nn.Key(), e2nn.Value() );
-  }
+  // for ( TEdge2Nodes::Iterator e2nn( _nodesOnEdge ); e2nn.More(); e2nn.Next() )
+  // {
+  //   splitEdgeByNodes( e2nn.Key(), e2nn.Value() );
+  // }
 }
 
 //================================================================================
@@ -240,7 +240,45 @@ BLSURFPlugin_EnforcedMesh1D::~BLSURFPlugin_EnforcedMesh1D()
 
 //================================================================================
 /*!
+ * \brief Add a vertex on EDGE
+ */
+//================================================================================
+
+void BLSURFPlugin_EnforcedMesh1D::AddVertexOnEdge( const double* theXYZ )
+{
+  // setup predicates to find the supporting EDGE
+  setupPredicates( _shape );
+
+  SMESHDS_Mesh*         meshDS = _mesh->GetMeshDS();
+  const SMDS_MeshNode* nodeOnE = meshDS->AddNode( theXYZ[0], theXYZ[1], theXYZ[2] );
+
+  // check if enfNode is on VERTEX
+  bool toRemove = true;
+  TopoDS_Vertex vertex;
+  TopoDS_Edge   edge;
+  if ( _onVertexPredicate->IsSatisfy( nodeOnE, &vertex ))
+  {
+    toRemove = SMESH_Algo::VertexNode( vertex, meshDS );
+    if ( !toRemove )
+      meshDS->SetNodeOnVertex( nodeOnE, vertex );
+  }
+  // find the EDGE supporting theXYZ
+  else if ( _onEdgePredicate->IsSatisfy( nodeOnE, &edge ))
+  {
+    gp_Pnt pnt( theXYZ[0], theXYZ[1], theXYZ[2] );
+    toRemove = findNodeOnEdge( pnt, edge );
+    if ( !toRemove )
+      addNodeOnEdge( nodeOnE, edge );
+  }
+
+  if ( toRemove )
+    meshDS->RemoveFreeNode( nodeOnE, /*submesh=*/nullptr, /*fromGroup=*/false );
+}
+
+//================================================================================
+/*!
  * \brief Return EDGEs resulted from division of FACE boundary by enforced segments
+ *        and enforced vertices
  *  \param [in] edge - possibly divided EDGE
  *  \param [out] splits - split EDGEs
  *  \return bool - true if the EDGE is split
@@ -251,6 +289,15 @@ bool BLSURFPlugin_EnforcedMesh1D::GetSplitsOfEdge( const TopoDS_Edge&           
                                                    std::vector< TopoDS_Edge > & splits,
                                                    TopTools_IndexedMapOfShape & edgeTags )
 {
+  if ( _nodesOnEdge.IsBound( edge )) // divide the EDGE
+  {
+    splitEdgeByNodes( edge, _nodesOnEdge( edge ));
+
+    _nodesOnEdge.UnBind( edge );
+  }
+
+  // return splits
+
   std::vector< TopoDS_Edge > * splitsInMap = _edgeSplitsOfEdge.ChangeSeek( edge );
   if ( !splitsInMap )
     return false;

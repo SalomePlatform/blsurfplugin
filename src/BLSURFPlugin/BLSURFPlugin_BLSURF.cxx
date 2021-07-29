@@ -438,9 +438,10 @@ BLSURFPlugin_BLSURF::getProjectionPoint(TopoDS_Face&  theFace,
       {
         // check location on the face
         BRepClass_FaceClassifier FC( face, uv, BRep_Tool::Tolerance( face ));
-        if ( FC.State() == TopAbs_IN )
+        if (( FC.State() == TopAbs_IN ) ||
+            ( FC.State() == TopAbs_ON && theAllowStateON ))
         {
-          if ( !foundFace.IsNull() )
+          if ( !foundFace.IsNull() && !theAllowStateON )
             return myPoint; // thePoint seems to be TopAbs_ON
           foundFace     = face;
           myPoint.uv    = uv.XY();
@@ -511,13 +512,15 @@ TopoDS_Shape BLSURFPlugin_BLSURF::entryToShape(std::string entry)
   return S;
 }
 
-void _createEnforcedVertexOnFace(TopoDS_Face faceShape, gp_Pnt aPnt, BLSURFPlugin_Hypothesis::TEnfVertex *enfVertex)
+void _createEnforcedVertexOnFace(TopoDS_Face                          faceShape,
+                                 const gp_Pnt&                        aPnt,
+                                 BLSURFPlugin_Hypothesis::TEnfVertex *enfVertex)
 {
   BLSURFPlugin_Hypothesis::TEnfVertexCoords enf_coords, coords, s_coords;
 
   // Find the face and get the (u,v) values of the enforced vertex on the face
-  BLSURFPlugin_BLSURF::projectionPoint myPoint =
-    BLSURFPlugin_BLSURF::getProjectionPoint(faceShape,aPnt);
+  BLSURFPlugin_BLSURF::projectionPoint projPnt =
+    BLSURFPlugin_BLSURF::getProjectionPoint( faceShape, aPnt, /*allowStateON=*/true );
   if ( faceShape.IsNull() )
     return;
 
@@ -525,15 +528,16 @@ void _createEnforcedVertexOnFace(TopoDS_Face faceShape, gp_Pnt aPnt, BLSURFPlugi
   enf_coords.push_back(aPnt.Y());
   enf_coords.push_back(aPnt.Z());
 
-  coords.push_back(myPoint.uv.X());
-  coords.push_back(myPoint.uv.Y());
-  coords.push_back(myPoint.xyz.X());
-  coords.push_back(myPoint.xyz.Y());
-  coords.push_back(myPoint.xyz.Z());
+  coords.push_back(projPnt.uv.X());
+  coords.push_back(projPnt.uv.Y());
+  coords.push_back(projPnt.xyz.X());
+  coords.push_back(projPnt.xyz.Y());
+  coords.push_back(projPnt.xyz.Z());
+  coords.push_back(projPnt.state == TopAbs_ON);
 
-  s_coords.push_back(myPoint.xyz.X());
-  s_coords.push_back(myPoint.xyz.Y());
-  s_coords.push_back(myPoint.xyz.Z());
+  s_coords.push_back(projPnt.xyz.X());
+  s_coords.push_back(projPnt.xyz.Y());
+  s_coords.push_back(projPnt.xyz.Z());
 
   // Save pair projected vertex / enf vertex
   EnfVertexCoords2ProjVertex[s_coords] = enf_coords;
@@ -545,16 +549,10 @@ void _createEnforcedVertexOnFace(TopoDS_Face faceShape, gp_Pnt aPnt, BLSURFPlugi
     (*it)->grpName = enfVertex->grpName;
   }
 
-  int key = 0;
-  if (! FacesWithEnforcedVertices.Contains(faceShape)) {
-    key = FacesWithEnforcedVertices.Add(faceShape);
-  }
-  else {
-    key = FacesWithEnforcedVertices.FindIndex(faceShape);
-  }
+  int key = FacesWithEnforcedVertices.Add( faceShape );
 
   // If a node is already created by an attractor, do not create enforced vertex
-  int attractorKey = FacesWithSizeMap.FindIndex(faceShape);
+  int attractorKey = FacesWithSizeMap.FindIndex( faceShape );
   bool sameAttractor = false;
   if (attractorKey >= 0)
     if (FaceId2AttractorCoords.count(attractorKey) > 0)
@@ -563,7 +561,7 @@ void _createEnforcedVertexOnFace(TopoDS_Face faceShape, gp_Pnt aPnt, BLSURFPlugi
 
   if (FaceId2EnforcedVertexCoords.find(key) != FaceId2EnforcedVertexCoords.end()) {
     if (! sameAttractor)
-      FaceId2EnforcedVertexCoords[key].insert(coords); // there should be no redondant coords here (see std::set management)
+      FaceId2EnforcedVertexCoords[key].insert(coords); // there should be no redundant coords here (see std::set management)
   }
   else {
     if (! sameAttractor) {
@@ -577,13 +575,9 @@ void _createEnforcedVertexOnFace(TopoDS_Face faceShape, gp_Pnt aPnt, BLSURFPlugi
 /////////////////////////////////////////////////////////
 void BLSURFPlugin_BLSURF::createEnforcedVertexOnFace(TopoDS_Shape faceShape, BLSURFPlugin_Hypothesis::TEnfVertexList enfVertexList)
 {
-  BLSURFPlugin_Hypothesis::TEnfVertex* enfVertex;
   gp_Pnt aPnt;
-
-  BLSURFPlugin_Hypothesis::TEnfVertexList::const_iterator enfVertexListIt = enfVertexList.begin();
-
-  for( ; enfVertexListIt != enfVertexList.end() ; ++enfVertexListIt ) {
-    enfVertex = *enfVertexListIt;
+  for( BLSURFPlugin_Hypothesis::TEnfVertex* enfVertex : enfVertexList )
+  {
     // Case of manual coords
     if (enfVertex->coords.size() != 0) {
       aPnt.SetCoord(enfVertex->coords[0],enfVertex->coords[1],enfVertex->coords[2]);
@@ -592,7 +586,7 @@ void BLSURFPlugin_BLSURF::createEnforcedVertexOnFace(TopoDS_Shape faceShape, BLS
 
     // Case of geom vertex coords
     if (enfVertex->geomEntry != "") {
-      TopoDS_Shape GeomShape = entryToShape(enfVertex->geomEntry);
+      TopoDS_Shape     GeomShape = entryToShape(enfVertex->geomEntry);
       TopAbs_ShapeEnum GeomType  = GeomShape.ShapeType();
        if (GeomType == TopAbs_VERTEX)
        {
@@ -675,10 +669,10 @@ void createAttractorOnFace(TopoDS_Shape GeomShape, std::string AttractorFunction
   }
 
   // Get the (u,v) values of the attractor on the face
-  BLSURFPlugin_BLSURF::projectionPoint myPoint =
+  BLSURFPlugin_BLSURF::projectionPoint projPnt =
     BLSURFPlugin_BLSURF::getProjectionPoint(TopoDS::Face(GeomShape),gp_Pnt(xa,ya,za));
-  gp_XY    uvPoint = myPoint.uv;
-  gp_XYZ  xyzPoint = myPoint.xyz;
+  gp_XY    uvPoint = projPnt.uv;
+  gp_XYZ  xyzPoint = projPnt.xyz;
   Standard_Real u0 = uvPoint.X();
   Standard_Real v0 = uvPoint.Y();
   Standard_Real x0 = xyzPoint.X();
@@ -2141,14 +2135,19 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
       BLSURFPlugin_Hypothesis::TEnfVertexCoordsList::const_iterator evlIt = evl.begin();
       for (; evlIt != evl.end(); ++evlIt)
       {
+        BLSURFPlugin_Hypothesis::TEnfVertexCoords xyzCoords = { evlIt->at(2),
+                                                                evlIt->at(3),
+                                                                evlIt->at(4)};
+        bool isOnEdge = evlIt->at(5);
+        if ( isOnEdge )
+        {
+          enforcedMesh.AddVertexOnEdge( xyzCoords.data() );
+          continue;
+        }
         double uvCoords[2] = { evlIt->at(0), evlIt->at(1) };
         ienf++;
         cad_point_t* point_p = cad_point_new(fce, ienf, uvCoords);
         int tag = 0;
-        BLSURFPlugin_Hypothesis::TEnfVertexCoords xyzCoords;
-        xyzCoords.push_back(evlIt->at(2));
-        xyzCoords.push_back(evlIt->at(3));
-        xyzCoords.push_back(evlIt->at(4));
         std::map< BLSURFPlugin_Hypothesis::TEnfVertexCoords, BLSURFPlugin_Hypothesis::TEnfVertexList >::const_iterator enfCoordsIt = EnfVertexCoords2EnfVertexList.find(xyzCoords);
         if (enfCoordsIt != EnfVertexCoords2EnfVertexList.end() &&
             !enfCoordsIt->second.empty() )
@@ -2651,6 +2650,7 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     mesh_get_vertex_tag(msh, iv, &tag);
     // Issue 0020656. Use vertex coordinates
     nodes[iv] = NULL;
+    bool isEnforcedNode = false;
     if ( tag > 0 )
     {
       if ( tag <= pmap.Extent() )
@@ -2664,10 +2664,8 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
           tag = 0; // enforced or attracted vertex
         nodes[iv] = SMESH_Algo::VertexNode( v, meshDS );
       }
-      if ( !nodes[iv] && ( nodes[iv] = enforcedMesh.GetNodeByTag( tag, pmap )))
-      {
-        continue;
-      }
+      if ( !nodes[iv] )
+        isEnforcedNode = ( nodes[iv] = enforcedMesh.GetNodeByTag( tag, pmap ));
     }
     if ( !nodes[iv] )
       nodes[iv] = meshDS->AddNode(xyz[0], xyz[1], xyz[2]);
@@ -2699,6 +2697,8 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
           groupDS->Add( nodes[iv] );
         }
     }
+    if ( isEnforcedNode )
+      continue;
 
     // internal points are tagged to zero
     if ( tag > 0 && tag <= pmap.Extent() )

@@ -57,6 +57,9 @@ public:
 
   ~BLSURFPlugin_EnforcedMesh1D();
 
+  // Add a vertex on EDGE
+  void AddVertexOnEdge( const double* xyz );
+
   // Return EDGEs resulted from division of FACE boundary by enforced segments
   bool GetSplitsOfEdge( const TopoDS_Edge&           edge,
                         std::vector< TopoDS_Edge > & splits,

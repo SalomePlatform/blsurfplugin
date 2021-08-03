@@ -7,8 +7,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>899</width>
-    <height>532</height>
+    <width>902</width>
+    <height>390</height>
    </rect>
   </property>
   <layout class="QGridLayout" name="gridLayout_8">
@@ -122,10 +122,13 @@
         <property name="orientation">
          <enum>Qt::Vertical</enum>
         </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Minimum</enum>
+        </property>
         <property name="sizeHint" stdset="0">
          <size>
           <width>20</width>
-          <height>4</height>
+          <height>0</height>
          </size>
         </property>
        </spacer>
@@ -207,10 +210,13 @@
         <property name="orientation">
          <enum>Qt::Vertical</enum>
         </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::MinimumExpanding</enum>
+        </property>
         <property name="sizeHint" stdset="0">
          <size>
           <width>20</width>
-          <height>36</height>
+          <height>0</height>
          </size>
         </property>
        </spacer>
@@ -220,10 +226,13 @@
         <property name="orientation">
          <enum>Qt::Vertical</enum>
         </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::MinimumExpanding</enum>
+        </property>
         <property name="sizeHint" stdset="0">
          <size>
           <width>20</width>
-          <height>23</height>
+          <height>0</height>
          </size>
         </property>
        </spacer>
@@ -231,7 +240,7 @@
      </layout>
     </widget>
    </item>
-   <item row="1" column="0">
+   <item row="0" column="2">
     <widget class="QGroupBox" name="groupBox_4">
      <property name="title">
       <string>BLSURF_ELEMENT_TYPE</string>
@@ -284,10 +293,13 @@
         <property name="orientation">
          <enum>Qt::Vertical</enum>
         </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::MinimumExpanding</enum>
+        </property>
         <property name="sizeHint" stdset="0">
          <size>
           <width>20</width>
-          <height>3</height>
+          <height>0</height>
          </size>
         </property>
        </spacer>
@@ -295,7 +307,7 @@
      </layout>
     </widget>
    </item>
-   <item row="1" column="1">
+   <item row="1" column="0">
     <widget class="QGroupBox" name="groupBox_2">
      <property name="title">
       <string>BLSURF_MAIN_PARAMETERS</string>
@@ -316,10 +328,13 @@
         <property name="orientation">
          <enum>Qt::Vertical</enum>
         </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::MinimumExpanding</enum>
+        </property>
         <property name="sizeHint" stdset="0">
          <size>
           <width>20</width>
-          <height>55</height>
+          <height>0</height>
          </size>
         </property>
        </spacer>
@@ -357,7 +372,7 @@
      </layout>
     </widget>
    </item>
-   <item row="2" column="0">
+   <item row="1" column="1">
     <widget class="QGroupBox" name="groupBox_5">
      <property name="toolTip">
       <string/>
@@ -437,7 +452,6 @@
          </item>
         </layout>
         <zorder>label_7</zorder>
-        <zorder>myVolumeGradation_2</zorder>
         <zorder>myNbSurfaceProximityLayers</zorder>
         <zorder>label_9</zorder>
         <zorder>mySurfaceProximityRatio</zorder>
@@ -503,10 +517,13 @@
         <property name="orientation">
          <enum>Qt::Vertical</enum>
         </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Minimum</enum>
+        </property>
         <property name="sizeHint" stdset="0">
          <size>
           <width>20</width>
-          <height>15</height>
+          <height>0</height>
          </size>
         </property>
        </spacer>
@@ -514,7 +531,7 @@
      </layout>
     </widget>
    </item>
-   <item row="2" column="1">
+   <item row="1" column="2">
     <widget class="QGroupBox" name="groupBox_3">
      <property name="title">
       <string>BLSURF_OTHER_PARAMETERS</string>
@@ -610,10 +627,13 @@
         <property name="orientation">
          <enum>Qt::Vertical</enum>
         </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::MinimumExpanding</enum>
+        </property>
         <property name="sizeHint" stdset="0">
          <size>
           <width>20</width>
-          <height>3</height>
+          <height>0</height>
          </size>
         </property>
        </spacer>

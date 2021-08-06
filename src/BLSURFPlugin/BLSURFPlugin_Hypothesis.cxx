@@ -29,6 +29,7 @@
 
 #include <SMESHDS_Group.hxx>
 #include <SMESHDS_Mesh.hxx>
+#include <SMESH_BoostTxtArchive.hxx>
 #include <SMESH_Gen_i.hxx>
 #include <SMESH_Group.hxx>
 #include <SMESH_TryCatch.hxx>
@@ -47,7 +48,6 @@
 #define MESHGEMS_VERSION_HEX (MESHGEMS_VERSION_MAJOR << 16 | MESHGEMS_VERSION_MINOR << 8 | MESHGEMS_VERSION_PATCH)
 
 #include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/set.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/string.hpp>
@@ -3395,10 +3395,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
   std::string buffer;
   if ( SMESHDS_Hypothesis::LoadStringFromStream( load, buffer ))
   {
-    std::istringstream istream( buffer.data() );
-    boost::archive::text_iarchive archive( istream );
     SMESH_TRY;
-    archive >> _hyperPatchEntriesList;
+    SMESHUtils::BoostTxtArchive( buffer ) >> _hyperPatchEntriesList;
     SMESH_CATCH( SMESH::printErrorInDebugMode );
   }
 
@@ -3406,10 +3404,8 @@ std::istream & BLSURFPlugin_Hypothesis::LoadFrom(std::istream & load)
   buffer.clear();
   if ( SMESHDS_Hypothesis::LoadStringFromStream( load, buffer ))
   {
-    std::istringstream istream( buffer.data() );
-    boost::archive::text_iarchive archive( istream );
     SMESH_TRY;
-    archive >> _enforcedMeshes;
+    SMESHUtils::BoostTxtArchive( buffer ) >> _enforcedMeshes;
     SMESH_CATCH( SMESH::printErrorInDebugMode );
   }
 

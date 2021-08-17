@@ -97,6 +97,9 @@ extern "C"{
 #include <fenv.h>
 #endif
 
+#include <memory>
+#include <functional>
+
 using namespace std;
 
 /* ==================================
@@ -2625,18 +2628,22 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
 
   /* retrieve mesh data (see meshgems/mesh.h) */
   integer nv, ne, nt, nq, vtx[4], tag, nb_tag;
-  integer *evedg, *evtri, *evquad, *tags_buff, type;
+  integer type;
   real xyz[3];
 
   mesh_get_vertex_count    (msh, &nv);
   mesh_get_edge_count      (msh, &ne);
   mesh_get_triangle_count  (msh, &nt);
   mesh_get_quadrangle_count(msh, &nq);
+  
+  using deleted_unique_ptr = std::unique_ptr<integer,std::function<void(integer*)>>;
+  
+  deleted_unique_ptr evedg_var((integer *)mesh_calloc_generic_buffer(msh), [](integer *ptr) { free(ptr); });
+  deleted_unique_ptr evtri_var((integer *)mesh_calloc_generic_buffer(msh), [](integer *ptr) { free(ptr); });
+  deleted_unique_ptr evquad_var((integer *)mesh_calloc_generic_buffer(msh), [](integer *ptr) { free(ptr); });
+  deleted_unique_ptr tags_buff_var((integer*)mesh_calloc_generic_buffer(msh), [](integer *ptr) { free(ptr); });
 
-  evedg  = (integer *)mesh_calloc_generic_buffer(msh);
-  evtri  = (integer *)mesh_calloc_generic_buffer(msh);
-  evquad = (integer *)mesh_calloc_generic_buffer(msh);
-  tags_buff = (integer*)mesh_calloc_generic_buffer(msh);
+  integer *evedg(evedg_var.get()),*evtri(evtri_var.get()),*evquad(evquad_var.get()),*tags_buff(tags_buff_var.get());
 
   std::vector<const SMDS_MeshNode*> nodes(nv+1);
   std::vector<bool>                  tags(nv+1);

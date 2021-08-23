@@ -1086,6 +1086,9 @@ void BLSURFPlugin_Hypothesis_i::SetEnforcedMeshes(const BLSURFPlugin::EnforcedMe
     enforcedMeshes.push_back({ meshID, partID, partType, inEM.groupName.in() });
   }
 
+  if ( GetImpl()->GetEnforcedMeshes() == enforcedMeshes )
+    return;
+
   this->GetImpl()->SetEnforcedMeshes( enforcedMeshes );
 
   // dump
@@ -1102,8 +1105,9 @@ void BLSURFPlugin_Hypothesis_i::SetEnforcedMeshes(const BLSURFPlugin::EnforcedMe
       pyDump << "'" << inEM.groupName.in() << "'";
     else
       pyDump << "''";
-    pyDump << ")" << ( i + 1 < theMeshes.length() ? ", " : "])");
+    pyDump << ")" << ( i + 1 < theMeshes.length() ? ", " : "");
   }
+  pyDump << "])";
 }
 
 //=============================================================================
@@ -3566,7 +3570,7 @@ bool BLSURFPlugin_Hypothesis_i::SetEnforcedVertexEntry(const char* theFaceEntry,
         if (string(theGroupName).empty())
           SMESH::TPythonDump() << _this() << ".AddEnforcedVertex(" << x << ", " << y << ", " << z << ")";
         else
-          SMESH::TPythonDump() << _this() << ".AddEnforcedVertexWithGroup(" << theFaceEntry << ", " << x << ", " << y << ", " << z << ", \"" << theGroupName << "\")";
+          SMESH::TPythonDump() << _this() << ".AddEnforcedVertexWithGroup(" << x << ", " << y << ", " << z << ", \"" << theGroupName << "\")";
       }
       else {
         if (string(theGroupName).empty())

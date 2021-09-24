@@ -40,6 +40,7 @@ extern "C"{
 #include <SMESH_File.hxx>
 #include <SMESH_Gen.hxx>
 #include <SMESH_Group.hxx>
+#include <SMESH_MGLicenseKeyGen.hxx>
 #include <SMESH_Mesh.hxx>
 #include <SMESH_MeshEditor.hxx>
 #include <SMESH_MesherHelper.hxx>
@@ -2531,6 +2532,9 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     // set_param(css, "global_physical_size", val_to_string( minFaceSize * 0.5 ).c_str());
     // set_param(css, "max_size",             val_to_string( minFaceSize * 5 ).c_str());
   }
+  std::string errorTxt;
+  if ( !SMESHUtils_MGLicenseKeyGen::SignCAD( c, errorTxt ))
+    return error( "Problem with library SalomeMeshGemsKeyGenerator: " + errorTxt );
 
   // Use the original dcad
   cadsurf_set_dcad(css, dcad);
@@ -3067,6 +3071,10 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh & aMesh, SMESH_MesherHelper* aHelpe
     else
       meshgems_mesh_set_quadrangle_vertices( msh, iQ++, nodeIDs );
   }
+
+  std::string errorTxt;
+  if ( !SMESHUtils_MGLicenseKeyGen::SignMesh( msh, errorTxt ))
+    return error( "Problem with library SalomeMeshGemsKeyGenerator: " + errorTxt );
 
   ret = cadsurf_set_mesh(css, msh);
   if ( ret != STATUS_OK ) return error("Pb in cadsurf_set_mesh()");

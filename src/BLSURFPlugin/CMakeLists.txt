@@ -54,6 +54,7 @@ SET(_link_LIBRARIES
   ${SMESH_StdMeshersEngine}
   ${SMESH_SMDS}
   ${SMESH_SMESHDS}
+  ${SMESH_SMESHUtils}
   ${GEOM_GEOMbasic}
   ${KERNEL_OpUtil}
   ${KERNEL_SalomeGenericObj}

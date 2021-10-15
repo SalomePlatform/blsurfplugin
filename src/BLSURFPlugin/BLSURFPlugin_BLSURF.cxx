@@ -3496,7 +3496,7 @@ status_t interrupt_cb(integer *interrupt_status, void *user_data)
   else /* you want to stop MG-CADSurf */
   {
     *interrupt_status = INTERRUPT_STOP;
-    return STATUS_ERROR;
+    return STATUS_OK;
   }
 }
 

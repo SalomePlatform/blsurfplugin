@@ -145,7 +145,8 @@ BLSURFPlugin_EnforcedMesh1D::BLSURFPlugin_EnforcedMesh1D( SMESH_MesherHelper&   
   : _mesh ( helper.GetMesh() ),
     _shape( helper.GetSubShape() ),
     _helper( *_mesh ),
-    _isQuadratic( helper.GetIsQuadratic() )
+    _isQuadratic( helper.GetIsQuadratic() ),
+    _nodeTag0( 0 )
 {
   if ( !hyp || !_mesh || hyp->GetEnforcedMeshes().empty() )
     return;

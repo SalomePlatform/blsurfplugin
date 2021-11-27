@@ -1763,7 +1763,7 @@ namespace
       TSeg2EdgeMap seg2EdgeMap;
 
       TopoDS_Iterator edgeIt( wire );
-      for ( int iSeg = 1; edgeIt.More(); edgeIt.Next(), ++iSeg )
+      for ( size_t iSeg = 1; edgeIt.More() && iSeg < nodesOfVertices.size(); edgeIt.Next(), ++iSeg )
       {
         SMESH_TLink link( nodesOfVertices[ iSeg-1 ], nodesOfVertices[ iSeg ]);
         TopoDS_Edge edge( TopoDS::Edge( edgeIt.Value() ));

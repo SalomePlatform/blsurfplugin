@@ -1,3 +1,4 @@
 [SALOME BLSURFPLUGIN] : @SALOMEBLSURFPLUGIN_VERSION@
 [DEVELOPMENT]         : @SALOMEBLSURFPLUGIN_VERSION_DEV@
-[DESCRIPTION]         : DISTENE BLSurf meshing plug-in for SALOME Mesh module
+[SHA1]                : @SALOMEBLSURFPLUGIN_GIT_SHA1@
+[DESCRIPTION]         : Meshing plug-in for SALOME Mesh module: MeshGems CADSurf (former BLSURF) algorithm

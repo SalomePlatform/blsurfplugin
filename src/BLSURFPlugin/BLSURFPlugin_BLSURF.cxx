@@ -45,6 +45,7 @@ extern "C"{
 #include <SMESH_MeshEditor.hxx>
 #include <SMESH_MesherHelper.hxx>
 #include <StdMeshers_FaceSide.hxx>
+#include <StdMeshers_ProjectionUtils.hxx>
 #include <StdMeshers_ViscousLayers2D.hxx>
 
 #include <Basics_Utils.hxx>
@@ -91,8 +92,6 @@ extern "C"{
 #include <TopoDS_Wire.hxx>
 #include <gp_Pnt.hxx>
 #include <gp_Pnt2d.hxx>
-#include <gp_XY.hxx>
-#include <gp_XYZ.hxx>
 
 #ifndef WIN32
 #include <fenv.h>
@@ -2969,6 +2968,14 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     error(_comment);
   }
 
+  // Set event listeners
+  if ( _hypothesis )
+    for ( int iF = 1; iF <= fmap.Size(); ++iF )
+    {
+      const TopoDS_Shape& face = fmap( iF );
+      SetEventListener( aMesh.GetSubMesh( face ));
+    }
+
   // Issue 0019864. On DebianSarge, FE signals do not obey to OSD::SetSignal(false)
 #ifndef WIN32
   if ( oldFEFlags > 0 )
@@ -3677,4 +3684,53 @@ void BLSURFPlugin_BLSURF::FillEntryToShape( const BLSURFPlugin_Hypothesis*      
       if ( !shape.IsNull() )
         entryToShape.insert({ entry, shape });
     }
+}
+
+//================================================================================
+/*!
+ * \brief Sets event listener to submeshes if enforced mesh is defined
+ * \param subMesh - submesh where algo is set
+ *
+ * This method is called when a submesh gets HYP_OK algo_state.
+ * After being set, event listener is notified on each event of a submesh.
+ * By default none listener is set
+ */
+//================================================================================
+
+void BLSURFPlugin_BLSURF::SetEventListener(SMESH_subMesh* faceSubMesh)
+{
+  if ( !_hypothesis )
+    return;
+
+  for ( const BLSURFPlugin_Hypothesis::EnforcedMesh& enfMesh : _hypothesis->GetEnforcedMeshes() )
+  {
+    SMESH_Mesh* mesh1D;
+    _hypothesis->GetEnforcedSegments( enfMesh, mesh1D );
+    if ( !mesh1D )
+      continue;
+
+    TopExp_Explorer edgeExp( mesh1D->GetShapeToMesh(), TopAbs_EDGE );
+    if ( edgeExp.More() )
+      StdMeshers_ProjectionUtils::SetEventListener( faceSubMesh,
+                                                    edgeExp.Current(),
+                                                    mesh1D );
+    // StdMeshers_ProjectionUtils::SetEventListener( faceSubMesh,
+    //                                               mesh1D->GetShapeToMesh(),
+    //                                               mesh1D );
+  }
+  return;
+}
+
+//================================================================================
+/*!
+ * \brief Allow algo to do something after persistent restoration
+ * \param subMesh - restored submesh
+ *
+ * This method is called only if a submesh has HYP_OK algo_state.
+ */
+//================================================================================
+
+void BLSURFPlugin_BLSURF::SubmeshRestored(SMESH_subMesh* subMesh)
+{
+  SetEventListener( subMesh );
 }

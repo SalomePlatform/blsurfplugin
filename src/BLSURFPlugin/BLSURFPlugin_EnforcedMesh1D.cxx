@@ -101,8 +101,6 @@ namespace
    *  \param [in] braNodes - nodes of the branch
    *  \param [in] nodeIndex - index of a node of the branch
    *  \param [inout] mesh - mesh holding the nodes and segments
-   * 
-   * 
    */
   //================================================================================
 
@@ -336,7 +334,7 @@ copyEnforcedMesh( const BLSURFPlugin_Hypothesis::EnforcedMesh& theEnfMesh,
   SMESH_Mesh* mesh1D;
   SMDS_ElemIteratorPtr segIt = theHyp->GetEnforcedSegments( theEnfMesh, mesh1D );
   if ( !segIt->more() )
-    return;
+    throw SALOME_Exception("No edges in an enforced mesh");
 
   // setup predicates to detect nodes on FACE boundary
   setupPredicates( theShape );

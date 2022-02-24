@@ -98,6 +98,11 @@ public:
   static void FillEntryToShape( const BLSURFPlugin_Hypothesis*          hyp,
                                 std::map< std::string, TopoDS_Shape > & s2eMap );
 
+  virtual void SetEventListener(SMESH_subMesh* subMesh) override;
+  virtual void SubmeshRestored(SMESH_subMesh* subMesh) override;
+
+
+
   // List of ids
   typedef std::vector<int> TListOfIDs;
 

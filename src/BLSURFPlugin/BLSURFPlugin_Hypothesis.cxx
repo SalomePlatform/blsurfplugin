@@ -1001,6 +1001,8 @@ BLSURFPlugin_Hypothesis::GetEnforcedSegments( const EnforcedMesh& enfMesh,
   if (( mesh = SMESH_Hypothesis::GetMeshByPersistentID( enfMesh._meshID )))
   {
     mesh->Load();
+    if ( mesh->NbEdges() == 0 )
+      GetGen()->Compute( *mesh, mesh->GetShapeToMesh(), /*flags=*/0 );
 
     switch( enfMesh._type )
     {

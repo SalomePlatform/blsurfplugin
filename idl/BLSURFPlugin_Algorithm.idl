@@ -367,7 +367,7 @@ module BLSURFPlugin
     double GetVolumeProximityRatio();
 
     /*!
-     * Set verbosity level in the range 0 to 100.
+     * Set verbosity level in the range 0 to 10.
      */
     void SetVerbosity(in short theVal) raises (SALOME::SALOME_Exception);
     short GetVerbosity();

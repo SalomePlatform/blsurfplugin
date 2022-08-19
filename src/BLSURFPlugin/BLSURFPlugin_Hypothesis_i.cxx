@@ -1045,7 +1045,7 @@ CORBA::Double BLSURFPlugin_Hypothesis_i::GetVolumeProximityRatio()
 //=============================================================================
 void BLSURFPlugin_Hypothesis_i::SetVerbosity(CORBA::Short theVal) {
   ASSERT(myBaseImpl);
-  if (theVal < 0 || theVal > 100)
+  if (theVal < 0 || theVal > 10)
     THROW_SALOME_CORBA_EXCEPTION( "Invalid verbosity level",SALOME::BAD_PARAM );
   this->GetImpl()->SetVerbosity(theVal);
   SMESH::TPythonDump() << _this() << ".SetVerbosity( " << theVal << " )";

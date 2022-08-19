@@ -243,7 +243,7 @@ class BLSURF_Algorithm(Mesh_Algorithm):
     return
 
 
-  ## Sets verbosity level in the range 0 to 100.
+  ## Sets verbosity level in the range 0 to 10.
   #  @param level verbosity level
   def SetVerbosity(self, level):
     self.Parameters().SetVerbosity(level)

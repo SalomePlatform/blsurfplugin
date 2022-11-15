@@ -1312,7 +1312,7 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
             ++theNbAttractors;
         }
         else{
-          MESSAGE("Wrong shape type !!")
+          MESSAGE("Wrong shape type !!");
         }
 
       }

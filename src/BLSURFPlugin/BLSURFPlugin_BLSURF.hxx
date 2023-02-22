@@ -67,7 +67,6 @@ extern "C"{
 #include <BRepClass_FaceClassifier.hxx>
 #include <BRepAdaptor_Surface.hxx>
 #include <BRepTools.hxx>
-#include <BRepAdaptor_HSurface.hxx>
 
 #include "BLSURFPlugin_Hypothesis.hxx"
 

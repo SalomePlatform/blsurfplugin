@@ -100,6 +100,9 @@ extern "C"{
 #include <memory>
 #include <functional>
 
+#define MESHGEMS_VERSION_HEX (MESHGEMS_VERSION_MAJOR << 16 | MESHGEMS_VERSION_MINOR << 8 | MESHGEMS_VERSION_PATCH)
+#define MESHGEMS_215 (2 << 16 | 15 << 8 | 0)
+
 using namespace std;
 
 /* ==================================
@@ -2532,8 +2535,19 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     // set_param(css, "max_size",             val_to_string( minFaceSize * 5 ).c_str());
   }
   std::string errorTxt;
+#if MESHGEMS_VERSION_HEX > MESHGEMS_215
+  MESSAGE("MeshGems > 2.15.0");
+  MESSAGE("=> unlock CADSurf with SPATIAL_LICENSE key");
+  std::string SPATIAL_LICENSE = SMESHUtils_MGLicenseKeyGen::GetKey(errorTxt);
+  status = meshgems_cadsurf_unlock_product(SPATIAL_LICENSE.c_str());
+  if STATUS_IS_ERROR( status )
+    return error( status, "Problem with SPATIAL_LICENSE to unlock CADSurf: " + errorTxt);
+#else
+  MESSAGE("MeshGems < 2.15.0");
+  MESSAGE("=> Sign the CAD with its info");
   if ( !SMESHUtils_MGLicenseKeyGen::SignCAD( c, errorTxt ))
     return error( "Problem with library SalomeMeshGemsKeyGenerator: " + errorTxt );
+#endif
 
   // Use the original dcad
   cadsurf_set_dcad(css, dcad);
@@ -3080,8 +3094,19 @@ bool BLSURFPlugin_BLSURF::Compute(SMESH_Mesh & aMesh, SMESH_MesherHelper* aHelpe
   }
 
   std::string errorTxt;
+#if MESHGEMS_VERSION_HEX > MESHGEMS_215
+  MESSAGE("MeshGems > 2.15.0");
+  MESSAGE("=> unlock CADSurf discrete with SPATIAL_LICENSE key");
+  std::string SPATIAL_LICENSE = SMESHUtils_MGLicenseKeyGen::GetKey(errorTxt);
+  ret = meshgems_cadsurf_unlock_product(SPATIAL_LICENSE.c_str());
+  if STATUS_IS_ERROR( ret )
+    return error( ret, "Problem with SPATIAL_LICENSE to unlock CADSurf discrete: " + errorTxt);
+#else
+  MESSAGE("MeshGems < 2.15.0");
+  MESSAGE("=> Sign the mesh with its info");
   if ( !SMESHUtils_MGLicenseKeyGen::SignMesh( msh, errorTxt ))
     return error( "Problem with library SalomeMeshGemsKeyGenerator: " + errorTxt );
+#endif
 
   ret = cadsurf_set_mesh(css, msh);
   if ( ret != STATUS_OK ) return error("Pb in cadsurf_set_mesh()");

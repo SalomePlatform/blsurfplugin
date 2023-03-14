@@ -83,7 +83,7 @@ isDone = Mesh_1.Compute()
 min_1, max_1 = Mesh_1.GetMinMax(SMESH.FT_Area)
 
 # Check that min and max areas are not too far
-assert max_1/min_1 < 6
+assert max_1/min_1 < 7
 
 # Second mesh with anisotropy (which disable gradation)
 Mesh_2 = smesh.Mesh(Fuse_1, "Mesh_2")

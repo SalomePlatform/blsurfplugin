@@ -515,11 +515,44 @@ TopoDS_Shape BLSURFPlugin_BLSURF::entryToShape(std::string entry)
   return S;
 }
 
+// Check if a point is already on the shape.
+// if faceShape is defined, we use it
+// else we use the sub-shape of the mesh
+bool _doVertexAlreadyExists(const TopoDS_Face&                   faceShape,
+                            const gp_Pnt&                        aPnt)
+{
+  // If the point is already on the shape, no need to add it
+  TopExp_Explorer ex;
+  TopoDS_Shape shapeToCheckVertices(faceShape);
+  bool alreadyExists(false);
+  if (faceShape.IsNull())
+    shapeToCheckVertices = theHelper->GetSubShape();
+  for (ex.Init(shapeToCheckVertices, TopAbs_VERTEX); ex.More(); ex.Next())
+  {
+    TopoDS_Vertex vertex = TopoDS::Vertex(ex.Current());
+    double tol = BRep_Tool::Tolerance( vertex );
+    gp_Pnt p = BRep_Tool::Pnt(vertex);
+    if ( p.IsEqual( aPnt, tol))
+    {
+      MESSAGE("The enforced vertex is already on the shape => No need to add it.");
+      alreadyExists = true;
+      break;
+    }
+  }
+  return alreadyExists;
+}
+
 void _createEnforcedVertexOnFace(TopoDS_Face                          faceShape,
                                  const gp_Pnt&                        aPnt,
-                                 BLSURFPlugin_Hypothesis::TEnfVertex *enfVertex)
+                                 BLSURFPlugin_Hypothesis::TEnfVertex *enfVertex,
+                                 bool checkVertexAlreadyExists=true)
 {
   BLSURFPlugin_Hypothesis::TEnfVertexCoords enf_coords, coords, s_coords;
+
+  // checkVertexAlreadyExists only for non internal vertices.
+  // For them we set checkVertexAlreadyExists=false as we do have to add them
+  if (checkVertexAlreadyExists && _doVertexAlreadyExists(faceShape, aPnt))
+    return;
 
   // Find the face and get the (u,v) values of the enforced vertex on the face
   BLSURFPlugin_BLSURF::projectionPoint projPnt =
@@ -1372,7 +1405,8 @@ void BLSURFPlugin_BLSURF::SetParameters(const BLSURFPlugin_Hypothesis* hyp,
           enfVertex->geomEntry = "";
           enfVertex->grpName = grpName;
           enfVertex->vertex = TopoDS::Vertex( exp_face.Current() );
-          _createEnforcedVertexOnFace( TopoDS::Face(exp.Current()),  aPnt, enfVertex);
+          _createEnforcedVertexOnFace( TopoDS::Face(exp.Current()),  aPnt, enfVertex,
+                                       /*checkVertexAlreadyExists*/false);
           HasSizeMapOnFace = true;
         }
       }

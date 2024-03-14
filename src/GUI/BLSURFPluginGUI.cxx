@@ -27,7 +27,8 @@
 // E.A. : between pymath.h and Standard_math.h which define
 // E.A. : some same symbols : acosh, asinh, ...
 #include <Standard_math.hxx>
-#include <pymath.h>
+  #include <Python.h>
+  #include <pymath.h>
 #endif
 
 #include "BLSURFPluginGUI_HypothesisCreator.h"

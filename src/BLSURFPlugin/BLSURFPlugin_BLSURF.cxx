@@ -2806,22 +2806,38 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
     meshDS->SetMeshElementOnShape(edg, TopoDS::Edge(emap(tag)));
   }
 
+  std::vector<meshgems_real> uvEntries(4*2);
+  meshgems_integer uid;
+
   /* enumerate triangles */
   for(int it=1;it<=nt;it++) {
     SMDS_MeshFace* tri;
+    meshgems_integer computedMap;
     mesh_get_triangle_vertices(msh, it, vtx);
     mesh_get_triangle_extra_vertices(msh, it, &type, evtri);
-    mesh_get_triangle_tag(msh, it, &tag);
+    mesh_get_triangle_tag(msh, it, &tag);    
+    meshgems_cadsurf_get_triangle_location_on_face( css, it, &computedMap, &uid, &uvEntries[0], &uvEntries[2], &uvEntries[4] );
+    
     if (tags[vtx[0]]) {
-      meshDS->SetNodeOnFace(nodes[vtx[0]], tag);
+      if ( computedMap )
+        meshDS->SetNodeOnFace(nodes[vtx[0]], tag, uvEntries[0], uvEntries[1] );
+      else
+        meshDS->SetNodeOnFace(nodes[vtx[0]], tag);
       tags[vtx[0]] = false;
     };
     if (tags[vtx[1]]) {
-      meshDS->SetNodeOnFace(nodes[vtx[1]], tag);
+      if ( computedMap )
+        meshDS->SetNodeOnFace(nodes[vtx[1]], tag, uvEntries[2], uvEntries[3] );
+      else
+        meshDS->SetNodeOnFace(nodes[vtx[1]], tag);
       tags[vtx[1]] = false;
     };
     if (tags[vtx[2]]) {
-      meshDS->SetNodeOnFace(nodes[vtx[2]], tag);
+      if ( computedMap )
+        meshDS->SetNodeOnFace(nodes[vtx[2]], tag, uvEntries[4], uvEntries[5] );
+      else
+        meshDS->SetNodeOnFace(nodes[vtx[2]], tag);
+
       tags[vtx[2]] = false;
     };
     if (type == MESHGEMS_MESH_ELEMENT_TYPE_TRIA6) {
@@ -2852,23 +2868,38 @@ bool BLSURFPlugin_BLSURF::compute(SMESH_Mesh&         aMesh,
   /* enumerate quadrangles */
   for(int it=1;it<=nq;it++) {
     SMDS_MeshFace* quad;
+    meshgems_integer computedMap;
     mesh_get_quadrangle_vertices(msh, it, vtx);
     mesh_get_quadrangle_extra_vertices(msh, it, &type, evquad);
     mesh_get_quadrangle_tag(msh, it, &tag);
+    meshgems_cadsurf_get_quadrilateral_location_on_face( css, it, &computedMap, &uid, &uvEntries[0], &uvEntries[2], &uvEntries[4], &uvEntries[6] );
+
     if (tags[vtx[0]]) {
-      meshDS->SetNodeOnFace(nodes[vtx[0]], tag);
+      if ( computedMap )
+        meshDS->SetNodeOnFace(nodes[vtx[0]], tag, uvEntries[0], uvEntries[1]);
+      else
+        meshDS->SetNodeOnFace(nodes[vtx[0]], tag);
       tags[vtx[0]] = false;
     };
     if (tags[vtx[1]]) {
-      meshDS->SetNodeOnFace(nodes[vtx[1]], tag);
+      if ( computedMap )
+        meshDS->SetNodeOnFace(nodes[vtx[1]], tag, uvEntries[2], uvEntries[3]);
+      else 
+        meshDS->SetNodeOnFace(nodes[vtx[1]], tag);
       tags[vtx[1]] = false;
     };
     if (tags[vtx[2]]) {
-      meshDS->SetNodeOnFace(nodes[vtx[2]], tag);
+      if ( computedMap )
+        meshDS->SetNodeOnFace(nodes[vtx[2]], tag, uvEntries[4], uvEntries[5]);
+      else
+        meshDS->SetNodeOnFace(nodes[vtx[2]], tag);
       tags[vtx[2]] = false;
     };
     if (tags[vtx[3]]) {
-      meshDS->SetNodeOnFace(nodes[vtx[3]], tag);
+      if ( computedMap )
+        meshDS->SetNodeOnFace(nodes[vtx[3]], tag, uvEntries[6], uvEntries[7]);
+      else
+        meshDS->SetNodeOnFace(nodes[vtx[3]], tag);
       tags[vtx[3]] = false;
     };
     if (type == MESHGEMS_MESH_ELEMENT_TYPE_QUAD9) {

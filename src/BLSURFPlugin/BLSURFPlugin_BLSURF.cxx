@@ -1792,7 +1792,7 @@ namespace
     {
       BRepBuilderAPI_MakeWire newWire;
 
-      typedef NCollection_DataMap<SMESH_TLink, TopoDS_Edge, SMESH_TLink > TSeg2EdgeMap;
+      typedef NCollection_DataMap<SMESH_TLink, TopoDS_Edge, SMESH_TLinkHasher > TSeg2EdgeMap;
       TSeg2EdgeMap seg2EdgeMap;
 
       TopoDS_Iterator edgeIt( wire );
